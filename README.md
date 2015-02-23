@@ -2,6 +2,28 @@
 Feasibility study for auroral tomography
 
 
+examples:
+---------
+draft 2015 SIMULATION commands were like:
+```
+python3 main_hist.py in/jgr2013_2cam_flame.xlsx /tmp --minev 150 -m fwd optim gfit eig eig1d ell eavg png --vlim -3.8 7.1 90 350 1e5 1e8 --jlim 0 7e4 --blim 0 2.5e9 -f 2 5 1 --ell
+```
+
+reading real data:
+```
+python3 main_hist.py in/jgr2013_realdata.xlsx /tmp -m realvid fwd optim png rawpng --vlim -3.8 7.1 90 350 0 30 --jlim nan 0.15 --blim 0 2500 -f 0 1 1
+```
+
+dump raw frames with time superimposed to disk without axes (for draft, -f 30 70 10)
+```
+python3 main_hist.py in/jgr2013_realdata.xlsx /tmp -m singleraw rawpng -f 30 70 10
+```
+
+plot eigenprofiles from 2013 JGR
+```
+python3 main_hist.py in/jgr2013_2cam.xlsx /tmp --minev 150 -m eig eig1d show -f 0 1 1
+```
+
  calibration:
 -------------
 The first program, rawDMCreader.py, accesses the raw camera data and averages the selected frames and writes the average as a FITS file
