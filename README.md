@@ -1,6 +1,16 @@
 # hist-feasibility
 Feasibility study for auroral tomography
 
+This program should be runnable on any Python 3.4 platform. Primarily tested on Linux.
+
+pre-install:
+------------
+```
+mkdir ~/hist-code && cd ~/hist-code
+git clone https://github.com/scienceopen/astrometry.git
+git clone https://github.com/scienceopen/hist-utils.git
+git clone https://github.com/scienceopen/python-mapping.git
+```
 
 examples:
 ---------
@@ -23,6 +33,14 @@ plot eigenprofiles from 2013 JGR
 ```
 python3 main_hist.py in/jgr2013_2cam.xlsx /tmp --minev 150 -m eig eig1d show -f 0 1 1
 ```
+
+plotting hints:
+---------------
+```-m rawpng``` saves the real video frames you chose to PNG with annotations/axes
+
+```-m realvid``` shows both cameras in one big figure
+
+```-m singleraw``` shows each camera images individually, without axes (for powerpoint,posters, etc.)
 
  calibration:
 -------------
