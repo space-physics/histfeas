@@ -46,18 +46,19 @@ def analyseres(sim,x,xp,usecam,cam,jfwd,jfit,drn,dhat,vlim,makeplot,progms):
     sfmt.set_powerlimits((-2, 2))
     sfmt.set_scientific(True)
     sfmt.set_useOffset(False)
-
-    if 'fwd' in makeplot:
-        for i,b in enumerate(drn):
-            plotB(b,usecam,sim.realdata,cam,vlim['b'],9999,makeplot,'$b_{fwd',
-                                                      cord, #pass all cord or it will IndexError if using only some instatiations of phi0
-                                                      [sfmt],8727,progms)
-#%% reconstructed brightness plot
-    if 'optim' in makeplot and len(dhat[0])>0:
-        for i,b in enumerate(dhat):
-            plotB(b['optim'],usecam,sim.realdata,cam,vlim['b'],9999,makeplot,'$b_{optim',
-                  cord[nit*i:nit*i+nit],[sfmt],8728,progms)
-
+    try:
+        if 'fwd' in makeplot:
+            for i,b in enumerate(drn):
+                plotB(b,usecam,sim.realdata,cam,vlim['b'],9999,makeplot,'$b_{fwd',
+                                                          cord, #pass all cord or it will IndexError if using only some instatiations of phi0
+                                                          [sfmt],8727,progms)
+    # reconstructed brightness plot
+        if 'optim' in makeplot and len(dhat[0])>0:
+            for i,b in enumerate(dhat):
+                plotB(b['optim'],usecam,sim.realdata,cam,vlim['b'],9999,makeplot,'$b_{optim',
+                      cord[nit*i:nit*i+nit],[sfmt],8728,progms)
+    except:
+        print('** ERROR plotting overall analysis plots of intensity')
 #%% energy flux plot amd calculations
     x0fwd = nans(nit); E0fwd = nans(nit)
     x0hat = nans(nit); E0hat = nans(nit)
