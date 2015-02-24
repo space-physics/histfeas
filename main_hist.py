@@ -15,11 +15,12 @@
 """
 from __future__ import division,print_function
 from signal import signal,SIGINT #for Ctrl C
-from os.path import expanduser
+from os.path import expanduser, join
+from os import mkdir
+import errno
 from numpy import absolute,zeros,asarray,in1d,arange
 from numpy.random import normal
 import h5py
-from os.path import join
 from sys import path
 path.extend(['../python-mapping','../astrometry'])
 from sanityCheck import getParams
@@ -191,11 +192,16 @@ if __name__ == '__main__':
     timeInds = ar.frames
     doProfile = ar.profile
     datadump = ar.dump
+#%% output directory
+    progms = ar.outdir
+    try:
+        mkdir(progms)
+    except OSError as e:
+        if e.errno != errno.EEXIST:
+            exit('*** error with making/accessing ' + str(progms))
 
-    progms = ar.outdir #'out/' + datetime.now().strftime('%Y-%m-%dT%H:%M:%S') + '/'
-    if progms:
-        with open(join(progms,'cmd.log'),'w') as f:
-            f.write(' '.join(argv))
+    with open(join(progms,'cmd.log'),'w') as f:
+        f.write(' '.join(argv))
 #%% overrides
     overrides = {'minev': ar.minev,'filter':ar.filter,
                  'fwdguess':ar.fwdguess, 'fitm':ar.fitm,'cam':ar.cam,
