@@ -38,8 +38,8 @@ def getMp(sim,zKM,makeplot,dbglvl):
 
 def downsampleEnergy(Ek,EKpcolor,Mp,downsamp):
     """ we know original points are logspaced.
-    1) make new Ek2 axis, with half as many log-spaced points
-    2) fill new Phi0_2 values with sums of adjacent Ek bins
+    1) make new Ek2 axis, with 1/downsamp as many log-spaced points
+    2) fill new Phi0_downsamp values with sums of adjacent Ek bins
     """
     nEK = Ek.size//downsamp #floor
 
