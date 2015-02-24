@@ -5,6 +5,7 @@ from os.path import isfile
 import h5py
 from warnings import warn
 from time import time
+from nans import nans
 #from pdb import set_trace
 
 def getObs(sim,cam,L,tDataInd,ver,makePlots,dbglvl):
@@ -31,7 +32,7 @@ def getObs(sim,cam,L,tDataInd,ver,makePlots,dbglvl):
         bp = L.dot(ver.ravel(order='F'))
         assert bp.size == nCutPix * sim.nCam
 
-        bn = nan*empty_like(bp)
+        bn = nans(bp.shape)
         for ci in sim.useCamInd.astype(str):
             cs = s_[cam[ci].ind]
             bn[cs] = mogrifyData(bp[cs],cam[ci])
