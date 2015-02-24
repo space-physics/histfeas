@@ -4,7 +4,7 @@ from numpy import empty,ones,ravel_multi_index,hypot,array
 from scipy.sparse import dok_matrix
 # local
 import sys
-sys.path.extend('../cv-utils')
+sys.path.append("../cv-utils")
 from lineClipping import cohensutherland
 
 '''
