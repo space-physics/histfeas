@@ -53,7 +53,7 @@ class Arc:
             return getColumnVER(self.zgrid, Mp['ztc'], Mp['Mp'], Phi0, z)
 
         elif self.zshape == 'zero': #zeros, already set to zero
-            return zeros((z.size,x.size)) #FIXME does this work correctly?
+            return zeros((z.size,x.size)) 
         else:
             exit('*** Unknown model type ' + self.zshape)
 
