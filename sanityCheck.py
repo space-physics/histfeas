@@ -39,6 +39,7 @@ def setupCam(Cam,sim,cp,zmax,dbglvl):
 
     if sim.camxreq[0] is not None:
         print('* overriding camera x-loc with ',sim.camxreq)
+        # MUST NOT use enumerate(sim.useCamInd) -- you will not index the correct column!
         for i,ci,cx in zip(sim.useCamInd,sim.useCamInd.astype(str),sim.camxreq):
             cp.ix['Xkm',i] = cx
             cam[ci] = Cam(sim,cp.ix[:,i], ci, zmax,dbglvl)
