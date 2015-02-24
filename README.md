@@ -10,6 +10,7 @@ mkdir ~/hist-code && cd ~/hist-code
 git clone https://github.com/scienceopen/astrometry.git
 git clone https://github.com/scienceopen/hist-utils.git
 git clone https://github.com/scienceopen/python-mapping.git
+git clone https://github.com/scienceopen/transcar-utils.git
 ```
 
 examples:
