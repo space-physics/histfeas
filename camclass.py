@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 from numpy import (linspace, fliplr, flipud, rot90, arange,
-                   polyfit,polyval,rint,empty, isfinite, 
+                   polyfit,polyval,rint,empty, isfinite,
                    absolute, hypot, logical_or, unravel_index, delete, where)
 from os.path import expanduser
 from dateutil.parser import parse
@@ -74,7 +74,7 @@ class Cam: #use this like an advanced version of Matlab struct
         cal1Dname = cp['cal1Dname']
         if isinstance(cal1Ddir,string_types) and isinstance(cal1Dname,string_types):
             self.cal1Dfn = expanduser(cal1Ddir + cal1Dname)
-            
+
         self.raymap = sim.raymap
         if self.raymap == 'arbitrary':
             self.angle_deg = self.arbanglemap()
@@ -260,27 +260,28 @@ class Cam: #use this like an advanced version of Matlab struct
             ax.legend()
             ax.set_xlabel('x-pixel'); ax.set_ylabel('$\theta$ [deg.]')
             ax.set_title('angle from magnetic zenith $\theta$')
-                                               
+
     def findClosestAzel(self,discardEdgepix):
         assert self.az.shape ==  self.el.shape
         assert self.az2pts.shape == self.el2pts.shape
         assert self.az.ndim == 2
-    
+
         npts = self.az2pts.size  #numel
         nearRow = empty(npts,dtype=int)
         nearCol = empty(npts,dtype=int)
+        #FIXME consider scipy.spatial.distance.cdist()
         for ipt in range(npts):
             #we do this point by point because we need to know the closest pixel for each point
             errdist = absolute( hypot(self.az - self.az2pts[ipt],
                                       self.el - self.el2pts[ipt]) )
-    
+
     # ********************************************
     # THIS UNRAVEL_INDEX MUST BE ORDER = 'C'
             nearRow[ipt],nearCol[ipt] = unravel_index(errdist.argmin(),
                                                       (self.ypix, self.xpix),order='C')
     #************************************************
-    
-    
+
+
         if discardEdgepix:
             edgeind = where(logical_or(logical_or(nearCol==0,nearCol == self.xpix-1),
                                        logical_or(nearRow==0,nearRow == self.ypix-1)) )[0]
@@ -289,7 +290,7 @@ class Cam: #use this like an advanced version of Matlab struct
             if self.dbglvl>0: print('deleted',edgeind.size, 'edge pixels ')
 
         self.findLSQ(nearRow, nearCol)
-    
+
         if self.dbglvl>0:
             clr = ['b','r','g','m']
             ax = figure().gca()
