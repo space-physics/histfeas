@@ -18,7 +18,7 @@ def FitVERopt(L,bn,j0,MpDict,sim,Fwd,makeplot,dbglvl):
 
     Mp,zTranscar,EK,EKpcolor = MpDict['Mp'],MpDict['ztc'],MpDict['Ek'],MpDict['EKpcolor']
 
-    if sim.useztranscar: 
+    if sim.useztranscar:
         Tm = Mp
     else: #interpolate A to be on the same altitude grid as b
         print('** using interpolated VER, use caution that peaks arent missed')
@@ -91,6 +91,7 @@ def FitVERopt(L,bn,j0,MpDict,sim,Fwd,makeplot,dbglvl):
         # this is repeated because the assignment overwrites from minimize()
         jfit['EK'] = EK
         jfit['EKpcolor'] = EKpcolor
+        # don't remove the two lines above (ek,ekpcolor)
 
     return vfit,jfit,Tm,bfit
 

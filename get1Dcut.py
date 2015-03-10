@@ -9,7 +9,7 @@ from coordconv3d import ecef2aer, ecef2geodetic
 
 def get1Dcut(cam,useCamInd,makeplot,progms,dbglvl):
     discardEdgepix = True #gets rid of duplicates beyond FOV of image that cause lsq estimation error
-#%% determine slant range between other camera and magnetic zentith to evaluate at
+#%% determine slant range between other camera and magnetic zenith to evaluate at
     srpts = logspace(4.3,6.9,25) #4.5 had zero discards for hst0 #6.8 didn't quite get to zenith
     #srpts = np.linspace(20e3,1e7,25) #few points are used
     #srpts = np.arange(25e3,10000e3,20e3,dtype=float)
