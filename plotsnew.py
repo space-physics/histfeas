@@ -12,9 +12,6 @@ from os.path import join
 from bisect import bisect
 from scipy.interpolate import interp1d
 #
-from sys import path
-path.append('../transcar-utils')
-from readTranscar import titlereaction
 from gaussfitter import gaussfit,twodgaussian
 
 #%% plot globals
@@ -379,7 +376,7 @@ def ploteig(EKpcolor,zKM,Tm,vlim,sim,tInd,makeplot,prefix,progms):
     ax.yaxis.set_major_locator(MultipleLocator(100))
     ax.yaxis.set_minor_locator(MultipleLocator(20))
     mptitle = '$P_{eig}$, filter: ' + sim.opticalfilter
-    mptitle = titlereaction(sim,mptitle)
+    mptitle += str(sim.reacreq)
 #    if sim.loadver:
 #        mptitle+= '\n' + sim.loadverfn
 #    else:
@@ -412,7 +409,7 @@ def ploteig1d(Ek,zKM,Tm,vlim,sim,tInd,makeplot,prefix,progms):
     ax.set_xlim(vlim[4:])
     ax.set_ylim(vlim[2:-2])
     titletxt = '$P_{eig}$ '
-    titletxt = titlereaction(sim,titletxt)
+    titletxt += str(sim.reacreq)
 
     titletxt += ' Opt. Filter: ' + sim.opticalfilter
     ax.set_title(titletxt, fontsize=tfs)
