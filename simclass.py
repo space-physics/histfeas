@@ -96,12 +96,13 @@ class Sim:
         self.reactionfn = sp.loc['reactionParam','Transcar']
         self.transcarconfig = sp.loc['simconfig','Transcar']
 
-        self.metastable = sp.loc['metastable','Transcar'] == 1
-        self.atomic = sp.loc['atomic','Transcar'] == 1
-        self.N21NG = sp.loc['N21NG','Transcar'] == 1
-        self.N2Meinel = sp.loc['N2Meinel','Transcar'] == 1
-        self.N22PG = sp.loc['N22PG','Transcar'] == 1
-        self.N21PG = sp.loc['N21PG','Transcar'] == 1
+        self.reacreq = ()
+        if sp.loc['metastable','Transcar'] == 1: self.reacreq += ('metastable',)
+        if sp.loc['atomic','Transcar'] == 1: self.reacreq += ('atomic',)
+        if sp.loc['N21NG','Transcar'] == 1: self.reacreq += ('n21ng',)
+        if sp.loc['N2Meinel','Transcar'] == 1: self.reacreq += ('n2meinel',)
+        if sp.loc['N22PG','Transcar'] == 1: self.reacreq += ('n22pg',)
+        if sp.loc['N21PG','Transcar'] == 1: self.reacreq += ('n21pg',)
 
         self.realdata = sp.loc['useActualData','Sim'] == 1
         self.realdatapath = sp.loc['ActualDataDir','Cams']
@@ -174,10 +175,10 @@ class Sim:
         return Fwd
 
     def maketind(self,timeInds,nTimeSlice):
-        if nTimeSlice == 0: 
+        if nTimeSlice == 0:
             exit('*** zero frame indices were specified to process, exiting')
 
-        if timeInds is None: 
+        if timeInds is None:
             timeInds = arange(nTimeSlice) #NOT range!
 
         return timeInds[timeInds<nTimeSlice] #(it's <, not <=) slice off commond line requests beyond number of frames
