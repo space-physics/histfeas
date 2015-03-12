@@ -97,12 +97,12 @@ class Sim:
         self.transcarconfig = sp.loc['simconfig','Transcar']
 
         self.reacreq = ()
-        if sp.loc['metastable','Transcar'] == 1: self.reacreq += ('metastable',)
-        if sp.loc['atomic','Transcar'] == 1: self.reacreq += ('atomic',)
-        if sp.loc['N21NG','Transcar'] == 1: self.reacreq += ('n21ng',)
-        if sp.loc['N2Meinel','Transcar'] == 1: self.reacreq += ('n2meinel',)
-        if sp.loc['N22PG','Transcar'] == 1: self.reacreq += ('n22pg',)
-        if sp.loc['N21PG','Transcar'] == 1: self.reacreq += ('n21pg',)
+        if sp.loc['metastable','Transcar'] == 1: self.reacreq += 'metastable',
+        if sp.loc['atomic','Transcar'] == 1: self.reacreq += 'atomic',
+        if sp.loc['N21NG','Transcar'] == 1: self.reacreq += 'n21ng',
+        if sp.loc['N2Meinel','Transcar'] == 1: self.reacreq += 'n2meinel',
+        if sp.loc['N22PG','Transcar'] == 1: self.reacreq += 'n22pg',
+        if sp.loc['N21PG','Transcar'] == 1: self.reacreq += 'n21pg',
 
         self.realdata = sp.loc['useActualData','Sim'] == 1
         self.realdatapath = sp.loc['ActualDataDir','Cams']
