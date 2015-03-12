@@ -631,19 +631,7 @@ def plotVER1D(sim,ver,zKM,vlim,tInd,makeplot,prefix,titletxt,figh,spfid,progms):
         pass
         #titletxt += '\n$M_p$ file: ' +str(sp.loc['verfn','Transcar'])
     else:
-        titletxt += '\nReactions: '
-        if sim.metastable:
-            titletxt += 'metastable, '
-        if sim.atomic:
-            titletxt += 'atomic, '
-        if sim.N21NG:
-            titletxt += 'N$_2$1N, '
-        if sim.N2Meinel:
-            titletxt += 'N$_2$Meinel, '
-        if sim.N22PG:
-            titletxt += ' N$_2$2P, '
-        if sim.N21PG:
-            titletxt += 'N$_2$1P'
+        titletxt += '\nReactions: ' + str(sim.reacreq)
 
     ax.set_title(titletxt, fontsize=tfs, y=1.02) #+ '  $t_i=' + str(tInd) + '$'
 
