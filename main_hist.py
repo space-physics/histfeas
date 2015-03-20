@@ -16,8 +16,7 @@
 from __future__ import division,print_function
 from signal import signal,SIGINT #for Ctrl C
 from os.path import expanduser, join
-from os import mkdir
-import errno
+from os import makedirs
 from numpy import absolute,zeros,asarray,in1d,arange
 from numpy.random import normal
 import h5py
@@ -195,10 +194,10 @@ if __name__ == '__main__':
 #%% output directory
     progms = ar.outdir
     try:
-        mkdir(progms)
+        makedirs(progms, exist_ok=True)
     except OSError as e:
-        if e.errno != errno.EEXIST:
-            exit('*** error with making/accessing ' + str(progms))
+        pass #for python 2.7
+
 
     with open(join(progms,'cmd.log'),'w') as f:
         f.write(' '.join(argv))
