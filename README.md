@@ -67,10 +67,6 @@ cam1
 
 Prerequisites:
 --------------
-``` 
-conda install --file requirements.txt
 ```
-or
-```
-pip install requirements.txt
+pip install -r requirements.txt
 ```
