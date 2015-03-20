@@ -14,7 +14,7 @@ def getTranscarMp(sim,makeplot,dbglvl):
     Peigen, EKpcolor = getTranscar(sim, dbglvl)[:2]
 
     #return Mp,zTranscar,Ek,EKpcolor
-    return Peigen.values, Peigen.index.values, Peigen.columns.values, EKpcolor
+    return asfortranarray(Peigen.values), Peigen.index.values, Peigen.columns.values, EKpcolor
 
 def getColumnVER(zgrid,zTranscar,Peig,Phi0,zKM):
     assert Phi0.shape[0] == Peig.shape[1]
@@ -37,12 +37,12 @@ def getMp(sim,zKM,makeplot,dbglvl):
     except AttributeError as e:
         exit('getMp: it appears there was trouble earlier on with getTranscar, aborting. ' + str(e))
 #%% clip to Hist resqueted alittudes
-    goodAltInd = (zKM[0] <zTranscar) & (zTranscar < zKM[-1])
-    Peigen = Peigen.iloc[goodAltInd,:]
+    goodAltInd = (zTranscar <= zKM[-1]) #TODO clips top only
+    Peig = asfortranarray(Peigen.values[goodAltInd,:])
 #%% repack, with optional downsample
     if sim.downsampleEnergy:
-        Ek,EKpcolor,Peigen = downsampleEnergy(Ek,EKpcolor,Peigen.values, sim.downsampleEnergy)
-    return {'Mp':Peigen.values,'ztc':zTranscar,'Ek':Ek,'EKpcolor':EKpcolor}
+        Ek,EKpcolor,Peigen = downsampleEnergy(Ek,EKpcolor,Peig, sim.downsampleEnergy)
+    return {'Mp':Peig,'ztc':zTranscar,'Ek':Ek,'EKpcolor':EKpcolor}
 
 def downsampleEnergy(Ek,EKpcolor,Mp,downsamp):
     """ we know original points are logspaced.
