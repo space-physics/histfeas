@@ -3,7 +3,7 @@ import csv
 from plotsnew import getx0E0, plotB
 from matplotlib.pyplot import figure,show
 from matplotlib.ticker import MaxNLocator,ScalarFormatter# ,LogFormatterMathtext, #for 1e4 -> 1 x 10^4, applied DIRECTLY in format=
-from numpy import diff, empty, spacing,asanyarray
+from numpy import diff, empty, asanyarray
 import h5py
 from plotsnew import writeplots
 
