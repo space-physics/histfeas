@@ -9,9 +9,9 @@ from readTranscar import getTranscar
 from eFluxGen import fluxgen
 
 
-def getTranscarMp(sim,zKM,makeplot,dbglvl):
+def getTranscarMp(sim,makeplot,dbglvl):
  #%% get VER/flux
-    Peigen, EKpcolor = getTranscar(sim, makeplot, dbglvl)[0,3]
+    Peigen, EKpcolor = getTranscar(sim, dbglvl)[:2]
 
     #return Mp,zTranscar,Ek,EKpcolor
     return Peigen.values, Peigen.index.values, Peigen.columns.values, EKpcolor
@@ -30,10 +30,11 @@ def getColumnVER(zgrid,zTranscar,Peig,Phi0,zKM):
     return Tm.dot(Phi0)
 
 def getMp(sim,zKM,makeplot,dbglvl):
-    Mp,zTranscar,Ek,EKpcolor = getTranscarMp(sim,zKM,makeplot,dbglvl)
+    Peigen,EKpcolor = getTranscar(sim, dbglvl)[:2]
+    Ek = Peigen.columns.values; zTranscar = Peigen.index.values
     if sim.downsampleEnergy:
-        Ek,EKpcolor,Mp = downsampleEnergy(Ek,EKpcolor,Mp, sim.downsampleEnergy)
-    return {'Mp':Mp,'ztc':zTranscar,'Ek':Ek,'EKpcolor':EKpcolor}
+        Ek,EKpcolor,Peigen = downsampleEnergy(Ek,EKpcolor,Peigen.values, sim.downsampleEnergy)
+    return {'Mp':Peigen.values,'ztc':zTranscar,'Ek':Ek,'EKpcolor':EKpcolor}
 
 def downsampleEnergy(Ek,EKpcolor,Mp,downsamp):
     """ we know original points are logspaced.
