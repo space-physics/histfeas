@@ -119,18 +119,14 @@ def makeCamFOVpixelEnds(Fwd,sim,cam,makePlots,dbglvl):
     return L,Fwd,cam
 #%%
 def loadEll(Fwd,cam,useCamInd,EllFN,dbglvl):
-
-    if not isfile(EllFN):
-        exit('*** loadEll: ' + EllFN +
-            ' not found.\nuse --ell command line option to save new Ell file.')
-
-    with h5py.File(EllFN,'r',libver='latest') as fid:
+    try:
+      with h5py.File(EllFN,'r',libver='latest') as fid:
         L = csc_matrix(fid['/L'].value)
 
         if Fwd is not None: #we're in main program
-            if (Fwd['x'] != fid['/Fwd/x'].value).any():
+            if (Fwd['x'] != fid['/Fwd/x']).any():
                 exit('*** need to recompute L, as x-locations arent matched loaded/commanded')
-            if (Fwd['z'] != fid['/Fwd/z'].value).any():
+            if (Fwd['z'] != fid['/Fwd/z']).any():
                 exit('*** need to recompute L, as z-locations arent matched loaded/commanded')
         elif Fwd is None: #we're in another program
             Fwd = {'x':fid['/Fwd/x'].value,'z':fid['/Fwd/z'].value}
@@ -148,6 +144,12 @@ def loadEll(Fwd,cam,useCamInd,EllFN,dbglvl):
                     cam[ci].zFOVpixelEnds = fid['/Obs/zFOVpixelEnds'][:,i]
             except KeyError:
                 warn('could not load FOV ends, maybe this is an old Ell file')
+
+    except FileNotFoundError as e:
+      exit('*** loadEll: ' + EllFN +
+            ' not found.\nuse --ell command line option to save new Ell file. ' + str(e))
+    except AttributeError as e:
+        exit('grid mismatch detected. use --ell command line option to save new Ell file. ' + str(e))
 
     print('loadEll: Loaded "L,Fwd,Obs" data from:', EllFN)
 
