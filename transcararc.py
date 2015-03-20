@@ -11,11 +11,10 @@ from eFluxGen import fluxgen
 
 def getTranscarMp(sim,zKM,makeplot,dbglvl):
  #%% get VER/flux
-    Mp,zTranscar,Ek,EKpcolor = getTranscar(sim, makeplot, dbglvl)
-#   zKM.size #same number of altitudes zKM doesn't have to match when interpolation zTransncar
-    assert zTranscar.shape[0] == Mp.shape[0]
+    Peigen, EKpcolor = getTranscar(sim, makeplot, dbglvl)[0,3]
 
-    return Mp,zTranscar,Ek,EKpcolor
+    #return Mp,zTranscar,Ek,EKpcolor
+    return Peigen.values, Peigen.index.values, Peigen.columns.values, EKpcolor
 
 def getColumnVER(zgrid,zTranscar,Peig,Phi0,zKM):
     assert Phi0.shape[0] == Peig.shape[1]
