@@ -63,7 +63,7 @@ def makeCamFOVpixelEnds(Fwd,sim,cam,makePlots,dbglvl):
     xFOVpixelEnds = empty((nCutPix, sim.nCam),dtype=float)
     zFOVpixelEnds = empty_like(xFOVpixelEnds)
 #%% (1) define the three x,y points defining each 2D pixel cone
-    for c in cam.keys():
+    for c in cam:#.keys():
         '''LINE LENGTH
          here we have 2 vertices per angle instead of 3 (line instead of polygon)
          the minus sign on x makes the angle origin at local east

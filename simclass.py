@@ -157,7 +157,8 @@ class Sim:
 
         if self.useztranscar:
             Fwd['x'] = makexzgrid(self.fwd_xlim, None, self.fwd_dxKM, None)[0]
-            Fwd['z'] = getaltgrid(sp.at['altitudePreload','Transcar'])
+            zTranscar = getaltgrid(sp.at['altitudePreload','Transcar'])
+            Fwd['z'] = zTranscar[(zTranscar <=self.fwd_zlim[1]) ] #TODO clips only top
         else:
             self.fwd_dzKM = sp.loc['ZcellKM','Fwdf']
             (Fwd['x'], Fwd['z']) = makexzgrid(self.fwd_xlim, self.fwd_zlim, self.fwd_dxKM, self.fwd_dzKM)
