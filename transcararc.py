@@ -30,8 +30,16 @@ def getColumnVER(zgrid,zTranscar,Peig,Phi0,zKM):
     return Tm.dot(Phi0)
 
 def getMp(sim,zKM,makeplot,dbglvl):
+#%% read from transcar sim
     Peigen,EKpcolor = getTranscar(sim, dbglvl)[:2]
-    Ek = Peigen.columns.values; zTranscar = Peigen.index.values
+    try:
+        Ek = Peigen.columns.values; zTranscar = Peigen.index.values
+    except AttributeError as e:
+        exit('getMp: it appears there was trouble earlier on with getTranscar, aborting. ' + str(e))
+#%% clip to Hist resqueted alittudes
+    goodAltInd = (zKM[0] <zTranscar) & (zTranscar < zKM[-1])
+    Peigen = Peigen.iloc[goodAltInd,:]
+#%% repack, with optional downsample
     if sim.downsampleEnergy:
         Ek,EKpcolor,Peigen = downsampleEnergy(Ek,EKpcolor,Peigen.values, sim.downsampleEnergy)
     return {'Mp':Peigen.values,'ztc':zTranscar,'Ek':Ek,'EKpcolor':EKpcolor}

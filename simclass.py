@@ -2,6 +2,10 @@ from __future__ import print_function, division
 from numpy import asarray,where,arange,isfinite,ceil,hypot
 import h5py
 from os.path import join
+#
+import sys
+sys.path.append('../transcar-utils')
+from readionoinit import getaltgrid
 
 class Sim:
 
@@ -45,14 +49,14 @@ class Sim:
             #sp.loc['OpticalFilter','Transcar'] = overrides['filter']
             self.opticalfilter = overrides['filter'].lower()
         else:
-            self.opticalfilter = sp.loc['OpticalFilter','Transcar'].lower()
+            self.opticalfilter = sp.at['OpticalFilter','Transcar'].lower()
         #%% manual override minimum beam energy
         if overrides['minev'] is not None:
             print('* minimum beam energy set to:',overrides['minev'])
             #sp.loc['minBeameV','Transcar']  = overrides['minev']
             self.minbeamev = overrides['minev']
         else:
-            mbe = sp.loc['minBeameV','Transcar']
+            mbe = sp.at['minBeameV','Transcar']
             if isfinite(mbe):
                 self.minbeamev = mbe
             else:
@@ -63,9 +67,9 @@ class Sim:
             #sp.loc['OptimFluxMethod','Recon'] = overrides['fitm']
             self.optimfitmeth = overrides['fitm']
         else:
-            self.optimfitmeth = sp.loc['OptimFluxMethod','Recon']
+            self.optimfitmeth = sp.at['OptimFluxMethod','Recon']
 
-        self.optimmaxiter = sp.loc['OptimMaxiter','Recon']
+        self.optimmaxiter = sp.at['OptimMaxiter','Recon']
         #%% force compute ell
         if overrides['ell']:
             #sp.loc['saveEll','Sim'] = 1 #we'll save to out/date directory!
@@ -73,8 +77,8 @@ class Sim:
             self.savefwdL = True
             self.loadfwdL = False
         else:
-            self.savefwdL = sp.loc['saveEll','Sim']
-            self.loadfwdL = sp.loc['loadEll','Sim']
+            self.savefwdL = sp.at['saveEll','Sim']
+            self.loadfwdL = sp.at['loadEll','Sim']
         #%%how many synthetic arcs are we using
         if ap is not None:
             self.useArcBool = ap.loc['useArc'].values.astype(bool)
@@ -83,26 +87,26 @@ class Sim:
         else:
             self.nArc = 0
 #%% transcar
-        self.useztranscar = sp.loc['UseTCz','Transcar'] == 1
-        self.loadver = sp.loc['loadVER','Transcar'] == 1
-        self.loadverfn = sp.loc['verfn','Transcar']
-        self.bg3fn = sp.loc['BG3transFN','Sim']
-        self.windowfn = sp.loc['windowFN','Sim']
-        self.qefn =sp.loc['emccdQEfn','Sim']
-        self.transcarev = sp.loc['BeamEnergyFN','Transcar']
-        self.transcarutc =sp.loc['tReq','Transcar']
-        self.excratesfn = sp.loc['ExcitationDATfn','Transcar']
-        self.transcarpath = sp.loc['TranscarDataDir','Sim']
-        self.reactionfn = sp.loc['reactionParam','Transcar']
-        self.transcarconfig = sp.loc['simconfig','Transcar']
+        self.useztranscar = sp.at['UseTCz','Transcar'] == 1
+        self.loadver = sp.at['loadVER','Transcar'] == 1
+        self.loadverfn = sp.at['verfn','Transcar']
+        self.bg3fn = sp.at['BG3transFN','Sim']
+        self.windowfn = sp.at['windowFN','Sim']
+        self.qefn =sp.at['emccdQEfn','Sim']
+        self.transcarev = sp.at['BeamEnergyFN','Transcar']
+        self.transcarutc = sp.at['tReq','Transcar']
+        self.excratesfn = sp.at['ExcitationDATfn','Transcar']
+        self.transcarpath = sp.at['TranscarDataDir','Sim']
+        self.reactionfn = sp.at['reactionParam','Transcar']
+        self.transcarconfig = sp.at['simconfig','Transcar']
 
         self.reacreq = ()
-        if sp.loc['metastable','Transcar'] == 1: self.reacreq += 'metastable',
-        if sp.loc['atomic','Transcar'] == 1: self.reacreq += 'atomic',
-        if sp.loc['N21NG','Transcar'] == 1: self.reacreq += 'n21ng',
-        if sp.loc['N2Meinel','Transcar'] == 1: self.reacreq += 'n2meinel',
-        if sp.loc['N22PG','Transcar'] == 1: self.reacreq += 'n22pg',
-        if sp.loc['N21PG','Transcar'] == 1: self.reacreq += 'n21pg',
+        if sp.at['metastable','Transcar'] == 1: self.reacreq += 'metastable',
+        if sp.at['atomic','Transcar'] == 1: self.reacreq += 'atomic',
+        if sp.at['N21NG','Transcar'] == 1: self.reacreq += 'n21ng',
+        if sp.at['N2Meinel','Transcar'] == 1: self.reacreq += 'n2meinel',
+        if sp.at['N22PG','Transcar'] == 1: self.reacreq += 'n22pg',
+        if sp.at['N21PG','Transcar'] == 1: self.reacreq += 'n21pg',
 
         self.realdata = sp.loc['useActualData','Sim'] == 1
         self.realdatapath = sp.loc['ActualDataDir','Cams']
@@ -140,21 +144,20 @@ class Sim:
             self.artmaxiter = int(sp.loc['maxIter','ART'])
         except ValueError:
             self.artmaxiter = 0
-        self.artlambda = sp.loc['lambda','ART']
-        self.artstop = sp.loc['stoprule','ART']
-        self.arttau = sp.loc['MDPtauDelta','ART']
+        self.artlambda = sp.at['lambda','ART']
+        self.artstop = sp.at['stoprule','ART']
+        self.arttau = sp.at['MDPtauDelta','ART']
 
     def setupFwdXZ(self,sp):
         Fwd = {}
-        self.fwd_xlim = (sp.loc['XminKM','Fwdf'],sp.loc['XmaxKM','Fwdf'])
-        self.fwd_zlim = (sp.loc['ZminKM','Fwdf'],sp.loc['ZmaxKM','Fwdf'])
-        self.fwd_dxKM = sp.loc['XcellKM','Fwdf']
+        self.fwd_xlim = (sp.at['XminKM','Fwdf'], sp.at['XmaxKM','Fwdf'])
+        self.fwd_zlim = (sp.at['ZminKM','Fwdf'], sp.at['ZmaxKM','Fwdf'])
+        self.fwd_dxKM = sp.at['XcellKM','Fwdf']
 
 
         if self.useztranscar:
             Fwd['x'] = makexzgrid(self.fwd_xlim, None, self.fwd_dxKM, None)[0]
-            with h5py.File(sp.loc['altitudePreload','Transcar'],'r',libver='latest') as fid:
-                Fwd['z'] = fid['/zTranscar'].value
+            Fwd['z'] = getaltgrid(sp.at['altitudePreload','Transcar'])
         else:
             self.fwd_dzKM = sp.loc['ZcellKM','Fwdf']
             (Fwd['x'], Fwd['z']) = makexzgrid(self.fwd_xlim, self.fwd_zlim, self.fwd_dxKM, self.fwd_dzKM)
