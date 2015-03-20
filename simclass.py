@@ -43,9 +43,9 @@ class Sim:
         if overrides['filter'] is not None:
             print('* overriding filter choice with:',overrides['filter'])
             #sp.loc['OpticalFilter','Transcar'] = overrides['filter']
-            self.opticalfilter = overrides['filter']
+            self.opticalfilter = overrides['filter'].lower()
         else:
-            self.opticalfilter = sp.loc['OpticalFilter','Transcar']
+            self.opticalfilter = sp.loc['OpticalFilter','Transcar'].lower()
         #%% manual override minimum beam energy
         if overrides['minev'] is not None:
             print('* minimum beam energy set to:',overrides['minev'])
