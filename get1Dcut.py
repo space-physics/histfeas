@@ -2,18 +2,12 @@ from __future__ import division
 from numpy import logspace
 import h5py
 from os.path import join
-from matplotlib.pyplot import figure
 from coordconv3d import ecef2aer, ecef2geodetic
-#
-#from pdb import set_trace
 
 def get1Dcut(cam,useCamInd,makeplot,progms,dbglvl):
     discardEdgepix = True #gets rid of duplicates beyond FOV of image that cause lsq estimation error
 #%% determine slant range between other camera and magnetic zenith to evaluate at
     srpts = logspace(4.3,6.9,25) #4.5 had zero discards for hst0 #6.8 didn't quite get to zenith
-    #srpts = np.linspace(20e3,1e7,25) #few points are used
-    #srpts = np.arange(25e3,10000e3,20e3,dtype=float)
-    #srpts = np.append(srpts,1e12) #infinity-like magnetic zenith range
 #%% (0) load az/el data from Astrometry.net
     for c in cam.keys():
         with h5py.File(cam[c].cal1Dfn,'r',libver='latest') as f:
@@ -46,6 +40,7 @@ def get1Dcut(cam,useCamInd,makeplot,progms,dbglvl):
     return cam
 
 def plotLOSecef(cam,useCamInd,makeplot,progms,dbglvl):
+    from matplotlib.pyplot import figure
     if dbglvl>0:
         figecef = figure(238923)
         clr = ['b','r','g','m']

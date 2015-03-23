@@ -4,7 +4,7 @@ GPLv3+
 """
 from __future__ import print_function, division
 from numpy import exp,outer, zeros_like,zeros,isnan
-from bisect import bisect
+from findnearest import find_nearest
 
 from transcararc import getColumnVER,getpx
 
@@ -38,12 +38,12 @@ class Arc:
         if self.zshape=='chapman':
             return ChapmanArc(self.w, self.h, self.x0,self.z0,
                                x, z,
-                               self.xLim, self.xshape,
+                               self.xshape,
                                self.pmax)[0]
         elif self.zshape == 'rect':
             return RectArc(self.w, self.h, self.x0,self.z0,
                                   x,z,
-                                  self.xLim,self.xshape,
+                                  self.xshape,
                                   self.pmax)[0]
         elif self.zshape == 'transcar':
             '''
@@ -53,29 +53,29 @@ class Arc:
             return getColumnVER(self.zgrid, Mp['ztc'], Mp['Mp'], Phi0, z)
 
         elif self.zshape == 'zero': #zeros, already set to zero
-            return zeros((z.size,x.size)) 
+            return zeros((z.size,x.size))
         else:
             exit('*** Unknown model type ' + self.zshape)
 
-def ChapmanArc(Wkm,H,X0,Z0,xKM,zKM,xLim,xshape, PC0=1):
+def ChapmanArc(Wkm,H,X0,Z0,xKM,zKM,xshape, PC0=1):
     # chapman vert
         pz = PC0 * exp(.5*(1-(zKM-Z0)/H - exp((Z0-zKM)/H)))
     # horizontal model
-        px = getpx(xKM,Wkm,X0,xLim,xshape,PC0)
+        px = getpx(xKM,Wkm,X0,xshape,PC0)
     # 2D model output
         ''' Make 2D Auroral Blob (original idea JLS)'''
         pzx  = outer(pz, px)
         return pzx,pz,px
 
-def RectArc(Wkm,Hkm,X0,Z0,xKM,zKM,xLim,xshape, PC0=1):
+def RectArc(Wkm,Hkm,X0,Z0,xKM,zKM,xshape, PC0=1):
 
     #find lower and upper indices of rect. phantom
-    PCind = ( bisect( zKM, Z0-Hkm/2 ), bisect( zKM, Z0+Hkm/2 ) )
+    PCind = (find_nearest( zKM, Z0-Hkm/2)[0], find_nearest(zKM, Z0+Hkm/2)[0] )
     #initialize vertical vector
     pz = zeros_like(zKM)
     pz[PCind[0]:PCind[1]+1] = PC0
     #horiz model
-    px = getpx(xKM,Wkm,X0,xLim, xshape,PC0)
+    px = getpx(xKM,Wkm,X0, xshape,PC0)
 
     pzx  = outer(pz, px)
     return pzx,pz,px
