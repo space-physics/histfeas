@@ -9,11 +9,10 @@ from matplotlib.ticker import LogFormatterMathtext, MultipleLocator, ScalarForma
 #from matplotlib.image import imsave
 import h5py
 from os.path import join
-from bisect import bisect
 from scipy.interpolate import interp1d
 #
 from gaussfitter import gaussfit,twodgaussian
-
+from findnearest import find_nearest
 #%% plot globals
 afs = 20
 tfs = 22
@@ -58,9 +57,9 @@ def goPlot(ParamFN,sim,arc,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Phi0,
 #%% get xind
     if not sim.realdata:
         if x1d is not None:
-            Jxi = bisect(xKM,x1d)
+            Jxi = find_nearest(xKM,x1d)[0]
         else:
-            Jxi = bisect(xKM,arc.x0)
+            Jxi = find_nearest(xKM,arc.x0)[0]
     else:
         Jxi = None
 #%% logrithmic axes
