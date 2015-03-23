@@ -108,12 +108,12 @@ class Sim:
         if sp.at['N22PG','Transcar'] == 1: self.reacreq += 'n22pg',
         if sp.at['N21PG','Transcar'] == 1: self.reacreq += 'n21pg',
 
-        self.realdata = sp.loc['useActualData','Sim'] == 1
-        self.realdatapath = sp.loc['ActualDataDir','Cams']
-        self.raymap = str(sp.loc['RayAngleMapping','Obs']).lower()
+        self.realdata = sp.at['useActualData','Sim'] == 1
+        self.realdatapath = sp.at['ActualDataDir','Cams']
+        self.raymap = str(sp.at['RayAngleMapping','Obs']).lower()
 
         if sp.loc['downsampleEnergy','Transcar'] >1:
-            self.downsampleEnergy = sp.loc['downsampleEnergy','Transcar']
+            self.downsampleEnergy = sp.at['downsampleEnergy','Transcar']
         else:
             self.downsampleEnergy = False
 
@@ -131,17 +131,17 @@ class Sim:
         else:
             exit('*** Unknown Ray Angle Mapping method: ' + str(self.raymap))
 
-        self.cal1dpath = sp.loc['cal1Ddir','Cams']
+        self.cal1dpath = sp.at['cal1Ddir','Cams']
 
-        self.startutc = sp.loc['reqStartUT','Obs']
-        self.stoputc = sp.loc['reqStopUT','Obs']
+        self.startutc = sp.at['reqStartUT','Obs']
+        self.stoputc = sp.at['reqStopUT','Obs']
         # make the simulation time step match that of the fastest camera
         self.kineticSec = 1. / (cp.ix['frameRateHz',self.useCamBool]).max()
 
         #%% recon
-        self.artinit = str(sp.loc['initVector','ART']).lower()
+        self.artinit = str(sp.at['initVector','ART']).lower()
         try:
-            self.artmaxiter = int(sp.loc['maxIter','ART'])
+            self.artmaxiter = int(sp.at['maxIter','ART'])
         except ValueError:
             self.artmaxiter = 0
         self.artlambda = sp.at['lambda','ART']
@@ -160,7 +160,7 @@ class Sim:
             zTranscar = getaltgrid(sp.at['altitudePreload','Transcar'])
             Fwd['z'] = zTranscar[(zTranscar <=self.fwd_zlim[1]) ] #TODO clips only top
         else:
-            self.fwd_dzKM = sp.loc['ZcellKM','Fwdf']
+            self.fwd_dzKM = sp.at['ZcellKM','Fwdf']
             (Fwd['x'], Fwd['z']) = makexzgrid(self.fwd_xlim, self.fwd_zlim, self.fwd_dxKM, self.fwd_dzKM)
         if Fwd['z'] is None:
             exit('*** sanitycheck: You must specify zmax zmin zcell when not using transcar altitudes in XLS')
@@ -192,15 +192,15 @@ class Sim:
 
         EllCritParams =  [cp.ix['Xkm',:].values, cp.ix['Zkm',:].values,
                           cp.ix['nCutPix',:].values, cp.ix['FOVmaxLengthKM',:].values,
-                          sp.loc['RayAngleMapping','Obs'].lower(),
-                          sp.loc['XcellKM','Fwdf'],
-                          sp.loc['XminKM','Fwdf'], sp.loc['XmaxKM','Fwdf'],
-                          sp.loc['EllIs','Sim'].lower(),
-                          sp.loc['UseTCz','Transcar'] ]
+                          sp.at['RayAngleMapping','Obs'].lower(),
+                          sp.at['XcellKM','Fwdf'],
+                          sp.at['XminKM','Fwdf'], sp.at['XmaxKM','Fwdf'],
+                          sp.at['EllIs','Sim'].lower(),
+                          sp.at['UseTCz','Transcar'] ]
 
         if not self.useztranscar:
-            EllCritParams.extend([sp.loc['ZcellKM','Fwdf'],
-                                  sp.loc['ZminKM','Fwdf'], sp.loc['ZmaxKM','Fwdf'] ])
+            EllCritParams.extend([sp.at['ZcellKM','Fwdf'],
+                                  sp.at['ZminKM','Fwdf'], sp.at['ZmaxKM','Fwdf'] ])
 
         if self.raymap == 'arbitrary':
             EllCritParams.extend([cp.ix['boresightElevDeg',:].values,

@@ -21,11 +21,11 @@ from numpy import absolute,zeros,asarray,in1d,arange
 from numpy.random import normal
 import h5py
 from sys import path
-path.extend(['../python-mapping','../astrometry'])
+path.extend(['../python-mapping','../astrometry','../hist-utils'])
 from sanityCheck import getParams
 
 def doSim(ParamFN,savedump,makeplot,datadump,timeInds,overrides,progms,x1d,vlim,animtime, dbglvl):
-    # local -- these were put here so that matlplotlib backend autoselect could happen first
+    # local -- these were put here so that matplotlib backend autoselect could happen first
     from AuroraFwdModel import getSimVER
     from transcararc import getMp,getPhi0 #calls matplotlib
     from observeVolume import getEll,getObs #calls matplotlib
@@ -50,7 +50,7 @@ def doSim(ParamFN,savedump,makeplot,datadump,timeInds,overrides,progms,x1d,vlim,
     Lfwd,Fwd,cam = getEll(sim,cam,Fwd,makeplot,dbglvl)
 #%% preallocation
     jfitAll = []; Phi0All=[];  drnAll = []; bfitAll=[];  jAll= []; PfitAll = []
-#%% load flux
+#%% load eigenprofiles from Transcar
     Peig = getMp(sim,Fwd['z'],makeplot,dbglvl)
 #start looping for each time slice in keogram (just once if simulated)
 

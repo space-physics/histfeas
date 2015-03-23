@@ -292,6 +292,7 @@ class Cam: #use this like an advanced version of Matlab struct
         self.findLSQ(nearRow, nearCol)
 
         if self.dbglvl>0:
+            from matplotlib.pyplot import figure
             clr = ['b','r','g','m']
             ax = figure().gca()
             ax.plot(nearCol,nearRow,color=clr[int(self.name)],label='cam'+self.name+'preLSQ',
