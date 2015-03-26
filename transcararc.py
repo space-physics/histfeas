@@ -72,8 +72,7 @@ def getPhi0(sim,ap,PhiFN,xKM,Ek,minev,makeplots,dbglvl):
                 Phi0 = asfortranarray(atleast_3d(f['/phiInit']))
             Phi0[Ek<minev,:,:] = 0 #this is the FORTRAN 3-D axis order
         else:
-            pz = fluxgen(Ek,ap['E0'],ap['Q0'],ap['Wbc'],ap['Bm'],ap['Bhf'],ap['bl'],
-                               ap['bm'],ap['bh'],'fluxgen' in makeplots,dbglvl)[0]
+            pz = fluxgen(Ek, ap, dbglvl)[0]
     #%% horizontal modulation
             px = getpx(xKM,ap['Wkm'],ap['X0km'],
                        ap['Xshape'],ap['Pnorm'])
