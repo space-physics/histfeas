@@ -1,6 +1,6 @@
 matplotlib>=1.4
-numpy>=1.7
-h5py>=2
+numpy>=1.9.1 
+h5py>=2.4
 scipy>=0.15
 pandas>=0.15
 -e git://github.com/scienceopen/gaussfitter.git#egg=gaussfitter

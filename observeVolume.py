@@ -1,7 +1,6 @@
-from numpy import empty,empty_like,s_,nan,isnan,sin,cos,radians,append,diff,array,arange
+from numpy import empty,empty_like,s_,isnan,sin,cos,radians,append,diff,array,arange
 from scipy.sparse import csc_matrix
 from EllLineLength import EllLineLength
-from os.path import isfile
 import h5py
 from warnings import warn
 from time import time
@@ -90,8 +89,9 @@ def makeCamFOVpixelEnds(Fwd,sim,cam,makePlots,dbglvl):
 #--------------
     if sim.useztranscar:
         Zpc = empty(Fwd['sz']+1, dtype=float)
-        dz  = empty(Fwd['sz'],   dtype=float)
 
+        #FIXME would gradient() be better here?
+        dz  = empty(Fwd['sz'],   dtype=float)
         dz[1:] = diff(Fwd['z'])
         dz[0] = dz[1] #FIXME assumes there was no grid jump (seems safe assumption)
 
