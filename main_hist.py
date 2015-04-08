@@ -49,21 +49,24 @@ def doSim(ParamFN,savedump,makeplot,datadump,timeInds,overrides,progms,x1d,vlim,
 #%% Step 1) get projection matrix
     Lfwd,Fwd,cam = getEll(sim,cam,Fwd,makeplot,dbglvl)
 #%% preallocation
-    jfitAll = []; Phi0All=[];  drnAll = []; bfitAll=[];  jAll= []; PfitAll = []
+    jfitAll = []; drnAll = []; bfitAll=[];  jAll= []; PfitAll = []
 #%% load eigenprofiles from Transcar
     Peig = getMp(sim,Fwd['z'],makeplot,dbglvl)
-#start looping for each time slice in keogram (just once if simulated)
-
+#%% synthetic diff. num flux
+    if not sim.realdata:
+        try:
+            Phi0all = getPhi0(sim,ap,Fwd['x'],Peig['Ek'], makeplot,dbglvl)
+        except TypeError as e:
+            print('*** trouble with forward model {}'.format(e))
+            Phi0all = None
+#%%start looping for each time slice in keogram (just once if simulated)
     for ti in timeInds:
-        if not sim.realdata:
-            if ap.ix['useArc',ti] != 1:
-                print('* skipping arc ' + str(ti))
-                continue
-            #%% Step 1a) Forward model
-            Phi0 = getPhi0(sim,ap.ix[:,ti],sim.Jfwdh5,Fwd['x'],
-                           Peig['Ek'], sim.minbeamev,makeplot,dbglvl)
-            Pfwd,arc = getSimVER(Phi0, Peig, Fwd, sim, ap.ix[:,ti], ti, dbglvl)
-        else: Phi0 = None; Pfwd = None; arc = None
+        if sim.realdata:
+            Phi0 = None; Pfwd = None; arc = None
+        else: #sim
+            Phi0 = Phi0all[...,ti]
+#%% Step 1) Forward model
+        Pfwd,arc = getSimVER(Phi0, Peig, Fwd, sim, ap.iloc[:,ti], ti, dbglvl)
 #%% Step 2) Observe Forward Model (create vector of observations)
         bn = getObs(sim,cam,Lfwd,ti,Pfwd,makeplot,dbglvl)
         drnAll.append(bn)
@@ -77,7 +80,7 @@ def doSim(ParamFN,savedump,makeplot,datadump,timeInds,overrides,progms,x1d,vlim,
             print('****************************************************************')
         elif overrides['fwdguess'][0] == 'randn':
             randfact = absolute(normal(1,overrides['fwdguess'][1], size=Phi0.size))
-            print('** WARNING: feeding minizer true answer times ' + str(randfact))
+            print('** WARNING: feeding minizer true answer times {}'.format(randfact))
             Phi0r = randfact * Phi0.ravel(order='F')
         else: #normal case, no a priori
             Phi0r = zeros(Fwd['sx']*Peig['Mp'].shape[1],dtype=float) #ones() is NOT appropriate -- should be tapered down for higher energy beams!! per JLS!
@@ -85,7 +88,6 @@ def doSim(ParamFN,savedump,makeplot,datadump,timeInds,overrides,progms,x1d,vlim,
         Pfit,jfit,Tm,bfit = FitVER(Lfwd, bn, Phi0r, Peig, sim, Fwd, makeplot,dbglvl)
 #%% collect results
         jfitAll.append(jfit); bfitAll.append(bfit)
-        Phi0All.append(Phi0)
 #%% plot results
         goPlot(ParamFN,sim,arc,Fwd,cam,Lfwd,Tm,bn,bfit,Pfwd,Pfit,Phi0,
                      jfit,rawdata,ti,makeplot,progms,x1d,vlim,dbglvl)
@@ -102,7 +104,7 @@ def doSim(ParamFN,savedump,makeplot,datadump,timeInds,overrides,progms,x1d,vlim,
 #%%
     print('done looping')
     analyseres(sim,Fwd['x'],Fwd['xPixCorn'],sim.useCamInd,cam,
-                   Phi0All,jfitAll,drnAll,bfitAll,vlim,makeplot,progms)
+                   Phi0all,jfitAll,drnAll,bfitAll,vlim,makeplot,progms)
 #%% debug: save variables to MAT file
     if 'mat' in savedump:
         from scipy.io import savemat
