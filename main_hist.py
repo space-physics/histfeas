@@ -57,8 +57,8 @@ def doSim(ParamFN,savedump,makeplot,datadump,timeInds,overrides,progms,x1d,vlim,
         try:
             Phi0all = getPhi0(sim,ap,Fwd['x'],Peig['Ek'], makeplot,dbglvl)
         except TypeError as e:
-            print('*** trouble with forward model {}'.format(e))
-            Phi0all = None
+            print('*** trouble with forward model. Exiting sim.   {}'.format(e))
+            return
 #%%start looping for each time slice in keogram (just once if simulated)
     for ti in timeInds:
         if sim.realdata:
@@ -138,7 +138,7 @@ if __name__ == '__main__':
 
     p = ArgumentParser(description='analyzes HST data and makes simulations')
     p.add_argument('infile',help='.xls filename with simulation parameters',type=str)
-    p.add_argument('outdir',help='directory for output',type=str,nargs='?',default='')
+    p.add_argument('outdir',help='directory for output',type=str,nargs='?',default='out')
     p.add_argument('-d','--debug',help='set debugging verbosity',default=0,type=float)
     p.add_argument('--mat',help='save matlab .mat file of results',action="store_true")
     p.add_argument('--h5',help='save HDF5 .h5 file of fit results',action="store_true")
@@ -196,8 +196,8 @@ if __name__ == '__main__':
 #%% output directory
     progms = ar.outdir
     try:
-        makedirs(progms, exist_ok=True)
-    except OSError as e:
+        makedirs(progms)#, exist_ok=True) #python 2.7 doesn't have exist_ok
+    except (OSError,TypeError) as e:
         pass #for python 2.7
 
 

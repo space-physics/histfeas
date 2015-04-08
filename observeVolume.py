@@ -147,7 +147,7 @@ def loadEll(Fwd,cam,useCamInd,EllFN,dbglvl):
             except KeyError:
                 warn('could not load FOV ends, maybe this is an old Ell file')
 
-    except FileNotFoundError as e:
+    except (IOError) as e: #python 2.7 doesn't have FileNotFoundError
       exit('*** loadEll: ' + EllFN +
             ' not found.\nuse --ell command line option to save new Ell file. {}'.format(e))
     except AttributeError as e:
