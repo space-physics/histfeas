@@ -65,11 +65,8 @@ cam1
  ./astrometry/fits2azel.py -i ~/HST/calibration/hst1cal.fits --h5 -c 65.12657 -147.496908333 -t 2013-04-14T08:54:00Z --png
 ```
 
-Prereqs:
---------
-Python 2.7 or 3.4
-Matplotlib >= 1.4
-Numpy >= 1.7
-h5py >= 2
-SciPy >= 0.15
-Pandas >= 0.15
+Prerequisites:
+--------------
+```
+pip install -r requirements.txt
+```

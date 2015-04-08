@@ -1,21 +1,21 @@
-from numpy import (asfortranarray,atleast_3d, exp,sinc,pi,zeros_like, outer,
-                   isnan,log,logspace)
-from bisect import bisect
+from numpy import (asfortranarray,atleast_3d, exp,sinc,pi,zeros, outer,
+                   isnan,log,logspace,where,empty,allclose)
 from sys import path
 import h5py
 from scipy.interpolate import interp1d
+#
 path.append('../transcar-utils')
 from readTranscar import getTranscar
 from eFluxGen import fluxgen
+from findnearest import find_nearest
 
 
-def getTranscarMp(sim,zKM,makeplot,dbglvl):
+def getTranscarMp(sim,makeplot,dbglvl):
  #%% get VER/flux
-    Mp,zTranscar,Ek,EKpcolor = getTranscar(sim, makeplot, dbglvl)
-#   zKM.size #same number of altitudes zKM doesn't have to match when interpolation zTransncar
-    assert zTranscar.shape[0] == Mp.shape[0]
+    Peigen, EKpcolor = getTranscar(sim, dbglvl)[:2]
 
-    return Mp,zTranscar,Ek,EKpcolor
+    #return Mp,zTranscar,Ek,EKpcolor
+    return asfortranarray(Peigen.values), Peigen.index.values, Peigen.columns.values, EKpcolor
 
 def getColumnVER(zgrid,zTranscar,Peig,Phi0,zKM):
     assert Phi0.shape[0] == Peig.shape[1]
@@ -31,10 +31,25 @@ def getColumnVER(zgrid,zTranscar,Peig,Phi0,zKM):
     return Tm.dot(Phi0)
 
 def getMp(sim,zKM,makeplot,dbglvl):
-    Mp,zTranscar,Ek,EKpcolor = getTranscarMp(sim,zKM,makeplot,dbglvl)
+#%% read from transcar sim
+    Peigen,EKpcolor = getTranscar(sim, dbglvl)[:2]
+    try:
+        Ek = Peigen.columns.values
+        zTranscar = Peigen.index.values
+    except AttributeError as e:
+        print('*** getMp: it appears there was trouble earlier on with getTranscar, aborting. {}'.format(e))
+        return None
+#%% clip to Hist requested altitudes
+    if not allclose(zKM,zTranscar):
+        print('** getMp: warning, attempting to trim altitude grid, this may not be successful due to floating point error')
+        goodAltInd = (zKM[0] < zTranscar) &  (zTranscar < zKM[-1])
+        Peig = asfortranarray(Peigen.values[goodAltInd,:])
+    else:
+        Peig = asfortranarray(Peigen.values)
+#%% repack, with optional downsample
     if sim.downsampleEnergy:
-        Ek,EKpcolor,Mp = downsampleEnergy(Ek,EKpcolor,Mp, sim.downsampleEnergy)
-    return {'Mp':Mp,'ztc':zTranscar,'Ek':Ek,'EKpcolor':EKpcolor}
+        Ek,EKpcolor,Peigen = downsampleEnergy(Ek,EKpcolor,Peig, sim.downsampleEnergy)
+    return {'Mp':Peig,'ztc':zTranscar,'Ek':Ek,'EKpcolor':EKpcolor}
 
 def downsampleEnergy(Ek,EKpcolor,Mp,downsamp):
     """ we know original points are logspaced.
@@ -54,48 +69,45 @@ def downsampleEnergy(Ek,EKpcolor,Mp,downsamp):
         print('** downsampleEnergy: should these NaNs be set to zero?')
     return Ek2,EKpcolor2,Mp2
 
-def getPhi0(sim,ap,PhiFN,xKM,Ek,minev,makeplots,dbglvl):
+def getPhi0(sim,ap,xKM,Ek,makeplots,dbglvl):
     #%% get flux
     if not sim.realdata:
-        if PhiFN is not None:
-            if dbglvl>0:
-                print('Loading sim. input diff. number flux from', PhiFN)
-            with h5py.File(PhiFN,'r',libver='latest') as phifid:
-                Phi0 = asfortranarray(atleast_3d(phifid['/phiInit']))
-            Phi0[Ek<minev,:,:] = 0 #this is the FORTRAN 3-D axis order
+        if sim.Jfwdh5 is not None:
+            print('Loading sim. input diff. number flux from', sim.Jfwdh5)
+            with h5py.File(sim.Jfwdh5,'r',libver='latest') as f:
+                Phi0 = asfortranarray(atleast_3d(f['/phiInit']))
         else:
-            pz = fluxgen(Ek,ap['E0'],ap['Q0'],ap['Wbc'],ap['Bm'],ap['Bhf'],ap['bl'],
-                               ap['bm'],ap['bh'],'fluxgen' in makeplots,dbglvl)[0]
+            Phi0 = empty((Ek.size,xKM.size,sim.nArc),order='F')
+            pz = fluxgen(Ek, ap, dbglvl)[0]
     #%% horizontal modulation
-            px = getpx(xKM,ap['Wkm'],ap['X0km'],
-                       sim.fwd_xlim,
-                       ap['Xshape'],ap['Pnorm'])
-            Phi0  = outer(pz, px)
-            Phi0[Ek<minev,:] = 0
+            px = getpx(xKM,ap.loc['Wkm'].values.astype(float),
+                           ap.loc['X0km'].values.astype(float),
+                           ap.loc['Xshape'].values)
+            for i in range(sim.nArc):
+                Phi0[...,i]  = outer(pz[:,i], px[i,:])
     #%% manual zeroing of low fluxes
+        Phi0[Ek<sim.minbeamev,...] = 0
         assert xKM.size == Phi0.shape[1]
     else:
         Phi0 = None
     return Phi0
 
-def getpx(xKM,Wkm,X0,xLim,BperpShape='gaussian',P0=1):
-    if isnan(X0) or isnan(Wkm) or isnan(P0):
-        exit('*** getpx: you must define X0, W0 and P0')
-
-    if BperpShape == 'gaussian':
-        px = exp(-((xKM-X0)/Wkm)**2) #(original idea JLS)
-    elif BperpShape == 'rect':
-        px = zeros_like(xKM);
+def getpx(xKM,Wkm,X0,xs='gaussian'):
+    px = zeros((X0.size,xKM.size),order='F') #since numpy 2-D array naturally iterates over rows
+#%%
+    px[xs=='gaussian',:] = exp(-((xKM-X0[xs=='gaussian',None])/Wkm[xs=='gaussian',None])**2) #(original idea JLS)
+#%%
+    ir = where(xs=='rect')[0]
+    for i in ir:
         #find leftmost and rightmost indices of rect. phantom
-        PGind = (bisect( xKM, X0-Wkm/2 ), bisect( xKM, X0+Wkm/2 ) )
-
-        px[PGind[0]:PGind[1]+1] = P0
-    elif BperpShape == 'sinc2':
-        px = sinc( pi*(xKM - X0)/Wkm )**2
-    elif BperpShape == 'none': #no smear
-        px = zeros_like(xKM)
-        px[bisect(xKM,X0)] = 1
-    else:
-        exit('*** Unknown B_perp shape ' + str(BperpShape))
+        PGind = (find_nearest(xKM, X0[i]-Wkm[i]/2)[0], find_nearest(xKM, X0[i]+Wkm[i]/2)[0] )
+        px[i, PGind[0]:PGind[1]+1] = 1.
+#%%
+    px[xs=='sinc2',:] = sinc( pi*(xKM - X0[xs=='sinc2',None])/Wkm[xs=='sinc2',None] )**2
+#%%
+    px[xs=='none',find_nearest(xKM,X0[xs=='none'])] = 1.
+#    jn = where(xs=='none')
+#    for j in jn:
+#        px[j,find_nearest(xKM,X0[j])[0]] = 1.
 
     return px

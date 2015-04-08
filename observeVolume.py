@@ -1,7 +1,7 @@
-from numpy import empty,empty_like,s_,nan,isnan,sin,cos,radians,append,diff,array,arange
+from numpy import empty,empty_like,s_,isnan,sin,cos,radians,append,diff,ones,outer
+import numpy as np
 from scipy.sparse import csc_matrix
 from EllLineLength import EllLineLength
-from os.path import isfile
 import h5py
 from warnings import warn
 from time import time
@@ -14,7 +14,8 @@ def getObs(sim,cam,L,tDataInd,ver,makePlots,dbglvl):
 
     if sim.realdata:
         bn = empty(nCutPix * sim.nCam,dtype=float,order='F') #FIXME assumes all cuts same length AND that cam 0 is used
-        for c in cam.keys():
+        for c in sim.useCamInd.astype(str):
+            cInd = range(int(c)*nCutPix,(int(c)+1)*nCutPix)
             """
              remember that we put "d" in lexigraphical form,
              "d" is a column-major vector, such that if our 1D cut is N pixels,
@@ -25,7 +26,7 @@ def getObs(sim,cam,L,tDataInd,ver,makePlots,dbglvl):
             thisCamPix = mogrifyData(thisCamPix, cam[c]) #for clarity
 
             ''' here's where we assemble vector of observations'''
-            bn[cam[c].ind] = thisCamPix
+            bn[cInd] = thisCamPix
 
 
     elif ver is not None: #or not np.any(np.isnan(v)): # no NaN in v # using synthetic data
@@ -33,9 +34,9 @@ def getObs(sim,cam,L,tDataInd,ver,makePlots,dbglvl):
         assert bp.size == nCutPix * sim.nCam
 
         bn = nans(bp.shape)
-        for ci in sim.useCamInd.astype(str):
-            cs = s_[cam[ci].ind]
-            bn[cs] = mogrifyData(bp[cs],cam[ci])
+        for c in sim.useCamInd.astype(str):
+            cInd = range(int(c)*nCutPix,(int(c)+1)*nCutPix)
+            bn[cInd] = mogrifyData(bp[cInd],cam[c])
 
     else: #skip VER processing
       print('skipping VER generation and pixel projection due to None in VER')
@@ -44,8 +45,8 @@ def getObs(sim,cam,L,tDataInd,ver,makePlots,dbglvl):
 #%% double check
    #assert np.any(np.isnan(drn)) == False # must be AFTER all drn are assigned, or you can get false positive errors!
     if bn is not None and isnan(bn).any():
-        dumpFN = 'obsdump_t' + str(tDataInd) + '.h5'
-        warn('NaN detected at tInd=' + str(tDataInd))
+        dumpFN = 'obsdump_t {}.h5'.format(tDataInd)
+        warn('NaN detected at tInd = {}'.format(tDataInd))
         print('** dumping variables to ' + dumpFN)
         with h5py.File(dumpFN,'w',libver='latest') as fid:
             fid.create_dataset("/bn",data=bn)
@@ -63,7 +64,7 @@ def makeCamFOVpixelEnds(Fwd,sim,cam,makePlots,dbglvl):
     xFOVpixelEnds = empty((nCutPix, sim.nCam),dtype=float)
     zFOVpixelEnds = empty_like(xFOVpixelEnds)
 #%% (1) define the three x,y points defining each 2D pixel cone
-    for c in cam.keys():
+    for c in cam:#.keys():
         '''LINE LENGTH
          here we have 2 vertices per angle instead of 3 (line instead of polygon)
          the minus sign on x makes the angle origin at local east
@@ -90,8 +91,9 @@ def makeCamFOVpixelEnds(Fwd,sim,cam,makePlots,dbglvl):
 #--------------
     if sim.useztranscar:
         Zpc = empty(Fwd['sz']+1, dtype=float)
-        dz  = empty(Fwd['sz'],   dtype=float)
 
+        #FIXME would gradient() be better here?
+        dz  = empty(Fwd['sz'],   dtype=float)
         dz[1:] = diff(Fwd['z'])
         dz[0] = dz[1] #FIXME assumes there was no grid jump (seems safe assumption)
 
@@ -119,19 +121,15 @@ def makeCamFOVpixelEnds(Fwd,sim,cam,makePlots,dbglvl):
     return L,Fwd,cam
 #%%
 def loadEll(Fwd,cam,useCamInd,EllFN,dbglvl):
-
-    if not isfile(EllFN):
-        exit('*** loadEll: ' + EllFN +
-            ' not found.\nuse --ell command line option to save new Ell file.')
-
-    with h5py.File(EllFN,'r',libver='latest') as fid:
-        L = csc_matrix(fid['/L'].value)
+    try:
+      with h5py.File(EllFN,'r',libver='latest') as fid:
+        L = csc_matrix(fid['/L'])
 
         if Fwd is not None: #we're in main program
-            if (Fwd['x'] != fid['/Fwd/x'].value).any():
-                exit('*** need to recompute L, as x-locations arent matched loaded/commanded')
-            if (Fwd['z'] != fid['/Fwd/z'].value).any():
-                exit('*** need to recompute L, as z-locations arent matched loaded/commanded')
+            if np.any(Fwd['x'] != fid['/Fwd/x']):#don't use .any() in case size is different
+                exit('*** need to recompute L, as x-locations arent matched: loaded vs. commanded')
+            if np.any(Fwd['z'] != fid['/Fwd/z']):  #don't use .any() in case size is different
+                exit('*** need to recompute L, as z-locations arent matched: loaded vs. commanded')
         elif Fwd is None: #we're in another program
             Fwd = {'x':fid['/Fwd/x'].value,'z':fid['/Fwd/z'].value}
         else:
@@ -148,6 +146,12 @@ def loadEll(Fwd,cam,useCamInd,EllFN,dbglvl):
                     cam[ci].zFOVpixelEnds = fid['/Obs/zFOVpixelEnds'][:,i]
             except KeyError:
                 warn('could not load FOV ends, maybe this is an old Ell file')
+
+    except FileNotFoundError as e:
+      exit('*** loadEll: ' + EllFN +
+            ' not found.\nuse --ell command line option to save new Ell file. {}'.format(e))
+    except AttributeError as e:
+        exit('grid mismatch detected. use --ell command line option to save new Ell file. {}'.format(e))
 
     print('loadEll: Loaded "L,Fwd,Obs" data from:', EllFN)
 
@@ -179,24 +183,15 @@ def getEll(sim,cam,Fwd,makePlots,dbglvl):
     else:
         L,Fwd,cam = loadEll(Fwd,cam,sim.useCamInd,sim.FwdLfn,dbglvl)
 
-    L,cam = removeUnusedCamera(L,sim.allCamInd,sim.nCutPix,cam,dbglvl)
+    L = removeUnusedCamera(L,sim.allCamInd,sim.nCutPix)
 
     return L,Fwd,cam
 
-def removeUnusedCamera(L,allcamlist,nCutPix,cam,dbglvl):
-
+def removeUnusedCamera(L,allcamlist,nCutPix):
     ''' remove unused cameras (rows of L) '''
-    jCam = 0 #jcam is for the "final" good L matrix, don't use i!
-    Lgoodrow = array([],dtype=int)
+    arow = ones(nCutPix).astype(bool)
+    grow = outer(arow,allcamlist).ravel(order='F')
+    L = L[grow,:]
 
-    for i,usecam in enumerate(allcamlist): #NOT ha[useCamInd] since we're eliminating unused
-        if usecam:
-            #i is used for the original L, jCam for the final good L
-            goodrows = arange(i * nCutPix,         (i+1) * nCutPix) #can't use np.s_
-            #jcam is for the "final" good L matrix, don't use i!
-            cam[str(i)].ind = s_[ jCam * nCutPix : (jCam+1) * nCutPix ]
-            Lgoodrow = append(Lgoodrow,goodrows) #can we use np.s_?
-            jCam +=1
-    L = L[Lgoodrow,:]
 
-    return L,cam
+    return L
