@@ -229,7 +229,7 @@ class Cam: #use this like an advanced version of Matlab struct
         rapix =  self.ra[cutrow, cutcol]
         decpix = self.dec[cutrow, cutcol]
         raMagzen,decMagzen = azel2radec(self.Baz,self.Bel,self.lat,self.lon,self.Bepoch)
-        if self.dbglvl>0: print('mag. zen. ra/dec ' + str((raMagzen,decMagzen)))
+        if self.dbglvl>0: print('mag. zen. ra/dec {} {}'.format(raMagzen,decMagzen))
 
         angledist_deg = angledist(raMagzen,decMagzen,rapix,decpix)
         # put distances into a 90-degree fan beam

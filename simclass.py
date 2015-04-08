@@ -81,9 +81,7 @@ class Sim:
             self.loadfwdL = sp.at['loadEll','Sim']
         #%%how many synthetic arcs are we using
         if ap is not None:
-            self.useArcBool = ap.loc['useArc'].values.astype(bool)
-            self.useArcInd = where(self.useArcBool)[0] # we want first item in tuple
-            self.nArc = int(self.useArcBool.sum())
+            self.nArc = ap.shape[1]
         else:
             self.nArc = 0
 #%% transcar
@@ -158,7 +156,7 @@ class Sim:
         if self.useztranscar:
             Fwd['x'] = makexzgrid(self.fwd_xlim, None, self.fwd_dxKM, None)[0]
             zTranscar = getaltgrid(sp.at['altitudePreload','Transcar'])
-            Fwd['z'] = zTranscar[(zTranscar <=self.fwd_zlim[1]) ] #TODO clips only top
+            Fwd['z'] = zTranscar[ (self.fwd_zlim[0] < zTranscar) & (zTranscar < self.fwd_zlim[1]) ]
         else:
             self.fwd_dzKM = sp.at['ZcellKM','Fwdf']
             (Fwd['x'], Fwd['z']) = makexzgrid(self.fwd_xlim, self.fwd_zlim, self.fwd_dxKM, self.fwd_dzKM)

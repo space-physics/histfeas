@@ -10,28 +10,27 @@ from transcararc import getColumnVER,getpx
 
 class Arc:
     def __init__(self,sim,ap):
-        if ap['useArc']:
-            self.xshape = ap['Xshape'].lower()
-            self.zshape = ap['Zshape'].lower()
-            self.h = ap['Hkm']
+        self.xshape = ap['Xshape'].lower()
+        self.zshape = ap['Zshape'].lower()
+        self.h = ap['Hkm']
 
-            if isnan(ap['Wkm']):
-                exit('*** you must specify W0 for all used arcs')
+        if isnan(ap['Wkm']):
+            exit('*** you must specify W0 for all used arcs')
 
-            if isnan(ap['X0km']):
-                exit('*** you must specify X0 for all used arcs')
+        if isnan(ap['X0km']):
+            exit('*** you must specify X0 for all used arcs')
 
-            if isnan(ap['Pnorm']):
-                exit('*** you must specify P0 for all used arcs')
+        if isnan(ap['Pnorm']):
+            exit('*** you must specify P0 for all used arcs')
 
 
-            self.w = ap['Wkm']
-            self.x0 = ap['X0km']
-            self.pmax = ap['Pnorm']
-            self.z0 = ap['Z0km']
-            self.xLim = sim.fwd_xlim
+        self.w = ap['Wkm']
+        self.x0 = ap['X0km']
+        self.pmax = ap['Pnorm']
+        self.z0 = ap['Z0km']
+        self.xLim = sim.fwd_xlim
 
-            self.zgrid = sim.useztranscar
+        self.zgrid = sim.useztranscar
 
 
     def getver(self, x, z, Mp, Phi0):
@@ -61,7 +60,7 @@ def ChapmanArc(Wkm,H,X0,Z0,xKM,zKM,xshape, PC0=1):
     # chapman vert
         pz = PC0 * exp(.5*(1-(zKM-Z0)/H - exp((Z0-zKM)/H)))
     # horizontal model
-        px = getpx(xKM,Wkm,X0,xshape,PC0)
+        px = getpx(xKM,Wkm,X0,xshape)
     # 2D model output
         ''' Make 2D Auroral Blob (original idea JLS)'''
         pzx  = outer(pz, px)
@@ -75,7 +74,7 @@ def RectArc(Wkm,Hkm,X0,Z0,xKM,zKM,xshape, PC0=1):
     pz = zeros_like(zKM)
     pz[PCind[0]:PCind[1]+1] = PC0
     #horiz model
-    px = getpx(xKM,Wkm,X0, xshape,PC0)
+    px = getpx(xKM,Wkm,X0, xshape)
 
     pzx  = outer(pz, px)
     return pzx,pz,px
