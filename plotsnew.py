@@ -43,7 +43,7 @@ def placetxt(x,y,txt,ax):
 def goPlot(ParamFN,sim,arc,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Phi0,
             fitp,rawdata,tInd,makeplot,progms,x1d,vlim,dbglvl):
 
-    spfid = ''.join((progms,'dump_t',str(tInd),'.h5'))
+    spfid = ''.join((progms,'dump_t{}.h5'.format(tInd)))
     cord = ['b','g','k','r','m','y']
 
     xKM = Fwd['x']
@@ -127,15 +127,13 @@ def goPlot(ParamFN,sim,arc,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Phi0,
                      nCutPix,'ART',cord,vlim['b'],tInd,1995,progms)
 #%% error plots
     if 'berror' in makeplot:
-        plotB(drn - dhat['art'],sim.useCamInd,sim.realdata,cam,vlim['b'],
+        plotB(drn - dhat['art'],sim.useCamInd,sim.realdata,cam,nCutPix,vlim['b'],
                             tInd,makeplot,'$\Delta{b}$',cord,sfmt,2990,progms)
 #%% characteristic energy determination for title labels
     #set_trace()
     gx0,gE0,x0,E0 = getx0E0(Phi0,fitp['EK'],xKM,tInd,progms,makeplot)
     if longtitle:
-        fwdloctxt = ('\n$x_{{cam}}=$'+ str(sim.allCamXkm) +'  $(x_0,E_0)=(' + #.to_string()
-                 '{:0.2f}'.format(x0) + ',' +
-                 '{:0.0f}'.format(E0) + ')$ [km,eV]')
+        fwdloctxt = ('\n$x_{{cam}}=${} $(x_0,E_0)=({:0.2f},{:0.0f})$ [km,eV]'.format(sim.allCamXkm,x0,E0))
     else:
         fwdloctxt=''
 
@@ -149,7 +147,7 @@ def goPlot(ParamFN,sim,arc,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Phi0,
               992,spfid,sfmt,cnorm,progms)
 #%% Forward model plots
     if 'fwd' in makeplot:
-        plotB(drn,sim.useCamInd,sim.realdata,cam,vlim['b'],
+        plotB(drn,sim.useCamInd,sim.realdata,cam,nCutPix,vlim['b'],
                              tInd,makeplot,'$br',cord,sfmt,1990,progms)
 
         plotnoise(cam,tInd,makeplot,'bnoise',progms)
@@ -514,9 +512,9 @@ def plotJ1D(sim,Jflux,Ek,vlim,tInd,makeplot,prefix,titletxt,figh,spfid,progms):
                      verticalalignment='top',
                      arrowprops={'facecolor':'red', 'shrink':0.2, 'headwidth':8, 'width':2},
                     )
-    except ValueError:
+    except ValueError as e:
         print('** could not plot Jfwd1D due to non-positive value(s) in Jflux, t= '+str(tInd) + ' ' + titletxt)
-        print('* did you pick the correct --x1d ?')
+        print('* did you pick the correct --x1d ?   {}'.format(e))
 
     ax.grid(True)
     ax.autoscale(True,tight=False)
@@ -629,7 +627,7 @@ def plotVER1D(sim,ver,zKM,vlim,tInd,makeplot,prefix,titletxt,figh,spfid,progms):
     else:
         titletxt += '\nReactions: ' + str(sim.reacreq)
 
-    ax.set_title(titletxt, fontsize=tfs, y=1.02) #+ '  $t_i=' + str(tInd) + '$'
+    ax.set_title(titletxt, fontsize=tfs, y=1.02)
 
     ax.yaxis.set_major_locator(MultipleLocator(100))
     ax.yaxis.set_minor_locator(MultipleLocator(20))
@@ -709,7 +707,7 @@ def plotBcompare(braw,bfit,cam,useCamInd,nCam,nCutPix,prefix,fittxt,cord,
 
     icm = 0
     for ci in useCamInd.astype(str):
-        cInd = cam[ci].ind
+        cInd = range(int(ci)*nCutPix,(int(ci)+1)*nCutPix)
         ax1.plot(cam[ci].angle_deg,braw[cInd],
                  label=('$\mathbf{B}_{fwd,cam' + ci + '}$'),
                  color=cord[icm])#, marker='.')
@@ -729,7 +727,7 @@ def plotBcompare(braw,bfit,cam,useCamInd,nCam,nCutPix,prefix,fittxt,cord,
         ax2.set_ylabel( fittxt + ' [photons sr$^{-1}$ s$^{-1}$]',labelpad=0,fontsize=afs)
 #%% now plot each camera
     for ci in useCamInd.astype(str):
-        cInd = cam[ci].ind
+        cInd = range(int(ci)*nCutPix,(int(ci)+1)*nCutPix)
         ax2.plot(cam[ci].angle_deg,bfit[cInd],
                  label=(fittxt + 'cam' + ci + '}$'),
                  color=cord[icm])#, marker='.')
@@ -756,12 +754,12 @@ def plotBcompare(braw,bfit,cam,useCamInd,nCam,nCutPix,prefix,fittxt,cord,
     if dosubtract:
         bias=[]
         ax3 =figure(figh+10000).gca()
-        for c in cam.keys():
-            cInd = cam[c].ind
+        for ci in useCamInd.astype(str):
+            cInd = range(int(ci)*nCutPix,(int(ci)+1)*nCutPix)
             bias.append(bfit[cInd].max() - braw[cInd].max())
-            ax3.plot(cam[c].angle_deg,braw[cInd] - (bfit[cInd]))#-bias[iCam]))
+            ax3.plot(cam[ci].angle_deg,braw[cInd] - (bfit[cInd]))#-bias[iCam]))
 
-        ax3.set_title('error $\mathbf{B}_{fwdf} - ' + fittxt + ', bias=' + str(bias),fontsize=12)
+        ax3.set_title('error $\mathbf{B}_{fwdf} - ' + fittxt + ', bias={}'.format(bias),fontsize=12)
         #  $t_i=' + str(tInd) + '$'
         ax3.set_xlabel('local view angle [deg.]')
         ax3.xaxis.set_major_locator(MultipleLocator(1))
@@ -772,7 +770,7 @@ def plotBcompare(braw,bfit,cam,useCamInd,nCam,nCutPix,prefix,fittxt,cord,
     writeplots(fg,'b'+fittxt[4:-1],tInd,makeplot,progms,'eps')
 
 #%%
-def plotB(bpix,useCamInd,isrealdata,cam,vlim,tInd,makeplot,labeltxt,cord,sfmt,figh,progms):
+def plotB(bpix,useCamInd,isrealdata,cam,nCutPix,vlim,tInd,makeplot,labeltxt,cord,sfmt,figh,progms):
 
     figure(figh).clf()
     fg = figure(figh)
@@ -795,14 +793,14 @@ def plotB(bpix,useCamInd,isrealdata,cam,vlim,tInd,makeplot,labeltxt,cord,sfmt,fi
 #        ax1.set_ylabel('$b_{raw}$ data numbers',labelpad=0,fontsize=afs)
 #        ax2.set_ylabel( fittxt + ' Data Numbers',labelpad=0,fontsize=afs)
 #%% make plot
-    for c in cam.keys():
-        std.append('{:0.1e}'.format(cam[c].noiseStd))
-
-        ax1.plot(cam[c].angle_deg,
-                bpix[cam[c].ind],
-                 label=(labeltxt + ',cam' + c +'}$'),
+    for ci in useCamInd.astype(str):
+        std.append('{:0.1e}'.format(cam[ci].noiseStd))
+        cInd = range(int(ci)*nCutPix,(int(ci)+1)*nCutPix)
+        ax1.plot(cam[ci].angle_deg,
+                bpix[cInd],
+                 label=(labeltxt + ',cam' + ci +'}$'),
                  #marker='.',
-                 color=cord[int(c)])
+                 color=cord[int(ci)])
     doBlbl(ax1,isrealdata,sfmt[0],vlim,labeltxt,std) #b is never log
     writeplots(fg,'b'+labeltxt[4:-2],tInd,makeplot,progms,'eps')
 

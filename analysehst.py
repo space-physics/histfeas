@@ -3,7 +3,7 @@ import csv
 from plotsnew import getx0E0, plotB
 from matplotlib.pyplot import figure,show
 from matplotlib.ticker import MaxNLocator,ScalarFormatter# ,LogFormatterMathtext, #for 1e4 -> 1 x 10^4, applied DIRECTLY in format=
-from numpy import diff, empty, asanyarray
+from numpy import diff, empty
 import h5py
 from plotsnew import writeplots
 
@@ -13,8 +13,6 @@ from nans import nans
 def analyseres(sim,x,xp,usecam,cam,jfwd,jfit,drn,dhat,vlim,makeplot,progms):
     if all([j is None for j in jfwd]):
         return
-
-    jfwd = asanyarray(jfwd).transpose([1,2,0]) # row,col,page to be like HDF5
     '''
     we need to fill zeros in jfwd with machine epsilon, since to get avg we need
     to divide by jfwd and we'll get NaN if we divide by zero
@@ -75,9 +73,7 @@ def analyseres(sim,x,xp,usecam,cam,jfwd,jfit,drn,dhat,vlim,makeplot,progms):
         gx0fwd,gE0fwd, x0fwd[ji],E0fwd[ji] = getx0E0(jfwd[...,ji],jf['EK'],x,9999,progms,makeplot)
         gx0hat,gE0hat, x0hat[ji],E0hat[ji] = getx0E0(jf['x'],     jf['EK'],x,9999,progms,makeplot)
 
-        print('t=' +str(ji)+ 'gaussian 2-D fits for (x,E). Fwd: {:0.2f}'.format(gx0fwd) +
-              ', {:0.1f}'.format(gE0fwd) + ' Optim:{:0.2f}'.format(gx0hat) +
-              ', {:0.1f}'.format(gE0hat))
+        print('t={} gaussian 2-D fits for (x,E). Fwd: {:0.2f} {:0.1f} Optim: {:0.2f} {:0.1f}'.format(ji, gx0fwd,gE0fwd,gx0hat,gE0hat))
 
         trythis(jfwd[...,ji], jf['x'], jf['EK'],x,dE,makeplot,progms)
 #%% average energy per x-location
