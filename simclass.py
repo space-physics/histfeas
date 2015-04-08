@@ -2,6 +2,10 @@ from __future__ import print_function, division
 from numpy import asarray,where,arange,isfinite,ceil,hypot
 import h5py
 from os.path import join
+#
+import sys
+sys.path.append('../transcar-utils')
+from readionoinit import getaltgrid
 
 class Sim:
 
@@ -43,16 +47,16 @@ class Sim:
         if overrides['filter'] is not None:
             print('* overriding filter choice with:',overrides['filter'])
             #sp.loc['OpticalFilter','Transcar'] = overrides['filter']
-            self.opticalfilter = overrides['filter']
+            self.opticalfilter = overrides['filter'].lower()
         else:
-            self.opticalfilter = sp.loc['OpticalFilter','Transcar']
+            self.opticalfilter = sp.at['OpticalFilter','Transcar'].lower()
         #%% manual override minimum beam energy
         if overrides['minev'] is not None:
             print('* minimum beam energy set to:',overrides['minev'])
             #sp.loc['minBeameV','Transcar']  = overrides['minev']
             self.minbeamev = overrides['minev']
         else:
-            mbe = sp.loc['minBeameV','Transcar']
+            mbe = sp.at['minBeameV','Transcar']
             if isfinite(mbe):
                 self.minbeamev = mbe
             else:
@@ -63,9 +67,9 @@ class Sim:
             #sp.loc['OptimFluxMethod','Recon'] = overrides['fitm']
             self.optimfitmeth = overrides['fitm']
         else:
-            self.optimfitmeth = sp.loc['OptimFluxMethod','Recon']
+            self.optimfitmeth = sp.at['OptimFluxMethod','Recon']
 
-        self.optimmaxiter = sp.loc['OptimMaxiter','Recon']
+        self.optimmaxiter = sp.at['OptimMaxiter','Recon']
         #%% force compute ell
         if overrides['ell']:
             #sp.loc['saveEll','Sim'] = 1 #we'll save to out/date directory!
@@ -73,43 +77,41 @@ class Sim:
             self.savefwdL = True
             self.loadfwdL = False
         else:
-            self.savefwdL = sp.loc['saveEll','Sim']
-            self.loadfwdL = sp.loc['loadEll','Sim']
+            self.savefwdL = sp.at['saveEll','Sim']
+            self.loadfwdL = sp.at['loadEll','Sim']
         #%%how many synthetic arcs are we using
         if ap is not None:
-            self.useArcBool = ap.loc['useArc'].values.astype(bool)
-            self.useArcInd = where(self.useArcBool)[0] # we want first item in tuple
-            self.nArc = int(self.useArcBool.sum())
+            self.nArc = ap.shape[1]
         else:
             self.nArc = 0
 #%% transcar
-        self.useztranscar = sp.loc['UseTCz','Transcar'] == 1
-        self.loadver = sp.loc['loadVER','Transcar'] == 1
-        self.loadverfn = sp.loc['verfn','Transcar']
-        self.bg3fn = sp.loc['BG3transFN','Sim']
-        self.windowfn = sp.loc['windowFN','Sim']
-        self.qefn =sp.loc['emccdQEfn','Sim']
-        self.transcarev = sp.loc['BeamEnergyFN','Transcar']
-        self.transcarutc =sp.loc['tReq','Transcar']
-        self.excratesfn = sp.loc['ExcitationDATfn','Transcar']
-        self.transcarpath = sp.loc['TranscarDataDir','Sim']
-        self.reactionfn = sp.loc['reactionParam','Transcar']
-        self.transcarconfig = sp.loc['simconfig','Transcar']
+        self.useztranscar = sp.at['UseTCz','Transcar'] == 1
+        self.loadver = sp.at['loadVER','Transcar'] == 1
+        self.loadverfn = sp.at['verfn','Transcar']
+        self.bg3fn = sp.at['BG3transFN','Sim']
+        self.windowfn = sp.at['windowFN','Sim']
+        self.qefn =sp.at['emccdQEfn','Sim']
+        self.transcarev = sp.at['BeamEnergyFN','Transcar']
+        self.transcarutc = sp.at['tReq','Transcar']
+        self.excratesfn = sp.at['ExcitationDATfn','Transcar']
+        self.transcarpath = sp.at['TranscarDataDir','Sim']
+        self.reactionfn = sp.at['reactionParam','Transcar']
+        self.transcarconfig = sp.at['simconfig','Transcar']
 
         self.reacreq = ()
-        if sp.loc['metastable','Transcar'] == 1: self.reacreq += 'metastable',
-        if sp.loc['atomic','Transcar'] == 1: self.reacreq += 'atomic',
-        if sp.loc['N21NG','Transcar'] == 1: self.reacreq += 'n21ng',
-        if sp.loc['N2Meinel','Transcar'] == 1: self.reacreq += 'n2meinel',
-        if sp.loc['N22PG','Transcar'] == 1: self.reacreq += 'n22pg',
-        if sp.loc['N21PG','Transcar'] == 1: self.reacreq += 'n21pg',
+        if sp.at['metastable','Transcar'] == 1: self.reacreq += 'metastable',
+        if sp.at['atomic','Transcar'] == 1: self.reacreq += 'atomic',
+        if sp.at['N21NG','Transcar'] == 1: self.reacreq += 'n21ng',
+        if sp.at['N2Meinel','Transcar'] == 1: self.reacreq += 'n2meinel',
+        if sp.at['N22PG','Transcar'] == 1: self.reacreq += 'n22pg',
+        if sp.at['N21PG','Transcar'] == 1: self.reacreq += 'n21pg',
 
-        self.realdata = sp.loc['useActualData','Sim'] == 1
-        self.realdatapath = sp.loc['ActualDataDir','Cams']
-        self.raymap = str(sp.loc['RayAngleMapping','Obs']).lower()
+        self.realdata = sp.at['useActualData','Sim'] == 1
+        self.realdatapath = sp.at['ActualDataDir','Cams']
+        self.raymap = str(sp.at['RayAngleMapping','Obs']).lower()
 
         if sp.loc['downsampleEnergy','Transcar'] >1:
-            self.downsampleEnergy = sp.loc['downsampleEnergy','Transcar']
+            self.downsampleEnergy = sp.at['downsampleEnergy','Transcar']
         else:
             self.downsampleEnergy = False
 
@@ -127,36 +129,36 @@ class Sim:
         else:
             exit('*** Unknown Ray Angle Mapping method: ' + str(self.raymap))
 
-        self.cal1dpath = sp.loc['cal1Ddir','Cams']
+        self.cal1dpath = sp.at['cal1Ddir','Cams']
 
-        self.startutc = sp.loc['reqStartUT','Obs']
-        self.stoputc = sp.loc['reqStopUT','Obs']
+        self.startutc = sp.at['reqStartUT','Obs']
+        self.stoputc = sp.at['reqStopUT','Obs']
         # make the simulation time step match that of the fastest camera
         self.kineticSec = 1. / (cp.ix['frameRateHz',self.useCamBool]).max()
 
         #%% recon
-        self.artinit = str(sp.loc['initVector','ART']).lower()
+        self.artinit = str(sp.at['initVector','ART']).lower()
         try:
-            self.artmaxiter = int(sp.loc['maxIter','ART'])
+            self.artmaxiter = int(sp.at['maxIter','ART'])
         except ValueError:
             self.artmaxiter = 0
-        self.artlambda = sp.loc['lambda','ART']
-        self.artstop = sp.loc['stoprule','ART']
-        self.arttau = sp.loc['MDPtauDelta','ART']
+        self.artlambda = sp.at['lambda','ART']
+        self.artstop = sp.at['stoprule','ART']
+        self.arttau = sp.at['MDPtauDelta','ART']
 
     def setupFwdXZ(self,sp):
         Fwd = {}
-        self.fwd_xlim = (sp.loc['XminKM','Fwdf'],sp.loc['XmaxKM','Fwdf'])
-        self.fwd_zlim = (sp.loc['ZminKM','Fwdf'],sp.loc['ZmaxKM','Fwdf'])
-        self.fwd_dxKM = sp.loc['XcellKM','Fwdf']
+        self.fwd_xlim = (sp.at['XminKM','Fwdf'], sp.at['XmaxKM','Fwdf'])
+        self.fwd_zlim = (sp.at['ZminKM','Fwdf'], sp.at['ZmaxKM','Fwdf'])
+        self.fwd_dxKM = sp.at['XcellKM','Fwdf']
 
 
         if self.useztranscar:
             Fwd['x'] = makexzgrid(self.fwd_xlim, None, self.fwd_dxKM, None)[0]
-            with h5py.File(sp.loc['altitudePreload','Transcar'],'r',libver='latest') as fid:
-                Fwd['z'] = fid['/zTranscar'].value
+            zTranscar = getaltgrid(sp.at['altitudePreload','Transcar'])
+            Fwd['z'] = zTranscar[ (self.fwd_zlim[0] < zTranscar) & (zTranscar < self.fwd_zlim[1]) ]
         else:
-            self.fwd_dzKM = sp.loc['ZcellKM','Fwdf']
+            self.fwd_dzKM = sp.at['ZcellKM','Fwdf']
             (Fwd['x'], Fwd['z']) = makexzgrid(self.fwd_xlim, self.fwd_zlim, self.fwd_dxKM, self.fwd_dzKM)
         if Fwd['z'] is None:
             exit('*** sanitycheck: You must specify zmax zmin zcell when not using transcar altitudes in XLS')
@@ -188,15 +190,15 @@ class Sim:
 
         EllCritParams =  [cp.ix['Xkm',:].values, cp.ix['Zkm',:].values,
                           cp.ix['nCutPix',:].values, cp.ix['FOVmaxLengthKM',:].values,
-                          sp.loc['RayAngleMapping','Obs'].lower(),
-                          sp.loc['XcellKM','Fwdf'],
-                          sp.loc['XminKM','Fwdf'], sp.loc['XmaxKM','Fwdf'],
-                          sp.loc['EllIs','Sim'].lower(),
-                          sp.loc['UseTCz','Transcar'] ]
+                          sp.at['RayAngleMapping','Obs'].lower(),
+                          sp.at['XcellKM','Fwdf'],
+                          sp.at['XminKM','Fwdf'], sp.at['XmaxKM','Fwdf'],
+                          sp.at['EllIs','Sim'].lower(),
+                          sp.at['UseTCz','Transcar'] ]
 
         if not self.useztranscar:
-            EllCritParams.extend([sp.loc['ZcellKM','Fwdf'],
-                                  sp.loc['ZminKM','Fwdf'], sp.loc['ZmaxKM','Fwdf'] ])
+            EllCritParams.extend([sp.at['ZcellKM','Fwdf'],
+                                  sp.at['ZminKM','Fwdf'], sp.at['ZmaxKM','Fwdf'] ])
 
         if self.raymap == 'arbitrary':
             EllCritParams.extend([cp.ix['boresightElevDeg',:].values,

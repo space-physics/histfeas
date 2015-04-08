@@ -1,7 +1,8 @@
 from __future__ import print_function, division
-#from numba import jit #2-3 times slower using Numba 1.5!!
-from numpy import empty,ones,ravel_multi_index,hypot,array
-from scipy.sparse import dok_matrix
+from numba import jit
+#from numbapro import vectorize
+from numpy import empty,ones,ravel_multi_index,hypot,zeros
+from scipy.sparse import dok_matrix,issparse
 # local
 import sys
 sys.path.append("../cv-utils")
@@ -60,39 +61,47 @@ def EllLineLength(Fwd,xFOVpixelEnds,zFOVpixelEnds,xCam,zCam,saveEll,Np,sim,makeP
         print('z: ', end=''); print(Fwd['z'])
         print('zpc: ',end=''); print(zpc)
 
-    L,xzplot = goCalcEll(maxNell,nCam,Np,sz,sx,xpc,zpc,xFOVpixelEnds,zFOVpixelEnds,
+    xzplot =None
+    L = goCalcEll(maxNell,nCam,Np,sz,sx,xpc,zpc,xFOVpixelEnds,zFOVpixelEnds,
                           xCam,zCam,useCamInd,plotEachRay,dbglvl)
 
     #%% write results to HDF5 file
     if saveEll:
         doSaveEll(L,Fwd,sim.FwdLfn,xFOVpixelEnds,zFOVpixelEnds,xCam,zCam,writeRays)
 
-    if 'ell' in makePlots and plotEachRay:
+    if 'ell' in makePlots and plotEachRay and xzplot:
         plotEll(sim.useCamInd,xFOVpixelEnds,zFOVpixelEnds,xCam,zCam,Np,xpc,zpc,
                 sz,sx,xzplot,sim.FwdLfn,plotEachRay,makePlots,
                 (None,None,None,None,None,None))
-
+    if issparse(L):
+        L = L.tocsc()
     return L
 
-#@jit #slower using Numba 1.5
-def goCalcEll(maxNell,nCam,Np,sz,sx,xpc,zpc,xFOVpixelEnds,zFOVpixelEnds,xCam,zCam,useCamInd,plotEachRay,dbglvl=0):
-    #FIXME assumes all cameras have same # of pixels
-    #Lrows = empty( ( maxNell * nCam * Np ) , dtype=int, order='F')
-    #Lcols = empty( ( maxNell * nCam * Np ) , dtype=int, order='F') #empty_like(Lrows)
-    #Lvals = empty( ( maxNell * nCam * Np ) , dtype=float, order='F') #empty_like
-#    LindStart = 0 #different than Matlab
- #   LindEnd = 0 #in case none found before k%100 first print to screen
-    inttot = 0
-    #L = zeros( ( Np*nCam,sz*sx),dtype=float ,order='F')
-    L = dok_matrix(( Np*nCam,sz*sx),dtype=float)
+def goCalcEll(maxNell,nCam,Np,sz,sx,xpc,zpc,xFOVpixelEnds,zFOVpixelEnds,
+                xCam,zCam,useCamInd,plotEachRay,dbglvl=0):
+
+    L = zeros( ( Np*nCam,sz*sx),dtype=float ,order='F') #dense
+    #L = dok_matrix(( Np*nCam,sz*sx),dtype=float) #sparse
+
     print('Dimensions of L:',L.shape,' sz=',sz, '  sx=',sx )
 
     Lcol =   empty(maxNell, dtype=int) #we'll truncate this to actual length at end
     tmpEll = empty(maxNell, dtype=float) #we'll truncate this to actual length at end
-
     xzplot = [] #we'll append to this
 
+    L = loopEll(Np,sz,sx,xpc,zpc,xFOVpixelEnds,zFOVpixelEnds,
+                             xCam,zCam,useCamInd,plotEachRay,
+                             L,Lcol,tmpEll,xzplot) #numba
+
+    return L#.tocsc()
+
+@jit(['float64[:,:](int64,int64,int64,float64[:],float64[:],float64[:,:],float64[:,:],float64[:],float64[:],int64[:],bool_,float64[:,:],int64[:],float64[:],float64[:])'])
+def loopEll(Np,sz,sx,xpc,zpc,xFOVpixelEnds,zFOVpixelEnds,
+             xCam,zCam,useCamInd,plotEachRay,L,Lcol,tmpEll,xzplot):
 #%%let's compute intersections!!
+    #FIXME assumes all cameras have same # of pixels
+    inttot = 0
+
     ''' We MUST have all cameras enabled for this computation (as verified in observeVolume)'''
 #    try:
     for iCam in useCamInd:
@@ -113,28 +122,27 @@ def goCalcEll(maxNell,nCam,Np,sz,sx,xpc,zpc,xFOVpixelEnds,zFOVpixelEnds,xCam,zCa
                         #assert nHitsThisPixelRay <= maxNell #removed for performance
                         Lcol[nHitsThisPixelRay] = ravel_multi_index((zInd,xInd),dims=(sz,sx),order='F')
                         tmpEll[nHitsThisPixelRay] = hypot(x2-x1,y2-y1)
-                        nHitsThisPixelRay += 1 
+                        nHitsThisPixelRay += 1
                         if plotEachRay:
-                            xzplot.append(array([x1,x2,y1,y2]))
+                            xzplot.append([x1,x2,y1,y2])
             if nHitsThisPixelRay > 0: #this is under "for k" level
                 inttot += nHitsThisPixelRay
                 L[iCam * Np + k, Lcol[:nHitsThisPixelRay]] = tmpEll[:nHitsThisPixelRay]
             if k%100 == 0: #arbitrary display update interval #this is under "for k" level
-                print('Camera #',iCam,': {:0.0f}'.format(1.0*k/Np*100)
-                      +'% complete, found',inttot, 'intersections.')
+                print('Camera #{}: {:0.0f}% complete, found {} intersections.'.format(iCam,1.0*k/Np*100,inttot))
 
 #    except IndexError:
 #        exit('**** ERROR on iCam='+str(iCam)+', k=' +str(k)+', xInd='+str(xInd)+', zInd='+str(zInd)+' *****')
-
     print('Total number of intersections found:',inttot)
-
-    return L.tocsc(), xzplot
+    return L#,xzplot
 
 def doSaveEll(L,Fwd,EllFN,xFOVpixelEnds,zFOVpixelEnds,xCam,zCam,writeRays):
     import h5py
     print('writing', EllFN )
+    if issparse(L):
+        L = L.todense()
     with h5py.File(EllFN,'w',libver='latest') as fid:
-        h5L = fid.create_dataset("/L",data=L.todense(),compression="gzip");  h5L.attrs['Units'] = 'kilometers'
+        h5L = fid.create_dataset("/L",data=L,compression="gzip");  h5L.attrs['Units'] = 'kilometers'
         h5Fwdx = fid.create_dataset("/Fwd/x",data=Fwd['x']); h5Fwdx.attrs['Units'] = 'kilometers'
         h5Fwdz = fid.create_dataset("/Fwd/z",data=Fwd['z']); h5Fwdz.attrs['Units'] = 'kilometers'
         h5FwdxPC = fid.create_dataset("/Fwd/xPixCorn",data=Fwd['xPixCorn']); h5FwdxPC.attrs['Units'] = 'kilometers'
