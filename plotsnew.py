@@ -161,7 +161,8 @@ def goPlot(ParamFN,sim,arc,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Phi0,
                   ('$\Phi_{{top}}$ input diff. number flux'+ fwdloctxt),
                             2932,spfid,sfmt,cnorm,progms)
 
-            plotJ1D(sim,Phi0[:,Jxi],None,fitp['EK'],vlim['j'],tInd,makeplot,'j0_1D',
+            if not 'optim' in makeplot:
+                plotJ1D(sim,Phi0[:,Jxi],None,fitp['EK'],vlim['j'],tInd,makeplot,'j0_1D',
                      ('Differential Number flux at $B_\perp$={:0.2f} [km]'.format(xKM[Jxi])),
                            3932,spfid,progms)
     # Forward model VER
@@ -170,7 +171,8 @@ def goPlot(ParamFN,sim,arc,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Phi0,
                 ('$P_{{fwd}}$ volume emission rate' + fwdloctxt),
                         19900,spfid,sfmt,cnorm,progms)
 
-            plotVER1D(sim,ver[:,Jxi],None,zKM,vlim['p'][2:],tInd,makeplot,'ver_1D',
+            if not 'optim' in makeplot:
+                plotVER1D(sim,ver[:,Jxi],None,zKM,vlim['p'][2:],tInd,makeplot,'ver_1D',
                   ('$P_{{fwd}}$ at $B_\perp$={:0.2f}'.format(xKM[Jxi]) +
                    ' [km]' + fwdloctxt),
                   119900,spfid,progms)

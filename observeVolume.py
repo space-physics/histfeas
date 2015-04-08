@@ -159,14 +159,13 @@ def loadEll(Fwd,cam,useCamInd,EllFN,dbglvl):
 
 def mogrifyData(data,cam):
     #steps should be in this order!
+    data = cam.intens2dn(data) #considers pixel area and camera amplifier gain
+    data = cam.scaleintens(data) #camera cross-calibration
+
     data = cam.donoise(data)
     #print('noise std. deviation cam ',cam.name,'=',cam.std)
-
     data = cam.dosmooth(data)
-
     data = cam.dolowerthres(data)
-
-    data = cam.scaleintens(data)
 
     data = cam.debias(data)
     data = cam.fixnegval(data)

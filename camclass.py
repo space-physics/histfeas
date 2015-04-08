@@ -17,6 +17,10 @@ class Cam: #use this like an advanced version of Matlab struct
     def __init__(self,sim,cp,name,zmax,dbglvl):
         self.dbglvl = dbglvl
         self.name = name
+
+        self.pixarea_m = cp['pixarea_m']
+        self.pedn = cp['pedn']
+
         self.lat = cp['latWGS84']
         self.lon = cp['lonWGS84']
         self.alt_m = cp['Zkm']*1e3
@@ -211,6 +215,15 @@ class Cam: #use this like an advanced version of Matlab struct
             data *= self.intensityScaleFactor
             #assert isnan(data).any() == False
         return data
+    def intens2dn(self,data):
+        """
+        A model for sensor gain
+        pedn is photoelectrons per data number
+        """
+        if isfinite(self.kineticSec) and isfinite(self.pixarea_m) and isfinite(self.pedn):
+            data *= self.kineticSec*self.pixarea_m/self.pedn
+        return data
+
     def dolowerthres(self,data):
         if isfinite(self.lowerthres):
             print('Thresholding Data to 0 when DN <',self.lowerthres, 'for Camera #' + self.name )
