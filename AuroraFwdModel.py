@@ -6,7 +6,6 @@ GPLv3+
 """
 from __future__ import print_function, division
 from numpy import isnan
-#from matplotlib.pyplot import figure,show
 #
 from arcclass import Arc
 
