@@ -17,11 +17,10 @@ class Cam: #use this like an advanced version of Matlab struct
     def __init__(self,sim,cp,name,zmax,dbglvl):
         self.dbglvl = dbglvl
         self.name = name
-        self.use = bool(cp['useCam'])
-        self.ind = None #will be set in ObserveVolume.py if camera is used.
 
-        self.pixarea_m = cp['pixarea_m']
+        self.pixarea_sqcm = cp['pixarea_sqcm']
         self.pedn = cp['pedn']
+        self.ampgain = cp['ampgain']
 
         self.lat = cp['latWGS84']
         self.lon = cp['lonWGS84']
@@ -167,7 +166,8 @@ class Cam: #use this like an advanced version of Matlab struct
          noisy = data.copy()
 
          if isfinite(self.noiseStd):
-             print('adding noise with std dev {:0.1e} to camera #{}'.format(self.noiseStd,self.name))
+             if self.dbglvl>0:
+                 print('adding noise with std dev {:0.1e} to camera #{}'.format(self.noiseStd,self.name))
              dnoise = self.noiseStd*(standard_normal(size=self.nCutPix))
              noisy += dnoise
          else:
@@ -175,7 +175,8 @@ class Cam: #use this like an advanced version of Matlab struct
 
 
          if isfinite(self.ccdbias):
-             print('adding bias {:0.1e} to camera #{}'.format(self.ccdbias,self.name))
+             if self.dbglvl>0:
+                 print('adding bias {:0.1e} to camera #{}'.format(self.ccdbias,self.name))
              noisy += self.ccdbias
 
          # kept for diagnostic purposes
@@ -222,8 +223,8 @@ class Cam: #use this like an advanced version of Matlab struct
         A model for sensor gain
         pedn is photoelectrons per data number
         """
-        if isfinite(self.kineticSec) and isfinite(self.pixarea_m) and isfinite(self.pedn):
-            data *= self.kineticSec*self.pixarea_m/self.pedn
+        if isfinite(self.kineticSec) and isfinite(self.pixarea_sqcm) and isfinite(self.pedn):
+            data *= self.kineticSec * self.pixarea_sqcm * self.ampgain * self.ampgain / self.pedn
         return data
 
     def dolowerthres(self,data):

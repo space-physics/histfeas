@@ -28,7 +28,7 @@ def getParams(XLSfn,overrides,savedump,progms,dbglvl):
 #%% setup cameras
     cam,cp = setupCam(sim,cp,Fwd['z'][-1],dbglvl)
 
-    print('fwd model voxels:\n')
+    print('fwd model voxels:')
     print('B_perp: N=',Fwd['sx'],'   B_parallel: M=',Fwd['sz'])
 #%% init variables
     return ap,sim,cam,Fwd
@@ -39,13 +39,15 @@ def setupCam(sim,cp,zmax,dbglvl):
 
     if sim.camxreq[0] is not None:
         print('* overriding camera x-loc with ',sim.camxreq)
-        for c,cx in zip(cp,sim.camxreq):
-            cp.iat['Xkm',c] = cx
-            cam[c] = Cam(sim,cp[c], c, zmax,dbglvl)
+        for i,(c,cx) in enumerate(zip(cp,sim.camxreq)):
+            if sim.useCamBool[i]:
+                cp.iat['Xkm',c] = cx
+                cam[c] = Cam(sim,cp[c], c, zmax,dbglvl)
     else:
-        for c in cp:
-            cam[c] = Cam(sim,cp[c], c, zmax,dbglvl)
-    
+        for i,c in enumerate(cp):
+            if sim.useCamBool[i]:
+                cam[c] = Cam(sim,cp[c], c, zmax,dbglvl)
+
     if len(cam)==0:
         exit('*** setupCam: 0 cams are configured, Nothing to do, exiting now.')
     return cam,cp

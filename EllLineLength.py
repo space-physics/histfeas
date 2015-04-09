@@ -94,7 +94,7 @@ def goCalcEll(maxNell,nCam,Np,sz,sx,xpc,zpc,xFOVpixelEnds,zFOVpixelEnds,
 
     return L#.tocsc()
 
-@jit(['float64[:,:](int64,int64,int64,float64[:],float64[:],float64[:,:],float64[:,:],float64[:],float64[:],int64[:],bool_,float64[:,:],int64[:],float64[:],float64[:])'])
+#@jit(['float64[:,:](int64,int64,int64,float64[:],float64[:],float64[:,:],float64[:,:],float64[:],float64[:],int64[:],bool_,float64[:,:],int64[:],float64[:],float64[:])'])
 def loopEll(Np,sz,sx,xpc,zpc,xFOVpixelEnds,zFOVpixelEnds,
              xCam,zCam,nCam,plotEachRay,L,Lcol,tmpEll,xzplot):
 #%%let's compute intersections!!
