@@ -38,12 +38,12 @@ def doSim(ParamFN,savedump,makeplot,datadump,timeInds,overrides,progms,x1d,vlim,
 #%% setup loop
     if sim.realdata:
         cam,rawdata,sim = getSimulData(sim,cam,makeplot,progms,dbglvl)
-        nTimeSlice = cam['0'].keo.shape[1] #FIXME assumes equal num. of time slices list(cam.keys())[0]
+        nTimeSlice = cam['0'].keo.shape[1] #FIXME assumes equal num. of time slices list(cam)[0]
     else: #simulation
         rawdata = None
         if sim.raymap == 'astrometry': #and any('b' in m[:2] for m in makeplot):
             from get1Dcut import get1Dcut #we need cam.angle_deg for plotting
-            cam = get1Dcut(cam,sim.useCamInd,makeplot,progms,dbglvl)
+            cam = get1Dcut(cam,makeplot,progms,dbglvl)
         nTimeSlice = ap.shape[1]
     timeInds = sim.maketind(timeInds,nTimeSlice)
 #%% Step 1) get projection matrix
@@ -103,7 +103,7 @@ def doSim(ParamFN,savedump,makeplot,datadump,timeInds,overrides,progms,x1d,vlim,
             PfitAll.append(Pfit)
 #%%
     print('done looping')
-    analyseres(sim,Fwd['x'],Fwd['xPixCorn'],sim.useCamInd,cam,
+    analyseres(sim,Fwd['x'],Fwd['xPixCorn'],cam,
                    Phi0all,jfitAll,drnAll,bfitAll,vlim,makeplot,progms)
 #%% debug: save variables to MAT file
     if 'mat' in savedump:
@@ -114,17 +114,16 @@ def doSim(ParamFN,savedump,makeplot,datadump,timeInds,overrides,progms,x1d,vlim,
             vd = {'drnP':bn,'LP':Lfwd,'vP':Pfwd,'vfitP':Pfit,#'vhatP':Phat['vART'],
                   'xPixCorn':Fwd['xPixCorn'],'zPixCorn':Fwd['zPixCorn']}
             savemat(cMatFN,oned_as='column',mdict=vd )
-        except:
-            print('failed to save to mat file')
+        except Exception as e:
+            print('failed to save to mat file.  {}'.format(e))
     if 'h5' in savedump:
         ch5fn = ''.join((progms,'/fitted','.h5'))
         jAll = asarray(jAll).transpose(axes=(1,2,0)) #asarray puts pages first
         print('saving to:', ch5fn)
-        with h5py.File(ch5fn,'w',libver='latest') as fid:
-            fid.create_dataset("/Jflux",data=jAll)
-            fid.create_dataset("/Vfit",data=PfitAll)
+        with h5py.File(ch5fn,'w',libver='latest') as f:
+            f["/Jflux"]=jAll
+            f["/Vfit"]=PfitAll
 
-    #return jfitAll,Lfwd
 #%% =======================================================================
 def signal_handler(signal, frame):
     print('\n *** Aborting program as per user pressed Ctrl+C ! \n')

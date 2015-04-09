@@ -13,7 +13,7 @@ from transcararc import getColumnVER
 from nans import nans
 
 
-def FitVERopt(L,bn,j0,MpDict,sim,Fwd,makeplot,dbglvl):
+def FitVERopt(L,bn,Phi0,MpDict,sim,Fwd,makeplot,dbglvl):
     vfit = {}; bfit = {}; jfit = {'x':None} #in case optim not run
 
     Mp,zTranscar,EK,EKpcolor = MpDict['Mp'],MpDict['ztc'],MpDict['Ek'],MpDict['EKpcolor']
@@ -30,7 +30,7 @@ def FitVERopt(L,bn,j0,MpDict,sim,Fwd,makeplot,dbglvl):
     assert Tm.flags['F_CONTIGUOUS'] is True
 
     '''in case optim not run -- don't remove'''
-    jfit['x'] = nans((nEnergy,Fwd['sx'])) #don't remove this
+    jfit['x'] = None #nans((nEnergy,Fwd['sx'])) #don't remove this
     jfit['EK'] = EK
     jfit['EKpcolor'] = EKpcolor
 #%% optimization
@@ -41,7 +41,7 @@ def FitVERopt(L,bn,j0,MpDict,sim,Fwd,makeplot,dbglvl):
     http://stackoverflow.com/questions/23476152/dynamically-writing-the-objective-function-and-constraints-for-scipy-optimize-mi
     '''
 
-    if (any(('gaussian' in m for m in makeplot)) or any(('optim' in m for m in makeplot))):
+    if 'gaussian' in makeplot or 'optim' in makeplot:
         optimmeth= sim.optimfitmeth
         maxiter = sim.optimmaxiter #it's already int
         sx = Fwd['sx']
@@ -64,12 +64,13 @@ def FitVERopt(L,bn,j0,MpDict,sim,Fwd,makeplot,dbglvl):
                     'fun': difffun}
         elif optimmeth.lower()=='cobyla':
             optimopt = {'maxiter':maxiter,'disp':True,'rhobeg':1e1,'tol':1} #10
-        else: raise RuntimeError('unknown minimization method ' + optimmeth)
+        else: 
+            exit('*** FITVERopt: unknown minimization method ' + optimmeth)
 
         tic = time()
         #
         jfit = minimize(optfun,
-                        x0=j0,
+                        x0=Phi0,
                         args=(L.tocsr(),Tm,bn,nEnergy,sx),
                         method=optimmeth,
                         bounds=nonnegbound, #non-negativity
@@ -77,13 +78,12 @@ def FitVERopt(L,bn,j0,MpDict,sim,Fwd,makeplot,dbglvl):
                         options=optimopt,
                         )
         #
-        print('{:0.1f}'.format(time()-tic) + ' seconds to fit.')
+        print('{:0.1f} seconds to fit.'.format(time()-tic))
 
         jfit.x = jfit.x.reshape(nEnergy,sx,order='F')
         #jfit['optimresidual'] = jfit.fun
         if dbglvl>0:
-            print('residual={:0.1f}'.format(jfit.fun) + ' after ' +
-               ' iterations and',jfit.nfev,'func evaluations.')
+            print('residual={:0.1f} after {} func evaluations.'.format(jfit.fun,jfit.nfev))
 
         # we do this here so that we don't have to carry so many variables around
         vfit['optim'] = getColumnVER(sim.useztranscar,zTranscar, Mp, jfit.x, Fwd['z'])
@@ -95,11 +95,13 @@ def FitVERopt(L,bn,j0,MpDict,sim,Fwd,makeplot,dbglvl):
 
     return vfit,jfit,Tm,bfit
 
-def optfun(jfit,L,Tm,b,nEnergy,sx):
-    vfit = Tm.dot(jfit.reshape(nEnergy,sx,order='F'))
-    bfit = L.dot(vfit.ravel(order='F'))
-    return norm(bfit - b, ord=2)
+def optfun(phiinv,L,Tm,b_obs,nEnergy,sx):
+    """this provides the quantity to minimize"""
+    pinv = Tm.dot(phiinv.reshape(nEnergy,sx,order='F'))
+    binv = L.dot(pinv.ravel(order='F'))
+    return norm(binv - b_obs, ord=2)
 
 def difffun(jfit,nEnergy=33,sx=109):
+    '''used only for slsqp method'''
     # computes difference down columns (top to bottom)
     return 1e5-absolute(diff(jfit.reshape(nEnergy,sx,order='F'), n=1, axis=0)).max()

@@ -10,8 +10,8 @@ from plotsnew import writeplots
 #
 from nans import nans
 
-def analyseres(sim,x,xp,usecam,cam,jfwd,jfit,drn,dhat,vlim,makeplot,progms):
-    if all([j is None for j in jfwd]):
+def analyseres(sim,x,xp,cam,jfwd,jfit,drn,dhat,vlim,makeplot,progms):
+    if jfwd is None or jfit[0]['x'] is None:
         return
     '''
     we need to fill zeros in jfwd with machine epsilon, since to get avg we need
@@ -47,16 +47,16 @@ def analyseres(sim,x,xp,usecam,cam,jfwd,jfit,drn,dhat,vlim,makeplot,progms):
     try:
         if 'fwd' in makeplot:
             for i,b in enumerate(drn):
-                plotB(b,usecam,sim.realdata,cam,vlim['b'],9999,makeplot,'$b_{fwd',
+                plotB(b,sim.realdata,cam,vlim['b'],9999,makeplot,'$b_{fwd',
                                                           cord, #pass all cord or it will IndexError if using only some instatiations of phi0
                                                           [sfmt],8727,progms)
     # reconstructed brightness plot
         if 'optim' in makeplot and len(dhat[0])>0:
             for i,b in enumerate(dhat):
-                plotB(b['optim'],usecam,sim.realdata,cam,vlim['b'],9999,makeplot,'$b_{optim',
+                plotB(b['optim'],sim.realdata,cam,vlim['b'],9999,makeplot,'$b_{optim',
                       cord[nit*i:nit*i+nit],[sfmt],8728,progms)
-    except:
-        print('** ERROR plotting overall analysis plots of intensity')
+    except Exception as e:
+        print('** analysehst: ERROR plotting overall analysis plots of intensity.  {}'.format(e))
 #%% energy flux plot amd calculations
     x0fwd = nans(nit); E0fwd = nans(nit)
     x0hat = nans(nit); E0hat = nans(nit)
@@ -91,7 +91,7 @@ def analyseres(sim,x,xp,usecam,cam,jfwd,jfit,drn,dhat,vlim,makeplot,progms):
         ax.set_xlabel('x [km]')
         ax.set_ylabel('Expected Value[Energy]')
         ax.set_title('Fwd model: Average Energy $\overline{E}$ at each x-location')
-        ax.legend(['{:0.0f}'.format(g)+' eV' for g in E0fwd],loc='best',fontsize=9)
+        ax.legend(['{:0.0f} eV'.format(g) for g in E0fwd],loc='best',fontsize=9)
         writeplots(fgf,'Eavg_fwd',9999,makeplot,progms)
 
     if 'optim' in makeplot:
@@ -101,7 +101,7 @@ def analyseres(sim,x,xp,usecam,cam,jfwd,jfit,drn,dhat,vlim,makeplot,progms):
         ax.set_xlabel('x [km]')
         ax.set_ylabel('Expected Value[Energy]')
         ax.set_title('ESTIMATED Average Energy $\overline{\hat{E}}$ at each x-location')
-        ax.legend(['{:0.0f}'.format(g)+' eV' for g in E0fwd],loc='best',fontsize=9)
+        ax.legend(['{:0.0f} eV'.format(g) for g in E0fwd],loc='best',fontsize=9)
         writeplots(fgo,'Eavg_optim',9999,makeplot,progms)
 #%% overall error
     x0err = x0hat-x0fwd
@@ -113,11 +113,11 @@ def analyseres(sim,x,xp,usecam,cam,jfwd,jfit,drn,dhat,vlim,makeplot,progms):
                                           ['{:0.1f}'.format(j) for j in E0err]))
 
     if 'h5' in makeplot:
-        with h5py.File(progms + 'results.h5',libver='latest') as fid:
-            fid.create_dataset('/x0/fit',data=x0hat)
-            fid.create_dataset('/x0/fwd',data=x0fwd)
-            fid.create_dataset('/E0/fit',data=E0hat)
-            fid.create_dataset('/E0/fwd',data=E0fwd)
+        with h5py.File(progms + 'results.h5','w',libver='latest') as f:
+            f['/x0/fit']=x0hat
+            f['/x0/fwd']=x0fwd
+            f['/E0/fit']=E0hat
+            f['/E0/fwd']=E0fwd
 
     if 'show' in makeplot:
         show()

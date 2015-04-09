@@ -17,25 +17,23 @@ class Sim:
             print('* Overriding XLS parameters, using cameras:',usecamreq)
             for ci,civ in enumerate(cp.loc['useCam']): # this might be a silly indexing method, but works
                 if (ci==usecamreq).any():
-                    cp.ix['useCam',ci] = 1 #do not use boolean, it screws up other rows
+                    cp.at['useCam',ci] = 1 #do not use boolean, it screws up other rows
                 else:
-                    cp.ix['useCam',ci] = 0 #do not use boolean, it screws up other rows
+                    cp.at['useCam',ci] = 0 #do not use boolean, it screws up other rows
         self.useCamBool = cp.loc['useCam'].values.astype(bool)
-        self.useCamInd = where(self.useCamBool)[0] # we want first item in tuple
 
         if usecamreq[0] is not None:
-            assert (self.useCamInd == usecamreq).all()
+            assert (self.useCamBool == usecamreq.astype(bool)).all()
 
-        self.nCam = int(self.useCamBool.sum())
+        self.nCamUsed = self.useCamBool.sum() #it is an int
 
-        self.allCamInd = cp.ix['useCam',:].values.astype(bool)
-        self.nCutPix = int(cp.ix['nCutPix',0]) #FIXME someday allow different # of pixels..
+        self.nCutPix = cp.at['nCutPix',0] #FIXME someday allow different # of pixels..
         self.allCamXkm = cp.ix['Xkm',:].values.astype(float)
         self.allCamZkm = cp.ix['Zkm',:].values.astype(float)
 
         #%% camera position override
         self.camxreq = overrides['camx']
-        if self.camxreq[0] is not None and len(self.camxreq) != self.nCam:
+        if self.camxreq[0] is not None and len(self.camxreq) != self.nCamUsed:
             exit('*** must specify same number of x-loc and used cameras')
         #%% manual override flux file
         if overrides['Jfwd'] is not None:
