@@ -3,19 +3,27 @@ Michael Hirsch
 GPLv3+
 """
 from __future__ import print_function, division
-from numpy import absolute,asfortranarray,diff,zeros,inf
+from numpy import absolute,asfortranarray,diff,zeros,inf,empty_like
 from scipy.optimize import minimize
 from scipy.interpolate import interp1d
 from numpy.linalg import norm
 from time import time
 #
 from transcararc import getColumnVER
-from nans import nans
 
-
-def FitVERopt(L,bn,Phi0,MpDict,sim,Fwd,makeplot,dbglvl):
+def FitVERopt(L,bn,Phi0,MpDict,sim,cam,Fwd,makeplot,dbglvl):
     vfit = {}; bfit = {}; jfit = {'x':None} #in case optim not run
-
+#%% scaling brightness
+    """
+    We could repeatedly downscale brightness in loop, but that consumes a lot of CPU.
+    It is equivalent to temporarily upscale observed brightness before loop.
+    """
+    bscale = [cam[c].b_chipscale for c in cam]
+    cInd = [cam[c].ind for c in cam]
+    bnu = empty_like(bn)
+    for s,c in zip(bscale,cInd):
+        bnu[c] = bn[c] / s
+#%%
     Mp,zTranscar,EK,EKpcolor = MpDict['Mp'],MpDict['ztc'],MpDict['Ek'],MpDict['EKpcolor']
 
     if sim.useztranscar:
@@ -64,14 +72,16 @@ def FitVERopt(L,bn,Phi0,MpDict,sim,Fwd,makeplot,dbglvl):
                     'fun': difffun}
         elif optimmeth.lower()=='cobyla':
             optimopt = {'maxiter':maxiter,'disp':True,'rhobeg':1e1,'tol':1} #10
-        else: 
+        else:
             exit('*** FITVERopt: unknown minimization method ' + optimmeth)
 
         tic = time()
         #
         jfit = minimize(optfun,
-                        x0=Phi0,
-                        args=(L.tocsr(),Tm,bn,nEnergy,sx),
+                        x0=Phi0, #Phi0 is a vector b/c that's what minimize() needs
+                        args=(L.tocsr(),Tm,
+                              bnu, #scaled version of bn (do once instead of in loop)
+                              nEnergy,sx),
                         method=optimmeth,
                         bounds=nonnegbound, #non-negativity
                         constraints=cons,
@@ -96,7 +106,9 @@ def FitVERopt(L,bn,Phi0,MpDict,sim,Fwd,makeplot,dbglvl):
     return vfit,jfit,Tm,bfit
 
 def optfun(phiinv,L,Tm,b_obs,nEnergy,sx):
-    """this provides the quantity to minimize"""
+    """this provides the quantity to minimize
+    Phi0 is a vector b/c that's what minimize needs(), reshape is low cost (but this many times?)
+    """
     pinv = Tm.dot(phiinv.reshape(nEnergy,sx,order='F'))
     binv = L.dot(pinv.ravel(order='F'))
     return norm(binv - b_obs, ord=2)

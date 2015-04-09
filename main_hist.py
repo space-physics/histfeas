@@ -85,7 +85,7 @@ def doSim(ParamFN,savedump,makeplot,datadump,timeInds,overrides,progms,x1d,vlim,
         else: #normal case, no a priori
             Phi0r = zeros(Fwd['sx']*Peig['Mp'].shape[1],dtype=float) #ones() is NOT appropriate -- should be tapered down for higher energy beams!! per JLS!
 
-        Pfit,jfit,Tm,bfit = FitVER(Lfwd, bn, Phi0r, Peig, sim, Fwd, makeplot,dbglvl)
+        Pfit,jfit,Tm,bfit = FitVER(Lfwd, bn, Phi0r, Peig, sim, cam,Fwd, makeplot,dbglvl)
 #%% collect results
         jfitAll.append(jfit); bfitAll.append(bfit)
 #%% plot results
