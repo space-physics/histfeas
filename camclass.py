@@ -224,7 +224,10 @@ class Cam: #use this like an advanced version of Matlab struct
         pedn is photoelectrons per data number
         """
         if isfinite(self.kineticSec) and isfinite(self.pixarea_sqcm) and isfinite(self.pedn):
-            data *= self.kineticSec * self.pixarea_sqcm * self.ampgain * self.ampgain / self.pedn
+            self.b_chipscale = self.kineticSec * self.pixarea_sqcm * self.ampgain * self.ampgain / self.pedn
+        else:
+            self.b_chipscale = 1
+        data *= self.b_chipscale
         return data
 
     def dolowerthres(self,data):
