@@ -34,6 +34,7 @@ def getObs(sim,cam,L,tDataInd,ver,makePlots,dbglvl):
 
 
     elif ver is not None: #or not np.any(np.isnan(v)): # no NaN in v # using synthetic data
+        """ FIEFK """
         bp = L.dot(ver.ravel(order='F'))
         assert bp.size == nCutPix * sim.nCamUsed
 
