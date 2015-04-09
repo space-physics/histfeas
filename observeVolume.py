@@ -13,9 +13,9 @@ def getObs(sim,cam,L,tDataInd,ver,makePlots,dbglvl):
     nCutPix = sim.nCutPix
 
     if sim.realdata:
-        bn = empty(nCutPix * sim.nCam,dtype=float,order='F') #FIXME assumes all cuts same length AND that cam 0 is used
-        for c in sim.useCamInd.astype(str):
-            cInd = range(int(c)*nCutPix,(int(c)+1)*nCutPix)
+        bn = empty(nCutPix * sim.nCamUsed,dtype=float,order='F') #FIXME assumes all cuts same length AND that cam 0 is used
+        for c in cam:
+            cInd = cam[c].ind
             """
              remember that we put "d" in lexigraphical form,
              "d" is a column-major vector, such that if our 1D cut is N pixels,
@@ -31,11 +31,11 @@ def getObs(sim,cam,L,tDataInd,ver,makePlots,dbglvl):
 
     elif ver is not None: #or not np.any(np.isnan(v)): # no NaN in v # using synthetic data
         bp = L.dot(ver.ravel(order='F'))
-        assert bp.size == nCutPix * sim.nCam
+        assert bp.size == nCutPix * sim.nCamUsed
 
         bn = nans(bp.shape)
-        for c in sim.useCamInd.astype(str):
-            cInd = range(int(c)*nCutPix,(int(c)+1)*nCutPix)
+        for c in cam:
+            cInd = cam[c].ind
             bn[cInd] = mogrifyData(bp[cInd],cam[c])
 
     else: #skip VER processing
@@ -61,7 +61,7 @@ def makeCamFOVpixelEnds(Fwd,sim,cam,makePlots,dbglvl):
 
     # when creating a new L, we always use all cameras, so ha['nCam'] is good here
     # order='F' not needed here because we don't reshape or ravel this variable
-    xFOVpixelEnds = empty((nCutPix, sim.nCam),dtype=float)
+    xFOVpixelEnds = empty((nCutPix, sim.nCamUsed),dtype=float)
     zFOVpixelEnds = empty_like(xFOVpixelEnds)
 #%% (1) define the three x,y points defining each 2D pixel cone
     for c in cam:#.keys():
@@ -120,7 +120,7 @@ def makeCamFOVpixelEnds(Fwd,sim,cam,makePlots,dbglvl):
     print('computed L in {:0.1f}'.format(time()-tic) + ' seconds.')
     return L,Fwd,cam
 #%%
-def loadEll(Fwd,cam,useCamInd,EllFN,dbglvl):
+def loadEll(Fwd,cam,EllFN,dbglvl):
     try:
       with h5py.File(EllFN,'r',libver='latest') as fid:
         L = csc_matrix(fid['/L'])
@@ -138,12 +138,12 @@ def loadEll(Fwd,cam,useCamInd,EllFN,dbglvl):
         Fwd['xPixCorn'] = fid['/Fwd/xPixCorn'].value
         Fwd['zPixCorn'] = fid['/Fwd/zPixCorn'].value
 
-        if useCamInd is not None and cam is not None:
+        if cam is not None:
             try:
-                for i,ci in zip(useCamInd,useCamInd.astype(str)):
+                for i,c in enumerate(cam):
                     #cam[ci].angle_deg =  fid['/Obs/pixAngle'][:,i]
-                    cam[ci].xFOVpixelEnds = fid['/Obs/xFOVpixelEnds'][:,i]
-                    cam[ci].zFOVpixelEnds = fid['/Obs/zFOVpixelEnds'][:,i]
+                    cam[c].xFOVpixelEnds = fid['/Obs/xFOVpixelEnds'][:,i]
+                    cam[c].zFOVpixelEnds = fid['/Obs/zFOVpixelEnds'][:,i]
             except KeyError:
                 warn('could not load FOV ends, maybe this is an old Ell file')
 
@@ -175,22 +175,27 @@ def mogrifyData(data,cam):
 def getEll(sim,cam,Fwd,makePlots,dbglvl):
 
     if not sim.loadfwdL:
-        if sim.nCam != len(sim.useCamBool):
+        if sim.nCamUsed != sim.useCamBool.size:
             exit('*** To make a fresh L matrix, you must enable ALL cameras all(useThisCam == 1) ')
 
         L,Fwd,cam = makeCamFOVpixelEnds(Fwd,sim,cam,makePlots,dbglvl)
     else:
-        L,Fwd,cam = loadEll(Fwd,cam,sim.useCamInd,sim.FwdLfn,dbglvl)
+        L,Fwd,cam = loadEll(Fwd,cam,sim.FwdLfn,dbglvl)
 
-    L = removeUnusedCamera(L,sim.allCamInd,sim.nCutPix)
+    L,cam = removeUnusedCamera(L,sim.useCamBool,sim.nCutPix,cam)
 
     return L,Fwd,cam
 
-def removeUnusedCamera(L,allcamlist,nCutPix):
+def removeUnusedCamera(L,useCamBool,nCutPix,cam):
     ''' remove unused cameras (rows of L) '''
     arow = ones(nCutPix).astype(bool)
-    grow = outer(arow,allcamlist).ravel(order='F')
+    grow = outer(arow,useCamBool).ravel(order='F')
     L = L[grow,:]
-
-
-    return L
+    ''' store indices of b vector corresponding to each camera (in case some cameras not used) '''
+    i=0
+    for c in cam:
+        if cam[c].use is True: #boolean
+            cam[c].ind = s_[ i*nCutPix : (i+1)*nCutPix ]
+            i+=1
+            
+    return L,cam

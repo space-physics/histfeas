@@ -17,6 +17,8 @@ class Cam: #use this like an advanced version of Matlab struct
     def __init__(self,sim,cp,name,zmax,dbglvl):
         self.dbglvl = dbglvl
         self.name = name
+        self.use = bool(cp['useCam'])
+        self.ind = None #will be set in ObserveVolume.py if camera is used.
 
         self.pixarea_m = cp['pixarea_m']
         self.pedn = cp['pedn']
@@ -123,28 +125,28 @@ class Cam: #use this like an advanced version of Matlab struct
     def doorient(self,az,el,ra,dec):
         if self.transpose:
             if self.dbglvl>0:
-                print('tranposing cam ' + self.name + ' az/el/ra/dec data')
+                print('tranposing cam #{} az/el/ra/dec data. '.format(self.name))
             az  = az.T
             el  = el.T
             ra  = ra.T
             dec = dec.T
         if self.flipLR:
             if self.dbglvl>0:
-                print('flipping horizontally cam ' + self.name + ' az/el/ra/dec data')
+                print('flipping horizontally cam #{} az/el/ra/dec data.'.format(self.name))
             az  = fliplr(az)
             el  = fliplr(el)
             ra  = fliplr(ra)
             dec = fliplr(dec)
         if self.flipUD:
             if self.dbglvl>0:
-                print('flipping vertically cam ' + self.name + ' az/el/ra/dec data')
+                print('flipping vertically cam #{} az/el/ra/dec data.'.format(self.name))
             az  = flipud(az)
             el  = flipud(el)
             ra  = flipud(ra)
             dec = flipud(dec)
         if self.rotCCW != 0:
             if self.dbglvl>0:
-                print('rotating cam ' + self.name + ' az/el/ra/dec data')
+                print('rotating cam #{} az/el/ra/dec data.'.format(self.name))
             az  = rot90(az, k = self.rotCCW)
             el  = rot90(el, k = self.rotCCW)
             ra  = rot90(ra, k = self.rotCCW)
@@ -157,7 +159,7 @@ class Cam: #use this like an advanced version of Matlab struct
     def debias(self,data):
         if isfinite(self.debiasData):
             if self.dbglvl>0:
-                print('Debiasing Data for Camera #' + self.name )
+                print('Debiasing Data for Camera #{}'.format(self.name) )
             data -= self.debiasData
         return data
 
@@ -165,7 +167,7 @@ class Cam: #use this like an advanced version of Matlab struct
          noisy = data.copy()
 
          if isfinite(self.noiseStd):
-             print('adding noise with std dev {:0.1e}'.format(self.noiseStd) + ' to camera'+self.name)
+             print('adding noise with std dev {:0.1e} to camera #{}'.format(self.noiseStd,self.name))
              dnoise = self.noiseStd*(standard_normal(size=self.nCutPix))
              noisy += dnoise
          else:
@@ -173,7 +175,7 @@ class Cam: #use this like an advanced version of Matlab struct
 
 
          if isfinite(self.ccdbias):
-             print('adding bias {:0.1e}'.format(self.ccdbias) + ' to camera'+self.name)
+             print('adding bias {:0.1e} to camera #{}'.format(self.ccdbias,self.name))
              noisy += self.ccdbias
 
          # kept for diagnostic purposes
@@ -196,14 +198,14 @@ class Cam: #use this like an advanced version of Matlab struct
     def dosmooth(self,data):
         if self.smoothspan > 0 and self.savgolOrder>0:
             if self.dbglvl>0:
-                print('Smoothing Data for Camera #' + self.name)
+                print('Smoothing Data for Camera #{}'.format(self.name))
             data= savgol_filter(data, self.smoothspan, self.savgolOrder)
         return data #LEAVE THIS AS SEPARATE LINE!
 
     def fixnegval(self,data):
         negDataInd = data<0
         if negDataInd.any():
-            print('* Setting',negDataInd.sum(),' negative Data values to 0 for Camera #' + self.name )
+            print('* Setting {} negative Data values to 0 for Camera #{}'.format(negDataInd.sum(), self.name))
             data[negDataInd] = 0
 
         self.nonneg = data
@@ -211,7 +213,7 @@ class Cam: #use this like an advanced version of Matlab struct
     def scaleintens(self,data):
         if isfinite(self.intensityScaleFactor) and self.intensityScaleFactor !=1 :
             if self.dbglvl>0:
-                print( 'Scaling data to Cam #' + self.name + ' by factor of ',self.intensityScaleFactor )
+                print('Scaling data to Cam #' + self.name + ' by factor of ',self.intensityScaleFactor )
             data *= self.intensityScaleFactor
             #assert isnan(data).any() == False
         return data
@@ -308,7 +310,7 @@ class Cam: #use this like an advanced version of Matlab struct
             from matplotlib.pyplot import figure
             clr = ['b','r','g','m']
             ax = figure().gca()
-            ax.plot(nearCol,nearRow,color=clr[int(self.name)],label='cam'+self.name+'preLSQ',
+            ax.plot(nearCol,nearRow,color=clr[int(self.name)],label='cam{}preLSQ'.format(self.name),
                     linestyle='None',marker='.')
             ax.legend()
             ax.set_xlabel('x'); ax.set_ylabel('y')

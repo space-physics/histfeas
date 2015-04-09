@@ -4,12 +4,12 @@ import h5py
 from os.path import join
 from coordconv3d import ecef2aer, ecef2geodetic
 
-def get1Dcut(cam,useCamInd,makeplot,progms,dbglvl):
+def get1Dcut(cam,makeplot,progms,dbglvl):
     discardEdgepix = True #gets rid of duplicates beyond FOV of image that cause lsq estimation error
 #%% determine slant range between other camera and magnetic zenith to evaluate at
     srpts = logspace(4.3,6.9,25) #4.5 had zero discards for hst0 #6.8 didn't quite get to zenith
 #%% (0) load az/el data from Astrometry.net
-    for c in cam.keys():
+    for c in cam:
         with h5py.File(cam[c].cal1Dfn,'r',libver='latest') as f:
             cam[c].doorient(f['/az'],f['/el'], f['/ra'], f['/dec'])
             #xind = fid['/x'].value;      #yind = fid['/y'].value
@@ -17,7 +17,7 @@ def get1Dcut(cam,useCamInd,makeplot,progms,dbglvl):
         cam[c].toecef(srpts)
 
     #optional: plot ECEF of points between each camera and magnetic zenith (lying at az,el relative to each camera)
-    plotLOSecef(cam,useCamInd,makeplot,progms,dbglvl)
+    plotLOSecef(cam,makeplot,progms,dbglvl)
 #%% (2) get az,el of these points from camera to the other camera's points
     cam['0'].az2pts,cam['0'].el2pts,cam['0'].r2pts = ecef2aer(cam['1'].x2mz, cam['1'].y2mz, cam['1'].z2mz,
                                                              cam['0'].lat, cam['0'].lon, cam['0'].alt_m)
@@ -25,7 +25,7 @@ def get1Dcut(cam,useCamInd,makeplot,progms,dbglvl):
                                                              cam['1'].lat, cam['1'].lon, cam['1'].alt_m)
 #%% (3) find indices corresponding to these az,el in each image
         # and Least squares fit line to nearest points found in step 3
-    for c in cam.keys():
+    for c in cam:
         cam[c].findClosestAzel(discardEdgepix)
 
 #%%
@@ -33,13 +33,13 @@ def get1Dcut(cam,useCamInd,makeplot,progms,dbglvl):
         dbgfn = join(progms,'debugLSQ.h5')
         print('writing', dbgfn)
         with h5py.File(dbgfn,libver='latest') as fid:
-            for c in cam.keys():
+            for c in cam:
                 fid.create_dataset('/cam'+c+'/cutrow',data= cam[c].cutrow)
                 fid.create_dataset('/cam'+c+'/cutcol', data = cam[c].cutcol)
                 fid.create_dataset('/cam'+c+'/xpix', data = cam[c].xpix)
     return cam
 
-def plotLOSecef(cam,useCamInd,makeplot,progms,dbglvl):
+def plotLOSecef(cam,makeplot,progms,dbglvl):
     from matplotlib.pyplot import figure
     if dbglvl>0:
         figecef = figure(238923)
@@ -49,7 +49,7 @@ def plotLOSecef(cam,useCamInd,makeplot,progms,dbglvl):
             kml1d = skml.Kml()
 
 
-    for c in cam.keys():
+    for c in cam:
         if dbglvl>0: #SHOW PLOT
             axecef = figecef.gca(projection='3d')
             axecef.plot(xs=cam[c].x2mz, ys=cam[c].y2mz, zs=cam[c].z2mz, zdir='z',
@@ -83,8 +83,8 @@ def plotLOSecef(cam,useCamInd,makeplot,progms,dbglvl):
 
 
 #
-#def findClosestAzel(cam,useCamInd, discardEdgepix,dbglvl):
-#    for c in cam.keys():
+#def findClosestAzel(cam, discardEdgepix,dbglvl):
+#    for c in cam:
 #        azImg,elImg,azVec,elVec = cam[c].az, cam[c].el, cam[c].az2pts,cam[c].el2pts,
 #
 #        ny,nx = cam[c].ypix, cam[c].xpix
