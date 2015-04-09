@@ -9,6 +9,10 @@ from nans import nans
 #from pdb import set_trace
 
 def getObs(sim,cam,L,tDataInd,ver,makePlots,dbglvl):
+    """
+    real data: extract brightness vector from disk data
+    simulation: create brightness from projection matrix and fwd model VER
+    """
 
     nCutPix = sim.nCutPix
 
@@ -33,7 +37,7 @@ def getObs(sim,cam,L,tDataInd,ver,makePlots,dbglvl):
         bp = L.dot(ver.ravel(order='F'))
         assert bp.size == nCutPix * sim.nCamUsed
 
-        bn = nans(bp.shape)
+        bn = nans(bp.shape) #nans as a flag to check if something screwed up
         for c in cam:
             cInd = cam[c].ind
             bn[cInd] = mogrifyData(bp[cInd],cam[c])
@@ -192,10 +196,7 @@ def removeUnusedCamera(L,useCamBool,nCutPix,cam):
     grow = outer(arow,useCamBool).ravel(order='F')
     L = L[grow,:]
     ''' store indices of b vector corresponding to each camera (in case some cameras not used) '''
-    i=0
-    for c in cam:
-        if cam[c].use is True: #boolean
-            cam[c].ind = s_[ i*nCutPix : (i+1)*nCutPix ]
-            i+=1
-            
+    for i,c in enumerate(cam):
+        cam[c].ind = s_[ i*nCutPix : (i+1)*nCutPix ]
+
     return L,cam

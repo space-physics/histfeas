@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 from numpy import asarray,where,arange,isfinite,ceil,hypot
-import h5py
+import numpy as np
 from os.path import join
 #
 import sys
@@ -23,7 +23,7 @@ class Sim:
         self.useCamBool = cp.loc['useCam'].values.astype(bool)
 
         if usecamreq[0] is not None:
-            assert (self.useCamBool == usecamreq.astype(bool)).all()
+            assert np.all(where(self.useCamBool)[0] == usecamreq) #not .all() in case of different length
 
         self.nCamUsed = self.useCamBool.sum() #it is an int
 
@@ -138,7 +138,8 @@ class Sim:
         self.artinit = str(sp.at['initVector','ART']).lower()
         try:
             self.artmaxiter = int(sp.at['maxIter','ART'])
-        except ValueError:
+        except ValueError as e:
+            print('* problem with ART max iter value.  {}'.format(e))
             self.artmaxiter = 0
         self.artlambda = sp.at['lambda','ART']
         self.artstop = sp.at['stoprule','ART']
