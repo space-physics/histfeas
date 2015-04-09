@@ -1016,7 +1016,7 @@ def writeplots(fg,plotprefix,tInd,method,progms,overridefmt=None):
         else:
             fmt = array(tmpl)[used][0]
         cn = join(progms,(plotprefix + '_t{:03d}.{:s}'.format(tInd,fmt)))
-        print('saving ' + cn)
+        print('save {}...'.format(cn),end='')
         fg.savefig(cn,bbox_inches='tight',dpi=plotdpi,format=fmt)  # this is slow and async
 #%%
 def getx0E0(jf,Ek,x,tInd,progms,makeplot):
