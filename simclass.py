@@ -28,8 +28,11 @@ class Sim:
         self.nCamUsed = self.useCamBool.sum() #it is an int
 
         self.nCutPix = cp.at['nCutPix',0] #FIXME someday allow different # of pixels..
-        self.allCamXkm = cp.ix['Xkm',:].values.astype(float)
-        self.allCamZkm = cp.ix['Zkm',:].values.astype(float)
+        self.allCamXkm = cp.loc['Xkm'].values.astype(float)
+        self.allCamZkm = cp.loc['Zkm'].values.astype(float)
+
+        self.obsalt_km = cp.loc['Zkm'].values.mean() #FIXME assuming cameras are at a very similar altitudes
+        self.zenang = 90.-cp.loc['Bincl'].values.mean() #FIXME assuming all in same plane and that difference in boresight path length are 'small'
 
         #%% camera position override
         self.camxreq = overrides['camx']
@@ -187,8 +190,8 @@ class Sim:
     def getEllHash(self,sp,cp):
         from hashlib import md5
 
-        EllCritParams =  [cp.ix['Xkm',:].values, cp.ix['Zkm',:].values,
-                          cp.ix['nCutPix',:].values, cp.ix['FOVmaxLengthKM',:].values,
+        EllCritParams =  [cp.loc['Xkm'].values, cp.loc['Zkm'].values,
+                          cp.loc['nCutPix'].values, cp.loc['FOVmaxLengthKM'].values,
                           sp.at['RayAngleMapping','Obs'].lower(),
                           sp.at['XcellKM','Fwdf'],
                           sp.at['XminKM','Fwdf'], sp.at['XmaxKM','Fwdf'],
@@ -200,8 +203,8 @@ class Sim:
                                   sp.at['ZminKM','Fwdf'], sp.at['ZmaxKM','Fwdf'] ])
 
         if self.raymap == 'arbitrary':
-            EllCritParams.extend([cp.ix['boresightElevDeg',:].values,
-                                  cp.ix['FOVdeg',:].values])
+            EllCritParams.extend([cp.loc['boresightElevDeg'].values,
+                                  cp.loc['FOVdeg'].values])
 
         # get a long string from a mix of numbers and strings
         EllTxt = ''.join([str(n) for n in EllCritParams]) #so fast!
