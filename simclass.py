@@ -141,8 +141,7 @@ class Sim:
         self.artinit = str(sp.at['initVector','ART']).lower()
         try:
             self.artmaxiter = int(sp.at['maxIter','ART'])
-        except ValueError as e:
-            print('* problem with ART max iter value.  {}'.format(e))
+        except ValueError: #this is normal,just means we're not using ART
             self.artmaxiter = 0
         self.artlambda = sp.at['lambda','ART']
         self.artstop = sp.at['stoprule','ART']

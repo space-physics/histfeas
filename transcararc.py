@@ -3,6 +3,7 @@ from numpy import (asfortranarray,atleast_3d, exp,sinc,pi,zeros, outer,
 from sys import path
 import h5py
 from scipy.interpolate import interp1d
+from warnings import warn
 #
 path.append('../transcar-utils')
 from readTranscar import getTranscar
@@ -24,7 +25,7 @@ def getColumnVER(zgrid,zTranscar,Peig,Phi0,zKM):
     if zgrid: #using original transcar z-locations
         Tm = Peig
     else:
-        print('* cubic interpolating Transcar altitude, use caution that VER peaks arent missed...')
+        warn('* cubic interpolating Transcar altitude, use caution that VER peaks arent missed...')
         fver = interp1d(zTranscar, Peig, axis=0, kind='cubic')
         Tm = asfortranarray(fver(zKM))
 
@@ -37,11 +38,11 @@ def getMp(sim,zKM,makeplot,dbglvl):
         Ek = Peigen.columns.values
         zTranscar = Peigen.index.values
     except AttributeError as e:
-        print('*** getMp: it appears there was trouble earlier on with getTranscar, aborting. {}'.format(e))
+        warn('*** getMp: it appears there was trouble earlier on with getTranscar, aborting. {}'.format(e))
         return None
 #%% clip to Hist requested altitudes
     if not allclose(zKM,zTranscar):
-        print('** getMp: warning, attempting to trim altitude grid, this may not be successful due to floating point error')
+        warn('** getMp: warning, attempting to trim altitude grid, this may not be successful due to floating point error')
         goodAltInd = (zKM[0] < zTranscar) &  (zTranscar < zKM[-1])
         Peig = asfortranarray(Peigen.values[goodAltInd,:])
     else:
