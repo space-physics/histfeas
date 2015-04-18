@@ -83,7 +83,7 @@ def doSim(ParamFN,savedump,makeplot,datadump,timeInds,overrides,progms,x1d,vlim,
             print('** WARNING: feeding minizer true answer times {}'.format(randfact))
             Phi0r = randfact * Phi0.ravel(order='F')
         else: #normal case, no a priori
-            Phi0r = zeros(Fwd['sx']*Peig['Mp'].shape[1],dtype=float) #ones() is NOT appropriate -- should be tapered down for higher energy beams!! per JLS!
+            Phi0r = zeros(Fwd['sx']*Peig['Mp'].shape[1]) #ones() is NOT appropriate -- must be tapered down for higher energy beams to keep physically plausible.
 
         Pfit,jfit,Tm,bfit = FitVER(Lfwd, bn, Phi0r, Peig, sim, cam,Fwd, makeplot,dbglvl)
 #%% collect results
