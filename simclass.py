@@ -3,9 +3,7 @@ from numpy import asarray,where,arange,isfinite,ceil,hypot
 import numpy as np
 from os.path import join
 #
-import sys
-sys.path.append('../transcar-utils')
-from readionoinit import getaltgrid
+from transcarutils.readionoinit import getaltgrid
 
 class Sim:
 
