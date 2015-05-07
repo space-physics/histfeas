@@ -4,9 +4,7 @@ from numba import jit
 from numpy import empty,ones,ravel_multi_index,hypot,zeros
 from scipy.sparse import dok_matrix,issparse
 # local
-import sys
-sys.path.append("../cv-utils")
-from lineClipping import cohensutherland
+from CVutils.lineClipping import cohensutherland
 
 '''
  Michael Hirsch

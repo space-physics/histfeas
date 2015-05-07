@@ -5,10 +5,9 @@ import h5py
 from scipy.interpolate import interp1d
 from warnings import warn
 #
-path.append('../transcar-utils')
-from readTranscar import getTranscar
-from eFluxGen import fluxgen
-from findnearest import find_nearest
+from transcarutils.readTranscar import getTranscar
+from transcarutils.eFluxGen import fluxgen
+from histutils.findnearest import find_nearest
 
 
 def getTranscarMp(sim,makeplot,dbglvl):
