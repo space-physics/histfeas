@@ -20,8 +20,6 @@ from os import makedirs
 from numpy import absolute,zeros,asarray,in1d,arange
 from numpy.random import normal
 import h5py
-from sys import path
-path.extend(['../python-mapping','../astrometry','../hist-utils'])
 from sanityCheck import getParams
 
 def doSim(ParamFN,savedump,makeplot,datadump,timeInds,overrides,progms,x1d,vlim,animtime, dbglvl):

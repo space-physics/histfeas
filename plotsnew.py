@@ -12,7 +12,7 @@ from os.path import join
 from scipy.interpolate import interp1d
 #
 from gaussfitter import gaussfit,twodgaussian
-from findnearest import find_nearest
+from histutils.findnearest import find_nearest
 #%% plot globals
 afs = 20
 tfs = 22
@@ -799,7 +799,7 @@ def plotB(bpix,isrealdata,cam,nCutPix,vlim,tInd,makeplot,labeltxt,cord,sfmt,figh
 #        ax2.set_ylabel( fittxt + ' Data Numbers',labelpad=0,fontsize=afs)
 #%% make plot
     for c in cam:
-        std.append('{:0.1e}'.format(cam[c].noiseStd))
+        std.append('{:0.1e}'.format(cam[c].noiselam))
         cInd = cam[c].ind
         ax1.plot(cam[c].angle_deg,
                 bpix[cInd],
@@ -809,7 +809,7 @@ def plotB(bpix,isrealdata,cam,nCutPix,vlim,tInd,makeplot,labeltxt,cord,sfmt,figh
     doBlbl(ax1,isrealdata,sfmt[0],vlim,labeltxt,std) #b is never log
     writeplots(fg,'b'+labeltxt[4:-2],tInd,makeplot,progms,format1d)
 
-def doBlbl(ax,isrealdata,sfmt,vlim,labeltxt,noiseStd):
+def doBlbl(ax,isrealdata,sfmt,vlim,labeltxt,noiselam):
     ax.legend(loc='upper left',fontsize=afs)
     ax.set_title('Observer Intensity',fontsize=tfs, y = 1.02)
 
