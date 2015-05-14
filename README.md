@@ -7,7 +7,7 @@ installation:
 ------------
 ```
 git clone --recursive --depth 1 https://github.com/scienceopen/hist-feasibility
-conda install --file requirements.txt
+pip install -r requirements.txt
 ```
 
 examples:
