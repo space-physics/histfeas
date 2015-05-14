@@ -1,16 +1,13 @@
 # hist-feasibility
 Feasibility study for auroral tomography
 
-This program should be runnable on any Python 3.4 platform. Primarily tested on Linux.
+This program should be runnable on any Python 2.7 or 3.4 platform. 
 
-pre-install:
+installation:
 ------------
 ```
-mkdir ~/hist-code && cd ~/hist-code
-git clone https://github.com/scienceopen/astrometry.git
-git clone https://github.com/scienceopen/hist-utils.git
-git clone https://github.com/scienceopen/python-mapping.git
-git clone https://github.com/scienceopen/transcar-utils.git
+git clone --recursive --depth 1 https://github.com/scienceopen/hist-feasibility
+conda install --file requirements.txt
 ```
 
 examples:
@@ -53,20 +50,14 @@ The third line uses my wrapper and post-processing based on Astrometry.net to ma
 
 cam0
 ```
- ./hist-utils/rawDMCreader.py -i ~/HSTdata/DataField/2013-04-14/HST0/2013-04-14T07-00-CamSer7196_frames_363000-1-369200.DMCdata -f 0 10 1 --avg --fits
+ ./histutils/rawDMCreader.py -i ~/HSTdata/DataField/2013-04-14/HST0/2013-04-14T07-00-CamSer7196_frames_363000-1-369200.DMCdata -f 0 10 1 --avg --fits
  mv ~/HSTdata/DataField/2013-04-14/HST1/2013-04-14T07-00-CamSer7196_frames_363000-1-369200_mean_frames.fits ~/HST/calibration/hst0cal.fits
  ./astrometry/fits2azel.py -i ~/HST/calibration/hst0cal.fits --h5 -c 65.1186367 -147.432975 -t 2013-04-14T08:54:00Z --png
 ```
 
 cam1
 ```
- ./hist-utils/rawDMCreader.py -i ~/HSTdata/DataField/2013-04-14/HST1/2013-04-14T07-00-CamSer1387_frames_205111-1-208621.DMCdata -f 0 10 1 --avg --fits
+ ./histutils/rawDMCreader.py -i ~/HSTdata/DataField/2013-04-14/HST1/2013-04-14T07-00-CamSer1387_frames_205111-1-208621.DMCdata -f 0 10 1 --avg --fits
  mv ~/HSTdata/DataField/2013-04-14/HST1/2013-04-14T07-00-CamSer1387_frames_205111-1-208621_mean_frames.fits ~/HST/calibration/hst1cal.fits
  ./astrometry/fits2azel.py -i ~/HST/calibration/hst1cal.fits --h5 -c 65.12657 -147.496908333 -t 2013-04-14T08:54:00Z --png
-```
-
-Prerequisites:
---------------
-```
-pip install -r requirements.txt
 ```
