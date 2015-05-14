@@ -6,11 +6,11 @@ from os.path import expanduser
 from dateutil.parser import parse
 from scipy.signal import savgol_filter
 from six import string_types
-from numpy.random import standard_normal
+from numpy.random import poisson
 #
-from azel2radec import azel2radec
-from haversine import angledist
-from coordconv3d import aer2ecef
+from pymap3d.azel2radec import azel2radec
+from pymap3d.haversine import angledist
+from pymap3d.coordconv3d import aer2ecef
 
 
 class Cam: #use this like an advanced version of Matlab struct
@@ -88,7 +88,7 @@ class Cam: #use this like an advanced version of Matlab struct
 #        else:
 #            exit('*** unknown ray mapping method ' + self.raymap)
 #%% pixel noise/bias
-        self.noiseStd = cp['noiseStd']
+        self.noiselam = cp['noiseLam']
         self.ccdbias = cp['CCDBias']
         self.debiasData = cp['debiasData']
         self.smoothspan = cp['smoothspan']
@@ -165,10 +165,10 @@ class Cam: #use this like an advanced version of Matlab struct
     def donoise(self,data):
          noisy = data.copy()
 
-         if isfinite(self.noiseStd):
+         if isfinite(self.noiselam):
              if self.dbglvl>0:
-                 print('adding noise with std dev {:0.1e} to camera #{}'.format(self.noiseStd,self.name))
-             dnoise = self.noiseStd*(standard_normal(size=self.nCutPix))
+                 print('adding Poisson noise with \lambda={:0.1f} to camera #{}'.format(self.noiselam,self.name))
+             dnoise = poisson(lam=self.noiselam,size=self.nCutPix)
              noisy += dnoise
          else:
              dnoise = None
@@ -185,16 +185,6 @@ class Cam: #use this like an advanced version of Matlab struct
          self.noisy = noisy
 
          return noisy
-         """
-         note the method below actually doesn't work quite right--thin spike in real data gets
-         less noise than spread out low peak data!
-         """
-         # Add noise, as percent of signal on PER CAMERA basis
-         #  where is reference for this!?
-         # self.std = self.noiseStd * norm(data,ord=2)
-         #print(norm(data,ord=2))
-         #en = standard_normal(size = self.nCutPix) # vector of zero-mean gaussian noise
-         #return data + self.ccdbias + self.std * en / norm(en,ord=2) #scaling noise
 
     def dosmooth(self,data):
         if self.smoothspan > 0 and self.savgolOrder>0:
