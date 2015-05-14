@@ -20,7 +20,7 @@ def getParams(XLSfn,overrides,savedump,progms,dbglvl):
 #%% ***** must be outside camclass ********
     nCutPix = cp.loc['nCutPix'].values
     if not (nCutPix == nCutPix[0]).all():
-        exit('*** all cameras must have same 1D cut length')
+        exit('*** sanityCheck: all cameras must have same 1D cut length')
 #%% class with parameters and function
     sim = Sim(sp,cp,ap,overrides,progms,dbglvl)
 #%% grid setup
