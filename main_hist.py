@@ -20,6 +20,8 @@ from os import makedirs
 from numpy import absolute,zeros,asarray,in1d,arange
 from numpy.random import normal
 import h5py
+from datetime import timedelta
+#
 from sanityCheck import getParams
 
 def doSim(ParamFN,savedump,makeplot,datadump,timeInds,overrides,progms,x1d,vlim,animtime, dbglvl):
@@ -53,7 +55,7 @@ def doSim(ParamFN,savedump,makeplot,datadump,timeInds,overrides,progms,x1d,vlim,
 #%% synthetic diff. num flux
     if not sim.realdata:
         try:
-            Phi0all = getPhi0(sim,ap,Fwd['x'],Peig['Ek'], makeplot,dbglvl)
+            Phi0all,tsim = getPhi0(sim,ap,Fwd['x'],Peig['Ek'], makeplot,dbglvl)
         except TypeError as e:
             print('*** trouble with forward model. Exiting sim.   {}'.format(e))
             return
@@ -62,7 +64,13 @@ def doSim(ParamFN,savedump,makeplot,datadump,timeInds,overrides,progms,x1d,vlim,
         if sim.realdata:
             Phi0 = None; Pfwd = None; arc = None
         else: #sim
-            Phi0 = Phi0all[...,ti]
+            """
+            we need to integrate in time over the relevant time slices
+            the .sum(axis=2) does the integration/smearing in time
+            """
+            #FIXME qualify our selected times from the command line, so we don't overlap in time
+            cti = [tsim.index(t) for t in tsim if t>=tsim[ti]  and t<(tsim[ti]+timedelta(seconds=sim.kineticSec) ) ]
+            Phi0 = Phi0all[...,cti].sum(axis=2)
 #%% Step 1) Forward model
         Pfwd,arc = getSimVER(Phi0, Peig, Fwd, sim, ap.iloc[:,ti], ti, dbglvl)
 #%% Step 2) Observe Forward Model (create vector of observations)

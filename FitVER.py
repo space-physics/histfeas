@@ -16,9 +16,10 @@ def FitVERopt(L,bn,Phi0,MpDict,sim,cam,Fwd,makeplot,dbglvl):
 #%% scaling brightness
     """
     We could repeatedly downscale brightness in loop, but that consumes a lot of CPU.
-    It is equivalent to temporarily upscale observed brightness before loop.
+    It is equivalent to temporarily upscale observed brightness once before minimization
+    Then downscale once after minimization
     """
-    bscale = [cam[c].b_chipscale for c in cam]
+    bscale = [cam[c].intens2dn for c in cam]
     cInd = [cam[c].ind for c in cam]
     bnu = empty_like(bn)
     for s,c in zip(bscale,cInd):
@@ -97,7 +98,12 @@ def FitVERopt(L,bn,Phi0,MpDict,sim,cam,Fwd,makeplot,dbglvl):
 
         # we do this here so that we don't have to carry so many variables around
         vfit['optim'] = getColumnVER(sim.useztranscar,zTranscar, Mp, jfit.x, Fwd['z'])
-        bfit['optim'] = L.dot( vfit['optim'].ravel(order='F') )
+#%% downscale result to complement upscaling
+        bfitu = L.dot( vfit['optim'].ravel(order='F') )
+        for s,c in zip(bscale,cInd):
+            bfitu[c] *= s
+        bfit['optim'] = bfitu
+#%%
         # this is repeated because the assignment overwrites from minimize()
         jfit['EK'] = EK
         jfit['EKpcolor'] = EKpcolor
@@ -107,7 +113,7 @@ def FitVERopt(L,bn,Phi0,MpDict,sim,cam,Fwd,makeplot,dbglvl):
 
 def optfun(phiinv,L,Tm,b_obs,nEnergy,sx):
     """this provides the quantity to minimize
-    Phi0 is a vector b/c that's what minimize needs(), reshape is low cost (but this many times?)
+    Phi0 is a vector b/c that's what minimize needs, reshape is low cost (but this many times?)
     """
     pinv = Tm.dot(phiinv.reshape(nEnergy,sx,order='F'))
     binv = L.dot(pinv.ravel(order='F'))
