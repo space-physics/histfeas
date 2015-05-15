@@ -1,4 +1,4 @@
-from __future__ import print_function, division
+from __future__ import print_function, division,absolute_import
 from numpy import (in1d,s_,empty,empty_like,isnan,asfortranarray,linspace,outer,
                    sin,cos,pi,ones_like,array,nan,rint,unravel_index,meshgrid,
                    )
@@ -19,7 +19,7 @@ import plotly.plotly as py
 from plotly.graph_objs import *
 #
 from gaussfitter import gaussfit,twodgaussian
-from histutils.findnearest import find_nearest
+from .histutils.findnearest import find_nearest
 #%% plot globals
 afs = 20
 tfs = 22
