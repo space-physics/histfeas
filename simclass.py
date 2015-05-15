@@ -2,6 +2,7 @@ from __future__ import print_function, division
 from numpy import asarray,where,arange,isfinite,ceil,hypot
 import numpy as np
 from os.path import join
+from dateutil.parser import parse
 #
 from transcarutils.readionoinit import getaltgrid
 
@@ -91,7 +92,7 @@ class Sim:
         self.windowfn = sp.at['windowFN','Sim']
         self.qefn =sp.at['emccdQEfn','Sim']
         self.transcarev = sp.at['BeamEnergyFN','Transcar']
-        self.transcarutc = sp.at['tReq','Transcar']
+        self.transcarutc = parse(sp.at['tReq','Transcar'])
         self.excratesfn = sp.at['ExcitationDATfn','Transcar']
         self.transcarpath = sp.at['TranscarDataDir','Sim']
         self.reactionfn = sp.at['reactionParam','Transcar']
@@ -195,7 +196,7 @@ class Sim:
                           sp.at['EllIs','Sim'].lower(),
                           sp.at['UseTCz','Transcar'] ]
 
-        if not self.useztranscar:
+        if not self.useztranscar: #FIXME maybe we should always consider these for best safety
             EllCritParams.extend([sp.at['ZcellKM','Fwdf'],
                                   sp.at['ZminKM','Fwdf'], sp.at['ZmaxKM','Fwdf'] ])
 

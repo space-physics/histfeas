@@ -76,9 +76,12 @@ def EllLineLength(Fwd,xFOVpixelEnds,zFOVpixelEnds,xCam,zCam,saveEll,Np,sim,makeP
 
 def goCalcEll(maxNell,nCam,Np,sz,sx,xpc,zpc,xFOVpixelEnds,zFOVpixelEnds,
                 xCam,zCam,plotEachRay,dbglvl=0):
+    usesparse=True
+    if usesparse:
+        L = dok_matrix(( Np*nCam,sz*sx),dtype=float) #sparse
+    else:
+        L = zeros( ( Np*nCam,sz*sx),dtype=float ,order='F') #dense
 
-    L = zeros( ( Np*nCam,sz*sx),dtype=float ,order='F') #dense
-    #L = dok_matrix(( Np*nCam,sz*sx),dtype=float) #sparse
 
     print('Dimensions of L:',L.shape,' sz=',sz, '  sx=',sx )
 
@@ -90,7 +93,10 @@ def goCalcEll(maxNell,nCam,Np,sz,sx,xpc,zpc,xFOVpixelEnds,zFOVpixelEnds,
                              xCam,zCam,nCam,plotEachRay,
                              L,Lcol,tmpEll,xzplot) #numba
 
-    return L#.tocsc()
+    if usesparse:
+        return L.tocsc()
+    else:
+        return L
 
 #@jit(['float64[:,:](int64,int64,int64,float64[:],float64[:],float64[:,:],float64[:,:],float64[:],float64[:],int64[:],bool_,float64[:,:],int64[:],float64[:],float64[:])'])
 def loopEll(Np,sz,sx,xpc,zpc,xFOVpixelEnds,zFOVpixelEnds,

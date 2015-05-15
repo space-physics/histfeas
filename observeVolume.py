@@ -164,7 +164,7 @@ def loadEll(Fwd,cam,EllFN,dbglvl):
 
 def mogrifyData(data,cam):
     #steps should be in this order!
-    data = cam.intens2dn(data) #considers pixel area and camera amplifier gain
+    data *= cam.intens2dn #considers pixel area and camera amplifier gain
     data = cam.scaleintens(data) #camera cross-calibration
 
     data = cam.donoise(data)

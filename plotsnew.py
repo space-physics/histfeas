@@ -3,13 +3,18 @@ from numpy import (in1d,s_,empty,empty_like,isnan,asfortranarray,linspace,outer,
                    sin,cos,pi,ones_like,array,nan,rint,unravel_index,meshgrid,
                    )
 from matplotlib.pyplot import (figure,subplots, clf,text,draw)
-from matplotlib.cm import get_cmap
+#from matplotlib.cm import get_cmap
 from matplotlib.colors import LogNorm
 from matplotlib.ticker import LogFormatterMathtext, MultipleLocator, ScalarFormatter #for 1e4 -> 1 x 10^4, applied DIRECTLY in format=
 #from matplotlib.image import imsave
 import h5py
 from os.path import join
 from scipy.interpolate import interp1d
+#import seaborn as sns
+#sns.set_style('whitegrid')
+#sns.set_palette('husl')
+import plotly.plotly as py
+from plotly.graph_objs import *
 #
 from gaussfitter import gaussfit,twodgaussian
 from histutils.findnearest import find_nearest
@@ -18,8 +23,8 @@ afs = 20
 tfs = 22
 tkfs = 16
 longtitle=False
-pcmcmap = get_cmap('jet')
-pcmcmap.set_under('white')
+#pcmcmap = get_cmap('jet')
+#pcmcmap.set_under('white')
 dymaj=100
 dymin=20
 format1d='png'
@@ -146,7 +151,7 @@ def goPlot(ParamFN,sim,arc,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Phi0,
 #%% ART Energy plots
     if 'jartadj' in makeplot:
         #fa,aa = subplots(nrows=1,ncols=2,sharex='col',num=992, figsize=(5,14))
-        plotJ(sim,fitp['phiARTadjoint'],xp,fitp['EKpcolor'],vlim['j'],tInd,makeplot,'jartadj',
+        plotJ(sim,fitp['phiARTadjoint'],xKM,xp,fitp['Ek'],fitp['EKpcolor'],vlim['j'],tInd,makeplot,'jartadj',
               '$\phi_{art,adj}[E,x]$ Estimated (ADJOINT) from ART VER',
               992,spfid,sfmt,cnorm,progms)
 #%% Forward model plots
@@ -158,7 +163,7 @@ def goPlot(ParamFN,sim,arc,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Phi0,
 
         if not sim.realdata:
     #       print('max |diff(phifwd)| = ' + str(np.abs(np.diff(phiInit, n=1, axis=0)).max()))
-            plotJ(sim,Phi0,xp,fitp['EKpcolor'],vlim['j'],tInd,makeplot,'phifwd',
+            plotJ(sim,Phi0,xKM,xp,fitp['Ek'],fitp['EKpcolor'],vlim['j'],tInd,makeplot,'phifwd',
                   ('$\Phi_{{top}}$ input diff. number flux'+ fwdloctxt),
                             2932,spfid,sfmt,cnorm,progms)
 
@@ -184,7 +189,7 @@ def goPlot(ParamFN,sim,arc,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Phi0,
 
         gx0hat,gE0hat,x0hat,E0hat = getx0E0(fitp['gaussian'],fitp['EK'],xKM,tInd,progms,makeplot)
 #'Neval = {:d}'.format(fitp.nfev)
-        plotJ(sim,fitp['gaussian'], xp, fitp['EKpcolor'], vlim['j'],tInd, makeplot,'jgaussian',
+        plotJ(sim,fitp['gaussian'], xKM,xp, fitp['Ek'],fitp['EKpcolor'], vlim['j'],tInd, makeplot,'jgaussian',
               ('$\widehat{\phi_{gaussian,optim}}[E,x]$ estimated diff. number flux' +
                fwdloctxt ),
               22992,spfid,sfmt,cnorm,progms)
@@ -212,7 +217,7 @@ def goPlot(ParamFN,sim,arc,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Phi0,
         print('Estimated $x_{{gauss,0}},E_{{gauss,0}}$={:0.2f}'.format(gx0hat) +
               ',' + '{:0.0f}'.format(gE0hat))
 
-        plotJ(sim,fitp.x,xp,fitp['EKpcolor'],vlim['j'],tInd,makeplot,'Phiest',
+        plotJ(sim,fitp.x,xKM,xp,fitp['Ek'],fitp['EKpcolor'],vlim['j'],tInd,makeplot,'Phiest',
               ('$\widehat{\phi}[E,x]$ estimated diff. number flux' + fwdloctxt ),
               992,spfid,sfmt,cnorm,progms)
               #'Neval = {:d}'.format(fitp.nfev)
@@ -228,7 +233,7 @@ def goPlot(ParamFN,sim,arc,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Phi0,
                                1992,spfid,progms)
 #%% Adjoint TJ plots
     if 'phiadj' in makeplot:
-        plotJ(sim,fitp['phiTJadjoint'],xp,fitp['EKpcolor'],vlim['j'],tInd,makeplot,'jadj',
+        plotJ(sim,fitp['phiTJadjoint'],xKM,xp,fitp['Ek'],fitp['EKpcolor'],vlim['j'],tInd,makeplot,'jadj',
                         '$\Phi_{adj}[E,x]$ Estimated diff. number flux from $LT\Phi=B$',
                          993,spfid,sfmt,cnorm,progms)
     if 'padj' in makeplot:
@@ -249,7 +254,7 @@ def goPlot(ParamFN,sim,arc,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Phi0,
 #              4993,spfid,sfmt,cnorm,progms)
 #%% maximum entropy
     if 'phimaxent' in makeplot:
-        plotJ(sim,fitp['maxent'],xp,fitp['EKpcolor'],vlim['j'],tInd,makeplot,'jme',
+        plotJ(sim,fitp['maxent'],xKM,xp,fitp['Ek'],fitp['EKpcolor'],vlim['j'],tInd,makeplot,'jme',
                               '$\Phi_{maxent}$ estimated diff. number flux',
                         994,spfid,sfmt,cnorm,progms)
 
@@ -286,14 +291,14 @@ def goPlot(ParamFN,sim,arc,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Phi0,
                 cax.set_ylabel('z [km]',labelpad=0)
                 cax.set_title('VER forward model vs. VER maximum entropy reconstruction')
                 cax.grid(True)
-                cax.yaxis.set_major_locator(MultipleLocator(100))
-                cax.yaxis.set_minor_locator(MultipleLocator(20))
+                cax.yaxis.set_major_locator(MultipleLocator(dymaj))
+                cax.yaxis.set_minor_locator(MultipleLocator(dymin))
                 print('max diff vmaxent-vfwd=' + str((vfit['maxent'][:,Jxi]-ver[:,Jxi]).max()))
             except Exception as e:
                 print('* could not plot vfwd vmaxent comparison.  {}'.format(e))
 #%% diff number flux from ART
     if 'jart' in makeplot:
-        plotJ(sim,fitp['art'],xp,fitp['EKpcolor'],vlim['j'],tInd,makeplot,'jart',
+        plotJ(sim,fitp['art'],xKM,xp,fitp['Ek'],fitp['EKpcolor'],vlim['j'],tInd,makeplot,'jart',
                         '$J_{art}[E,x]$ Estimated J from Kaczmarz ART on LT and b',
                          996,spfid,sfmt,cnorm,progms)
     if 'vart' in makeplot:
@@ -356,8 +361,8 @@ def plottphi0(Tm,Phi0,Jxi,Ek,zKM,vlim,sim,tInd,makeplot,prefix,progms):
 
     ax.legend(loc='upper left',framealpha=0.5)
 
-    ax.yaxis.set_major_locator(MultipleLocator(100))
-    ax.yaxis.set_minor_locator(MultipleLocator(20))
+    ax.yaxis.set_major_locator(MultipleLocator(dymaj))
+    ax.yaxis.set_minor_locator(MultipleLocator(dymin))
     ax.tick_params(axis='both', which='both', direction='in', labelsize=tkfs)
     ax.set_xlim(vlim[4:])
     ax.set_ylim(vlim[2:-2])
@@ -368,14 +373,15 @@ def ploteig(EKpcolor,zKM,Tm,vlim,sim,tInd,makeplot,prefix,progms):
 
     fg = figure(); ax = fg.gca()
     pcm = ax.pcolormesh(EKpcolor, zKM, Tm,
-                        edgecolors='none',cmap=pcmcmap, norm=LogNorm(),
+                        edgecolors='none',#cmap=pcmcmap,
+                        norm=LogNorm(),
                         vmin=vlim[4], vmax=vlim[5])
     ax.set_xlabel('Energy [eV]',fontsize=afs)
     ax.set_ylabel('$B_\parallel$ [km]',fontsize=afs)
     ax.autoscale(True,tight=True)
     ax.set_xscale('log')
-    ax.yaxis.set_major_locator(MultipleLocator(100))
-    ax.yaxis.set_minor_locator(MultipleLocator(20))
+    ax.yaxis.set_major_locator(MultipleLocator(dymaj))
+    ax.yaxis.set_minor_locator(MultipleLocator(dymin))
     mptitle = '$P_{eig}$, filter: ' + sim.opticalfilter
     mptitle += str(sim.reacreq)
 #    if sim.loadver:
@@ -402,8 +408,8 @@ def ploteig1d(Ek,zKM,Tm,vlim,sim,tInd,makeplot,prefix,progms):
 
     for i,e in enumerate(Ek[beamsel],firstbeamind):
         ax.semilogx(Tm[:,i], zKM,label='{:0.0f}'.format(e)+'eV')#,marker='.')
-    ax.yaxis.set_major_locator(MultipleLocator(100))
-    ax.yaxis.set_minor_locator(MultipleLocator(20))
+    ax.yaxis.set_major_locator(MultipleLocator(dymaj))
+    ax.yaxis.set_minor_locator(MultipleLocator(dymin))
     ax.set_ylabel('$B_\parallel$ [km]',fontsize=afs)
     ax.set_xlabel('volume emission rate [photons cm$^{-3}$s$^{-1}$]',fontsize=afs)
     ax.tick_params(axis='both', which='both', direction='in', labelsize=tkfs)
@@ -524,9 +530,9 @@ def plotJ1D(sim,PhiFwd,PhiInv,Ek,vlim,tInd,makeplot,prefix,titletxt,figh,spfid,p
     ax.grid(True)
     ax.autoscale(True,tight=False)
     ax.set_ylim(1, vlim[1])
-    ax.set_xlim([Ek[0]*0.95, Ek[-1]*1.05])
+    ax.set_xlim([Ek[0]*0.98, Ek[-1]*1.05])
 
-    ax.set_xlabel('particle energy [eV]',           fontsize=afs,labelpad=0)
+    ax.set_xlabel('particle energy [eV]', fontsize=afs,labelpad=0)
     ax.set_ylabel('Differential Number Flux  [cm$^{-2}$s$^{-1}$eV$^{-1}$]',fontsize=afs,labelpad=0)
     ax.set_title(titletxt,fontsize=tfs)
 
@@ -539,7 +545,7 @@ def plotJ1D(sim,PhiFwd,PhiInv,Ek,vlim,tInd,makeplot,prefix,titletxt,figh,spfid,p
     if 'h5' in makeplot:
         dumph5(sim,spfid,prefix,tInd,PhiFwd=PhiFwd,PhiInv=PhiInv,Ek=Ek)
 #%%
-def plotJ(sim,Jflux,xp,EKpcolor,vlim,tInd,makeplot,prefix,titletxt,figh,spfid,sfmt,cnorm,progms):
+def plotJ(sim,Jflux,x,xp,Ek,EKpcolor,vlim,tInd,makeplot,prefix,titletxt,figh,spfid,sfmt,cnorm,progms):
     plt3 = 'octave'#'octave' #'mpl'#'mayavi'
     #fontsizes
 
@@ -548,22 +554,34 @@ def plotJ(sim,Jflux,xp,EKpcolor,vlim,tInd,makeplot,prefix,titletxt,figh,spfid,sf
     pre = ('lin','log')
     vmin = (0.,1.)
     for c,s,v,p in zip(cnorm,sfmt,vmin,pre):
-        fg = figure(figh)
-        ax = fg.gca()
-        pcm = ax.pcolormesh(xp,EKpcolor,Jflux,edgecolors='none',
-                   cmap=pcmcmap, norm=c, rasterized=False,
-                   vmin=v, vmax=vlim[1]) #vmin can't be 0 when using LogNorm!
-                   #my recollection is that rasterized=True didn't really help savefig speed
-        cbar = fg.colorbar(pcm,format=s)
-        cbar.set_label('[cm$^{-2}$s$^{-1}$eV$^{-1}$]', labelpad=0, fontsize=afs)
-        cbar.ax.tick_params(labelsize=afs)
-        cbar.ax.yaxis.get_offset_text().set_size(afs)
-        cbar.ax.yaxis.get_offset_text().set_position((-1, 0))
-        ax.set_yscale('log')
+        if 'plotly' in makeplot:
+            dpy = Data([Contour(x=x,y=Ek,z=Jflux,
+                                xaxis='$B_\perp$ [km]',
+                                yaxis='$B_\parallel$ [km]')])
+            dlay= Layout(xaxis=XAxis(range=vlim[:2]),
+                         yaxis=YAxis(range=vlim[2:4]))
 
-        fg.subplots_adjust(top=0.85)
-        doJlbl(ax,titletxt)
-        writeplots(fg,prefix+p,tInd,makeplot,progms)
+            dfg = Figure(data=dpy,layout=dlay)
+
+            plot_url = py.plot(dfg, filename='{}_{}'.format(prefix,tInd))
+            #print(plot_url)
+        else:
+            fg = figure(figh)
+            ax = fg.gca()
+            pcm = ax.pcolormesh(xp,EKpcolor,Jflux,edgecolors='none',
+                       norm=c, rasterized=False, #cmap=pcmcmap,
+                       vmin=v, vmax=vlim[1]) #vmin can't be 0 when using LogNorm!
+                       #my recollection is that rasterized=True didn't really help savefig speed
+            cbar = fg.colorbar(pcm,format=s)
+            cbar.set_label('[cm$^{-2}$s$^{-1}$eV$^{-1}$]', labelpad=0, fontsize=afs)
+            cbar.ax.tick_params(labelsize=afs)
+            cbar.ax.yaxis.get_offset_text().set_size(afs)
+            cbar.ax.yaxis.get_offset_text().set_position((-1, 0))
+            ax.set_yscale('log')
+
+            fg.subplots_adjust(top=0.85)
+            doJlbl(ax,titletxt)
+            writeplots(fg,prefix+p,tInd,makeplot,progms)
 
 #%% 3-D
     if '3d' in makeplot:
@@ -652,7 +670,7 @@ def plotVER(sim,ver,x,xp,z,zp,vlim,tInd,makeplot,prefix,titletxt,figh,spfid,sfmt
     # http://stackoverflow.com/questions/13943217/how-to-add-colorbars-to-scatterplots-created-like-this
     # http://stackoverflow.com/questions/18856069/how-to-shrink-a-subplot-colorbar
     '''
-    figure(figh).clf()
+
 
 
     vmin=(0.,1.)
@@ -660,31 +678,53 @@ def plotVER(sim,ver,x,xp,z,zp,vlim,tInd,makeplot,prefix,titletxt,figh,spfid,sfmt
 
     if ver is not None:
         for c,s,v,p in zip(cnorm,sfmt,vmin,pre):
+          if 'plotly' in makeplot:
+            dpy = Data([Contour(x=x,y=z,z=ver)])
+            dlay= Layout(xaxis=XAxis(range=vlim[:2], title='$B_\perp$ [km]'),
+                         yaxis=YAxis(range=vlim[2:4],title='$B_\parallel$ [km]'))
+
+            dfg = Figure(data=dpy,layout=dlay)
+
+            plot_url = py.plot(dfg, filename='{}_{}'.format(prefix,tInd))
+            #print(plot_url)
+          else:
+            figure(figh).clf()
             fg = figure(figh)
             ax = fg.gca()
-            pcm = ax.pcolormesh(xp,zp,ver,edgecolors='none',cmap=pcmcmap,norm=c,
-                                vmin=v,vmax=vlim[5],
-                                rasterized=True)
+            if pstyle=='pcolor':
+                hc = ax.pcolormesh(xp,zp,ver,edgecolors='none',
+                                    norm=c, #cmap=pcmcmap,n
+                                    vmin=v,vmax=vlim[5],
+                                    rasterized=True)
 
-            ax.yaxis.set_major_locator(MultipleLocator(100))
-            ax.yaxis.set_minor_locator(MultipleLocator(20))
+            elif pstyle=='contour':
+                print(p)
+                hc = ax.contour(x,z,ver,fmt='%1.1e',
+                                norm=c,vmin=v,vmax=vlim[5],
+                                cmap=sns.dark_palette("palegreen", as_cmap=True))
+                ax.clabel(hc,fontsize=9,inline=1)
+
+                cbar = fg.colorbar(hc,format=s)
+                cbar.set_label('[photons cm$^{-3}$s$^{-1}$]',labelpad=0,fontsize=afs)
+                cbar.ax.tick_params(labelsize=afs)
+                cbar.ax.yaxis.get_offset_text().set_size(afs)
+                cbar.ax.yaxis.get_offset_text().set_position((-1, 0))
+                cbar.add_lines(hc)
+
+
+            ax.yaxis.set_major_locator(MultipleLocator(dymaj))
+            ax.yaxis.set_minor_locator(MultipleLocator(dymin))
             ax.xaxis.set_major_locator(MultipleLocator(1))
-            ax.xaxis.set_minor_locator(MultipleLocator(0.2))
-            ax.tick_params(axis='both', which='both', direction='out')
+            ax.xaxis.set_minor_locator(MultipleLocator(0.1))
+            ax.tick_params(axis='both', which='both', direction='out', labelsize=tfs) #not needed with seaborn
 
-            cbar = fg.colorbar(pcm,format=s)
-            cbar.set_label('[photons cm$^{-3}$s$^{-1}$]',labelpad=0,fontsize=afs)
-            cbar.ax.tick_params(labelsize=afs)
-            cbar.ax.yaxis.get_offset_text().set_size(afs)
-            cbar.ax.yaxis.get_offset_text().set_position((-1, 0))
-            ax.set_xlabel('$B_\perp$ [km]',fontsize=afs,labelpad=0)
-            ax.set_ylabel('$B_\parallel$ [km]',fontsize=afs,labelpad=0)
-            ax.autoscale(True,tight=True) #need this to fill axes (does not resize axes)
+            ax.set_xlabel('$B_\perp$ [km]',fontsize=afs)
+            ax.set_ylabel('$B_\parallel$ [km]',fontsize=afs)
+            #ax.autoscale(True,tight=True) #need this to fill axes (does not resize axes)
 
             ax.set_xlim(vlim[:2])
             ax.set_ylim(vlim[2:4])
-            ax.tick_params(axis='both', which='major', labelsize=tfs)
-            ax.set_title(titletxt,fontsize=tfs,y=1.02)
+            ax.set_title(titletxt,fontsize=tfs)
             writeplots(fg,prefix+p,tInd,makeplot,progms)
     else:
         text(0,0,'Using Actual Data (ver=None)')

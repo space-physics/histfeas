@@ -1,9 +1,9 @@
 from numpy import (asfortranarray,atleast_3d, exp,sinc,pi,zeros, outer,
                    isnan,log,logspace,where,empty,allclose)
-from sys import path
 import h5py
 from scipy.interpolate import interp1d
 from warnings import warn
+from datetime import timedelta
 #
 from transcarutils.readTranscar import getTranscar
 from transcarutils.eFluxGen import fluxgen
@@ -48,6 +48,7 @@ def getMp(sim,zKM,makeplot,dbglvl):
         Peig = asfortranarray(Peigen.values)
 #%% repack, with optional downsample
     if sim.downsampleEnergy:
+        print('** downsampling in energy **')
         Ek,EKpcolor,Peigen = downsampleEnergy(Ek,EKpcolor,Peig, sim.downsampleEnergy)
     return {'Mp':Peig,'ztc':zTranscar,'Ek':Ek,'EKpcolor':EKpcolor}
 
@@ -85,12 +86,15 @@ def getPhi0(sim,ap,xKM,Ek,makeplots,dbglvl):
                            ap.loc['Xshape'].values)
             for i in range(sim.nArc):
                 Phi0[...,i]  = outer(pz[:,i], px[i,:])
-    #%% manual zeroing of low fluxes
-        Phi0[Ek<sim.minbeamev,...] = 0
+
         assert xKM.size == Phi0.shape[1]
+    #%% obtain simulation time steps from spreadsheet
+        tsim = []
+        for i,ts in enumerate(ap.loc['tReqOffsetSec'].values.astype(float)):
+            tsim.append(sim.transcarutc + timedelta(seconds=ts))
     else:
         Phi0 = None
-    return Phi0
+    return Phi0,tsim
 
 def getpx(xKM,Wkm,X0,xs='gaussian'):
     px = zeros((X0.size,xKM.size),order='F') #since numpy 2-D array naturally iterates over rows

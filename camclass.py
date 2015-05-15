@@ -17,11 +17,7 @@ class Cam: #use this like an advanced version of Matlab struct
     def __init__(self,sim,cp,name,zmax,dbglvl):
         self.dbglvl = dbglvl
         self.name = name
-
-        self.pixarea_sqcm = cp['pixarea_sqcm']
-        self.pedn = cp['pedn']
-        self.ampgain = cp['ampgain']
-
+#%%
         self.lat = cp['latWGS84']
         self.lon = cp['lonWGS84']
         self.alt_m = cp['Zkm']*1e3
@@ -74,6 +70,20 @@ class Cam: #use this like an advanced version of Matlab struct
         self.arbfov = cp['FOVdeg']
 #%%
         self.kineticSec = 1. / cp['frameRateHz']
+#%% camera model
+        """
+        A model for sensor gain
+        pedn is photoelectrons per data number
+        This is used in fwd model and data inversion
+        """
+        self.pixarea_sqcm = cp['pixarea_sqcm']
+        self.pedn = cp['pedn']
+        self.ampgain = cp['ampgain']
+
+        if isfinite(self.kineticSec) and isfinite(self.pixarea_sqcm) and isfinite(self.pedn):
+            self.intens2dn = self.kineticSec * self.pixarea_sqcm * self.ampgain * self.ampgain / self.pedn
+        else:
+            self.intens2dn = 1
 #%% sky mapping
         cal1Ddir = sim.cal1dpath
         cal1Dname = cp['cal1Dname']
@@ -207,17 +217,6 @@ class Cam: #use this like an advanced version of Matlab struct
                 print('Scaling data to Cam #' + self.name + ' by factor of ',self.intensityScaleFactor )
             data *= self.intensityScaleFactor
             #assert isnan(data).any() == False
-        return data
-    def intens2dn(self,data):
-        """
-        A model for sensor gain
-        pedn is photoelectrons per data number
-        """
-        if isfinite(self.kineticSec) and isfinite(self.pixarea_sqcm) and isfinite(self.pedn):
-            self.b_chipscale = self.kineticSec * self.pixarea_sqcm * self.ampgain * self.ampgain / self.pedn
-        else:
-            self.b_chipscale = 1
-        data *= self.b_chipscale
         return data
 
     def dolowerthres(self,data):
