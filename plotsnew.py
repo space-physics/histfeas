@@ -10,9 +10,11 @@ from matplotlib.ticker import LogFormatterMathtext, MultipleLocator, ScalarForma
 import h5py
 from os.path import join
 from scipy.interpolate import interp1d
+#
 #import seaborn as sns
 #sns.set_style('whitegrid')
 #sns.set_palette('husl')
+#
 import plotly.plotly as py
 from plotly.graph_objs import *
 #
@@ -29,6 +31,7 @@ dymaj=100
 dymin=20
 format1d='png'
 plotdpi=50
+pstyle='contour'
 
 #%%
 def logfmt(makeplot):
