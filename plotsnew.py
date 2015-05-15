@@ -151,7 +151,7 @@ def goPlot(ParamFN,sim,arc,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Phi0,
 #%% ART Energy plots
     if 'jartadj' in makeplot:
         #fa,aa = subplots(nrows=1,ncols=2,sharex='col',num=992, figsize=(5,14))
-        plotJ(sim,fitp['phiARTadjoint'],xKM,xp,fitp['Ek'],fitp['EKpcolor'],vlim['j'],tInd,makeplot,'jartadj',
+        plotJ(sim,fitp['phiARTadjoint'],xKM,xp,fitp['EK'],fitp['EKpcolor'],vlim['j'],tInd,makeplot,'jartadj',
               '$\phi_{art,adj}[E,x]$ Estimated (ADJOINT) from ART VER',
               992,spfid,sfmt,cnorm,progms)
 #%% Forward model plots
@@ -163,7 +163,7 @@ def goPlot(ParamFN,sim,arc,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Phi0,
 
         if not sim.realdata:
     #       print('max |diff(phifwd)| = ' + str(np.abs(np.diff(phiInit, n=1, axis=0)).max()))
-            plotJ(sim,Phi0,xKM,xp,fitp['Ek'],fitp['EKpcolor'],vlim['j'],tInd,makeplot,'phifwd',
+            plotJ(sim,Phi0,xKM,xp,fitp['EK'],fitp['EKpcolor'],vlim['j'],tInd,makeplot,'phifwd',
                   ('$\Phi_{{top}}$ input diff. number flux'+ fwdloctxt),
                             2932,spfid,sfmt,cnorm,progms)
 
@@ -189,7 +189,7 @@ def goPlot(ParamFN,sim,arc,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Phi0,
 
         gx0hat,gE0hat,x0hat,E0hat = getx0E0(fitp['gaussian'],fitp['EK'],xKM,tInd,progms,makeplot)
 #'Neval = {:d}'.format(fitp.nfev)
-        plotJ(sim,fitp['gaussian'], xKM,xp, fitp['Ek'],fitp['EKpcolor'], vlim['j'],tInd, makeplot,'jgaussian',
+        plotJ(sim,fitp['gaussian'], xKM,xp, fitp['EK'],fitp['EKpcolor'], vlim['j'],tInd, makeplot,'jgaussian',
               ('$\widehat{\phi_{gaussian,optim}}[E,x]$ estimated diff. number flux' +
                fwdloctxt ),
               22992,spfid,sfmt,cnorm,progms)
@@ -217,7 +217,7 @@ def goPlot(ParamFN,sim,arc,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Phi0,
         print('Estimated $x_{{gauss,0}},E_{{gauss,0}}$={:0.2f}'.format(gx0hat) +
               ',' + '{:0.0f}'.format(gE0hat))
 
-        plotJ(sim,fitp.x,xKM,xp,fitp['Ek'],fitp['EKpcolor'],vlim['j'],tInd,makeplot,'Phiest',
+        plotJ(sim,fitp.x,xKM,xp,fitp['EK'],fitp['EKpcolor'],vlim['j'],tInd,makeplot,'Phiest',
               ('$\widehat{\phi}[E,x]$ estimated diff. number flux' + fwdloctxt ),
               992,spfid,sfmt,cnorm,progms)
               #'Neval = {:d}'.format(fitp.nfev)
@@ -233,7 +233,7 @@ def goPlot(ParamFN,sim,arc,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Phi0,
                                1992,spfid,progms)
 #%% Adjoint TJ plots
     if 'phiadj' in makeplot:
-        plotJ(sim,fitp['phiTJadjoint'],xKM,xp,fitp['Ek'],fitp['EKpcolor'],vlim['j'],tInd,makeplot,'jadj',
+        plotJ(sim,fitp['phiTJadjoint'],xKM,xp,fitp['EK'],fitp['EKpcolor'],vlim['j'],tInd,makeplot,'jadj',
                         '$\Phi_{adj}[E,x]$ Estimated diff. number flux from $LT\Phi=B$',
                          993,spfid,sfmt,cnorm,progms)
     if 'padj' in makeplot:
@@ -254,7 +254,7 @@ def goPlot(ParamFN,sim,arc,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Phi0,
 #              4993,spfid,sfmt,cnorm,progms)
 #%% maximum entropy
     if 'phimaxent' in makeplot:
-        plotJ(sim,fitp['maxent'],xKM,xp,fitp['Ek'],fitp['EKpcolor'],vlim['j'],tInd,makeplot,'jme',
+        plotJ(sim,fitp['maxent'],xKM,xp,fitp['EK'],fitp['EKpcolor'],vlim['j'],tInd,makeplot,'jme',
                               '$\Phi_{maxent}$ estimated diff. number flux',
                         994,spfid,sfmt,cnorm,progms)
 
@@ -298,7 +298,7 @@ def goPlot(ParamFN,sim,arc,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Phi0,
                 print('* could not plot vfwd vmaxent comparison.  {}'.format(e))
 #%% diff number flux from ART
     if 'jart' in makeplot:
-        plotJ(sim,fitp['art'],xKM,xp,fitp['Ek'],fitp['EKpcolor'],vlim['j'],tInd,makeplot,'jart',
+        plotJ(sim,fitp['art'],xKM,xp,fitp['EK'],fitp['EKpcolor'],vlim['j'],tInd,makeplot,'jart',
                         '$J_{art}[E,x]$ Estimated J from Kaczmarz ART on LT and b',
                          996,spfid,sfmt,cnorm,progms)
     if 'vart' in makeplot:
