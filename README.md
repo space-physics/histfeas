@@ -1,4 +1,7 @@
-# hist-feasibility
+[![Code Climate](https://codeclimate.com/github/scienceopen/hist-feasibility/badges/gpa.svg)](https://codeclimate.com/github/scienceopen/hist-feasibility)
+
+hist-feasibility
+================
 Feasibility study for auroral tomography
 
 This program should be runnable on any Python 2.7/3.4 platform. Primarily tested on Linux.
