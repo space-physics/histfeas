@@ -571,7 +571,7 @@ def plotJ(sim,Jflux,x,xp,Ek,EKpcolor,vlim,tInd,makeplot,prefix,titletxt,spfid,pr
 
             dfg = Figure(data=dpy,layout=dlay)
 
-            py.plot(dfg, filename='{}_{}'.format(prefix,tInd))
+            py.plot(dfg, filename='{}_{}_{}'.format(progms,prefix,tInd))
             #print(plot_url)
         else:
             fg = figure()
@@ -707,7 +707,7 @@ def plotVER(sim,ver,x,xp,z,zp,vlim,tInd,makeplot,prefix,titletxt,spfid,progms):
 
             dfg = Figure(data=dpy,layout=dlay)
 
-            py.plot(dfg, filename='{}_{}'.format(prefix,tInd))
+            py.plot(dfg, filename='{}_{}_{}'.format(progms,prefix,tInd))
             #print(plot_url)
           else:
             fg = figure()
