@@ -15,11 +15,11 @@ from scipy.interpolate import interp1d
 #sns.set_style('whitegrid')
 #sns.set_palette('husl')
 #
-import plotly.plotly as py
-from plotly.graph_objs import *
+#import plotly.plotly as py
+#from plotly.graph_objs import *
 #
 from gaussfitter import gaussfit,twodgaussian
-from .histutils.findnearest import find_nearest
+from histutils.findnearest import find_nearest
 #%% plot globals
 afs = 20
 tfs = 22
@@ -34,10 +34,14 @@ plotdpi=50
 pstyle='contour'
 
 #%%
-def logfmt(makeplot):
+def logfmt(makeplot,powlim=(-2,2)):
+    """
+    call this in EACH function--don't try to reuse or one plot will affect
+    the other, particularly a problem with colorbar() (in matplotlib 1.4.2/1.4.3 at least)
+    """
     cnorm = [None]
     sfmt = ScalarFormatter(useMathText=True) #for 10^3 instead of 1e3
-    sfmt.set_powerlimits((-2, 2))
+    sfmt.set_powerlimits(powlim)
     sfmt.set_scientific(True)
     sfmt.set_useOffset(False)
     sfmt = [sfmt]
@@ -74,8 +78,6 @@ def goPlot(ParamFN,sim,arc,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Phi0,
             Jxi = find_nearest(xKM,arc.x0)[0]
     else:
         Jxi = None
-#%% logrithmic axes
-    cnorm,sfmt = logfmt(makeplot)
 
 #%% eigenfunction
     if 'eig' in makeplot:
@@ -89,11 +91,11 @@ def goPlot(ParamFN,sim,arc,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Phi0,
 #%% optional show plots
     if 'realvid' in makeplot and sim.realdata:
         plotRealImg(sim,cam,rawdata,tInd,makeplot,'realdata','$I$',1830,
-                               spfid,'gray',cnorm,progms)
+                               spfid,'gray',progms)
 
     if 'singleraw' in makeplot and sim.realdata:
         plotPlainImg(sim,cam,rawdata,tInd,makeplot,'realdata','$I$',1831,
-                               spfid,'gray',cnorm,progms)
+                               spfid,'gray',progms)
 
 #%% scatter plot of LOS
     if 'kml' in makeplot or 'kmlrays' in makeplot:
@@ -132,15 +134,15 @@ def goPlot(ParamFN,sim,arc,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Phi0,
 
     if 'bartrecon' in makeplot:
 #        plotB(drn,cam,tInd,'$b$',cord,
-#              1995,axm,car,cac,'oneperplot')
+#              axm,car,cac,'oneperplot')
 #        plotB(dhat['art'],cam,tInd,'$\hat{b}$',cord[::-1],
-#              1995,axm,car,cac,['twinx','oneperplot'])
+#              axm,car,cac,['twinx','oneperplot'])
         plotBcompare(drn,dhat['artrecon'],cam,sim.nCamUsed,
                      nCutPix,'ART',cord,vlim['b'],tInd,1995,progms)
 #%% error plots
     if 'berror' in makeplot:
         plotB(drn - dhat['art'],sim.realdata,cam,nCutPix,vlim['b'],
-                            tInd,makeplot,'$\Delta{b}$',cord,sfmt,2990,progms)
+                            tInd,makeplot,'$\Delta{b}$',cord,progms)
 #%% characteristic energy determination for title labels
     #set_trace()
     gx0,gE0,x0,E0 = getx0E0(Phi0,fitp['EK'],xKM,tInd,progms,makeplot)
@@ -156,28 +158,29 @@ def goPlot(ParamFN,sim,arc,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Phi0,
         #fa,aa = subplots(nrows=1,ncols=2,sharex='col',num=992, figsize=(5,14))
         plotJ(sim,fitp['phiARTadjoint'],xKM,xp,fitp['EK'],fitp['EKpcolor'],vlim['j'],tInd,makeplot,'jartadj',
               '$\phi_{art,adj}[E,x]$ Estimated (ADJOINT) from ART VER',
-              992,spfid,sfmt,cnorm,progms)
+              spfid,progms)
 #%% Forward model plots
     if 'fwd' in makeplot:
-        plotB(drn,sim.realdata,cam,nCutPix,vlim['b'],
-                             tInd,makeplot,'$br',cord,sfmt,1990,progms)
+        plotB(drn,sim.realdata,cam,nCutPix,vlim['b'],tInd,makeplot,'$br',cord,progms)
 
         plotnoise(cam,tInd,makeplot,'bnoise',progms)
 
         if not sim.realdata:
+            # Forward model VER
+            plotVER(sim,ver,xKM,xp,zKM,zp,vlim['p'],tInd,makeplot,'pfwd',
+                ('$P_{{fwd}}$ volume emission rate' + fwdloctxt),
+                        spfid,progms)
+
     #       print('max |diff(phifwd)| = ' + str(np.abs(np.diff(phiInit, n=1, axis=0)).max()))
             plotJ(sim,Phi0,xKM,xp,fitp['EK'],fitp['EKpcolor'],vlim['j'],tInd,makeplot,'phifwd',
                   ('$\Phi_{{top}}$ input diff. number flux'+ fwdloctxt),
-                            2932,spfid,sfmt,cnorm,progms)
+                            spfid,progms)
 
             if not 'optim' in makeplot:
                 plotJ1D(sim,Phi0[:,Jxi],None,fitp['EK'],vlim['j'],tInd,makeplot,'phifwd_1D',
                      ('Differential Number flux at $B_\perp$={:0.2f} [km]'.format(xKM[Jxi])),
-                           3932,spfid,progms)
-    # Forward model VER
-            plotVER(sim,ver,xKM,xp,zKM,zp,vlim['p'],tInd,makeplot,'pfwd',
-                ('$P_{{fwd}}$ volume emission rate' + fwdloctxt),
-                        19900,spfid,sfmt,cnorm,progms)
+                           spfid,progms)
+
 
             if not 'optim' in makeplot:
                 plotVER1D(sim,ver[:,Jxi],None,zKM,vlim['p'][2:],tInd,makeplot,'pfwd_1D',
@@ -195,14 +198,14 @@ def goPlot(ParamFN,sim,arc,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Phi0,
         plotJ(sim,fitp['gaussian'], xKM,xp, fitp['EK'],fitp['EKpcolor'], vlim['j'],tInd, makeplot,'jgaussian',
               ('$\widehat{\phi_{gaussian,optim}}[E,x]$ estimated diff. number flux' +
                fwdloctxt ),
-              22992,spfid,sfmt,cnorm,progms)
+              spfid,progms)
 
         print('Estimated $x_{{gauss,0}},E_{{gauss,0}}$={:0.2f}'.format(gx0hat) +
               ',' + '{:0.0f}'.format(gE0hat))
 
         plotVER(sim,vfit['gaussian'],xKM,xp,zKM,zp,vlim['p'],tInd,makeplot,'vgaussian',
               ('$\widehat{P_{gaussian,optim}}$ volume emission rate' + fwdloctxt),
-              23992,spfid,sfmt,cnorm,progms)
+              spfid,progms)
 #%% optimize search plots
     if 'optim' in makeplot:
         print(fitp.message)
@@ -213,7 +216,7 @@ def goPlot(ParamFN,sim,arc,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Phi0,
 
         plotVER(sim,vfit['optim'],xKM,xp,zKM,zp,vlim['p'],tInd,makeplot,'pest',
               ('$\widehat{P}$ volume emission rate' + fwdloctxt),
-              3992,spfid,sfmt,cnorm,progms)
+              spfid,progms)
 
         #print('max |diff(phi)| = ' + str(np.abs(np.diff(fitp.x, n=1, axis=0)).max()))
         gx0hat,gE0hat,x0hat,E0hat = getx0E0(fitp.x,fitp['EK'],xKM,tInd,progms,makeplot)
@@ -222,7 +225,7 @@ def goPlot(ParamFN,sim,arc,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Phi0,
 
         plotJ(sim,fitp.x,xKM,xp,fitp['EK'],fitp['EKpcolor'],vlim['j'],tInd,makeplot,'Phiest',
               ('$\widehat{\phi}[E,x]$ estimated diff. number flux' + fwdloctxt ),
-              992,spfid,sfmt,cnorm,progms)
+              spfid,progms)
               #'Neval = {:d}'.format(fitp.nfev)
 
         if Jxi is not None:
@@ -233,50 +236,50 @@ def goPlot(ParamFN,sim,arc,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Phi0,
 
             plotJ1D(sim,Phi0[:,Jxi],fitp.x[:,Jxi],fitp['EK'],vlim['j'],tInd,makeplot,'Phiest_1D',
                        ('Differential Number flux at $B_\perp$={:0.2f} [km]'.format(xKM[Jxi])),
-                               1992,spfid,progms)
+                               spfid,progms)
 #%% Adjoint TJ plots
     if 'phiadj' in makeplot:
         plotJ(sim,fitp['phiTJadjoint'],xKM,xp,fitp['EK'],fitp['EKpcolor'],vlim['j'],tInd,makeplot,'jadj',
                         '$\Phi_{adj}[E,x]$ Estimated diff. number flux from $LT\Phi=B$',
-                         993,spfid,sfmt,cnorm,progms)
+                         spfid,progms)
     if 'padj' in makeplot:
         plotVER(sim,vfit['adj'],xKM,xp,zKM,zp,vlim['p'],tInd,makeplot,'vadj',
               '$\hat{P}_{adj}$ from unfiltered backprojection $A^+b$',
-              3993,spfid,sfmt,cnorm,progms)
+              spfid,progms)
     if 'badj' in makeplot:
 #        plotB(drn,cam,tInd,'$b$',cord,
-#              1991,'oneperplot')
+#              'oneperplot')
 #        plotB(dhat['fit_adj'],cam,tInd,'$b_{fit_adj}$',cord[::-1],
-#              1991,axm,car,cac,['twinx','oneperplot'])
+#              axm,car,cac,['twinx','oneperplot'])
         plotBcompare(drn,dhat['fit_adj'],cam,sim.nCamUsed,nCutPix,
                      bcomptxt,'adj',cord,vlim['b'],tInd,
                      2993,makeplot,progms)
 #    if 'vbackproj' in makeplot:
 #        plotVER(sim,Phat['vBackProj'],xKM,xp,zKM,zp,vlim['p'],tInd,makeplot,'vadj',
 #              '$\hat{v}_{back_projection}$ from unfiltered backprojection $A^+b$',
-#              4993,spfid,sfmt,cnorm,progms)
+#              spfid,progms)
 #%% maximum entropy
     if 'phimaxent' in makeplot:
         plotJ(sim,fitp['maxent'],xKM,xp,fitp['EK'],fitp['EKpcolor'],vlim['j'],tInd,makeplot,'jme',
                               '$\Phi_{maxent}$ estimated diff. number flux',
-                        994,spfid,sfmt,cnorm,progms)
+                            spfid,progms)
 
     if 'phimaxent1d' in makeplot and Jxi is not None:
         plotJ1D(sim,fitp['maxent'][:,Jxi],fitp['EK'],vlim['j'],tInd,makeplot,'jme_1D',
                 ('Differential Number flux at $B_\perp$={:0.2f} [km]'.format(xKM[Jxi])),
-                1994,spfid,progms)
+                spfid,progms)
     if 'bmaxent' in makeplot:
         plotBcompare(drn,dhat['fit_maxent'],cam,sim.nCamUsed, nCutPix,
                      bcomptxt, 'maxent',cord,vlim['b'],tInd,
                      2994,makeplot,progms)
 #        plotB(drn,cam,tInd,'$b$',cord,
-#              1992,axm,car,cac,'oneperplot')
+#              axm,car,cac,'oneperplot')
 #        plotB(dhat['fit_maxent'],cam,tInd,'$b_{fit_maxent}$',cord[::-1],
-#              1992,axm,car,cac,['twinx','oneperplot'])
+#              axm,car,cac,['twinx','oneperplot'])
     if 'pmaxent' in makeplot:
         plotVER(sim,vfit['maxent'],xKM,xp,zKM,zp,vlim['p'],tInd,makeplot,'maxent',
               '$\hat{v}_{maxent}$ from maximum entropy regularization',
-              3994,spfid,sfmt,cnorm,progms)
+              spfid,progms)
     if 'pmaxent1d' in makeplot and Jxi is not None:
         plotVER1D(sim,vfit['maxent'][:,Jxi],zKM,vlim['p'][2:],tInd,makeplot,
                   'vermaxent_1D',
@@ -303,12 +306,12 @@ def goPlot(ParamFN,sim,arc,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Phi0,
     if 'jart' in makeplot:
         plotJ(sim,fitp['art'],xKM,xp,fitp['EK'],fitp['EKpcolor'],vlim['j'],tInd,makeplot,'jart',
                         '$J_{art}[E,x]$ Estimated J from Kaczmarz ART on LT and b',
-                         996,spfid,sfmt,cnorm,progms)
+                         spfid,progms)
     if 'vart' in makeplot:
         assert isnan(vfit['art']).any() == False
         plotVER(sim,vfit['art'],xKM,xp,zKM,zp,vlim['p'],tInd,makeplot,'vart',
               '$\hat{P}_{art}$ from ART estimation of $J$',
-              3996,spfid,sfmt,cnorm,progms)
+              spfid,progms)
     if 'bart' in makeplot:
         plotBcompare(drn,dhat['fit_art'],cam,sim.nCamUsed,nCutPix,
                      bcomptxt,'art',cord,vlim['b'],tInd,
@@ -392,7 +395,7 @@ def ploteig(EKpcolor,zKM,Tm,vlim,sim,tInd,makeplot,prefix,progms):
 #    else:
 #        mptitle += '\n' + sim.transcarpath
     ax.set_title(mptitle,fontsize=tfs)
-    cbar = fg.colorbar(pcm)
+    cbar = fg.colorbar(pcm,ax=ax)
     cbar.set_label('[photons cm$^{-3}$s$^{-1}$]',labelpad=0,fontsize=afs)
     cbar.ax.tick_params(labelsize=afs)
     cbar.ax.yaxis.get_offset_text().set_size(afs)
@@ -429,7 +432,7 @@ def ploteig1d(Ek,zKM,Tm,vlim,sim,tInd,makeplot,prefix,progms):
     writeplots(fg,prefix,tInd,makeplot,progms)
 
 
-def plotPlainImg(sim,cam,rawdata,t,makeplot,prefix,titletxt,figh,spfid,cnorm,progms):
+def plotPlainImg(sim,cam,rawdata,t,makeplot,prefix,titletxt,figh,spfid,progms):
     """http://stackoverflow.com/questions/22408237/named-colors-in-matplotlib"""
     for c in cam:
         figure(figh).clf()
@@ -454,7 +457,7 @@ def plotPlainImg(sim,cam,rawdata,t,makeplot,prefix,titletxt,figh,spfid,cnorm,pro
             draw()
 
 #%%
-def plotRealImg(sim,cam,rawdata,t,makeplot,prefix,titletxt,figh,spfid,cnorm,progms):
+def plotRealImg(sim,cam,rawdata,t,makeplot,prefix,titletxt,figh,spfid,progms):
     showcb = True
     #alltReq = sim.alltReq
     figure(figh).clf()
@@ -503,12 +506,11 @@ def plotPicard(A,b,cvar=None):
     picard(asfortranarray(U), s, b)
     print('DONE')
 
-def plotJ1D(sim,PhiFwd,PhiInv,Ek,vlim,tInd,makeplot,prefix,titletxt,figh,spfid,progms):
+def plotJ1D(sim,PhiFwd,PhiInv,Ek,vlim,tInd,makeplot,prefix,titletxt,spfid,progms):
     anno = False
     #fontsizes
 
-    figure(figh).clf()
-    fg = figure(figh)
+    fg = figure()
     ax = fg.gca()
 
     for Phi,l in zip((PhiFwd,PhiInv),('$\Phi$','$\widehat{{\Phi}}$')):
@@ -548,12 +550,13 @@ def plotJ1D(sim,PhiFwd,PhiInv,Ek,vlim,tInd,makeplot,prefix,titletxt,figh,spfid,p
     if 'h5' in makeplot:
         dumph5(sim,spfid,prefix,tInd,PhiFwd=PhiFwd,PhiInv=PhiInv,Ek=Ek)
 #%%
-def plotJ(sim,Jflux,x,xp,Ek,EKpcolor,vlim,tInd,makeplot,prefix,titletxt,figh,spfid,sfmt,cnorm,progms):
+def plotJ(sim,Jflux,x,xp,Ek,EKpcolor,vlim,tInd,makeplot,prefix,titletxt,spfid,progms):
+
+    cnorm,sfmt = logfmt(makeplot)
     plt3 = 'octave'#'octave' #'mpl'#'mayavi'
     #fontsizes
 
 #%% 2-D
-    figure(figh).clf()
     pre = ('lin','log')
     vmin = (0.,1.)
     for c,s,v,p in zip(cnorm,sfmt,vmin,pre):
@@ -566,25 +569,25 @@ def plotJ(sim,Jflux,x,xp,Ek,EKpcolor,vlim,tInd,makeplot,prefix,titletxt,figh,spf
 
             dfg = Figure(data=dpy,layout=dlay)
 
-            plot_url = py.plot(dfg, filename='{}_{}'.format(prefix,tInd))
+            py.plot(dfg, filename='{}_{}'.format(prefix,tInd))
             #print(plot_url)
         else:
-            fg = figure(figh)
-            ax = fg.gca()
+            fgj = figure()
+            ax = fgj.gca()
             pcm = ax.pcolormesh(xp,EKpcolor,Jflux,edgecolors='none',
                        norm=c, rasterized=False, #cmap=pcmcmap,
                        vmin=v, vmax=vlim[1]) #vmin can't be 0 when using LogNorm!
                        #my recollection is that rasterized=True didn't really help savefig speed
-            cbar = fg.colorbar(pcm,format=s)
+            cbar = fgj.colorbar(pcm,ax=ax)#,format=s)
             cbar.set_label('[cm$^{-2}$s$^{-1}$eV$^{-1}$]', labelpad=0, fontsize=afs)
             cbar.ax.tick_params(labelsize=afs)
             cbar.ax.yaxis.get_offset_text().set_size(afs)
             cbar.ax.yaxis.get_offset_text().set_position((-1, 0))
             ax.set_yscale('log')
 
-            fg.subplots_adjust(top=0.85)
+            fgj.subplots_adjust(top=0.85)
             doJlbl(ax,titletxt)
-            writeplots(fg,prefix+p,tInd,makeplot,progms)
+            writeplots(fgj,prefix+p,tInd,makeplot,progms)
 
 #%% 3-D
     if '3d' in makeplot:
@@ -668,7 +671,9 @@ def plotVER1D(sim,pfwd,pinv,zKM,vlim,tInd,makeplot,prefix,titletxt,figh,spfid,pr
     if 'h5' in makeplot: #a separate stanza
         dumph5(sim,spfid,prefix,tInd,pfwd=pfwd,pinv=pinv,z=zKM)
 #%%
-def plotVER(sim,ver,x,xp,z,zp,vlim,tInd,makeplot,prefix,titletxt,figh,spfid,sfmt, cnorm,progms):
+def plotVER(sim,ver,x,xp,z,zp,vlim,tInd,makeplot,prefix,titletxt,spfid,progms):
+
+    cnorm,sfmt = logfmt(makeplot)
     '''
     # http://stackoverflow.com/questions/13943217/how-to-add-colorbars-to-scatterplots-created-like-this
     # http://stackoverflow.com/questions/18856069/how-to-shrink-a-subplot-colorbar
@@ -688,32 +693,33 @@ def plotVER(sim,ver,x,xp,z,zp,vlim,tInd,makeplot,prefix,titletxt,figh,spfid,sfmt
 
             dfg = Figure(data=dpy,layout=dlay)
 
-            plot_url = py.plot(dfg, filename='{}_{}'.format(prefix,tInd))
+            py.plot(dfg, filename='{}_{}'.format(prefix,tInd))
             #print(plot_url)
           else:
-            figure(figh).clf()
-            fg = figure(figh)
+            fg = figure()
             ax = fg.gca()
             if pstyle=='pcolor':
                 hc = ax.pcolormesh(xp,zp,ver,edgecolors='none',
                                     norm=c, #cmap=pcmcmap,n
                                     vmin=v,vmax=vlim[5],
                                     rasterized=True)
+                ax.autoscale(True,tight=True) #need this to fill axes (does not resize axes)
 
             elif pstyle=='contour':
                 print(p)
-                hc = ax.contour(x,z,ver,fmt='%1.1e',
-                                norm=c,vmin=v,vmax=vlim[5],
-                                cmap=sns.dark_palette("palegreen", as_cmap=True))
-                ax.clabel(hc,fontsize=9,inline=1)
+                hc = ax.contour(x,z,ver,linewidths=2,
+                                norm=c,vmin=v,vmax=vlim[5],)
+                               # cmap=sns.dark_palette("palegreen", as_cmap=True))
+                #ax.clabel(hc,fontsize=6,inline=True)
+                #hc.ax.get_children().set_linewidths(5.0)
 
-                cbar = fg.colorbar(hc,format=s)
-                cbar.set_label('[photons cm$^{-3}$s$^{-1}$]',labelpad=0,fontsize=afs)
-                cbar.ax.tick_params(labelsize=afs)
-                cbar.ax.yaxis.get_offset_text().set_size(afs)
-                cbar.ax.yaxis.get_offset_text().set_position((-1, 0))
+            cbar = fg.colorbar(hc,ax=ax)#,format=s)
+            cbar.set_label('[photons cm$^{-3}$s$^{-1}$]',labelpad=0,fontsize=afs)
+            cbar.ax.tick_params(labelsize=afs)
+            cbar.ax.yaxis.get_offset_text().set_size(afs)
+            cbar.ax.yaxis.get_offset_text().set_position((-1, 0))
+            if pstyle=='contour':
                 cbar.add_lines(hc)
-
 
             ax.yaxis.set_major_locator(MultipleLocator(dymaj))
             ax.yaxis.set_minor_locator(MultipleLocator(dymin))
@@ -723,7 +729,6 @@ def plotVER(sim,ver,x,xp,z,zp,vlim,tInd,makeplot,prefix,titletxt,figh,spfid,sfmt
 
             ax.set_xlabel('$B_\perp$ [km]',fontsize=afs)
             ax.set_ylabel('$B_\parallel$ [km]',fontsize=afs)
-            #ax.autoscale(True,tight=True) #need this to fill axes (does not resize axes)
 
             ax.set_xlim(vlim[:2])
             ax.set_ylim(vlim[2:4])
@@ -744,10 +749,7 @@ def plotBcompare(braw,bfit,cam,nCam,nCutPix,prefix,fittxt,cord,
     ax1 = fg.gca()
 
     #plot raw
-    sfmt = ScalarFormatter(useMathText=True) #for 10^3 instead of 1e3
-    sfmt.set_powerlimits((-3, 3))
-    sfmt.set_scientific(True)
-    sfmt.set_useOffset(False)
+    cnorm,sfmt = logfmt(makeplot,(-3,3))
     ax1.get_yaxis().set_major_formatter(sfmt)
 
     ax1.yaxis.get_offset_text().set_size(afs)
@@ -797,6 +799,7 @@ def plotBcompare(braw,bfit,cam,nCam,nCutPix,prefix,fittxt,cord,
 
     ax1.grid(True)
     ax1.autoscale(True,tight=True)
+    print(vlim)
     ax1.set_ylim(vlim) #must come AFTER autoscale!
 #%% do more detailed comparison
     if dosubtract:
@@ -818,11 +821,12 @@ def plotBcompare(braw,bfit,cam,nCam,nCutPix,prefix,fittxt,cord,
     writeplots(fg,prefix,tInd,makeplot,progms,format1d)
 
 #%%
-def plotB(bpix,isrealdata,cam,nCutPix,vlim,tInd,makeplot,labeltxt,cord,sfmt,figh,progms):
+def plotB(bpix,isrealdata,cam,nCutPix,vlim,tInd,makeplot,labeltxt,cord,progms):
 
-    figure(figh).clf()
-    fg = figure(figh)
-    ax1 = fg.gca()
+    cnorm,sfmt = logfmt(makeplot)
+
+    fgb = figure()
+    ax1 = fgb.gca()
 
     std = []
 #%% do we need twinax? Let's find out if they're within factor of 10
@@ -850,31 +854,31 @@ def plotB(bpix,isrealdata,cam,nCutPix,vlim,tInd,makeplot,labeltxt,cord,sfmt,figh
                  #marker='.',
                  color=cord[c])
     doBlbl(ax1,isrealdata,sfmt[0],vlim,labeltxt,std) #b is never log
-    writeplots(fg,'b'+labeltxt[4:-2],tInd,makeplot,progms,format1d)
+    writeplots(fgb,'b'+labeltxt[4:-2],tInd,makeplot,progms,format1d)
 
-def doBlbl(ax,isrealdata,sfmt,vlim,labeltxt,noiselam):
-    ax.legend(loc='upper left',fontsize=afs)
-    ax.set_title('Observer Intensity',fontsize=tfs, y = 1.02)
+def doBlbl(axb,isrealdata,sfmt,vlim,labeltxt,noiselam):
+    axb.legend(loc='upper left',fontsize=afs)
+    axb.set_title('Observer Intensity',fontsize=tfs)
 
-    ax.yaxis.get_offset_text().set_size(afs)
+    axb.yaxis.get_offset_text().set_size(afs)
 
 #    if not isrealdata and noiseStd:
 #        ax.text(0.05,0.95,'noise std. dev.=' +noiseStd,fontsize=afs,
 #                transform=ax.transAxes,va='top',ha='left')
-    ax.set_xlabel('local view angle [deg.]',fontsize=afs)
+    axb.set_xlabel('local view angle [deg.]',fontsize=afs)
 
-    ax.xaxis.set_major_locator(MultipleLocator(1))
-    ax.xaxis.set_minor_locator(MultipleLocator(0.2))
-    ax.tick_params(axis='both', which='both', direction='out',labelsize=afs)
+    axb.xaxis.set_major_locator(MultipleLocator(1))
+    axb.xaxis.set_minor_locator(MultipleLocator(0.2))
+    axb.tick_params(axis='both', which='both', direction='out',labelsize=afs)
 
     #sfmt.set_powerlimits((-6, 6))
-    ax.yaxis.set_major_formatter(sfmt)
+    axb.yaxis.set_major_formatter(sfmt)
 
-    ax.set_ylabel(labeltxt + '}$ [photons sr$^{-1}$ s$^{-1}$]',labelpad=-1,fontsize=afs) # yes the }$ is appropriate
+    axb.set_ylabel(labeltxt + '}$ [photons sr$^{-1}$ s$^{-1}$]',labelpad=-1,fontsize=afs) # yes the }$ is appropriate
 
-    ax.grid(True,which='major')
-    ax.autoscale(True,tight=True)
-    ax.set_ylim(vlim) #must come AFTER autoscale!
+    axb.grid(True,which='major')
+    axb.autoscale(True,tight=True)
+    axb.set_ylim(vlim) #must come AFTER autoscale!
 
 def allLinePlot(simfilelist):
 #%% priming
@@ -940,11 +944,8 @@ def planviewkml(cam,xKM,zKM,makeplot,figh,progms):
     clr=['r','b','g','m']
     kclr = ['ff5c5ccd','ffff0000']
     ax = figure(figh).gca(); clf()
-    sfmt = ScalarFormatter(useMathText=True) #for 10^3 instead of 1e3
-    sfmt.set_powerlimits((-6, 6))
-    sfmt.set_scientific(False)
-    sfmt.set_useOffset(False)
-    ax.get_xaxis().set_major_formatter(sfmt)
+
+    cnorm,sfmt = logfmt(makeplot,(-6,6))
 
 
     kml1d = skml.Kml()
