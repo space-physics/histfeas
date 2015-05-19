@@ -8,7 +8,7 @@ from transcarutils.readionoinit import getaltgrid
 
 class Sim:
 
-    def __init__(self,sp,cp,ap,overrides,progms,dbglvl):
+    def __init__(self,sp,cp,ap,overrides,makeplot,progms,dbglvl):
         self.dbglvl=dbglvl
         #%% how many cameras in use, and which ones?
         usecamreq = asarray(overrides['cam'])
@@ -31,7 +31,7 @@ class Sim:
         self.allCamZkm = cp.loc['Zkm'].values.astype(float)
 
         self.obsalt_km = cp.loc['Zkm'].values.mean() #FIXME assuming cameras are at a very similar altitudes
-        self.zenang = 90.-cp.loc['Bincl'].values.mean() #FIXME assuming all in same plane and that difference in boresight path length are 'small'
+        self.zenang = 90-cp.loc['Bincl'].values.mean() #FIXME assuming all in same plane and that difference in boresight path length are 'small'
 
         #%% camera position override
         self.camxreq = overrides['camx']
@@ -79,6 +79,13 @@ class Sim:
         else:
             self.savefwdL = sp.at['saveEll','Sim']
             self.loadfwdL = sp.at['loadEll','Sim']
+#%% setup plotting
+#        self.plots = {}
+#
+#        if 'optim' in makeplot:
+#            self.plots['optim'] = ('bnoise','best','pest','phiest','pest_1d','phiest_1d')
+#        if 'fwd' in makeplot:
+#            self.plots['fwd'] =   ('bnoise','bfwd','pfwd','phifwd','pfwd_1d','phifwd_1d')
         #%%how many synthetic arcs are we using
         if ap is not None:
             self.nArc = ap.shape[1]

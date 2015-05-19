@@ -8,7 +8,7 @@ from camclass import Cam
 from simclass import Sim
 from xlrd.biffh import XLRDError
 
-def getParams(XLSfn,overrides,savedump,progms,dbglvl):
+def getParams(XLSfn,overrides,savedump,makeplot,progms,dbglvl):
 #%% read spreadsheet
     paramSheets = ('Sim','Cameras','Arcs')
     sp = read_excel(XLSfn,paramSheets[0],index_col=0,header=0)
@@ -22,7 +22,7 @@ def getParams(XLSfn,overrides,savedump,progms,dbglvl):
     if not (nCutPix == nCutPix[0]).all():
         exit('*** sanityCheck: all cameras must have same 1D cut length')
 #%% class with parameters and function
-    sim = Sim(sp,cp,ap,overrides,progms,dbglvl)
+    sim = Sim(sp,cp,ap,overrides,makeplot,progms,dbglvl)
 #%% grid setup
     Fwd = sim.setupFwdXZ(sp)
 #%% setup cameras

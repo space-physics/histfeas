@@ -34,7 +34,7 @@ def doSim(ParamFN,savedump,makeplot,datadump,timeInds,overrides,progms,x1d,vlim,
     from plotsnew import goPlot
     from analysehst import analyseres
 #%% Step 0) load data
-    ap,sim,cam,Fwd = getParams(ParamFN, overrides,savedump,progms,dbglvl)
+    ap,sim,cam,Fwd = getParams(ParamFN, overrides,savedump,makeplot,progms,dbglvl)
 #%% setup loop
     if sim.realdata:
         cam,rawdata,sim = getSimulData(sim,cam,makeplot,progms,dbglvl)
