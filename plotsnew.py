@@ -181,15 +181,15 @@ def goPlot(ParamFN,sim,arc,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Phi0,
                fwdloctxt ),
               spfid,progms)
 
-        print('Estimated $x_{{gauss,0}},E_{{gauss,0}}$={:0.2f}'.format(gx0hat) +
-              ',' + '{:0.0f}'.format(gE0hat))
+        print('Estimated $x_{{gauss,0}},E_{{gauss,0}}$={:0.2f}, {:0.0f}'.format(gx0hat,gE0hat))
 
         plotVER(sim,vfit['gaussian'],xKM,xp,zKM,zp,vlim['p'],tInd,makeplot,'vgaussian',
               ('$\widehat{P_{gaussian,optim}}$ volume emission rate' + fwdloctxt),
               spfid,progms)
 #%% optimize search plots
     if 'optim' in makeplot:
-        plotoptim(sim,fitp,xKM,xp,zKM,zp,vlim,tInd,makeplot,spfid,progms)
+        plotoptim(sim,cam,drn,dhat,nCutPix,bcomptxt,fwdloctxt,ver,Phi0,Jxi,
+                  vfit,fitp,xKM,xp,zKM,zp,vlim,tInd,cord,makeplot,spfid,progms)
 #%% Adjoint TJ plots
     if 'adj' in makeplot:
         plotadj(sim,cam,drn,dhat,nCutPix,xKM,xp,zKM,zp,vfit,fitp,vlim,
@@ -282,7 +282,7 @@ def plotfwd(sim,cam,drn,nCutPix,xKM,xp,zKM,zp,
 #%%
 def plotoptim(sim,cam,drn,dhat,nCutPix,bcomptxt,fwdloctxt,ver,Phi0,Jxi,
               vfit,fitp,xKM,xp,zKM,zp,vlim,tInd,cord,makeplot,spfid,progms):
-    print(fitp.message)
+    print(' The minimizer message is {}'.format(fitp.message))
 
     plotBcompare(drn,dhat['optim'],cam,sim.nCamUsed,nCutPix,
                  bcomptxt, 'est',cord,vlim['b'],tInd,makeplot,progms)
@@ -293,8 +293,7 @@ def plotoptim(sim,cam,drn,dhat,nCutPix,bcomptxt,fwdloctxt,ver,Phi0,Jxi,
 
     #print('max |diff(phi)| = ' + str(np.abs(np.diff(fitp.x, n=1, axis=0)).max()))
     gx0hat,gE0hat,x0hat,E0hat = getx0E0(fitp.x,fitp['EK'],xKM,tInd,progms,makeplot)
-    print('Estimated $x_{{gauss,0}},E_{{gauss,0}}$={:0.2f}'.format(gx0hat) +
-          ',' + '{:0.0f}'.format(gE0hat))
+    print('Estimated $x_{{gauss,0}},E_{{gauss,0}}$={:0.2f}, {:0.0f}'.format(gx0hat,gE0hat))
 
     plotJ(sim,fitp.x,xKM,xp,fitp['EK'],fitp['EKpcolor'],vlim['j'],tInd,makeplot,'phiest',
           ('$\widehat{\phi}[E,x]$ estimated diff. number flux' + fwdloctxt ),
@@ -374,7 +373,7 @@ def plottphi0(Tm,Phi0,Jxi,Ek,zKM,vlim,sim,tInd,makeplot,prefix,progms):
         #try:
             ax.plot(Tm[:,i]*Phi0[i,Jxi], zKM, label='{:0.0f}'.format(e) + 'eV')
         #except ValueError:
-        #    print('skipped plotting {:0.0f}'.format(e) +' eV due to zero diff. num flux at that energy')
+        #    print('skipped plotting {:0.0f} eV due to zero diff. num flux at that energy'.format(e))
     ax.set_xscale('log')
     ax.set_title('individual eigenprofile contributions to $P_{fwd}$',fontsize=tfs)
     ax.set_xlabel('volume emission rate [photons cm$^{-3}$ s$^{-1}$]',fontsize=afs)
@@ -514,13 +513,12 @@ def plotPicard(A,b,cvar=None):
     from picard import picard
     from scipy.sparse import issparse
     from numpy.linalg import svd
-    print('computing SVD for Picard plot: ' + cvar + '  ...',end='')
+    print('computing SVD for Picard plot: {}  ...'.format(cvar))
     if issparse(A):
         [U,s,V] = svd(A.todense(order='F'),full_matrices=False,compute_uv=1) #V is not used!
     else:
         [U,s,V] = svd(A,full_matrices=False,compute_uv=1) #V is not used!
     picard(asfortranarray(U), s, b)
-    print('DONE')
 
 def plotJ1D(sim,PhiFwd,PhiInv,Ek,vlim,tInd,makeplot,prefix,titletxt,spfid,progms):
     anno = False
@@ -578,6 +576,7 @@ def plotJ(sim,Jflux,x,xp,Ek,EKpcolor,vlim,tInd,makeplot,prefix,titletxt,spfid,pr
     for c,s,v,p in zip(cnorm,sfmt,vmin,pre):
         #determine lowest level to plot
         vmin = getmin(v,vlim[0])
+        print('using phi plot limits ({:.1e},  {:.1e})'.format(vmin,vlim[1]))
 
         if 'plotly' in makeplot:
             dpy = Data([Contour(x=x,y=Ek,z=Jflux,
@@ -599,14 +598,27 @@ def plotJ(sim,Jflux,x,xp,Ek,EKpcolor,vlim,tInd,makeplot,prefix,titletxt,spfid,pr
                        vmin=vmin, vmax=vlim[1]) #vmin can't be 0 when using LogNorm!
                        #my recollection is that rasterized=True didn't really help savefig speed
             elif pstyle=='contour':
-                hc = ax.contour(x,Ek,Jflux,linewidths=2,
-                                norm=c,vmin=v,vmax=vlim[1],)
-            cbar = fg.colorbar(hc,ax=ax,format=s)
+                hc = ax.contour(x,Ek,Jflux,levels=linspace(v,vlim[1],6),
+                                linewidths=2,norm=c,vmin=v,vmax=vlim[1],)
+            """
+            remember colorbar ticks set themselves automatically to the data for
+            contours. vmin/vmax sets the color extremes, but not the colorbar ticks.
+            colorbar ticks are set inside colorbar with colorbar(...,ticks=[...])
+            http://stackoverflow.com/questions/16695275/set-limits-on-a-matplotlib-colorbar-without-changing-the-actual-plot
+            """
+
+            cbar = fg.colorbar(hc,ax=ax,format=s,)
             cbar.set_label('[cm$^{-2}$s$^{-1}$eV$^{-1}$]', labelpad=0, fontsize=afs)
             cbar.ax.tick_params(labelsize=afs)
+            #now let's fix the exponent label on the colorbar
             cbar.ax.yaxis.get_offset_text().set_size(afs)
-            cbar.ax.yaxis.get_offset_text().set_position((-1, 0))
+            cbar.ax.yaxis.get_offset_text().set_position((-1, 1))
+            if pstyle=='contour':
+                cbar.add_lines(hc)
+
             ax.set_yscale('log')
+
+            ax.grid(True)
 
             fg.subplots_adjust(top=0.85)
             doJlbl(ax,titletxt)
@@ -715,7 +727,7 @@ def plotVER(sim,ver,x,xp,z,zp,vlim,tInd,makeplot,prefix,titletxt,spfid,progms):
     if ver is not None:
         for c,s,v,p in zip(cnorm,sfmt,vmin,pre):
           #determine lowest level to plot
-          vmin = getmin(v,vlim[0])
+          vmin = getmin(v,vlim[4])
 
           if 'plotly' in makeplot:
             dpy = Data([Contour(x=x,y=z,z=ver)])
@@ -737,13 +749,18 @@ def plotVER(sim,ver,x,xp,z,zp,vlim,tInd,makeplot,prefix,titletxt,spfid,progms):
                 ax.autoscale(True,tight=True) #need this to fill axes (does not resize axes)
 
             elif pstyle=='contour':
-                print(p)
-                hc = ax.contour(x,z,ver,linewidths=2,norm=c,vmin=vmin,vmax=vlim[5],)
+                hc = ax.contour(x,z,ver,levels=linspace(v,vlim[5],6),
+                                linewidths=2,norm=c,vmin=vmin,vmax=vlim[5],)
                                # cmap=sns.dark_palette("palegreen", as_cmap=True))
                 ax.clabel(hc,fontsize=6,inline=True)
                 #hc.ax.get_children().set_linewidths(5.0)
-
-            cbar = fg.colorbar(hc,ax=ax,format=s)
+            """
+            remember colorbar ticks set themselves automatically to the data for
+            contours. vmin/vmax sets the color extremes, but not the colorbar ticks.
+            colorbar ticks are set inside colorbar with colorbar(...,ticks=[...])
+            http://stackoverflow.com/questions/16695275/set-limits-on-a-matplotlib-colorbar-without-changing-the-actual-plot
+            """
+            cbar = fg.colorbar(hc,ax=ax,format=s,)
             cbar.set_label('[photons cm$^{-3}$s$^{-1}$]',labelpad=0,fontsize=afs)
             cbar.ax.tick_params(labelsize=afs)
             cbar.ax.yaxis.get_offset_text().set_size(afs)
@@ -763,6 +780,9 @@ def plotVER(sim,ver,x,xp,z,zp,vlim,tInd,makeplot,prefix,titletxt,spfid,progms):
             ax.set_xlim(vlim[:2])
             ax.set_ylim(vlim[2:4])
             ax.set_title(titletxt,fontsize=tfs)
+
+            ax.grid(True)
+
             writeplots(fg,prefix+p,tInd,makeplot,progms)
     else:
         text(0,0,'Using Actual Data (ver=None)')
@@ -828,7 +848,6 @@ def plotBcompare(braw,bfit,cam,nCam,nCutPix,prefix,fittxt,cord,
 
     ax1.grid(True)
     ax1.autoscale(True,tight=True)
-    print(vlim)
     ax1.set_ylim(vlim) #must come AFTER autoscale!
 #%% do more detailed comparison
     if dosubtract:
@@ -1109,9 +1128,7 @@ def getx0E0(jf,Ek,x,tInd,progms,makeplot):
     try:
         gparam = gaussfit(gpix,returnfitimage=False)
     except ValueError:
-        print(gpix.shape)
-        print(pkrow,pkcol)
-        print('gaussian fit doesnt work when peak is against edge of model space')
+        print('gaussian fit doesnt work when peak is against edge of model space. gpix shape {} row {} col {}'.format(gpix.shape,pkrow,pkcol))
         return nan, nan,nan,nan
 
     Ghcol = rint(gparam[2] + rcpluck[1])
