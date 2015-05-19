@@ -164,8 +164,7 @@ def goPlot(ParamFN,sim,arc,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Phi0,
               spfid,progms)
 #%% Forward model plots
     if 'fwd' in makeplot or 'optim' in makeplot:
-        plotnoise(sim,cam,drn,dhat,nCutPix,bcomptxt,fwdloctxt,ver,Phi0,Jxi,
-                  vfit,fitp,xKM,xp,zKM,zp,vlim,tInd,cord,makeplot,spfid,progms)
+        plotnoise(cam,tInd,makeplot,'bnoise',progms)
 
     if 'fwd' in makeplot:
         plotfwd(sim,cam,drn,nCutPix,xKM,xp,zKM,zp,
