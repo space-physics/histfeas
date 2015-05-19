@@ -107,8 +107,12 @@ def doSim(ParamFN,savedump,makeplot,datadump,timeInds,overrides,progms,x1d,vlim,
 
         if 'h5' in savedump:
             PfitAll.append(Pfit)
-#%%
+#%% wrapup
     print('done looping')
+
+    #make all those PNGs grouped into a few animated GIFs
+    png2gif(progms)
+
     analyseres(sim,Fwd['x'],Fwd['xPixCorn'],cam,
                    Phi0all,jfitAll,drnAll,bfitAll,vlim,makeplot,progms)
 #%% debug: save variables to MAT file
