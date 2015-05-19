@@ -164,33 +164,12 @@ def goPlot(ParamFN,sim,arc,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Phi0,
               spfid,progms)
 #%% Forward model plots
     if 'fwd' in makeplot or 'optim' in makeplot:
-        plotnoise(cam,tInd,makeplot,'bnoise',progms)
+        plotnoise(sim,cam,drn,dhat,nCutPix,bcomptxt,fwdloctxt,ver,Phi0,Jxi,
+                  vfit,fitp,xKM,xp,zKM,zp,vlim,tInd,cord,makeplot,spfid,progms)
 
     if 'fwd' in makeplot:
-        plotB(drn,sim.realdata,cam,nCutPix,vlim['b'],tInd,makeplot,'$br',cord,progms)
-
-        if not sim.realdata:
-            # Forward model VER
-            plotVER(sim,ver,xKM,xp,zKM,zp,vlim['p'],tInd,makeplot,'pfwd',
-                ('$P_{{fwd}}$ volume emission rate' + fwdloctxt),
-                        spfid,progms)
-
-    #       print('max |diff(phifwd)| = ' + str(np.abs(np.diff(phiInit, n=1, axis=0)).max()))
-            plotJ(sim,Phi0,xKM,xp,fitp['EK'],fitp['EKpcolor'],vlim['j'],tInd,makeplot,'phifwd',
-                  ('$\Phi_{{top}}$ input diff. number flux'+ fwdloctxt),
-                            spfid,progms)
-
-            if not 'optim' in makeplot:
-                plotJ1D(sim,Phi0[:,Jxi],None,fitp['EK'],vlim['j'],tInd,makeplot,'phifwd_1D',
-                     ('Differential Number flux at $B_\perp$={:0.2f} [km]'.format(xKM[Jxi])),
-                           spfid,progms)
-
-
-            if not 'optim' in makeplot:
-                plotVER1D(sim,ver[:,Jxi],None,zKM,vlim['p'][2:],tInd,makeplot,'pfwd_1D',
-                  ('$P_{{fwd}}$ at $B_\perp$={:0.2f}'.format(xKM[Jxi]) +
-                   ' [km]' + fwdloctxt),
-                  119900,spfid,progms)
+        plotfwd(sim,cam,drn,nCutPix,xKM,xp,zKM,zp,
+                ver,Phi0,fitp,Jxi,vlim,tInd,makeplot,cord,fwdloctxt,spfid,progms)
 #%% gaussian fit of optim
     if 'gaussian' in makeplot and 'fwd' in makeplot:
         plotBcompare(drn,dhat['gaussian'],cam,sim.nCamUsed,nCutPix,
@@ -211,54 +190,11 @@ def goPlot(ParamFN,sim,arc,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Phi0,
               spfid,progms)
 #%% optimize search plots
     if 'optim' in makeplot:
-        print(fitp.message)
-
-        plotBcompare(drn,dhat['optim'],cam,sim.nCamUsed,nCutPix,
-                     bcomptxt, 'est',cord,vlim['b'],tInd,makeplot,progms)
-
-        plotVER(sim,vfit['optim'],xKM,xp,zKM,zp,vlim['p'],tInd,makeplot,'pest',
-              ('$\widehat{P}$ volume emission rate' + fwdloctxt),
-              spfid,progms)
-
-        #print('max |diff(phi)| = ' + str(np.abs(np.diff(fitp.x, n=1, axis=0)).max()))
-        gx0hat,gE0hat,x0hat,E0hat = getx0E0(fitp.x,fitp['EK'],xKM,tInd,progms,makeplot)
-        print('Estimated $x_{{gauss,0}},E_{{gauss,0}}$={:0.2f}'.format(gx0hat) +
-              ',' + '{:0.0f}'.format(gE0hat))
-
-        plotJ(sim,fitp.x,xKM,xp,fitp['EK'],fitp['EKpcolor'],vlim['j'],tInd,makeplot,'Phiest',
-              ('$\widehat{\phi}[E,x]$ estimated diff. number flux' + fwdloctxt ),
-              spfid,progms)
-              #'Neval = {:d}'.format(fitp.nfev)
-
-        if Jxi is not None:
-            plotVER1D(sim,ver[:,Jxi],vfit['optim'][:,Jxi],zKM,vlim['p'][2:],tInd,makeplot,'pest_1D',
-                      ('$\widehat{{P}}$ at $B_\perp$={:0.2f} [km]'.format(xKM[Jxi])
-                       + fwdloctxt),
-                      119900,spfid,progms)
-
-            plotJ1D(sim,Phi0[:,Jxi],fitp.x[:,Jxi],fitp['EK'],vlim['j'],tInd,makeplot,'Phiest_1D',
-                       ('Differential Number flux at $B_\perp$={:0.2f} [km]'.format(xKM[Jxi])),
-                               spfid,progms)
+        plotoptim(sim,fitp,xKM,xp,zKM,zp,vlim,tInd,makeplot,spfid,progms)
 #%% Adjoint TJ plots
-    if 'phiadj' in makeplot:
-        plotJ(sim,fitp['phiTJadjoint'],xKM,xp,fitp['EK'],fitp['EKpcolor'],vlim['j'],tInd,makeplot,'jadj',
-                        '$\Phi_{adj}[E,x]$ Estimated diff. number flux from $LT\Phi=B$',
-                         spfid,progms)
-    if 'padj' in makeplot:
-        plotVER(sim,vfit['adj'],xKM,xp,zKM,zp,vlim['p'],tInd,makeplot,'vadj',
-              '$\hat{P}_{adj}$ from unfiltered backprojection $A^+b$',
-              spfid,progms)
-    if 'badj' in makeplot:
-#        plotB(drn,cam,tInd,'$b$',cord,
-#              'oneperplot')
-#        plotB(dhat['fit_adj'],cam,tInd,'$b_{fit_adj}$',cord[::-1],
-#              axm,car,cac,['twinx','oneperplot'])
-        plotBcompare(drn,dhat['fit_adj'],cam,sim.nCamUsed,nCutPix,
-                     bcomptxt,'adj',cord,vlim['b'],tInd,makeplot,progms)
-#    if 'vbackproj' in makeplot:
-#        plotVER(sim,Phat['vBackProj'],xKM,xp,zKM,zp,vlim['p'],tInd,makeplot,'vadj',
-#              '$\hat{v}_{back_projection}$ from unfiltered backprojection $A^+b$',
-#              spfid,progms)
+    if 'adj' in makeplot:
+        plotadj(sim,cam,drn,dhat,nCutPix,xKM,xp,zKM,zp,vfit,fitp,vlim,
+                                 bcomptxt,tInd,makeplot,cord,spfid,progms)
 #%% maximum entropy
     if 'phimaxent' in makeplot:
         plotJ(sim,fitp['maxent'],xKM,xp,fitp['EK'],fitp['EKpcolor'],vlim['j'],tInd,makeplot,'jme',
@@ -315,6 +251,88 @@ def goPlot(ParamFN,sim,arc,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Phi0,
     if 'bart' in makeplot:
         plotBcompare(drn,dhat['fit_art'],cam,sim.nCamUsed,nCutPix,
                      bcomptxt,'art',cord,vlim['b'],tInd, makeplot,progms)
+
+#%%
+def plotfwd(sim,cam,drn,nCutPix,xKM,xp,zKM,zp,
+            ver,Phi0,fitp,Jxi,vlim,tInd,makeplot,cord,fwdloctxt,spfid,progms):
+
+    plotB(drn,sim.realdata,cam,nCutPix,vlim['b'],tInd,makeplot,'$br',cord,progms)
+
+    if not sim.realdata:
+        # Forward model VER
+        plotVER(sim,ver,xKM,xp,zKM,zp,vlim['p'],tInd,makeplot,'pfwd',
+            ('$P_{{fwd}}$ volume emission rate' + fwdloctxt),
+                    spfid,progms)
+
+#       print('max |diff(phifwd)| = ' + str(np.abs(np.diff(phiInit, n=1, axis=0)).max()))
+        plotJ(sim,Phi0,xKM,xp,fitp['EK'],fitp['EKpcolor'],vlim['j'],tInd,makeplot,'phifwd',
+              ('$\Phi_{{top}}$ input diff. number flux'+ fwdloctxt),
+                        spfid,progms)
+
+        if not 'optim' in makeplot:
+            plotJ1D(sim,Phi0[:,Jxi],None,fitp['EK'],vlim['j'],tInd,makeplot,'phifwd1d',
+                 ('Differential Number flux at $B_\perp$={:0.2f} [km]'.format(xKM[Jxi])),
+                       spfid,progms)
+
+
+        if not 'optim' in makeplot:
+            plotVER1D(sim,ver[:,Jxi],None,zKM,vlim['p'][2:],tInd,makeplot,'pfwd1d',
+              ('$P_{{fwd}}$ at $B_\perp$={:0.2f}'.format(xKM[Jxi]) +
+               ' [km]' + fwdloctxt),
+              119900,spfid,progms)
+#%%
+def plotoptim(sim,cam,drn,dhat,nCutPix,bcomptxt,fwdloctxt,ver,Phi0,Jxi,
+              vfit,fitp,xKM,xp,zKM,zp,vlim,tInd,cord,makeplot,spfid,progms):
+    print(fitp.message)
+
+    plotBcompare(drn,dhat['optim'],cam,sim.nCamUsed,nCutPix,
+                 bcomptxt, 'est',cord,vlim['b'],tInd,makeplot,progms)
+
+    plotVER(sim,vfit['optim'],xKM,xp,zKM,zp,vlim['p'],tInd,makeplot,'pest',
+          ('$\widehat{P}$ volume emission rate' + fwdloctxt),
+          spfid,progms)
+
+    #print('max |diff(phi)| = ' + str(np.abs(np.diff(fitp.x, n=1, axis=0)).max()))
+    gx0hat,gE0hat,x0hat,E0hat = getx0E0(fitp.x,fitp['EK'],xKM,tInd,progms,makeplot)
+    print('Estimated $x_{{gauss,0}},E_{{gauss,0}}$={:0.2f}'.format(gx0hat) +
+          ',' + '{:0.0f}'.format(gE0hat))
+
+    plotJ(sim,fitp.x,xKM,xp,fitp['EK'],fitp['EKpcolor'],vlim['j'],tInd,makeplot,'phiest',
+          ('$\widehat{\phi}[E,x]$ estimated diff. number flux' + fwdloctxt ),
+          spfid,progms)
+          #'Neval = {:d}'.format(fitp.nfev)
+
+    if Jxi is not None:
+        plotVER1D(sim,ver[:,Jxi],vfit['optim'][:,Jxi],zKM,vlim['p'][2:],tInd,makeplot,'pest1d',
+                  ('$\widehat{{P}}$ at $B_\perp$={:0.2f} [km]'.format(xKM[Jxi])
+                   + fwdloctxt),
+                  119900,spfid,progms)
+
+        plotJ1D(sim,Phi0[:,Jxi],fitp.x[:,Jxi],fitp['EK'],vlim['j'],tInd,makeplot,'phiest1d',
+                   ('Differential Number flux at $B_\perp$={:0.2f} [km]'.format(xKM[Jxi])),
+                           spfid,progms)
+#%%
+def plotadj(sim,cam,drn,dhat,nCutPix,xKM,xp,zKM,zp,vfit,fitp,vlim,
+                                 bcomptxt,tInd,makeplot,cord,spfid,progms):
+    if 'phiadj' in makeplot:
+        plotJ(sim,fitp['phiTJadjoint'],xKM,xp,fitp['EK'],fitp['EKpcolor'],vlim['j'],tInd,makeplot,'jadj',
+                    '$\Phi_{adj}[E,x]$ Estimated diff. number flux from $LT\Phi=B$',
+                     spfid,progms)
+    if 'padj' in makeplot:
+        plotVER(sim,vfit['adj'],xKM,xp,zKM,zp,vlim['p'],tInd,makeplot,'vadj',
+              '$\hat{P}_{adj}$ from unfiltered backprojection $A^+b$',
+              spfid,progms)
+    if 'badj' in makeplot:
+#        plotB(drn,cam,tInd,'$b$',cord,
+#              'oneperplot')
+#        plotB(dhat['fit_adj'],cam,tInd,'$b_{fit_adj}$',cord[::-1],
+#              axm,car,cac,['twinx','oneperplot'])
+        plotBcompare(drn,dhat['fit_adj'],cam,sim.nCamUsed,nCutPix,
+                     bcomptxt,'adj',cord,vlim['b'],tInd,makeplot,progms)
+#    if 'vbackproj' in makeplot:
+#        plotVER(sim,Phat['vBackProj'],xKM,xp,zKM,zp,vlim['p'],tInd,makeplot,'vadj',
+#              '$\hat{v}_{back_projection}$ from unfiltered backprojection $A^+b$',
+#              spfid,progms)
 #%% ############################################################################
 def plotnoise(cam,tInd,makeplot,prefix,progms):
     fg = figure()
