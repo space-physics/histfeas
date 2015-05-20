@@ -29,7 +29,7 @@ from datetime import timedelta
 from pyimagevideo.imageconv import png2multipage
 from sanityCheck import getParams
 
-def doSim(ParamFN,savedump,makeplot,datadump,timeInds,overrides,progms,x1d,vlim,animtime, dbglvl):
+def doSim(ParamFN,savedump,makeplot,datadump,timeInds,overrides,progms,x1d,vlim,animtime, cmd,dbglvl):
     # local -- these were put here so that matplotlib backend autoselect could happen first
     from AuroraFwdModel import getSimVER
     from transcararc import getMp,getPhi0 #calls matplotlib
@@ -115,7 +115,7 @@ def doSim(ParamFN,savedump,makeplot,datadump,timeInds,overrides,progms,x1d,vlim,
 #%% wrapup
     print('done looping')
 
-    png2multipage(progms,'.png','.tif',delete=True) #gif writing is not working yet
+    png2multipage(progms,'.png','.tif',descr=cmd,delete=True) #gif writing is not working yet
 
     analyseres(sim,Fwd['x'],Fwd['xPixCorn'],cam,
                    Phi0all,jfitAll,drnAll,bfitAll,vlim,makeplot,progms)
@@ -242,7 +242,7 @@ if __name__ == '__main__':
         goCprofile(profFN)
     else: #normal
         doSim(ParamFN,savedump,makeplot,datadump,timeInds,
-                                      overrides,progms,ar.x1d, vlim,ar.anim,dbglvl=ar.debug)
+                                      overrides,progms,ar.x1d, vlim,ar.anim,' '.join(argv),dbglvl=ar.debug)
 
 #    if ar.saveall:
 #        with h5py.File(progms + 'validate.h5',libver='latest') as fid:
