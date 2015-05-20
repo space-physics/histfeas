@@ -13,3 +13,6 @@
 [submodule "histutils"]
 	path = histutils
 	url = https://scienceopen@github.com/scienceopen/histutils.git
+[submodule "pyimagevideo"]
+	path = pyimagevideo
+	url = https://github.com/scienceopen/pyimagevideo.git
