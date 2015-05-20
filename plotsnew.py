@@ -572,11 +572,11 @@ def plotJ(sim,Jflux,x,xp,Ek,EKpcolor,vlim,tInd,makeplot,prefix,titletxt,spfid,pr
 
 #%% 2-D
     pre = ('lin','log')
-    vmin = (0.,1.)
-    for c,s,v,p in zip(cnorm,sfmt,vmin,pre):
+    vlow = (0.,1.)
+    for c,s,v,p in zip(cnorm,sfmt,vlow,pre):
         #determine lowest level to plot
         vmin = getmin(v,vlim[0])
-        print('using phi plot limits ({:.1e},  {:.1e})'.format(vmin,vlim[1]))
+        #print('using phi plot limits ({:.1e},  {:.1e})'.format(vmin,vlim[1]))
 
         if 'plotly' in makeplot:
             dpy = Data([Contour(x=x,y=Ek,z=Jflux,
@@ -598,7 +598,9 @@ def plotJ(sim,Jflux,x,xp,Ek,EKpcolor,vlim,tInd,makeplot,prefix,titletxt,spfid,pr
                        vmin=vmin, vmax=vlim[1]) #vmin can't be 0 when using LogNorm!
                        #my recollection is that rasterized=True didn't really help savefig speed
             elif pstyle=='contour':
-                hc = ax.contour(x,Ek,Jflux,levels=linspace(v,vlim[1],6),
+                clvl = linspace(vmin,vlim[1],6)
+                print('phi using contour levels {}'.format(clvl))
+                hc = ax.contour(x,Ek,Jflux,levels=clvl,
                                 linewidths=2,norm=c,vmin=v,vmax=vlim[1],)
             """
             remember colorbar ticks set themselves automatically to the data for
@@ -721,11 +723,11 @@ def plotVER(sim,ver,x,xp,z,zp,vlim,tInd,makeplot,prefix,titletxt,spfid,progms):
 
 
 
-    vmin=(0.,1.)
+    vlow=(0.,1.)
     pre = ('lin','log')
 
     if ver is not None:
-        for c,s,v,p in zip(cnorm,sfmt,vmin,pre):
+        for c,s,v,p in zip(cnorm,sfmt,vlow,pre):
           #determine lowest level to plot
           vmin = getmin(v,vlim[4])
 
@@ -744,12 +746,12 @@ def plotVER(sim,ver,x,xp,z,zp,vlim,tInd,makeplot,prefix,titletxt,spfid,progms):
             if pstyle=='pcolor':
                 hc = ax.pcolormesh(xp,zp,ver,edgecolors='none',
                                     norm=c, #cmap=pcmcmap,n
-                                    vmin=v,vmax=vlim[5],
+                                    vmin=vmin,vmax=vlim[5],
                                     rasterized=True)
                 ax.autoscale(True,tight=True) #need this to fill axes (does not resize axes)
 
             elif pstyle=='contour':
-                hc = ax.contour(x,z,ver,levels=linspace(v,vlim[5],6),
+                hc = ax.contour(x,z,ver,levels=linspace(vmin,vlim[5],6),
                                 linewidths=2,norm=c,vmin=vmin,vmax=vlim[5],)
                                # cmap=sns.dark_palette("palegreen", as_cmap=True))
                 ax.clabel(hc,fontsize=6,inline=True)
