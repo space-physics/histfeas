@@ -26,6 +26,8 @@ from numpy.random import normal
 import h5py
 from datetime import timedelta
 #
+#import logging
+#logging.basicConfig(filename='hist.log',filemode='w',level=logging.DEBUG)
 from pyimagevideo.imageconv import png2multipage
 from sanityCheck import getParams
 
@@ -118,7 +120,7 @@ def doSim(ParamFN,savedump,makeplot,datadump,timeInds,overrides,progms,x1d,vlim,
     png2multipage(progms,'.png','.tif',descr=cmd,delete=True,verbose=verbose) #gif writing is not working yet
 
     analyseres(sim,Fwd['x'],Fwd['xPixCorn'],cam,
-                   Phi0all,jfitAll,drnAll,bfitAll,vlim,makeplot,progms)
+                   Phi0all,jfitAll,drnAll,bfitAll,vlim,makeplot,progms,verbose)
 #%% debug: save variables to MAT file
     if 'mat' in savedump:
         from scipy.io import savemat
@@ -152,7 +154,7 @@ if __name__ == '__main__':
 
     p = ArgumentParser(description='analyzes HST data and makes simulations')
     p.add_argument('infile',help='.xls filename with simulation parameters',type=str)
-    p.add_argument('outdir',help='directory for output',type=str,nargs='?',default='out')
+    p.add_argument('outdir',help='directory for output',type=str)
     p.add_argument('-v','--verbose',help='set debugging verbosity e.g. -v -vv -vvv',action='count',default=0)
     p.add_argument('--mat',help='save matlab .mat file of results',action="store_true")
     p.add_argument('--h5',help='save HDF5 .h5 file of fit results',action="store_true")
