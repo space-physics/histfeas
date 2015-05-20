@@ -25,6 +25,7 @@ from numpy import absolute,zeros,asarray,in1d,arange
 from numpy.random import normal
 import h5py
 from datetime import timedelta
+from sys import stderr
 #
 #import logging
 #logging.basicConfig(filename='hist.log',filemode='w',level=logging.DEBUG)
@@ -115,9 +116,9 @@ def doSim(ParamFN,savedump,makeplot,datadump,timeInds,overrides,progms,x1d,vlim,
         if 'h5' in savedump:
             PfitAll.append(Pfit)
 #%% wrapup
-    print('done looping')
+    msg='{} done looping'.format(argv[0]); print(msg); print(msg,file=stderr)
 
-    png2multipage(progms,'.png','.tif',descr=cmd,delete=True,verbose=verbose) #gif writing is not working yet
+    png2multipage(progms,'.eps','.tif',descr=cmd,delete=False,verbose=verbose) #gif writing is not working yet
 
     analyseres(sim,Fwd['x'],Fwd['xPixCorn'],cam,
                    Phi0all,jfitAll,drnAll,bfitAll,vlim,makeplot,progms,verbose)
@@ -139,6 +140,8 @@ def doSim(ParamFN,savedump,makeplot,datadump,timeInds,overrides,progms,x1d,vlim,
         with h5py.File(ch5fn,'w',libver='latest') as f:
             f["/Jflux"]=jAll
             f["/Vfit"]=PfitAll
+
+    msg ='{} program end'.format(argv[0]); print(msg); print(msg,file=stderr)
 
 #%% =======================================================================
 
