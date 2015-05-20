@@ -7,6 +7,7 @@ from dateutil.parser import parse
 from scipy.signal import savgol_filter
 from six import string_types
 from numpy.random import poisson
+from warnings import warn
 #
 from pymap3d.azel2radec import azel2radec
 from pymap3d.haversine import angledist
@@ -206,7 +207,7 @@ class Cam: #use this like an advanced version of Matlab struct
     def fixnegval(self,data):
         negDataInd = data<0
         if (self.verbose and negDataInd.any()) or negDataInd.sum()>0.1*self.nCutPix:
-            print('* Setting {} negative Data values to 0 for Camera #{}'.format(negDataInd.sum(), self.name))
+            warn('Setting {} negative Data values to 0 for Camera #{}'.format(negDataInd.sum(), self.name))
             data[negDataInd] = 0
 
         self.nonneg = data
