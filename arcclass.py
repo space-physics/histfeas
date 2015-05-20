@@ -15,13 +15,13 @@ class Arc:
         self.h = ap['Hkm']
 
         if isnan(ap['Wkm']):
-            exit('*** you must specify W0 for all used arcs')
+            raise ValueError('you must specify W0 for all used arcs')
 
         if isnan(ap['X0km']):
-            exit('*** you must specify X0 for all used arcs')
+            raise ValueError('you must specify X0 for all used arcs')
 
         if isnan(ap['Pnorm']):
-            exit('*** you must specify P0 for all used arcs')
+            raise ValueError('you must specify P0 for all used arcs')
 
 
         self.w = ap['Wkm']
@@ -54,7 +54,7 @@ class Arc:
         elif self.zshape == 'zero': #zeros, already set to zero
             return zeros((z.size,x.size))
         else:
-            exit('*** Unknown model type ' + self.zshape)
+            raise TypeError('Unknown model type: {}'.format(self.zshape))
 
 def ChapmanArc(Wkm,H,X0,Z0,xKM,zKM,xshape, PC0=1):
     # chapman vert

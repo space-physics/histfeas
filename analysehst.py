@@ -6,11 +6,12 @@ from matplotlib.ticker import MaxNLocator,ScalarFormatter# ,LogFormatterMathtext
 from numpy import diff, empty
 import h5py
 from plotsnew import writeplots
+from warnings import warn
 
 #
 from nans import nans
 
-def analyseres(sim,x,xp,cam,jfwd,jfit,drn,dhat,vlim,makeplot,progms):
+def analyseres(sim,x,xp,cam,jfwd,jfit,drn,dhat,vlim,makeplot,progms,verbose):
     if jfwd is None or jfit[0]['x'] is None:
         return
     '''
@@ -49,14 +50,14 @@ def analyseres(sim,x,xp,cam,jfwd,jfit,drn,dhat,vlim,makeplot,progms):
             for i,b in enumerate(drn):
                 plotB(b,sim.realdata,cam,vlim['b'],9999,makeplot,'$b_{fwd',
                                                           cord, #pass all cord or it will IndexError if using only some instatiations of phi0
-                                                          [sfmt],8727,progms)
+                                                          [sfmt],progms,verbose)
     # reconstructed brightness plot
         if 'optim' in makeplot and len(dhat[0])>0:
             for i,b in enumerate(dhat):
                 plotB(b['optim'],sim.realdata,cam,vlim['b'],9999,makeplot,'$b_{optim',
-                      cord[nit*i:nit*i+nit],[sfmt],8728,progms)
+                      cord[nit*i:nit*i+nit],[sfmt],progms,verbose)
     except Exception as e:
-        print('** analysehst: ERROR plotting overall analysis plots of intensity.  {}'.format(e))
+        warn('ERROR plotting overall analysis plots of intensity.  {}'.format(e))
 #%% energy flux plot amd calculations
     x0fwd = nans(nit); E0fwd = nans(nit)
     x0hat = nans(nit); E0hat = nans(nit)
@@ -70,12 +71,12 @@ def analyseres(sim,x,xp,cam,jfwd,jfit,drn,dhat,vlim,makeplot,progms):
 #%% back to work
     for ji,jf in enumerate(jfit):
         #note even if array is F_CONTIGUOUS, argmax is C-order!!
-        gx0fwd,gE0fwd, x0fwd[ji],E0fwd[ji] = getx0E0(jfwd[...,ji],jf['EK'],x,9999,progms,makeplot)
-        gx0hat,gE0hat, x0hat[ji],E0hat[ji] = getx0E0(jf['x'],     jf['EK'],x,9999,progms,makeplot)
+        gx0fwd,gE0fwd, x0fwd[ji],E0fwd[ji] = getx0E0(jfwd[...,ji],jf['EK'],x,9999,progms,makeplot,verbose)
+        gx0hat,gE0hat, x0hat[ji],E0hat[ji] = getx0E0(jf['x'],     jf['EK'],x,9999,progms,makeplot,verbose)
 
         print('t={} gaussian 2-D fits for (x,E). Fwd: {:0.2f} {:0.1f} Optim: {:0.2f} {:0.1f}'.format(ji, gx0fwd,gE0fwd,gx0hat,gE0hat))
 
-        trythis(jfwd[...,ji], jf['x'], jf['EK'],x,dE,makeplot,progms)
+        trythis(jfwd[...,ji], jf['x'], jf['EK'],x,dE,makeplot,progms,verbose)
 #%% average energy per x-location
     # formula is per JGR 2013 Dahlgren et al.
     #E_avg = sum(flux*E*dE) / sum(flux*dE)
@@ -122,7 +123,7 @@ def analyseres(sim,x,xp,cam,jfwd,jfit,drn,dhat,vlim,makeplot,progms):
     if 'show' in makeplot:
         show()
 
-def trythis(jfwd,jfit,Ek,x,dE,makeplot,progms):
+def trythis(jfwd,jfit,Ek,x,dE,makeplot,progms,verbose):
     #from numpy.testing import assert_allclose
     Eavgfwd = ((jfwd * Ek[:,None] * dE[:,None]).sum(axis=0) /
                (jfwd * dE[:,None]).sum(axis=0) )
