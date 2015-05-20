@@ -22,6 +22,7 @@ from numpy.random import normal
 import h5py
 from datetime import timedelta
 #
+from histutils.imageconv import png2gif
 from sanityCheck import getParams
 
 def doSim(ParamFN,savedump,makeplot,datadump,timeInds,overrides,progms,x1d,vlim,animtime, dbglvl):
@@ -110,7 +111,6 @@ def doSim(ParamFN,savedump,makeplot,datadump,timeInds,overrides,progms,x1d,vlim,
 #%% wrapup
     print('done looping')
 
-    #make all those PNGs grouped into a few animated GIFs
     png2gif(progms)
 
     analyseres(sim,Fwd['x'],Fwd['xPixCorn'],cam,
@@ -135,6 +135,7 @@ def doSim(ParamFN,savedump,makeplot,datadump,timeInds,overrides,progms,x1d,vlim,
             f["/Vfit"]=PfitAll
 
 #%% =======================================================================
+
 def signal_handler(signal, frame):
     print('\n *** Aborting program as per user pressed Ctrl+C ! \n')
     exit(0)
@@ -241,10 +242,5 @@ if __name__ == '__main__':
 
 #    if ar.saveall:
 #        with h5py.File(progms + 'validate.h5',libver='latest') as fid:
-#            fid.create_dataset('/fitp/residual',data=fitpAll['/optimresidual'])
+#            fid['/fitp/residual']=fitpAll['/optimresidual'])
 #            fid.create_dataset("/L",data=L,        compression="gzip")
-    #exit(progms)
-
-    #if saveplots and makePlots:
-   #     print('converting to TIFF')
-   #     subprocess.call(['convert','out/Jadj_t*.png','-compress','zip','out/JadjSim.tiff'], shell=False)
