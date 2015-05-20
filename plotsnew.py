@@ -25,7 +25,10 @@ try:
 except:
     pass
 #
-from gaussfitter import gaussfit,twodgaussian
+try:
+    from gaussfitter import gaussfit,twodgaussian
+except ImportError as e:
+    warn('gaussfitter not available {}'.format(e))
 from histutils.findnearest import find_nearest
 #%% plot globals
 afs = None#20
@@ -1107,6 +1110,7 @@ def writeplots(fg,plotprefix,tInd,method,progms,overridefmt=None,verbose=0):
         fg.savefig(cn,bbox_inches='tight',dpi=dpi,format=fmt)  # this is slow and async
 #%%
 def getx0E0(jf,Ek,x,tInd,progms,makeplot,verbose):
+  try:
     if jf is None or isnan(jf).any() or not 'optim' in makeplot:
         return nan, nan,nan,nan
 #%% interp log to linear
@@ -1167,4 +1171,6 @@ def getx0E0(jf,Ek,x,tInd,progms,makeplot,verbose):
     except IndexError:
         warn('gaussian fit was outside model space')
         return nan, nan, nan, nan
-
+  except Exception as e:
+      warn('gauss fit failure {}'.format(e))
+      return nan,nan,nan,nan
