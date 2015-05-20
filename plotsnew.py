@@ -13,9 +13,9 @@ from scipy.interpolate import interp1d
 from warnings import warn
 #
 import seaborn as sns
-sns.set_style('whitegrid')
 sns.color_palette(sns.color_palette("cubehelix"))
-sns.set(context='paper', rc={'image.cmap': 'cubehelix_r'}) #for contour
+sns.set(context='paper', style='whitegrid',
+        rc={'image.cmap': 'cubehelix_r'}) #for contour
 
 #sns.set_palette(sns.cubehelix_palette(6)) #all one color, hard to see
 #
