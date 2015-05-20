@@ -141,14 +141,10 @@ def goPlot(ParamFN,sim,arc,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Phi0,
 #%% 1-D slice plots
 
     if 'bartrecon' in makeplot:
-#        plotB(drn,cam,tInd,'$b$',axm,car,cac,'oneperplot')
-#        plotB(dhat['art'],cam,tInd,'$\hat{b}$', axm,car,cac,['twinx','oneperplot'])
-        plotBcompare(drn,dhat['artrecon'],cam,sim.nCamUsed,
-                     nCutPix,'ART',vlim['b'],tInd,progms,verbose)
+        plotBcompare(drn,dhat['artrecon'],cam,sim.nCamUsed,'ART',vlim['b'],tInd,progms,verbose)
 #%% error plots
     if 'berror' in makeplot:
-        plotB(drn - dhat['art'],sim.realdata,cam,nCutPix,vlim['b'],
-                            tInd,makeplot,'$\Delta{b}$',progms,verbose)
+        plotB(drn - dhat['art'],sim,cam,vlim['b'],tInd,makeplot,'$\Delta{b}$',progms,verbose)
 #%% characteristic energy determination for title labels
     #set_trace()
     gx0,gE0,x0,E0 = getx0E0(Phi0,fitp['EK'],xKM,tInd,progms,makeplot,verbose)
@@ -174,7 +170,7 @@ def goPlot(ParamFN,sim,arc,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Phi0,
                 ver,Phi0,fitp,Jxi,vlim,tInd,makeplot,fwdloctxt,spfid,progms,verbose)
 #%% gaussian fit of optim
     if 'gaussian' in makeplot and 'fwd' in makeplot:
-        plotBcompare(drn,dhat['gaussian'],cam,sim.nCamUsed,nCutPix,
+        plotBcompare(drn,dhat['gaussian'],cam,sim.nCamUsed,
                      bcomptxt, 'gaussfit',vlim['b'],tInd, makeplot,progms,verbose)
 
         gx0hat,gE0hat,x0hat,E0hat = getx0E0(fitp['gaussian'],fitp['EK'],xKM,tInd,progms,makeplot,verbose)
@@ -208,10 +204,8 @@ def goPlot(ParamFN,sim,arc,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Phi0,
                 ('Differential Number flux at $B_\perp$={:0.2f} [km]'.format(xKM[Jxi])),
                 spfid,progms,verbose)
     if 'bmaxent' in makeplot:
-        plotBcompare(drn,dhat['fit_maxent'],cam,sim.nCamUsed, nCutPix,
+        plotBcompare(drn,dhat['fit_maxent'],cam,sim.nCamUsed,
                      bcomptxt, 'maxent',vlim['b'],tInd,makeplot,progms,verbose)
-#        plotB(drn,cam,tInd,'$b$',axm,car,cac,'oneperplot')
-#        plotB(dhat['fit_maxent'],cam,tInd,'$b_{fit_maxent}$', axm,car,cac,['twinx','oneperplot'])
     if 'pmaxent' in makeplot:
         plotVER(sim,vfit['maxent'],xKM,xp,zKM,zp,vlim['p'],tInd,makeplot,'maxent',
               '$\hat{v}_{maxent}$ from maximum entropy regularization',
@@ -249,14 +243,14 @@ def goPlot(ParamFN,sim,arc,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Phi0,
               '$\hat{P}_{art}$ from ART estimation of $J$',
               spfid,progms,verbose)
     if 'bart' in makeplot:
-        plotBcompare(drn,dhat['fit_art'],cam,sim.nCamUsed,nCutPix,
+        plotBcompare(drn,dhat['fit_art'],cam,sim.nCamUsed,
                      bcomptxt,'art',vlim['b'],tInd, makeplot,progms,verbose)
 
 #%%
 def plotfwd(sim,cam,drn,nCutPix,xKM,xp,zKM,zp,
             ver,Phi0,fitp,Jxi,vlim,tInd,makeplot,fwdloctxt,spfid,progms,verbose):
 
-    plotB(drn,sim.realdata,cam,nCutPix,vlim['b'],tInd,makeplot,'$br',progms,verbose)
+    plotB(drn,sim,cam,vlim['b'],tInd,makeplot,'$br',progms,verbose)
 
     if not sim.realdata:
         # Forward model VER
@@ -285,7 +279,7 @@ def plotoptim(sim,cam,drn,dhat,nCutPix,bcomptxt,fwdloctxt,ver,Phi0,Jxi,
               vfit,fitp,xKM,xp,zKM,zp,vlim,tInd,makeplot,spfid,progms,verbose):
     print(' The minimizer message is {}'.format(fitp.message))
 
-    plotBcompare(drn,dhat['optim'],cam,sim.nCamUsed,nCutPix,
+    plotBcompare(drn,dhat['optim'],cam,sim.nCamUsed,
                  bcomptxt, 'est',vlim['b'],tInd,makeplot,progms,verbose)
 
     plotVER(sim,vfit['optim'],xKM,xp,zKM,zp,vlim['p'],tInd,makeplot,'pest',
@@ -322,9 +316,7 @@ def plotadj(sim,cam,drn,dhat,nCutPix,xKM,xp,zKM,zp,vfit,fitp,vlim,
               '$\hat{P}_{adj}$ from unfiltered backprojection $A^+b$',
               spfid,progms,verbose)
     if 'badj' in makeplot:
-#        plotB(drn,cam,tInd,'$b$','oneperplot')
-#        plotB(dhat['fit_adj'],cam,tInd,'$b_{fit_adj}$', axm,car,cac,['twinx','oneperplot'])
-        plotBcompare(drn,dhat['fit_adj'],cam,sim.nCamUsed,nCutPix,
+        plotBcompare(drn,dhat['fit_adj'],cam,sim.nCamUsed,
                      bcomptxt,'adj',vlim['b'],tInd,makeplot,progms,verbose)
 #    if 'vbackproj' in makeplot:
 #        plotVER(sim,Phat['vBackProj'],xKM,xp,zKM,zp,vlim['p'],tInd,makeplot,'vadj',
@@ -793,7 +785,7 @@ def plotVER(sim,ver,x,xp,z,zp,vlim,tInd,makeplot,prefix,titletxt,spfid,progms,ve
     if 'h5' in makeplot: #a separate stanza
         dumph5(sim,spfid,prefix,tInd,ver=ver,x=x,xp=xp,z=z,zp=zp)
 #%%
-def plotBcompare(braw,bfit,cam,nCam,nCutPix,prefix,fittxt,
+def plotBcompare(braw,bfit,cam,nCam,prefix,fittxt,
                                                 vlim,tInd,makeplot,progms,verbose):
     dosubtract = False
 
@@ -872,7 +864,7 @@ def plotBcompare(braw,bfit,cam,nCam,nCutPix,prefix,fittxt,
     writeplots(fg,prefix,tInd,makeplot,progms,format1d,verbose)
 
 #%%
-def plotB(bpix,isrealdata,cam,nCutPix,vlim,tInd,makeplot,labeltxt,progms,verbose):
+def plotB(bpix,sim,cam,vlim,tInd,makeplot,labeltxt,progms,verbose):
 
     cnorm,sfmt = logfmt(makeplot)
 
@@ -904,7 +896,7 @@ def plotB(bpix,isrealdata,cam,nCutPix,vlim,tInd,makeplot,labeltxt,progms,verbose
                  label=(labeltxt + ',cam{}$'.format(c)),)
                  #marker='.',
                  #color=cord[c])
-    doBlbl(ax1,isrealdata,sfmt[0],vlim,labeltxt,std) #b is never log
+    doBlbl(ax1,sim.realdata,sfmt[0],vlim,labeltxt,std) #b is never log
     writeplots(fgb,'bfwd'+labeltxt[4:-2],tInd,makeplot,progms,format1d,verbose=verbose)
 
 def doBlbl(axb,isrealdata,sfmt,vlim,labeltxt,noiselam):
