@@ -26,7 +26,7 @@ from numpy.random import normal
 import h5py
 from datetime import timedelta
 #
-from pyimagevideo.imageconv import png2gif
+from pyimagevideo.imageconv import png2multipage
 from sanityCheck import getParams
 
 def doSim(ParamFN,savedump,makeplot,datadump,timeInds,overrides,progms,x1d,vlim,animtime, dbglvl):
@@ -115,7 +115,7 @@ def doSim(ParamFN,savedump,makeplot,datadump,timeInds,overrides,progms,x1d,vlim,
 #%% wrapup
     print('done looping')
 
-    png2gif(progms,'.tif') #gif writing is not working yet
+    png2multipage(progms,'.png') #gif writing is not working yet
 
     analyseres(sim,Fwd['x'],Fwd['xPixCorn'],cam,
                    Phi0all,jfitAll,drnAll,bfitAll,vlim,makeplot,progms)
