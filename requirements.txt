@@ -4,6 +4,6 @@ h5py>=2.5
 scipy>=0.15
 pandas>=0.16.1
 astropy>=1.0
-Wand
+scikit-image>=0.10
 -e git://github.com/scienceopen/gaussfitter.git#egg=gaussfitter
 
