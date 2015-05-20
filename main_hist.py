@@ -12,6 +12,10 @@
  4) fit differential number flux to reconstructed VER
  5) Test reconstruction & fit by reprojecting to synthetic image brightness
 
+example: (fwd model only)
+python3 main_hist.py in/2cam_trans.xlsx /dev/shm/rev_trans2/ -m fwd png --vlim -0.5 3.5 90 350 1e9 1e10 --jlim 1e5 5e5 --blim 0 1e4 -f 0 120 20
+
+
 """
 from __future__ import division,print_function
 from signal import signal,SIGINT #for Ctrl C
@@ -22,7 +26,7 @@ from numpy.random import normal
 import h5py
 from datetime import timedelta
 #
-from histutils.imageconv import png2gif
+from pyimagevideo.imageconv import png2gif
 from sanityCheck import getParams
 
 def doSim(ParamFN,savedump,makeplot,datadump,timeInds,overrides,progms,x1d,vlim,animtime, dbglvl):
@@ -111,7 +115,7 @@ def doSim(ParamFN,savedump,makeplot,datadump,timeInds,overrides,progms,x1d,vlim,
 #%% wrapup
     print('done looping')
 
-    png2gif(progms)
+    png2gif(progms,'.tif') #gif writing is not working yet
 
     analyseres(sim,Fwd['x'],Fwd['xPixCorn'],cam,
                    Phi0all,jfitAll,drnAll,bfitAll,vlim,makeplot,progms)
