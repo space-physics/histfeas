@@ -11,6 +11,11 @@ sudo apt-get install libfreeimage3
 pip install -r requirements.txt
 git submodule update --init --remote
 git submodule foreach "(git checkout master; git pull)"
+cd transcar-utils
+git submodule update --init --remote
+git submodule foreach "(git checkout master; git pull)"
+cd lowtran
+make -f Makefile.f2py
 ```
 
 examples:
