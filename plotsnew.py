@@ -904,7 +904,7 @@ def plotB(bpix,isrealdata,cam,nCutPix,vlim,tInd,makeplot,labeltxt,cord,progms):
                  #marker='.',
                  color=cord[c])
     doBlbl(ax1,isrealdata,sfmt[0],vlim,labeltxt,std) #b is never log
-    writeplots(fgb,'b'+labeltxt[4:-2],tInd,makeplot,progms,format1d)
+    writeplots(fgb,'bfwd'+labeltxt[4:-2],tInd,makeplot,progms,format1d)
 
 def doBlbl(axb,isrealdata,sfmt,vlim,labeltxt,noiselam):
     axb.legend(loc='upper left',fontsize=afs)

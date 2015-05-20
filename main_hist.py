@@ -115,7 +115,7 @@ def doSim(ParamFN,savedump,makeplot,datadump,timeInds,overrides,progms,x1d,vlim,
 #%% wrapup
     print('done looping')
 
-    png2multipage(progms,'.png') #gif writing is not working yet
+    png2multipage(progms,'.png','.tif',delete=True) #gif writing is not working yet
 
     analyseres(sim,Fwd['x'],Fwd['xPixCorn'],cam,
                    Phi0all,jfitAll,drnAll,bfitAll,vlim,makeplot,progms)
