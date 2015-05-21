@@ -6,17 +6,19 @@ from os.path import expanduser
 from dateutil.parser import parse
 from scipy.signal import savgol_filter
 from six import string_types
-from numpy.random import standard_normal
+from numpy.random import poisson
+from warnings import warn
 #
-from azel2radec import azel2radec
-from haversine import angledist
-from coordconv3d import aer2ecef
+from pymap3d.azel2radec import azel2radec
+from pymap3d.haversine import angledist
+from pymap3d.coordconv3d import aer2ecef
 
 
 class Cam: #use this like an advanced version of Matlab struct
-    def __init__(self,sim,cp,name,zmax,dbglvl):
-        self.dbglvl = dbglvl
+    def __init__(self,sim,cp,name,zmax,verbose):
+        self.verbose = verbose
         self.name = name
+#%%
         self.lat = cp['latWGS84']
         self.lon = cp['lonWGS84']
         self.alt_m = cp['Zkm']*1e3
@@ -69,6 +71,20 @@ class Cam: #use this like an advanced version of Matlab struct
         self.arbfov = cp['FOVdeg']
 #%%
         self.kineticSec = 1. / cp['frameRateHz']
+#%% camera model
+        """
+        A model for sensor gain
+        pedn is photoelectrons per data number
+        This is used in fwd model and data inversion
+        """
+        self.pixarea_sqcm = cp['pixarea_sqcm']
+        self.pedn = cp['pedn']
+        self.ampgain = cp['ampgain']
+
+        if isfinite(self.kineticSec) and isfinite(self.pixarea_sqcm) and isfinite(self.pedn):
+            self.intens2dn = self.kineticSec * self.pixarea_sqcm * self.ampgain * self.ampgain / self.pedn
+        else:
+            self.intens2dn = 1
 #%% sky mapping
         cal1Ddir = sim.cal1dpath
         cal1Dname = cp['cal1Dname']
@@ -83,7 +99,7 @@ class Cam: #use this like an advanced version of Matlab struct
 #        else:
 #            exit('*** unknown ray mapping method ' + self.raymap)
 #%% pixel noise/bias
-        self.noiseStd = cp['noiseStd']
+        self.noiselam = cp['noiseLam']
         self.ccdbias = cp['CCDBias']
         self.debiasData = cp['debiasData']
         self.smoothspan = cp['smoothspan']
@@ -118,29 +134,29 @@ class Cam: #use this like an advanced version of Matlab struct
                                                    self.lat,self.lon,self.alt_m)
     def doorient(self,az,el,ra,dec):
         if self.transpose:
-            if self.dbglvl>0:
-                print('tranposing cam ' + self.name + ' az/el/ra/dec data')
+            if self.verbose>0:
+                print('tranposing cam #{} az/el/ra/dec data. '.format(self.name))
             az  = az.T
             el  = el.T
             ra  = ra.T
             dec = dec.T
         if self.flipLR:
-            if self.dbglvl>0:
-                print('flipping horizontally cam ' + self.name + ' az/el/ra/dec data')
+            if self.verbose>0:
+                print('flipping horizontally cam #{} az/el/ra/dec data.'.format(self.name))
             az  = fliplr(az)
             el  = fliplr(el)
             ra  = fliplr(ra)
             dec = fliplr(dec)
         if self.flipUD:
-            if self.dbglvl>0:
-                print('flipping vertically cam ' + self.name + ' az/el/ra/dec data')
+            if self.verbose>0:
+                print('flipping vertically cam #{} az/el/ra/dec data.'.format(self.name))
             az  = flipud(az)
             el  = flipud(el)
             ra  = flipud(ra)
             dec = flipud(dec)
         if self.rotCCW != 0:
-            if self.dbglvl>0:
-                print('rotating cam ' + self.name + ' az/el/ra/dec data')
+            if self.verbose>0:
+                print('rotating cam #{} az/el/ra/dec data.'.format(self.name))
             az  = rot90(az, k = self.rotCCW)
             el  = rot90(el, k = self.rotCCW)
             ra  = rot90(ra, k = self.rotCCW)
@@ -152,24 +168,26 @@ class Cam: #use this like an advanced version of Matlab struct
 
     def debias(self,data):
         if isfinite(self.debiasData):
-            if self.dbglvl>0:
-                print('Debiasing Data for Camera #' + self.name )
+            if self.verbose>0:
+                print('Debiasing Data for Camera #{}'.format(self.name) )
             data -= self.debiasData
         return data
 
     def donoise(self,data):
          noisy = data.copy()
 
-         if isfinite(self.noiseStd):
-             print('adding noise with std dev {:0.1e}'.format(self.noiseStd) + ' to camera'+self.name)
-             dnoise = self.noiseStd*(standard_normal(size=self.nCutPix))
+         if isfinite(self.noiselam):
+             if self.verbose>0:
+                 print('adding Poisson noise with \lambda={:0.1f} to camera #{}'.format(self.noiselam,self.name))
+             dnoise = poisson(lam=self.noiselam,size=self.nCutPix)
              noisy += dnoise
          else:
              dnoise = None
 
 
          if isfinite(self.ccdbias):
-             print('adding bias {:0.1e}'.format(self.ccdbias) + ' to camera'+self.name)
+             if self.verbose>0:
+                 print('adding bias {:0.1e} to camera #{}'.format(self.ccdbias,self.name))
              noisy += self.ccdbias
 
          # kept for diagnostic purposes
@@ -178,39 +196,31 @@ class Cam: #use this like an advanced version of Matlab struct
          self.noisy = noisy
 
          return noisy
-         """
-         note the method below actually doesn't work quite right--thin spike in real data gets
-         less noise than spread out low peak data!
-         """
-         # Add noise, as percent of signal on PER CAMERA basis
-         #  where is reference for this!?
-         # self.std = self.noiseStd * norm(data,ord=2)
-         #print(norm(data,ord=2))
-         #en = standard_normal(size = self.nCutPix) # vector of zero-mean gaussian noise
-         #return data + self.ccdbias + self.std * en / norm(en,ord=2) #scaling noise
 
     def dosmooth(self,data):
         if self.smoothspan > 0 and self.savgolOrder>0:
-            if self.dbglvl>0:
-                print('Smoothing Data for Camera #' + self.name)
+            if self.verbose>0:
+                print('Smoothing Data for Camera #{}'.format(self.name))
             data= savgol_filter(data, self.smoothspan, self.savgolOrder)
         return data #LEAVE THIS AS SEPARATE LINE!
 
     def fixnegval(self,data):
         negDataInd = data<0
-        if negDataInd.any():
-            print('* Setting',negDataInd.sum(),' negative Data values to 0 for Camera #' + self.name )
-            data[negDataInd] = 0
+        if (self.verbose and negDataInd.any()) or negDataInd.sum()>0.1*self.nCutPix:
+            warn('Setting {} negative Data values to 0 for Camera #{}'.format(negDataInd.sum(), self.name))
+        
+        data[negDataInd] = 0
 
         self.nonneg = data
         return data
     def scaleintens(self,data):
         if isfinite(self.intensityScaleFactor) and self.intensityScaleFactor !=1 :
-            if self.dbglvl>0:
-                print( 'Scaling data to Cam #' + self.name + ' by factor of ',self.intensityScaleFactor )
+            if self.verbose>0:
+                print('Scaling data to Cam #' + self.name + ' by factor of ',self.intensityScaleFactor )
             data *= self.intensityScaleFactor
             #assert isnan(data).any() == False
         return data
+
     def dolowerthres(self,data):
         if isfinite(self.lowerthres):
             print('Thresholding Data to 0 when DN <',self.lowerthres, 'for Camera #' + self.name )
@@ -229,7 +239,7 @@ class Cam: #use this like an advanced version of Matlab struct
         rapix =  self.ra[cutrow, cutcol]
         decpix = self.dec[cutrow, cutcol]
         raMagzen,decMagzen = azel2radec(self.Baz,self.Bel,self.lat,self.lon,self.Bepoch)
-        if self.dbglvl>0: print('mag. zen. ra/dec {} {}'.format(raMagzen,decMagzen))
+        if self.verbose>0: print('mag. zen. ra/dec {} {}'.format(raMagzen,decMagzen))
 
         angledist_deg = angledist(raMagzen,decMagzen,rapix,decpix)
         # put distances into a 90-degree fan beam
@@ -244,7 +254,7 @@ class Cam: #use this like an advanced version of Matlab struct
         self.cutrow = cutrow
         self.cutcol = cutcol
 
-        if self.dbglvl>0:
+        if self.verbose>0:
             from matplotlib.pyplot import figure
             clr = ['b','r','g','m']
             ax=figure().gca()
@@ -287,15 +297,15 @@ class Cam: #use this like an advanced version of Matlab struct
                                        logical_or(nearRow==0,nearRow == self.ypix-1)) )[0]
             nearRow = delete(nearRow,edgeind)
             nearCol = delete(nearCol,edgeind)
-            if self.dbglvl>0: print('deleted',edgeind.size, 'edge pixels ')
+            if self.verbose>0: print('deleted',edgeind.size, 'edge pixels ')
 
         self.findLSQ(nearRow, nearCol)
 
-        if self.dbglvl>0:
+        if self.verbose>0:
             from matplotlib.pyplot import figure
             clr = ['b','r','g','m']
             ax = figure().gca()
-            ax.plot(nearCol,nearRow,color=clr[int(self.name)],label='cam'+self.name+'preLSQ',
+            ax.plot(nearCol,nearRow,color=clr[int(self.name)],label='cam{}preLSQ'.format(self.name),
                     linestyle='None',marker='.')
             ax.legend()
             ax.set_xlabel('x'); ax.set_ylabel('y')

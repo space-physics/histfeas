@@ -4,9 +4,7 @@ from numba import jit
 from numpy import empty,ones,ravel_multi_index,hypot,zeros
 from scipy.sparse import dok_matrix,issparse
 # local
-import sys
-sys.path.append("../cv-utils")
-from lineClipping import cohensutherland
+from CVutils.lineClipping import cohensutherland
 
 '''
  Michael Hirsch
@@ -45,11 +43,10 @@ def EllLineLength(Fwd,xFOVpixelEnds,zFOVpixelEnds,xCam,zCam,saveEll,Np,sim,makeP
 #%% convenience variables (easier to type)
     sx =  Fwd['sx']
     sz =  Fwd['sz']
-    nCam = sim.nCam
+    nCam = sim.nCamUsed
     xpc = Fwd['xPixCorn']
     zpc = Fwd['zPixCorn']
     maxNell = Fwd['maxNell']
-    useCamInd = sim.useCamInd
     assert xpc.size == sx + 1
     assert zpc.size == sz + 1
 #%% preallocation
@@ -63,14 +60,14 @@ def EllLineLength(Fwd,xFOVpixelEnds,zFOVpixelEnds,xCam,zCam,saveEll,Np,sim,makeP
 
     xzplot =None
     L = goCalcEll(maxNell,nCam,Np,sz,sx,xpc,zpc,xFOVpixelEnds,zFOVpixelEnds,
-                          xCam,zCam,useCamInd,plotEachRay,dbglvl)
+                          xCam,zCam,plotEachRay,dbglvl)
 
     #%% write results to HDF5 file
     if saveEll:
         doSaveEll(L,Fwd,sim.FwdLfn,xFOVpixelEnds,zFOVpixelEnds,xCam,zCam,writeRays)
 
     if 'ell' in makePlots and plotEachRay and xzplot:
-        plotEll(sim.useCamInd,xFOVpixelEnds,zFOVpixelEnds,xCam,zCam,Np,xpc,zpc,
+        plotEll(nCam,xFOVpixelEnds,zFOVpixelEnds,xCam,zCam,Np,xpc,zpc,
                 sz,sx,xzplot,sim.FwdLfn,plotEachRay,makePlots,
                 (None,None,None,None,None,None))
     if issparse(L):
@@ -78,10 +75,13 @@ def EllLineLength(Fwd,xFOVpixelEnds,zFOVpixelEnds,xCam,zCam,saveEll,Np,sim,makeP
     return L
 
 def goCalcEll(maxNell,nCam,Np,sz,sx,xpc,zpc,xFOVpixelEnds,zFOVpixelEnds,
-                xCam,zCam,useCamInd,plotEachRay,dbglvl=0):
+                xCam,zCam,plotEachRay,dbglvl=0):
+    usesparse=True
+    if usesparse:
+        L = dok_matrix(( Np*nCam,sz*sx),dtype=float) #sparse
+    else:
+        L = zeros( ( Np*nCam,sz*sx),dtype=float ,order='F') #dense
 
-    L = zeros( ( Np*nCam,sz*sx),dtype=float ,order='F') #dense
-    #L = dok_matrix(( Np*nCam,sz*sx),dtype=float) #sparse
 
     print('Dimensions of L:',L.shape,' sz=',sz, '  sx=',sx )
 
@@ -90,21 +90,24 @@ def goCalcEll(maxNell,nCam,Np,sz,sx,xpc,zpc,xFOVpixelEnds,zFOVpixelEnds,
     xzplot = [] #we'll append to this
 
     L = loopEll(Np,sz,sx,xpc,zpc,xFOVpixelEnds,zFOVpixelEnds,
-                             xCam,zCam,useCamInd,plotEachRay,
+                             xCam,zCam,nCam,plotEachRay,
                              L,Lcol,tmpEll,xzplot) #numba
 
-    return L#.tocsc()
+    if usesparse:
+        return L.tocsc()
+    else:
+        return L
 
-@jit(['float64[:,:](int64,int64,int64,float64[:],float64[:],float64[:,:],float64[:,:],float64[:],float64[:],int64[:],bool_,float64[:,:],int64[:],float64[:],float64[:])'])
+#@jit(['float64[:,:](int64,int64,int64,float64[:],float64[:],float64[:,:],float64[:,:],float64[:],float64[:],int64[:],bool_,float64[:,:],int64[:],float64[:],float64[:])'])
 def loopEll(Np,sz,sx,xpc,zpc,xFOVpixelEnds,zFOVpixelEnds,
-             xCam,zCam,useCamInd,plotEachRay,L,Lcol,tmpEll,xzplot):
+             xCam,zCam,nCam,plotEachRay,L,Lcol,tmpEll,xzplot):
 #%%let's compute intersections!!
     #FIXME assumes all cameras have same # of pixels
     inttot = 0
 
     ''' We MUST have all cameras enabled for this computation (as verified in observeVolume)'''
 #    try:
-    for iCam in useCamInd:
+    for iCam in range(nCam):
         xfov = xFOVpixelEnds[:,iCam]; zfov = zFOVpixelEnds[:,iCam]
         for k in range(Np): #FIXME assumes all cam same 1D cut pixel length
             nHitsThisPixelRay = 0
@@ -154,7 +157,7 @@ def doSaveEll(L,Fwd,EllFN,xFOVpixelEnds,zFOVpixelEnds,xCam,zCam,writeRays):
         h5xCam = fid.create_dataset('/Obs/xCam',data=xCam); h5xCam.attrs['Units'] = 'kilometers'
         h5zCam = fid.create_dataset('/Obs/zCam',data=zCam); h5zCam.attrs['Units'] = 'kilometers'
 
-def plotEll(useCamInd,xFOVpixelEnds,zFOVpixelEnds,xCam,zCam,Np,xpc,zpc,sz,sx,
+def plotEll(nCam,xFOVpixelEnds,zFOVpixelEnds,xCam,zCam,Np,xpc,zpc,sz,sx,
             xzplot,EllFN,plotEachRay,makeplot,vlim):
     from matplotlib.pyplot import figure, draw, pause
     from matplotlib.ticker import MultipleLocator
@@ -180,7 +183,7 @@ def plotEll(useCamInd,xFOVpixelEnds,zFOVpixelEnds,xCam,zCam,Np,xpc,zpc,sz,sx,
             draw() #need plt.pause(0.01) just after this
             pause(0.01) #need plt.draw() just before this
     else:
-        for iCam in useCamInd:
+        for iCam in range(nCam):
             for iray in range(0,Np,decimfactor):
                 #DO NOT SPECIFY x=... y=... or NO LINES appear!!
                 ax.plot([xCam[iCam],xFOVpixelEnds[iray,iCam]],
