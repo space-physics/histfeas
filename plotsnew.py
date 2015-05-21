@@ -356,7 +356,7 @@ def plotnoise(cam,tInd,makeplot,prefix,progms,verbose):
 
     writeplots(fg,prefix,tInd,makeplot,progms,format1d,verbose)
   except Exception as e:
-    warn(e)
+    warn('tind {}   {}'.format(tInd,e))
 
 def plottphi0(Tm,Phi0,Jxi,Ek,zKM,vlim,sim,tInd,makeplot,prefix,progms,verbose):
   try:
@@ -384,7 +384,7 @@ def plottphi0(Tm,Phi0,Jxi,Ek,zKM,vlim,sim,tInd,makeplot,prefix,progms,verbose):
 
     writeplots(fg,prefix,tInd,makeplot,progms,verbose=verbose)
   except Exception as e:
-    warn(e)
+    warn('tind {}   {}'.format(tInd,e))
 
 def ploteig(EKpcolor,zKM,Tm,vlim,sim,tInd,makeplot,prefix,progms,verbose):
   try:
@@ -415,7 +415,7 @@ def ploteig(EKpcolor,zKM,Tm,vlim,sim,tInd,makeplot,prefix,progms,verbose):
     ax.set_ylim(vlim[2:4])
     writeplots(fg,prefix,tInd,makeplot,progms,verbose=verbose)
   except Exception as e:
-    warn(e)
+    warn('tind {}   {}'.format(tInd,e))
 
 def ploteig1d(Ek,zKM,Tm,vlim,sim,tInd,makeplot,prefix,progms,verbose):
   try:
@@ -445,7 +445,7 @@ def ploteig1d(Ek,zKM,Tm,vlim,sim,tInd,makeplot,prefix,progms,verbose):
     ax.grid(True)
     writeplots(fg,prefix,tInd,makeplot,progms,verbose=verbose)
   except Exception as e:
-    warn(e)
+    warn('tind {}   {}'.format(tInd,e))
 
 def plotPlainImg(sim,cam,rawdata,t,makeplot,prefix,titletxt,figh,spfid,progms,verbose):
     """http://stackoverflow.com/questions/22408237/named-colors-in-matplotlib"""
@@ -509,7 +509,7 @@ def plotRealImg(sim,cam,rawdata,t,makeplot,prefix,titletxt,figh,spfid,progms,ver
     else:
         draw() #This draw must be here for multiplot animations or this window won't update!
   except Exception as e:
-    warn(e)
+    warn('{}'.format(e))
 
 def plotPicard(A,b,cvar=None,verbose=0):
     from picard import picard
@@ -567,7 +567,7 @@ def plotJ1D(sim,PhiFwd,PhiInv,Ek,vlim,tInd,makeplot,prefix,titletxt,spfid,progms
     if 'h5' in makeplot:
         dumph5(sim,spfid,prefix,tInd,PhiFwd=PhiFwd,PhiInv=PhiInv,Ek=Ek)
   except Exception as e:
-    warn(e)
+    warn('tind {}   {}'.format(tInd,e))
 #%%
 def plotJ(sim,Jflux,x,xp,Ek,EKpcolor,vlim,tInd,makeplot,prefix,titletxt,spfid,progms,verbose):
   try:
@@ -645,7 +645,7 @@ def plotJ(sim,Jflux,x,xp,Ek,EKpcolor,vlim,tInd,makeplot,prefix,titletxt,spfid,pr
     if 'h5' in makeplot:
         dumph5(sim,spfid,prefix,tInd,jfwd=Jflux,xp=xp,Ek=EKpcolor)
   except Exception as e:
-    warn(e)
+    warn('tind {}   {}'.format(tInd,e))
 
 def doJlbl(ax,titletxt):
     ax.set_ylabel('Energy [eV]',fontsize=afs,labelpad=0)
@@ -686,7 +686,7 @@ def plotJ3(x,EKpcolor,Jflux,plt3):
         octave.Jmesh(x,e,Jflux)
     return ax3
   except Exception as e:
-    warn(e)
+    warn('{}'.format(e))
 
 def getmin(vs,vu):
     if vu is not None:
@@ -725,7 +725,7 @@ def plotVER1D(sim,pfwd,pinv,zKM,vlim,tInd,makeplot,prefix,titletxt,spfid,progms,
     if 'h5' in makeplot: #a separate stanza
         dumph5(sim,spfid,prefix,tInd,pfwd=pfwd,pinv=pinv,z=zKM)
   except Exception as e:
-    warn(e)
+    warn('tind {}   {}'.format(tInd,e))
 #%%
 def plotVER(sim,ver,x,xp,z,zp,vlim,tInd,makeplot,prefix,titletxt,spfid,progms,verbose):
   try:
@@ -806,7 +806,7 @@ def plotVER(sim,ver,x,xp,z,zp,vlim,tInd,makeplot,prefix,titletxt,spfid,progms,ve
     if 'h5' in makeplot: #a separate stanza
         dumph5(sim,spfid,prefix,tInd,ver=ver,x=x,xp=xp,z=z,zp=zp)
   except Exception as e:
-    warn(e)
+    warn('tind {}   {}'.format(tInd,e))
 #%%
 def plotBcompare(braw,bfit,cam,nCam,prefix,fittxt, vlim,tInd,makeplot,progms,verbose):
   try:
@@ -886,7 +886,7 @@ def plotBcompare(braw,bfit,cam,nCam,prefix,fittxt, vlim,tInd,makeplot,progms,ver
 
     writeplots(fg,prefix,tInd,makeplot,progms,format1d,verbose)
   except Exception as e:
-    warn(e)
+    warn('tind {}   {}'.format(tInd,e))
 #%%
 def plotB(bpix,sim,cam,vlim,tInd,makeplot,labeltxt,progms,verbose):
   try:
@@ -923,7 +923,7 @@ def plotB(bpix,sim,cam,vlim,tInd,makeplot,labeltxt,progms,verbose):
     doBlbl(ax1,sim.realdata,sfmt[0],vlim,labeltxt,std) #b is never log
     writeplots(fgb,'bfwd'+labeltxt[4:-2],tInd,makeplot,progms,format1d,verbose=verbose)
   except Exception as e:
-    warn(e)
+    warn('tind {}   {}'.format(tInd,e))
 
 def doBlbl(axb,isrealdata,sfmt,vlim,labeltxt,noiselam):
     axb.legend(loc='upper left',fontsize=afs)
@@ -1000,7 +1000,7 @@ def planview3(cam,xKM,zKM,makeplot,figh,progms):
     z = earthrad * outer(ones_like(u), cos(v))
     ax.plot_surface(x, y, z,  rstride=4, cstride=4, color='g')
   except Exception as e:
-    warn(e)
+    warn('{}'.format(e))
 #%%
 def planviewkml(cam,xKM,zKM,makeplot,figh,progms,verbose=0):
   """
@@ -1101,7 +1101,7 @@ def planviewkml(cam,xKM,zKM,makeplot,figh,progms,verbose=0):
     if verbose>0: print('saving ' + kmlfn)
     kml1d.save(kmlfn)
   except Exception as e:
-    warn(e)
+    warn('{}'.format(e))
 #%%
 def dumph5(sim,fn,prefix,tInd,**writevar): #used in other .py too
     print('dumping to '+ fn)
