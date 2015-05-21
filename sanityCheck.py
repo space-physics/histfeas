@@ -7,8 +7,9 @@ from pandas import read_excel
 from camclass import Cam
 from simclass import Sim
 from xlrd.biffh import XLRDError
+from warnings import warn
 
-def getParams(XLSfn,overrides,savedump,progms,dbglvl):
+def getParams(XLSfn,overrides,savedump,makeplot,progms,dbglvl):
 #%% read spreadsheet
     paramSheets = ('Sim','Cameras','Arcs')
     sp = read_excel(XLSfn,paramSheets[0],index_col=0,header=0)
@@ -20,30 +21,34 @@ def getParams(XLSfn,overrides,savedump,progms,dbglvl):
 #%% ***** must be outside camclass ********
     nCutPix = cp.loc['nCutPix'].values
     if not (nCutPix == nCutPix[0]).all():
-        exit('*** all cameras must have same 1D cut length')
+        raise ValueError('sanityCheck: all cameras must have same 1D cut length')
 #%% class with parameters and function
-    sim = Sim(sp,cp,ap,overrides,progms,dbglvl)
+    sim = Sim(sp,cp,ap,overrides,makeplot,progms,dbglvl)
 #%% grid setup
     Fwd = sim.setupFwdXZ(sp)
 #%% setup cameras
-    cam,cp = setupCam(Cam,sim,cp,Fwd['z'][-1],dbglvl)
+    cam,cp = setupCam(sim,cp,Fwd['z'][-1],dbglvl)
 
-    print('fwd model voxels:\n')
-    print('B_perp: N=',Fwd['sx'],'   B_parallel: M=',Fwd['sz'])
+    print('fwd model voxels:\n'
+          'B_perp: N={}   B_parallel: M={}'.format(Fwd['sx'],Fwd['sz']))
 #%% init variables
     return ap,sim,cam,Fwd
 ###############################################
 
-def setupCam(Cam,sim,cp,zmax,dbglvl):
+def setupCam(sim,cp,zmax,dbglvl):
     cam = {}
 
     if sim.camxreq[0] is not None:
-        print('* overriding camera x-loc with ',sim.camxreq)
-        # MUST NOT use enumerate(sim.useCamInd) -- you will not index the correct column!
-        for i,ci,cx in zip(sim.useCamInd,sim.useCamInd.astype(str),sim.camxreq):
-            cp.ix['Xkm',i] = cx
-            cam[ci] = Cam(sim,cp.ix[:,i], ci, zmax,dbglvl)
+        warn('overriding camera x-loc with {}'.format(sim.camxreq))
+        for i,(c,cx) in enumerate(zip(cp,sim.camxreq)):
+            if sim.useCamBool[i]:
+                cp.iat['Xkm',c] = cx
+                cam[c] = Cam(sim,cp[c], c, zmax,dbglvl)
     else:
-        for i,ci in zip(sim.useCamInd,sim.useCamInd.astype(str)):
-            cam[ci] = Cam(sim,cp.ix[:,i], ci, zmax,dbglvl)
+        for i,c in enumerate(cp):
+            if sim.useCamBool[i]:
+                cam[c] = Cam(sim,cp[c], c, zmax,dbglvl)
+
+    if len(cam)==0:
+        raise ValueError('setupCam: 0 cams are configured, Nothing to do, exiting now.')
     return cam,cp

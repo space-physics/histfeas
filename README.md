@@ -4,13 +4,21 @@ hist-feasibility
 ================
 Feasibility study for auroral tomography
 
-This program should be runnable on any Python 2.7/3.4 platform. Primarily tested on Linux.
+This program should be runnable on any Python 3.4 platform. Primarily tested on Linux.
 
-setup:
+installation:
 ------------
 ```
+git clone --recursive --depth 1 https://github.com/scienceopen/hist-feasibility
+sudo apt-get install libfreeimage3
 pip install -r requirements.txt
-git clone --recursive https://github.com/scienceopen/hist-feasbility.git
+git submodule update --init --remote
+git submodule foreach "(git checkout master; git pull)"
+cd transcar-utils
+git submodule update --init --remote
+git submodule foreach "(git checkout master; git pull)"
+cd lowtran
+make -f Makefile.f2py
 ```
 
 examples:

@@ -1,42 +1,43 @@
 from __future__ import print_function, division
 from numpy import asarray,where,arange,isfinite,ceil,hypot
-import h5py
+import numpy as np
 from os.path import join
+from dateutil.parser import parse
+from warnings import warn
 #
-import sys
-sys.path.append('../transcar-utils')
-from readionoinit import getaltgrid
+from transcarutils.readionoinit import getaltgrid
 
 class Sim:
 
-    def __init__(self,sp,cp,ap,overrides,progms,dbglvl):
+    def __init__(self,sp,cp,ap,overrides,makeplot,progms,dbglvl):
         self.dbglvl=dbglvl
         #%% how many cameras in use, and which ones?
         usecamreq = asarray(overrides['cam'])
         if usecamreq[0] is not None: #override spreadsheet
-            print('* Overriding XLS parameters, using cameras:',usecamreq)
+            warn(' Overriding XLS parameters, using cameras: {}'.format(usecamreq))
             for ci,civ in enumerate(cp.loc['useCam']): # this might be a silly indexing method, but works
                 if (ci==usecamreq).any():
-                    cp.ix['useCam',ci] = 1 #do not use boolean, it screws up other rows
+                    cp.at['useCam',ci] = 1 #do not use boolean, it screws up other rows
                 else:
-                    cp.ix['useCam',ci] = 0 #do not use boolean, it screws up other rows
+                    cp.at['useCam',ci] = 0 #do not use boolean, it screws up other rows
         self.useCamBool = cp.loc['useCam'].values.astype(bool)
-        self.useCamInd = where(self.useCamBool)[0] # we want first item in tuple
 
         if usecamreq[0] is not None:
-            assert (self.useCamInd == usecamreq).all()
+            assert np.all(where(self.useCamBool)[0] == usecamreq) #not .all() in case of different length
 
-        self.nCam = int(self.useCamBool.sum())
+        self.nCamUsed = self.useCamBool.sum() #it is an int
 
-        self.allCamInd = cp.ix['useCam',:].values.astype(bool)
-        self.nCutPix = int(cp.ix['nCutPix',0]) #FIXME someday allow different # of pixels..
-        self.allCamXkm = cp.ix['Xkm',:].values.astype(float)
-        self.allCamZkm = cp.ix['Zkm',:].values.astype(float)
+        self.nCutPix = cp.at['nCutPix',0] #FIXME someday allow different # of pixels..
+        self.allCamXkm = cp.loc['Xkm'].values.astype(float)
+        self.allCamZkm = cp.loc['Zkm'].values.astype(float)
+
+        self.obsalt_km = cp.loc['Zkm'].values.mean() #FIXME assuming cameras are at a very similar altitudes
+        self.zenang = 90-cp.loc['Bincl'].values.mean() #FIXME assuming all in same plane and that difference in boresight path length are 'small'
 
         #%% camera position override
         self.camxreq = overrides['camx']
-        if self.camxreq[0] is not None and len(self.camxreq) != self.nCam:
-            exit('*** must specify same number of x-loc and used cameras')
+        if self.camxreq[0] is not None and len(self.camxreq) != self.nCamUsed:
+            raise ValueError('must specify same number of x-loc and used cameras')
         #%% manual override flux file
         if overrides['Jfwd'] is not None:
             print('* overriding J0 flux with file: ' + overrides['Jfwd'])
@@ -79,6 +80,13 @@ class Sim:
         else:
             self.savefwdL = sp.at['saveEll','Sim']
             self.loadfwdL = sp.at['loadEll','Sim']
+#%% setup plotting
+#        self.plots = {}
+#
+#        if 'optim' in makeplot:
+#            self.plots['optim'] = ('bnoise','best','pest','phiest','pest_1d','phiest_1d')
+#        if 'fwd' in makeplot:
+#            self.plots['fwd'] =   ('bnoise','bfwd','pfwd','phifwd','pfwd_1d','phifwd_1d')
         #%%how many synthetic arcs are we using
         if ap is not None:
             self.nArc = ap.shape[1]
@@ -92,7 +100,7 @@ class Sim:
         self.windowfn = sp.at['windowFN','Sim']
         self.qefn =sp.at['emccdQEfn','Sim']
         self.transcarev = sp.at['BeamEnergyFN','Transcar']
-        self.transcarutc = sp.at['tReq','Transcar']
+        self.transcarutc = parse(sp.at['tReq','Transcar'])
         self.excratesfn = sp.at['ExcitationDATfn','Transcar']
         self.transcarpath = sp.at['TranscarDataDir','Sim']
         self.reactionfn = sp.at['reactionParam','Transcar']
@@ -135,12 +143,12 @@ class Sim:
         self.stoputc = sp.at['reqStopUT','Obs']
         # make the simulation time step match that of the fastest camera
         self.kineticSec = 1. / (cp.ix['frameRateHz',self.useCamBool]).max()
-
+        self.timestepsperexp = sp.at['timestepsPerExposure','Sim']
         #%% recon
         self.artinit = str(sp.at['initVector','ART']).lower()
         try:
             self.artmaxiter = int(sp.at['maxIter','ART'])
-        except ValueError:
+        except ValueError: #this is normal,just means we're not using ART
             self.artmaxiter = 0
         self.artlambda = sp.at['lambda','ART']
         self.artstop = sp.at['stoprule','ART']
@@ -188,21 +196,21 @@ class Sim:
     def getEllHash(self,sp,cp):
         from hashlib import md5
 
-        EllCritParams =  [cp.ix['Xkm',:].values, cp.ix['Zkm',:].values,
-                          cp.ix['nCutPix',:].values, cp.ix['FOVmaxLengthKM',:].values,
+        EllCritParams =  [cp.loc['Xkm'].values, cp.loc['Zkm'].values,
+                          cp.loc['nCutPix'].values, cp.loc['FOVmaxLengthKM'].values,
                           sp.at['RayAngleMapping','Obs'].lower(),
                           sp.at['XcellKM','Fwdf'],
                           sp.at['XminKM','Fwdf'], sp.at['XmaxKM','Fwdf'],
                           sp.at['EllIs','Sim'].lower(),
                           sp.at['UseTCz','Transcar'] ]
 
-        if not self.useztranscar:
+        if not self.useztranscar: #FIXME maybe we should always consider these for best safety
             EllCritParams.extend([sp.at['ZcellKM','Fwdf'],
                                   sp.at['ZminKM','Fwdf'], sp.at['ZmaxKM','Fwdf'] ])
 
         if self.raymap == 'arbitrary':
-            EllCritParams.extend([cp.ix['boresightElevDeg',:].values,
-                                  cp.ix['FOVdeg',:].values])
+            EllCritParams.extend([cp.loc['boresightElevDeg'].values,
+                                  cp.loc['FOVdeg'].values])
 
         # get a long string from a mix of numbers and strings
         EllTxt = ''.join([str(n) for n in EllCritParams]) #so fast!
