@@ -24,7 +24,6 @@ from os import makedirs
 from numpy import absolute,zeros,asarray,in1d,arange
 from numpy.random import normal
 import h5py
-from datetime import timedelta
 from sys import stderr
 #
 #import logging
@@ -52,7 +51,7 @@ def doSim(ParamFN,savedump,makeplot,datadump,timeInds,overrides,progms,x1d,vlim,
         if sim.raymap == 'astrometry': #and any('b' in m[:2] for m in makeplot):
             from get1Dcut import get1Dcut #we need cam.angle_deg for plotting
             cam = get1Dcut(cam,makeplot,progms,verbose)
-        nTimeSlice = ap.shape[1]
+        nTimeSlice = ap.shape[1]-1 #last column is end of sim time
     timeInds = sim.maketind(timeInds,nTimeSlice)
 #%% Step 1) get projection matrix
     Lfwd,Fwd,cam = getEll(sim,cam,Fwd,makeplot,verbose)
@@ -62,25 +61,21 @@ def doSim(ParamFN,savedump,makeplot,datadump,timeInds,overrides,progms,x1d,vlim,
     Peig = getMp(sim,Fwd['z'],makeplot,verbose)
 #%% synthetic diff. num flux
     if not sim.realdata:
-        try:
-            Phi0all,tsim = getPhi0(sim,ap,Fwd['x'],Peig['Ek'], makeplot,verbose)
-        except TypeError as e:
-            print('*** trouble with forward model. Exiting sim.   {}'.format(e))
-            return
+        Phi0all,X0 = getPhi0(sim,ap,Fwd['x'],Peig['Ek'], makeplot,verbose)
+        if not x1d: x1d = X0
+    if verbose>0: print('timeInds: {}'.format(timeInds))
 #%%start looping for each time slice in keogram (just once if simulated)
     for ti in timeInds:
         if sim.realdata:
-            Phi0 = None; Pfwd = None; arc = None
+            Phi0 = None; Pfwd = None
         else: #sim
             """
             we need to integrate in time over the relevant time slices
             the .sum(axis=2) does the integration/smearing in time
             """
-            #FIXME qualify our selected times from the command line, so we don't overlap in time
-            cti = [tsim.index(t) for t in tsim if t>=tsim[ti]  and t<(tsim[ti]+timedelta(seconds=sim.kineticSec) ) ]
-            Phi0 = Phi0all[...,cti].sum(axis=2)
+            Phi0 = Phi0all[...,ti]
 #%% Step 1) Forward model
-        Pfwd,arc = getSimVER(Phi0, Peig, Fwd, sim, ap.iloc[:,ti], ti, verbose)
+        Pfwd = getSimVER(Phi0, Peig, Fwd, sim, ap.iloc[:,ti], ti, verbose)
 #%% Step 2) Observe Forward Model (create vector of observations)
         bn = getObs(sim,cam,Lfwd,ti,Pfwd,makeplot,verbose)
         drnAll.append(bn)
@@ -103,8 +98,8 @@ def doSim(ParamFN,savedump,makeplot,datadump,timeInds,overrides,progms,x1d,vlim,
 #%% collect results
         jfitAll.append(jfit); bfitAll.append(bfit)
 #%% plot results
-        goPlot(ParamFN,sim,arc,Fwd,cam,Lfwd,Tm,bn,bfit,Pfwd,Pfit,Phi0,
-                     jfit,rawdata,ti,makeplot,progms,x1d,vlim,verbose)
+        goPlot(ParamFN,sim,Fwd,cam,Lfwd,Tm,bn,bfit,Pfwd,Pfit,Phi0,
+                     jfit,rawdata,ti,makeplot,progms,x1d[ti],vlim,verbose)
         if animtime is not None:
             plt.draw()
             plt.pause(animtime)
