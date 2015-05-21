@@ -9,13 +9,17 @@ from nans import nans
 #from pdb import set_trace
 
 def getObs(sim,cam,L,tDataInd,ver,makePlots,dbglvl):
+    """
+    real data: extract brightness vector from disk data
+    simulation: create brightness from projection matrix and fwd model VER
+    """
 
     nCutPix = sim.nCutPix
 
     if sim.realdata:
-        bn = empty(nCutPix * sim.nCam,dtype=float,order='F') #FIXME assumes all cuts same length AND that cam 0 is used
-        for c in sim.useCamInd.astype(str):
-            cInd = range(int(c)*nCutPix,(int(c)+1)*nCutPix)
+        bn = empty(nCutPix * sim.nCamUsed,dtype=float,order='F') #FIXME assumes all cuts same length AND that cam 0 is used
+        for c in cam:
+            cInd = cam[c].ind
             """
              remember that we put "d" in lexigraphical form,
              "d" is a column-major vector, such that if our 1D cut is N pixels,
@@ -30,12 +34,13 @@ def getObs(sim,cam,L,tDataInd,ver,makePlots,dbglvl):
 
 
     elif ver is not None: #or not np.any(np.isnan(v)): # no NaN in v # using synthetic data
+        """ FIEFK """
         bp = L.dot(ver.ravel(order='F'))
-        assert bp.size == nCutPix * sim.nCam
+        assert bp.size == nCutPix * sim.nCamUsed
 
-        bn = nans(bp.shape)
-        for c in sim.useCamInd.astype(str):
-            cInd = range(int(c)*nCutPix,(int(c)+1)*nCutPix)
+        bn = nans(bp.shape) #nans as a flag to check if something screwed up
+        for c in cam:
+            cInd = cam[c].ind
             bn[cInd] = mogrifyData(bp[cInd],cam[c])
 
     else: #skip VER processing
@@ -46,8 +51,7 @@ def getObs(sim,cam,L,tDataInd,ver,makePlots,dbglvl):
    #assert np.any(np.isnan(drn)) == False # must be AFTER all drn are assigned, or you can get false positive errors!
     if bn is not None and isnan(bn).any():
         dumpFN = 'obsdump_t {}.h5'.format(tDataInd)
-        warn('NaN detected at tInd = {}'.format(tDataInd))
-        print('** dumping variables to ' + dumpFN)
+        warn('NaN detected at tInd = {}   dumping variables to {}'.format(tDataInd,dumpFN))
         with h5py.File(dumpFN,'w',libver='latest') as fid:
             fid.create_dataset("/bn",data=bn)
             fid.create_dataset("/v",data=ver)
@@ -61,7 +65,7 @@ def makeCamFOVpixelEnds(Fwd,sim,cam,makePlots,dbglvl):
 
     # when creating a new L, we always use all cameras, so ha['nCam'] is good here
     # order='F' not needed here because we don't reshape or ravel this variable
-    xFOVpixelEnds = empty((nCutPix, sim.nCam),dtype=float)
+    xFOVpixelEnds = empty((nCutPix, sim.nCamUsed),dtype=float)
     zFOVpixelEnds = empty_like(xFOVpixelEnds)
 #%% (1) define the three x,y points defining each 2D pixel cone
     for c in cam:#.keys():
@@ -120,53 +124,51 @@ def makeCamFOVpixelEnds(Fwd,sim,cam,makePlots,dbglvl):
     print('computed L in {:0.1f}'.format(time()-tic) + ' seconds.')
     return L,Fwd,cam
 #%%
-def loadEll(Fwd,cam,useCamInd,EllFN,dbglvl):
+def loadEll(Fwd,cam,EllFN,verbose):
     try:
       with h5py.File(EllFN,'r',libver='latest') as fid:
         L = csc_matrix(fid['/L'])
 
         if Fwd is not None: #we're in main program
             if np.any(Fwd['x'] != fid['/Fwd/x']):#don't use .any() in case size is different
-                exit('*** need to recompute L, as x-locations arent matched: loaded vs. commanded')
+                raise ValueError('need to recompute L, as x-locations arent matched: loaded vs. commanded')
             if np.any(Fwd['z'] != fid['/Fwd/z']):  #don't use .any() in case size is different
-                exit('*** need to recompute L, as z-locations arent matched: loaded vs. commanded')
+                raise ValueError('need to recompute L, as z-locations arent matched: loaded vs. commanded')
         elif Fwd is None: #we're in another program
             Fwd = {'x':fid['/Fwd/x'].value,'z':fid['/Fwd/z'].value}
         else:
-            exit('*** I dont understand what youre trying to do with Fwd, which should either be None or properly initialized')
+            raise TypeError("I dont understand what you're trying to do with Fwd, which should either be None or properly initialized")
         #{x,z}PixCorn must be assigned AFTER the if/elif/else
         Fwd['xPixCorn'] = fid['/Fwd/xPixCorn'].value
         Fwd['zPixCorn'] = fid['/Fwd/zPixCorn'].value
 
-        if useCamInd is not None and cam is not None:
+        if cam is not None:
             try:
-                for i,ci in zip(useCamInd,useCamInd.astype(str)):
+                for i,c in enumerate(cam):
                     #cam[ci].angle_deg =  fid['/Obs/pixAngle'][:,i]
-                    cam[ci].xFOVpixelEnds = fid['/Obs/xFOVpixelEnds'][:,i]
-                    cam[ci].zFOVpixelEnds = fid['/Obs/zFOVpixelEnds'][:,i]
+                    cam[c].xFOVpixelEnds = fid['/Obs/xFOVpixelEnds'][:,i]
+                    cam[c].zFOVpixelEnds = fid['/Obs/zFOVpixelEnds'][:,i]
             except KeyError:
                 warn('could not load FOV ends, maybe this is an old Ell file')
 
     except (IOError) as e: #python 2.7 doesn't have FileNotFoundError
-      exit('*** loadEll: ' + EllFN +
-            ' not found.\nuse --ell command line option to save new Ell file. {}'.format(e))
+      raise IOError('*** loadEll: {} not found.\nuse --ell command line option to save new Ell file. {}'.format(EllFN,e))
     except AttributeError as e:
-        exit('grid mismatch detected. use --ell command line option to save new Ell file. {}'.format(e))
+        raise AttributeError('grid mismatch detected. use --ell command line option to save new Ell file. {}'.format(e))
 
-    print('loadEll: Loaded "L,Fwd,Obs" data from:', EllFN)
+    if verbose>0: print('loadEll: Loaded "L,Fwd,Obs" data from:', EllFN)
 
     return L,Fwd,cam
 
 def mogrifyData(data,cam):
     #steps should be in this order!
+    data *= cam.intens2dn #considers pixel area and camera amplifier gain
+    data = cam.scaleintens(data) #camera cross-calibration
+
     data = cam.donoise(data)
     #print('noise std. deviation cam ',cam.name,'=',cam.std)
-
     data = cam.dosmooth(data)
-
     data = cam.dolowerthres(data)
-
-    data = cam.scaleintens(data)
 
     data = cam.debias(data)
     data = cam.fixnegval(data)
@@ -176,22 +178,24 @@ def mogrifyData(data,cam):
 def getEll(sim,cam,Fwd,makePlots,dbglvl):
 
     if not sim.loadfwdL:
-        if sim.nCam != len(sim.useCamBool):
-            exit('*** To make a fresh L matrix, you must enable ALL cameras all(useThisCam == 1) ')
+        if sim.nCamUsed != sim.useCamBool.size:
+            raise ValueError('To make a fresh L matrix, you must enable ALL cameras all(useThisCam == 1) ')
 
         L,Fwd,cam = makeCamFOVpixelEnds(Fwd,sim,cam,makePlots,dbglvl)
     else:
-        L,Fwd,cam = loadEll(Fwd,cam,sim.useCamInd,sim.FwdLfn,dbglvl)
+        L,Fwd,cam = loadEll(Fwd,cam,sim.FwdLfn,dbglvl)
 
-    L = removeUnusedCamera(L,sim.allCamInd,sim.nCutPix)
+    L,cam = removeUnusedCamera(L,sim.useCamBool,sim.nCutPix,cam)
 
     return L,Fwd,cam
 
-def removeUnusedCamera(L,allcamlist,nCutPix):
+def removeUnusedCamera(L,useCamBool,nCutPix,cam):
     ''' remove unused cameras (rows of L) '''
     arow = ones(nCutPix).astype(bool)
-    grow = outer(arow,allcamlist).ravel(order='F')
+    grow = outer(arow,useCamBool).ravel(order='F')
     L = L[grow,:]
+    ''' store indices of b vector corresponding to each camera (in case some cameras not used) '''
+    for i,c in enumerate(cam):
+        cam[c].ind = s_[ i*nCutPix : (i+1)*nCutPix ]
 
-
-    return L
+    return L,cam
