@@ -7,6 +7,7 @@ from pandas import read_excel
 from camclass import Cam
 from simclass import Sim
 from xlrd.biffh import XLRDError
+from warnings import warn
 
 def getParams(XLSfn,overrides,savedump,makeplot,progms,dbglvl):
 #%% read spreadsheet
@@ -20,7 +21,7 @@ def getParams(XLSfn,overrides,savedump,makeplot,progms,dbglvl):
 #%% ***** must be outside camclass ********
     nCutPix = cp.loc['nCutPix'].values
     if not (nCutPix == nCutPix[0]).all():
-        exit('*** sanityCheck: all cameras must have same 1D cut length')
+        raise ValueError('sanityCheck: all cameras must have same 1D cut length')
 #%% class with parameters and function
     sim = Sim(sp,cp,ap,overrides,makeplot,progms,dbglvl)
 #%% grid setup
@@ -28,8 +29,8 @@ def getParams(XLSfn,overrides,savedump,makeplot,progms,dbglvl):
 #%% setup cameras
     cam,cp = setupCam(sim,cp,Fwd['z'][-1],dbglvl)
 
-    print('fwd model voxels:')
-    print('B_perp: N=',Fwd['sx'],'   B_parallel: M=',Fwd['sz'])
+    print('fwd model voxels:\n'
+          'B_perp: N={}   B_parallel: M={}'.format(Fwd['sx'],Fwd['sz']))
 #%% init variables
     return ap,sim,cam,Fwd
 ###############################################
@@ -38,7 +39,7 @@ def setupCam(sim,cp,zmax,dbglvl):
     cam = {}
 
     if sim.camxreq[0] is not None:
-        print('* overriding camera x-loc with ',sim.camxreq)
+        warn('overriding camera x-loc with {}'.format(sim.camxreq))
         for i,(c,cx) in enumerate(zip(cp,sim.camxreq)):
             if sim.useCamBool[i]:
                 cp.iat['Xkm',c] = cx
@@ -49,5 +50,5 @@ def setupCam(sim,cp,zmax,dbglvl):
                 cam[c] = Cam(sim,cp[c], c, zmax,dbglvl)
 
     if len(cam)==0:
-        exit('*** setupCam: 0 cams are configured, Nothing to do, exiting now.')
+        raise ValueError('setupCam: 0 cams are configured, Nothing to do, exiting now.')
     return cam,cp
