@@ -8,6 +8,7 @@ from scipy.optimize import minimize
 from scipy.interpolate import interp1d
 from numpy.linalg import norm
 from time import time
+from warnings import warn
 #
 from transcararc import getColumnVER
 
@@ -30,7 +31,7 @@ def FitVERopt(L,bn,Phi0,MpDict,sim,cam,Fwd,makeplot,dbglvl):
     if sim.useztranscar:
         Tm = Mp
     else: #interpolate A to be on the same altitude grid as b
-        print('** using interpolated VER, use caution that peaks arent missed')
+        warn("using interpolated VER, use caution that peaks aren't missed")
         fint = interp1d(zTranscar, Mp, kind='linear',axis=0) #faster than loop
         Tm = asfortranarray( fint(Fwd['z']) )
 
@@ -74,7 +75,7 @@ def FitVERopt(L,bn,Phi0,MpDict,sim,cam,Fwd,makeplot,dbglvl):
         elif optimmeth.lower()=='cobyla':
             optimopt = {'maxiter':maxiter,'disp':True,'rhobeg':1e1,'tol':1} #10
         else:
-            exit('*** FITVERopt: unknown minimization method ' + optimmeth)
+            raise TypeError('unknown minimization method: {}'.format(optimmeth))
 
         tic = time()
         #
