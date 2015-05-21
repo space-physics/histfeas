@@ -24,12 +24,14 @@ from os import makedirs
 from numpy import absolute,zeros,asarray,in1d,arange
 from numpy.random import normal
 import h5py
-from datetime import timedelta
+from sys import stderr
 #
+#import logging
+#logging.basicConfig(filename='hist.log',filemode='w',level=logging.DEBUG)
 from pyimagevideo.imageconv import png2multipage
 from sanityCheck import getParams
 
-def doSim(ParamFN,savedump,makeplot,datadump,timeInds,overrides,progms,x1d,vlim,animtime, dbglvl):
+def doSim(ParamFN,savedump,makeplot,datadump,timeInds,overrides,progms,x1d,vlim,animtime, cmd,verbose):
     # local -- these were put here so that matplotlib backend autoselect could happen first
     from AuroraFwdModel import getSimVER
     from transcararc import getMp,getPhi0 #calls matplotlib
@@ -39,50 +41,46 @@ def doSim(ParamFN,savedump,makeplot,datadump,timeInds,overrides,progms,x1d,vlim,
     from plotsnew import goPlot
     from analysehst import analyseres
 #%% Step 0) load data
-    ap,sim,cam,Fwd = getParams(ParamFN, overrides,savedump,makeplot,progms,dbglvl)
+    ap,sim,cam,Fwd = getParams(ParamFN, overrides,savedump,makeplot,progms,verbose)
 #%% setup loop
     if sim.realdata:
-        cam,rawdata,sim = getSimulData(sim,cam,makeplot,progms,dbglvl)
+        cam,rawdata,sim = getSimulData(sim,cam,makeplot,progms,verbose)
         nTimeSlice = cam['0'].keo.shape[1] #FIXME assumes equal num. of time slices list(cam)[0]
     else: #simulation
         rawdata = None
         if sim.raymap == 'astrometry': #and any('b' in m[:2] for m in makeplot):
             from get1Dcut import get1Dcut #we need cam.angle_deg for plotting
-            cam = get1Dcut(cam,makeplot,progms,dbglvl)
-        nTimeSlice = ap.shape[1]
+            cam = get1Dcut(cam,makeplot,progms,verbose)
+        nTimeSlice = ap.shape[1]-1 #last column is end of sim time
     timeInds = sim.maketind(timeInds,nTimeSlice)
 #%% Step 1) get projection matrix
-    Lfwd,Fwd,cam = getEll(sim,cam,Fwd,makeplot,dbglvl)
+    Lfwd,Fwd,cam = getEll(sim,cam,Fwd,makeplot,verbose)
 #%% preallocation
     jfitAll = []; drnAll = []; bfitAll=[];  jAll= []; PfitAll = []
 #%% load eigenprofiles from Transcar
-    Peig = getMp(sim,Fwd['z'],makeplot,dbglvl)
+    Peig = getMp(sim,Fwd['z'],makeplot,verbose)
 #%% synthetic diff. num flux
     if not sim.realdata:
-        try:
-            Phi0all,tsim = getPhi0(sim,ap,Fwd['x'],Peig['Ek'], makeplot,dbglvl)
-        except TypeError as e:
-            print('*** trouble with forward model. Exiting sim.   {}'.format(e))
-            return
+        Phi0all,X0 = getPhi0(sim,ap,Fwd['x'],Peig['Ek'], makeplot,verbose)
+        if not x1d: x1d = X0
+    if verbose>0: print('timeInds: {}'.format(timeInds))
 #%%start looping for each time slice in keogram (just once if simulated)
     for ti in timeInds:
         if sim.realdata:
-            Phi0 = None; Pfwd = None; arc = None
+            Phi0 = None; Pfwd = None
         else: #sim
             """
             we need to integrate in time over the relevant time slices
             the .sum(axis=2) does the integration/smearing in time
             """
-            #FIXME qualify our selected times from the command line, so we don't overlap in time
-            cti = [tsim.index(t) for t in tsim if t>=tsim[ti]  and t<(tsim[ti]+timedelta(seconds=sim.kineticSec) ) ]
-            Phi0 = Phi0all[...,cti].sum(axis=2)
+            Phi0 = Phi0all[...,ti]
 #%% Step 1) Forward model
-        Pfwd,arc = getSimVER(Phi0, Peig, Fwd, sim, ap.iloc[:,ti], ti, dbglvl)
+        Pfwd = getSimVER(Phi0, Peig, Fwd, sim, ap.iloc[:,ti], ti, verbose)
 #%% Step 2) Observe Forward Model (create vector of observations)
-        bn = getObs(sim,cam,Lfwd,ti,Pfwd,makeplot,dbglvl)
+        bn = getObs(sim,cam,Lfwd,ti,Pfwd,makeplot,verbose)
         drnAll.append(bn)
 #%% Step 3) Reconstruction (not used in long time)
-        #vhat,vr0 = ReconVER(L,bn,sim,ap,cp,Fwd,ti,makeplot,dbglvl)
+        #vhat,vr0 = ReconVER(L,bn,sim,ap,cp,Fwd,ti,makeplot,verbose)
 #%% Step 4) fit constituent energies to our estimated vHat and reproject
         if overrides['fwdguess'][0] == 'true':
             Phi0r = Phi0.ravel(order='F')
@@ -96,12 +94,12 @@ def doSim(ParamFN,savedump,makeplot,datadump,timeInds,overrides,progms,x1d,vlim,
         else: #normal case, no a priori
             Phi0r = zeros(Fwd['sx']*Peig['Mp'].shape[1]) #ones() is NOT appropriate -- must be tapered down for higher energy beams to keep physically plausible.
 
-        Pfit,jfit,Tm,bfit = FitVER(Lfwd, bn, Phi0r, Peig, sim, cam,Fwd, makeplot,dbglvl)
+        Pfit,jfit,Tm,bfit = FitVER(Lfwd, bn, Phi0r, Peig, sim, cam,Fwd, makeplot,verbose)
 #%% collect results
         jfitAll.append(jfit); bfitAll.append(bfit)
 #%% plot results
-        goPlot(ParamFN,sim,arc,Fwd,cam,Lfwd,Tm,bn,bfit,Pfwd,Pfit,Phi0,
-                     jfit,rawdata,ti,makeplot,progms,x1d,vlim,dbglvl)
+        goPlot(ParamFN,sim,Fwd,cam,Lfwd,Tm,bn,bfit,Pfwd,Pfit,Phi0,
+                     jfit,rawdata,ti,makeplot,progms,x1d[ti],vlim,verbose)
         if animtime is not None:
             plt.draw()
             plt.pause(animtime)
@@ -113,12 +111,12 @@ def doSim(ParamFN,savedump,makeplot,datadump,timeInds,overrides,progms,x1d,vlim,
         if 'h5' in savedump:
             PfitAll.append(Pfit)
 #%% wrapup
-    print('done looping')
+    msg='{} done looping'.format(argv[0]); print(msg); print(msg,file=stderr)
 
-    png2multipage(progms,'.png','.tif',delete=True) #gif writing is not working yet
+    png2multipage(progms,'.eps','.tif',descr=cmd,delete=False,verbose=verbose) #gif writing is not working yet
 
     analyseres(sim,Fwd['x'],Fwd['xPixCorn'],cam,
-                   Phi0all,jfitAll,drnAll,bfitAll,vlim,makeplot,progms)
+                   Phi0all,jfitAll,drnAll,bfitAll,vlim,makeplot,progms,verbose)
 #%% debug: save variables to MAT file
     if 'mat' in savedump:
         from scipy.io import savemat
@@ -138,6 +136,8 @@ def doSim(ParamFN,savedump,makeplot,datadump,timeInds,overrides,progms,x1d,vlim,
             f["/Jflux"]=jAll
             f["/Vfit"]=PfitAll
 
+    msg ='{} program end'.format(argv[0]); print(msg); print(msg,file=stderr)
+
 #%% =======================================================================
 
 def signal_handler(signal, frame):
@@ -152,8 +152,8 @@ if __name__ == '__main__':
 
     p = ArgumentParser(description='analyzes HST data and makes simulations')
     p.add_argument('infile',help='.xls filename with simulation parameters',type=str)
-    p.add_argument('outdir',help='directory for output',type=str,nargs='?',default='out')
-    p.add_argument('-d','--debug',help='set debugging verbosity',default=0,type=float)
+    p.add_argument('outdir',help='directory for output',type=str)
+    p.add_argument('-v','--verbose',help='set debugging verbosity e.g. -v -vv -vvv',action='count',default=0)
     p.add_argument('--mat',help='save matlab .mat file of results',action="store_true")
     p.add_argument('--h5',help='save HDF5 .h5 file of fit results',action="store_true")
     p.add_argument('--dump',help='dump debugging data to .h5 at key points of program',action="store_true")
@@ -231,7 +231,7 @@ if __name__ == '__main__':
         from profileRunHSTsim0 import goCprofile
         profFN = 'hstprofstats.pstats'
         print('saving profile results to ' + profFN)
-        cProfile.run('doSim(ParamFN,savedump,makeplot,datadump,timeInds,overrides,progms,ar.x1d,vlim,ar.anim,dbglvl=ar.debug)',profFN)
+        cProfile.run('doSim(ParamFN,savedump,makeplot,datadump,timeInds,overrides,progms,ar.x1d,vlim,ar.anim,ar.verbose)',profFN)
 
         #binpath = expanduser('~/profile/')
         #sysCall = [binpath + 'gprof2dot.py','-f','pstats',profFN,'|','dot','-Tpng','-o','output.png']
@@ -242,7 +242,7 @@ if __name__ == '__main__':
         goCprofile(profFN)
     else: #normal
         doSim(ParamFN,savedump,makeplot,datadump,timeInds,
-                                      overrides,progms,ar.x1d, vlim,ar.anim,dbglvl=ar.debug)
+                                      overrides,progms,ar.x1d, vlim,ar.anim,' '.join(argv), ar.verbose)
 
 #    if ar.saveall:
 #        with h5py.File(progms + 'validate.h5',libver='latest') as fid:

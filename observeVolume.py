@@ -51,8 +51,7 @@ def getObs(sim,cam,L,tDataInd,ver,makePlots,dbglvl):
    #assert np.any(np.isnan(drn)) == False # must be AFTER all drn are assigned, or you can get false positive errors!
     if bn is not None and isnan(bn).any():
         dumpFN = 'obsdump_t {}.h5'.format(tDataInd)
-        warn('NaN detected at tInd = {}'.format(tDataInd))
-        print('** dumping variables to ' + dumpFN)
+        warn('NaN detected at tInd = {}   dumping variables to {}'.format(tDataInd,dumpFN))
         with h5py.File(dumpFN,'w',libver='latest') as fid:
             fid.create_dataset("/bn",data=bn)
             fid.create_dataset("/v",data=ver)
@@ -125,20 +124,20 @@ def makeCamFOVpixelEnds(Fwd,sim,cam,makePlots,dbglvl):
     print('computed L in {:0.1f}'.format(time()-tic) + ' seconds.')
     return L,Fwd,cam
 #%%
-def loadEll(Fwd,cam,EllFN,dbglvl):
+def loadEll(Fwd,cam,EllFN,verbose):
     try:
       with h5py.File(EllFN,'r',libver='latest') as fid:
         L = csc_matrix(fid['/L'])
 
         if Fwd is not None: #we're in main program
             if np.any(Fwd['x'] != fid['/Fwd/x']):#don't use .any() in case size is different
-                exit('*** need to recompute L, as x-locations arent matched: loaded vs. commanded')
+                raise ValueError('need to recompute L, as x-locations arent matched: loaded vs. commanded')
             if np.any(Fwd['z'] != fid['/Fwd/z']):  #don't use .any() in case size is different
-                exit('*** need to recompute L, as z-locations arent matched: loaded vs. commanded')
+                raise ValueError('need to recompute L, as z-locations arent matched: loaded vs. commanded')
         elif Fwd is None: #we're in another program
             Fwd = {'x':fid['/Fwd/x'].value,'z':fid['/Fwd/z'].value}
         else:
-            exit('*** I dont understand what youre trying to do with Fwd, which should either be None or properly initialized')
+            raise TypeError("I dont understand what you're trying to do with Fwd, which should either be None or properly initialized")
         #{x,z}PixCorn must be assigned AFTER the if/elif/else
         Fwd['xPixCorn'] = fid['/Fwd/xPixCorn'].value
         Fwd['zPixCorn'] = fid['/Fwd/zPixCorn'].value
@@ -153,12 +152,11 @@ def loadEll(Fwd,cam,EllFN,dbglvl):
                 warn('could not load FOV ends, maybe this is an old Ell file')
 
     except (IOError) as e: #python 2.7 doesn't have FileNotFoundError
-      exit('*** loadEll: ' + EllFN +
-            ' not found.\nuse --ell command line option to save new Ell file. {}'.format(e))
+      raise IOError('*** loadEll: {} not found.\nuse --ell command line option to save new Ell file. {}'.format(EllFN,e))
     except AttributeError as e:
-        exit('grid mismatch detected. use --ell command line option to save new Ell file. {}'.format(e))
+        raise AttributeError('grid mismatch detected. use --ell command line option to save new Ell file. {}'.format(e))
 
-    print('loadEll: Loaded "L,Fwd,Obs" data from:', EllFN)
+    if verbose>0: print('loadEll: Loaded "L,Fwd,Obs" data from:', EllFN)
 
     return L,Fwd,cam
 
@@ -181,7 +179,7 @@ def getEll(sim,cam,Fwd,makePlots,dbglvl):
 
     if not sim.loadfwdL:
         if sim.nCamUsed != sim.useCamBool.size:
-            exit('*** To make a fresh L matrix, you must enable ALL cameras all(useThisCam == 1) ')
+            raise ValueError('To make a fresh L matrix, you must enable ALL cameras all(useThisCam == 1) ')
 
         L,Fwd,cam = makeCamFOVpixelEnds(Fwd,sim,cam,makePlots,dbglvl)
     else:

@@ -3,6 +3,7 @@ from numpy import asarray,where,arange,isfinite,ceil,hypot
 import numpy as np
 from os.path import join
 from dateutil.parser import parse
+from warnings import warn
 #
 from transcarutils.readionoinit import getaltgrid
 
@@ -13,7 +14,7 @@ class Sim:
         #%% how many cameras in use, and which ones?
         usecamreq = asarray(overrides['cam'])
         if usecamreq[0] is not None: #override spreadsheet
-            print('* Overriding XLS parameters, using cameras:',usecamreq)
+            warn(' Overriding XLS parameters, using cameras: {}'.format(usecamreq))
             for ci,civ in enumerate(cp.loc['useCam']): # this might be a silly indexing method, but works
                 if (ci==usecamreq).any():
                     cp.at['useCam',ci] = 1 #do not use boolean, it screws up other rows
@@ -36,7 +37,7 @@ class Sim:
         #%% camera position override
         self.camxreq = overrides['camx']
         if self.camxreq[0] is not None and len(self.camxreq) != self.nCamUsed:
-            exit('*** must specify same number of x-loc and used cameras')
+            raise ValueError('must specify same number of x-loc and used cameras')
         #%% manual override flux file
         if overrides['Jfwd'] is not None:
             print('* overriding J0 flux with file: ' + overrides['Jfwd'])
@@ -142,7 +143,7 @@ class Sim:
         self.stoputc = sp.at['reqStopUT','Obs']
         # make the simulation time step match that of the fastest camera
         self.kineticSec = 1. / (cp.ix['frameRateHz',self.useCamBool]).max()
-
+        self.timestepsperexp = sp.at['timestepsPerExposure','Sim']
         #%% recon
         self.artinit = str(sp.at['initVector','ART']).lower()
         try:
