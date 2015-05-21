@@ -214,8 +214,8 @@ def goPlot(ParamFN,sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Phi0,
     if 'pmaxent1d' in makeplot and Jxi is not None:
         plotVER1D(sim,vfit['maxent'][:,Jxi],zKM,vlim['p'][2:],tInd,makeplot,
                   'vermaxent_1D',
-                  ('$p_{optim,maxent}$  $B_\perp$={:0.2f}'.format(xKM[Jxi]) +' [km] ' + fwdloctxt),
-                  13994,spfid,progms,verbose)
+                  ('$p_{optim,maxent}$  $B_\perp$={:0.2f} [km]  {}'.format(xKM[Jxi],fwdloctxt)),
+                  spfid,progms,verbose)
         if 'pfwd1d' in makeplot:
             try:
                 cax = figure().gca()
@@ -272,9 +272,8 @@ def plotfwd(sim,cam,drn,nCutPix,xKM,xp,zKM,zp,
 
         if not 'optim' in makeplot:
             plotVER1D(sim,ver[:,Jxi],None,zKM,vlim['p'][2:],tInd,makeplot,'pfwd1d',
-              ('$P_{{fwd}}$ at $B_\perp$={:0.2f}'.format(xKM[Jxi]) +
-               ' [km]' + fwdloctxt),
-              119900,spfid,progms,verbose)
+              ('$P_{{fwd}}$ at $B_\perp$={:0.2f}  [km] {}'.format(xKM[Jxi],fwdloctxt)),
+              spfid,progms,verbose)
 #%%
 def plotoptim(sim,cam,drn,dhat,nCutPix,bcomptxt,fwdloctxt,ver,Phi0,Jxi,
               vfit,fitp,xKM,xp,zKM,zp,vlim,tInd,makeplot,spfid,progms,verbose):
@@ -298,9 +297,8 @@ def plotoptim(sim,cam,drn,dhat,nCutPix,bcomptxt,fwdloctxt,ver,Phi0,Jxi,
 
     if Jxi is not None:
         plotVER1D(sim,ver[:,Jxi],vfit['optim'][:,Jxi],zKM,vlim['p'][2:],tInd,makeplot,'pest1d',
-                  ('$\widehat{{P}}$ at $B_\perp$={:0.2f} [km]'.format(xKM[Jxi])
-                   + fwdloctxt),
-                  119900,spfid,progms,verbose)
+                  ('$\widehat{{P}}$ at $B_\perp$={:0.2f} [km]  {}'.format(xKM[Jxi],fwdloctxt)),
+                  spfid,progms,verbose)
 
         plotJ1D(sim,Phi0[:,Jxi],fitp.x[:,Jxi],fitp['EK'],vlim['j'],tInd,makeplot,'phiest1d',
                    ('Differential Number flux at $B_\perp$={:0.2f} [km]'.format(xKM[Jxi])),
@@ -325,6 +323,7 @@ def plotadj(sim,cam,drn,dhat,nCutPix,xKM,xp,zKM,zp,vfit,fitp,vlim,
 #              spfid,progms)
 #%% ############################################################################
 def plotnoise(cam,tInd,makeplot,prefix,progms,verbose):
+  try:
     fg = figure()
     ax = fg.add_subplot(311)
 
@@ -356,8 +355,11 @@ def plotnoise(cam,tInd,makeplot,prefix,progms,verbose):
 
 
     writeplots(fg,prefix,tInd,makeplot,progms,format1d,verbose)
+  except Exception as e:
+    warn(e)
 
 def plottphi0(Tm,Phi0,Jxi,Ek,zKM,vlim,sim,tInd,makeplot,prefix,progms,verbose):
+  try:
     fg = figure()
     ax = fg.gca()
 
@@ -381,9 +383,11 @@ def plottphi0(Tm,Phi0,Jxi,Ek,zKM,vlim,sim,tInd,makeplot,prefix,progms,verbose):
     ax.set_ylim(vlim[2:-2])
 
     writeplots(fg,prefix,tInd,makeplot,progms,verbose=verbose)
+  except Exception as e:
+    warn(e)
 
 def ploteig(EKpcolor,zKM,Tm,vlim,sim,tInd,makeplot,prefix,progms,verbose):
-
+  try:
     fg = figure(); ax = fg.gca()
     pcm = ax.pcolormesh(EKpcolor, zKM, Tm,
                         edgecolors='none',#cmap=pcmcmap,
@@ -410,8 +414,11 @@ def ploteig(EKpcolor,zKM,Tm,vlim,sim,tInd,makeplot,prefix,progms,verbose):
     ax.tick_params(axis='both', which='both', direction='out', labelsize=tkfs)
     ax.set_ylim(vlim[2:4])
     writeplots(fg,prefix,tInd,makeplot,progms,verbose=verbose)
+  except Exception as e:
+    warn(e)
 
 def ploteig1d(Ek,zKM,Tm,vlim,sim,tInd,makeplot,prefix,progms,verbose):
+  try:
     firstbeamind=0
 
     beamsel = s_[firstbeamind:-firstbeamind-1]
@@ -437,7 +444,8 @@ def ploteig1d(Ek,zKM,Tm,vlim,sim,tInd,makeplot,prefix,progms,verbose):
     #ax.autoscale(True,tight=True)
     ax.grid(True)
     writeplots(fg,prefix,tInd,makeplot,progms,verbose=verbose)
-
+  except Exception as e:
+    warn(e)
 
 def plotPlainImg(sim,cam,rawdata,t,makeplot,prefix,titletxt,figh,spfid,progms,verbose):
     """http://stackoverflow.com/questions/22408237/named-colors-in-matplotlib"""
@@ -465,6 +473,7 @@ def plotPlainImg(sim,cam,rawdata,t,makeplot,prefix,titletxt,figh,spfid,progms,ve
 
 #%%
 def plotRealImg(sim,cam,rawdata,t,makeplot,prefix,titletxt,figh,spfid,progms,verbose):
+  try:
     showcb = True
     #alltReq = sim.alltReq
     figure(figh).clf()
@@ -499,7 +508,8 @@ def plotRealImg(sim,cam,rawdata,t,makeplot,prefix,titletxt,figh,spfid,progms,ver
         writeplots(fg,'rawFrame',t,'png',progms,verbose=verbose)
     else:
         draw() #This draw must be here for multiplot animations or this window won't update!
-
+  except Exception as e:
+    warn(e)
 
 def plotPicard(A,b,cvar=None,verbose=0):
     from picard import picard
@@ -513,6 +523,7 @@ def plotPicard(A,b,cvar=None,verbose=0):
     picard(asfortranarray(U), s, b)
 
 def plotJ1D(sim,PhiFwd,PhiInv,Ek,vlim,tInd,makeplot,prefix,titletxt,spfid,progms,verbose):
+  try:
     anno = False
     #fontsizes
 
@@ -555,9 +566,11 @@ def plotJ1D(sim,PhiFwd,PhiInv,Ek,vlim,tInd,makeplot,prefix,titletxt,spfid,progms
 
     if 'h5' in makeplot:
         dumph5(sim,spfid,prefix,tInd,PhiFwd=PhiFwd,PhiInv=PhiInv,Ek=Ek)
+  except Exception as e:
+    warn(e)
 #%%
 def plotJ(sim,Jflux,x,xp,Ek,EKpcolor,vlim,tInd,makeplot,prefix,titletxt,spfid,progms,verbose):
-
+  try:
     cnorm,sfmt = logfmt(makeplot)
     plt3 = 'octave'         #'octave' #'mpl'#'mayavi'
     #fontsizes
@@ -631,6 +644,8 @@ def plotJ(sim,Jflux,x,xp,Ek,EKpcolor,vlim,tInd,makeplot,prefix,titletxt,spfid,pr
 
     if 'h5' in makeplot:
         dumph5(sim,spfid,prefix,tInd,jfwd=Jflux,xp=xp,Ek=EKpcolor)
+  except Exception as e:
+    warn(e)
 
 def doJlbl(ax,titletxt):
     ax.set_ylabel('Energy [eV]',fontsize=afs,labelpad=0)
@@ -644,6 +659,7 @@ def doJlbl(ax,titletxt):
     ax.autoscale(True,tight=True) #need this to fill axes (does not resize axes)
 #%%
 def plotJ3(x,EKpcolor,Jflux,plt3):
+  try:
     if plt3 == 'mpl':
         x,e = meshgrid(x,EKpcolor)
         ax3 = figure().gca(projection='3d')
@@ -669,6 +685,8 @@ def plotJ3(x,EKpcolor,Jflux,plt3):
         x,e = meshgrid(x,EKpcolor)
         octave.Jmesh(x,e,Jflux)
     return ax3
+  except Exception as e:
+    warn(e)
 
 def getmin(vs,vu):
     if vu is not None:
@@ -676,9 +694,9 @@ def getmin(vs,vu):
     else:
         return vs
 
-def plotVER1D(sim,pfwd,pinv,zKM,vlim,tInd,makeplot,prefix,titletxt,figh,spfid,progms,verbose):
-    figure(figh).clf()
-    fg = figure(figh)
+def plotVER1D(sim,pfwd,pinv,zKM,vlim,tInd,makeplot,prefix,titletxt,spfid,progms,verbose):
+  try:
+    fg = figure()
     ax = fg.gca()
 
     for p,l in zip((pfwd,pinv),('fwd','est')):
@@ -706,9 +724,11 @@ def plotVER1D(sim,pfwd,pinv,zKM,vlim,tInd,makeplot,prefix,titletxt,figh,spfid,pr
 
     if 'h5' in makeplot: #a separate stanza
         dumph5(sim,spfid,prefix,tInd,pfwd=pfwd,pinv=pinv,z=zKM)
+  except Exception as e:
+    warn(e)
 #%%
 def plotVER(sim,ver,x,xp,z,zp,vlim,tInd,makeplot,prefix,titletxt,spfid,progms,verbose):
-
+  try:
     cnorm,sfmt = logfmt(makeplot)
     '''
     # http://stackoverflow.com/questions/13943217/how-to-add-colorbars-to-scatterplots-created-like-this
@@ -785,9 +805,11 @@ def plotVER(sim,ver,x,xp,z,zp,vlim,tInd,makeplot,prefix,titletxt,spfid,progms,ve
 
     if 'h5' in makeplot: #a separate stanza
         dumph5(sim,spfid,prefix,tInd,ver=ver,x=x,xp=xp,z=z,zp=zp)
+  except Exception as e:
+    warn(e)
 #%%
-def plotBcompare(braw,bfit,cam,nCam,prefix,fittxt,
-                                                vlim,tInd,makeplot,progms,verbose):
+def plotBcompare(braw,bfit,cam,nCam,prefix,fittxt, vlim,tInd,makeplot,progms,verbose):
+  try:
     dosubtract = False
 
     fg = figure()
@@ -863,10 +885,11 @@ def plotBcompare(braw,bfit,cam,nCam,prefix,fittxt,
 
 
     writeplots(fg,prefix,tInd,makeplot,progms,format1d,verbose)
-
+  except Exception as e:
+    warn(e)
 #%%
 def plotB(bpix,sim,cam,vlim,tInd,makeplot,labeltxt,progms,verbose):
-
+  try:
     cnorm,sfmt = logfmt(makeplot)
 
     fgb = figure()
@@ -899,6 +922,8 @@ def plotB(bpix,sim,cam,vlim,tInd,makeplot,labeltxt,progms,verbose):
                  #color=cord[c])
     doBlbl(ax1,sim.realdata,sfmt[0],vlim,labeltxt,std) #b is never log
     writeplots(fgb,'bfwd'+labeltxt[4:-2],tInd,makeplot,progms,format1d,verbose=verbose)
+  except Exception as e:
+    warn(e)
 
 def doBlbl(axb,isrealdata,sfmt,vlim,labeltxt,noiselam):
     axb.legend(loc='upper left',fontsize=afs)
@@ -944,7 +969,8 @@ def allLinePlot(simfilelist):
         ax.plot(Ek,Jme[:,:,ti])
 #%%
 def planview3(cam,xKM,zKM,makeplot,figh,progms):
-    from coordconv3d import aer2ecef, geodetic2ecef
+  try:
+    from pymap3d import aer2ecef, geodetic2ecef
     fg = figure(figh)#; fg.clf()
     ax = fg.gca(projection='3d')
     az = 106.444916022 #TODO arbitrary should be from real camera pointing
@@ -973,12 +999,15 @@ def planview3(cam,xKM,zKM,makeplot,figh,progms):
     y = earthrad * outer(sin(u), sin(v))
     z = earthrad * outer(ones_like(u), cos(v))
     ax.plot_surface(x, y, z,  rstride=4, cstride=4, color='g')
+  except Exception as e:
+    warn(e)
 #%%
 def planviewkml(cam,xKM,zKM,makeplot,figh,progms,verbose=0):
-    """
-    https://developers.google.com/kml/documentation/cameras
-    """
-    from coordconv3d import aer2geodetic#, aer2ecef
+  """
+  https://developers.google.com/kml/documentation/cameras
+  """
+  try:
+    from pymap3d import aer2geodetic#, aer2ecef
     import simplekml as skml
     decimaterayfactor = 16
 
@@ -1071,6 +1100,8 @@ def planviewkml(cam,xKM,zKM,makeplot,figh,progms,verbose=0):
     kmlfn = join(progms,'cam'+'.kml')
     if verbose>0: print('saving ' + kmlfn)
     kml1d.save(kmlfn)
+  except Exception as e:
+    warn(e)
 #%%
 def dumph5(sim,fn,prefix,tInd,**writevar): #used in other .py too
     print('dumping to '+ fn)
