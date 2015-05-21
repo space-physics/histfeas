@@ -1,9 +1,11 @@
+from __future__ import division, absolute_import
 from numpy import (asfortranarray,atleast_3d, exp,sinc,pi,zeros, outer,
-                   isnan,log,logspace,where,empty,allclose)
+                   isnan,log,logspace,where,empty,arange,allclose,diff)
 import h5py
 from scipy.interpolate import interp1d
 from warnings import warn
-from datetime import timedelta
+from scipy.interpolate import interp1d
+from six import string_types
 #
 from transcarutils.readTranscar import getTranscar
 from transcarutils.eFluxGen import fluxgen
@@ -70,7 +72,7 @@ def downsampleEnergy(Ek,EKpcolor,Mp,downsamp):
         print('** downsampleEnergy: should these NaNs be set to zero?')
     return Ek2,EKpcolor2,Mp2
 
-def getPhi0(sim,ap,xKM,Ek,makeplots,dbglvl):
+def getPhi0(sim,ap,xKM,Ek,makeplots,verbose):
     #%% get flux
     if not sim.realdata:
         if sim.Jfwdh5 is not None:
@@ -78,38 +80,86 @@ def getPhi0(sim,ap,xKM,Ek,makeplots,dbglvl):
             with h5py.File(sim.Jfwdh5,'r',libver='latest') as f:
                 Phi0 = asfortranarray(atleast_3d(f['/phiInit']))
         else:
-            Phi0 = empty((Ek.size,xKM.size,sim.nArc),order='F')
-            pz = fluxgen(Ek, ap, dbglvl)[0]
+            Phi0 = empty((Ek.size,xKM.size,sim.nArc-1),order='F')
+#%% upsample to sim time steps
+            E0,Q0,Wbc,bl,bm,bh,Bm,Bhf, Wkm,X0,Xshape = upsampletime(ap,sim)
+
+
+            pz = fluxgen(Ek, E0,Q0,Wbc,bl,bm,bh,Bm,Bhf, verbose)[0]
     #%% horizontal modulation
-            px = getpx(xKM,ap.loc['Wkm'].values.astype(float),
-                           ap.loc['X0km'].values.astype(float),
-                           ap.loc['Xshape'].values)
-            for i in range(sim.nArc):
-                Phi0[...,i]  = outer(pz[:,i], px[i,:])
+            px = getpx(xKM,Wkm,X0,Xshape)
+            for i in range(sim.nArc-1):
+                #unsmeared in time
+                phi0sim = zeros((Ek.size,xKM.size),order='F') #MUST BE ZEROS SINCE WE'RE SUMMING!
+                for j in range(sim.timestepsperexp):
+                    phi0sim += outer(pz[:,i*sim.timestepsperexp+j],
+                                     px[i*sim.timestepsperexp+j,:])
+                Phi0[...,i]  = phi0sim
 
         assert xKM.size == Phi0.shape[1]
-    #%% obtain simulation time steps from spreadsheet
-        tsim = []
-        for i,ts in enumerate(ap.loc['tReqOffsetSec'].values.astype(float)):
-            tsim.append(sim.transcarutc + timedelta(seconds=ts))
     else:
         Phi0 = None
-    return Phi0,tsim
+    return Phi0,X0
 
-def getpx(xKM,Wkm,X0,xs='gaussian'):
+def upsampletime(ap,sim):
+    #%% obtain observation time steps from spreadsheet (for now, equal to kinetic time)
+    texp = ap.loc['tReqOffsetSec'].values.astype(float)
+    if abs(sim.kineticSec - diff(texp).mean()) > 1e-3:
+        warn('exposure time not matching spreadsheet arc time step')
+    # make simulation time, also defined as seconds since Transcar tReq
+    dtsim =sim.kineticSec/sim.timestepsperexp
+    tsim = arange(texp[0],texp[-1],dtsim)
+
+# FUTURE
+#    #tsim is a finer time step than texp, the camera exposure
+#    tsim = empty(texp.size*sim.timestepsperexp,dtype=datetime)
+#    tsimstep = timedelta(seconds=sim.kineticSec/sim.timestepsperexp)
+#    for i,t in enumerate(texp):
+#        #sim time steps (for future, in case spreadsheet steps != to exposure time (kinetic time))
+#        for j in range(i*sim.timestepsperexp, (i+1)*sim.timestepsperexp):
+#            tsim[j] = sim.transcarutc + j*tsimstep
+
+    #probably could be done with lambda
+
+    f = interp1d(texp,ap.loc['E0'].values.astype(float));     E0  = f(tsim)
+    f = interp1d(texp,ap.loc['Q0'].values.astype(float));     Q0  = f(tsim)
+    f = interp1d(texp,ap.loc['Wbc',:].values.astype(float));  Wbc = f(tsim)
+    f = interp1d(texp,ap.loc['bl'].values.astype(float));     bl  = f(tsim)
+    f = interp1d(texp,ap.loc['bm'].values.astype(float));     bm  = f(tsim)
+    f = interp1d(texp,ap.loc['bh'].values.astype(float));     bh  = f(tsim)
+    f = interp1d(texp,ap.loc['Bm'].values.astype(float));     Bm  = f(tsim)
+    f = interp1d(texp,ap.loc['Bhf'].values.astype(float));    Bhf = f(tsim)
+    f = interp1d(texp,ap.loc['Wkm'].values.astype(float));    Wkm = f(tsim)
+    f = interp1d(texp,ap.loc['X0km'].values.astype(float));   X0  = f(tsim)
+
+    if ap.loc['Xshape'].eq(ap.at['Xshape',0]).all():
+        Xshape = ap.at['Xshape',0]
+    else:
+        raise NotImplementedError('upgrade code to meld Xshapes ')
+
+    return E0,Q0,Wbc,bl,bm,bh,Bm,Bhf, Wkm, X0,Xshape
+
+def getpx(xKM,Wkm,X0,xs):
+    assert isinstance(xs,string_types)
     px = zeros((X0.size,xKM.size),order='F') #since numpy 2-D array naturally iterates over rows
 #%%
-    px[xs=='gaussian',:] = exp(-((xKM-X0[xs=='gaussian',None])/Wkm[xs=='gaussian',None])**2) #(original idea JLS)
+    if xs =='gaussian':
+        px = exp(-((xKM-X0[:,None])/Wkm[:,None])**2) #(original idea JLS)
 #%%
-    ir = where(xs=='rect')[0]
-    for i in ir:
-        #find leftmost and rightmost indices of rect. phantom
-        PGind = (find_nearest(xKM, X0[i]-Wkm[i]/2)[0], find_nearest(xKM, X0[i]+Wkm[i]/2)[0] )
-        px[i, PGind[0]:PGind[1]+1] = 1.
+    elif xs =='rect':
+    #ir = where(xs=='rect')[0]
+    #for i in ir:
+        for i in range(X0.size):
+            #find leftmost and rightmost indices of rect. phantom
+            PGind = (find_nearest(xKM, X0[i]-Wkm[i]/2)[0],
+                     find_nearest(xKM, X0[i]+Wkm[i]/2)[0] )
+            px[i, PGind[0]:PGind[1]+1] = 1.
 #%%
-    px[xs=='sinc2',:] = sinc( pi*(xKM - X0[xs=='sinc2',None])/Wkm[xs=='sinc2',None] )**2
+    elif xs == 'sinc2':
+        px= sinc( pi*(xKM - X0[:,None])/Wkm[:,None] )**2
 #%%
-    px[xs=='none',find_nearest(xKM,X0[xs=='none'])] = 1.
+    else:
+        px[:,find_nearest(xKM,X0)] = 1.
 #    jn = where(xs=='none')
 #    for j in jn:
 #        px[j,find_nearest(xKM,X0[j])[0]] = 1.

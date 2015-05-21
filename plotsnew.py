@@ -67,7 +67,7 @@ def placetxt(x,y,txt,ax):
             va='bottom',ha='left',
             bbox=dict(boxstyle="round,pad=0.0",fc='black', alpha=0.25))
 
-def goPlot(ParamFN,sim,arc,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Phi0,
+def goPlot(ParamFN,sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Phi0,
             fitp,rawdata,tInd,makeplot,progms,x1d,vlim,verbose):
 
     spfid = ''.join((progms,'dump_t{}.h5'.format(tInd)))
@@ -85,8 +85,6 @@ def goPlot(ParamFN,sim,arc,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Phi0,
     if not sim.realdata:
         if x1d is not None:
             Jxi = find_nearest(xKM,x1d)[0]
-        else:
-            Jxi = find_nearest(xKM,arc.x0)[0]
     else:
         Jxi = None
 

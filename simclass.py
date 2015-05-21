@@ -143,7 +143,7 @@ class Sim:
         self.stoputc = sp.at['reqStopUT','Obs']
         # make the simulation time step match that of the fastest camera
         self.kineticSec = 1. / (cp.ix['frameRateHz',self.useCamBool]).max()
-
+        self.timestepsperexp = sp.at['timestepsPerExposure','Sim']
         #%% recon
         self.artinit = str(sp.at['initVector','ART']).lower()
         try:
