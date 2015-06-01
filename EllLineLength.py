@@ -1,8 +1,11 @@
-from __future__ import print_function, division
-from numba import jit
+from __future__ import print_function, division,absolute_import
+import h5py
+#from numba import jit
 #from numbapro import vectorize
 from numpy import empty,ones,ravel_multi_index,hypot,zeros
 from scipy.sparse import dok_matrix,issparse
+from shutil import copy2
+from os.path import basename,join
 # local
 from CVutils.lineClipping import cohensutherland
 
@@ -36,7 +39,7 @@ from CVutils.lineClipping import cohensutherland
  line length "ell" for each element of L. This is how we implement the line integral.
 '''
 
-def EllLineLength(Fwd,xFOVpixelEnds,zFOVpixelEnds,xCam,zCam,saveEll,Np,sim,makePlots,dbglvl):
+def EllLineLength(Fwd,xFOVpixelEnds,zFOVpixelEnds,Np,sim,makePlots,dbglvl):
     plotEachRay=False
     writeRays = False #write pixel rays to hdf5 for viewing
 
@@ -60,14 +63,14 @@ def EllLineLength(Fwd,xFOVpixelEnds,zFOVpixelEnds,xCam,zCam,saveEll,Np,sim,makeP
 
     xzplot =None
     L = goCalcEll(maxNell,nCam,Np,sz,sx,xpc,zpc,xFOVpixelEnds,zFOVpixelEnds,
-                          xCam,zCam,plotEachRay,dbglvl)
+                          sim.allCamXkm,sim.allCamZkm,plotEachRay,dbglvl)
 
     #%% write results to HDF5 file
-    if saveEll:
-        doSaveEll(L,Fwd,sim.FwdLfn,xFOVpixelEnds,zFOVpixelEnds,xCam,zCam,writeRays)
+    if sim.savefwdL:
+        doSaveEll(L,Fwd,sim,xFOVpixelEnds,zFOVpixelEnds,writeRays)
 
     if 'ell' in makePlots and plotEachRay and xzplot:
-        plotEll(nCam,xFOVpixelEnds,zFOVpixelEnds,xCam,zCam,Np,xpc,zpc,
+        plotEll(nCam,xFOVpixelEnds,zFOVpixelEnds,sim.xCam,sim.zCam,Np,xpc,zpc,
                 sz,sx,xzplot,sim.FwdLfn,plotEachRay,makePlots,
                 (None,None,None,None,None,None))
     if issparse(L):
@@ -139,12 +142,11 @@ def loopEll(Np,sz,sx,xpc,zpc,xFOVpixelEnds,zFOVpixelEnds,
     print('Total number of intersections found:',inttot)
     return L#,xzplot
 
-def doSaveEll(L,Fwd,EllFN,xFOVpixelEnds,zFOVpixelEnds,xCam,zCam,writeRays):
-    import h5py
-    print('writing', EllFN )
+def doSaveEll(L,Fwd,sim,xFOVpixelEnds,zFOVpixelEnds,writeRays):
+    print('writing {}'.format(sim.FwdLfn))
     if issparse(L):
         L = L.todense()
-    with h5py.File(EllFN,'w',libver='latest') as fid:
+    with h5py.File(sim.FwdLfn,'w',libver='latest') as fid:
         h5L = fid.create_dataset("/L",data=L,compression="gzip");  h5L.attrs['Units'] = 'kilometers'
         h5Fwdx = fid.create_dataset("/Fwd/x",data=Fwd['x']); h5Fwdx.attrs['Units'] = 'kilometers'
         h5Fwdz = fid.create_dataset("/Fwd/z",data=Fwd['z']); h5Fwdz.attrs['Units'] = 'kilometers'
@@ -154,8 +156,10 @@ def doSaveEll(L,Fwd,EllFN,xFOVpixelEnds,zFOVpixelEnds,xCam,zCam,writeRays):
         #h5ObsPA =  fid.create_dataset("/Obs/pixAngle",data=pixAngleDeg);  h5ObsPA.attrs['Units'] = 'Degrees'
         h5ObsxFPE = fid.create_dataset("/Obs/xFOVpixelEnds",data=xFOVpixelEnds); h5ObsxFPE.attrs['Units'] = 'kilometers'
         h5ObszFPE = fid.create_dataset("/Obs/zFOVpixelEnds",data=zFOVpixelEnds); h5ObszFPE.attrs['Units'] = 'kilometers'
-        h5xCam = fid.create_dataset('/Obs/xCam',data=xCam); h5xCam.attrs['Units'] = 'kilometers'
-        h5zCam = fid.create_dataset('/Obs/zCam',data=zCam); h5zCam.attrs['Units'] = 'kilometers'
+        h5xCam = fid.create_dataset('/Obs/xCam',data=sim.allCamXkm); h5xCam.attrs['Units'] = 'kilometers'
+        h5zCam = fid.create_dataset('/Obs/zCam',data=sim.allCamZkm); h5zCam.attrs['Units'] = 'kilometers'
+    copy2(sim.FwdLfn,join(sim.cal1dpath,basename(sim.FwdLfn)))
+
 
 def plotEll(nCam,xFOVpixelEnds,zFOVpixelEnds,xCam,zCam,Np,xpc,zpc,sz,sx,
             xzplot,EllFN,plotEachRay,makeplot,vlim):
