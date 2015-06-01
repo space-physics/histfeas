@@ -11,6 +11,7 @@ import h5py
 from os.path import join
 from scipy.interpolate import interp1d
 from warnings import warn
+from pandas import DataFrame
 #
 import seaborn as sns
 sns.color_palette(sns.color_palette("cubehelix"))
@@ -28,8 +29,10 @@ except:
 try:
     from gaussfitter import gaussfit,twodgaussian
 except ImportError as e:
-    warn('gaussfitter not available {}'.format(e))
+    warn('{}'.format(e))
+
 from histutils.findnearest import find_nearest
+from transcarutils.opticalmod import plotOptMod
 #%% plot globals
 afs = None#20
 tfs = None#22
@@ -67,7 +70,7 @@ def placetxt(x,y,txt,ax):
             va='bottom',ha='left',
             bbox=dict(boxstyle="round,pad=0.0",fc='black', alpha=0.25))
 
-def goPlot(ParamFN,sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Phi0,
+def goPlot(ParamFN,sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
             fitp,rawdata,tInd,makeplot,progms,x1d,vlim,verbose):
 
     spfid = ''.join((progms,'dump_t{}.h5'.format(tInd)))
@@ -97,6 +100,11 @@ def goPlot(ParamFN,sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Phi0,
 
     if 'tphi0' in makeplot:
         plottphi0(Tm,Phi0,Jxi,fitp['EK'],zKM,vlim['p'],sim,tInd,makeplot,'tphi0',progms,verbose)
+
+    if 'spectra' in makeplot:
+        #FIXME this is temporary hack until Peigen is passed to hist-feasibility as DataFrame
+        Peigen = DataFrame(Peig['Mp'],index=zKM,columns=fitp['EK'])
+        plotOptMod(None,Peigen)
 #%% optional show plots
     if 'realvid' in makeplot and sim.realdata:
         plotRealImg(sim,cam,rawdata,tInd,makeplot,'realdata','$I$',1830,
