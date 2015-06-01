@@ -98,7 +98,7 @@ def doSim(ParamFN,savedump,makeplot,datadump,timeInds,overrides,progms,x1d,vlim,
 #%% collect results
         jfitAll.append(jfit); bfitAll.append(bfit)
 #%% plot results
-        goPlot(ParamFN,sim,Fwd,cam,Lfwd,Tm,bn,bfit,Pfwd,Pfit,Phi0,
+        goPlot(ParamFN,sim,Fwd,cam,Lfwd,Tm,bn,bfit,Pfwd,Pfit,Peig,Phi0,
                      jfit,rawdata,ti,makeplot,progms,x1d[ti],vlim,verbose)
         if animtime is not None:
             plt.draw()
@@ -111,7 +111,7 @@ def doSim(ParamFN,savedump,makeplot,datadump,timeInds,overrides,progms,x1d,vlim,
         if 'h5' in savedump:
             PfitAll.append(Pfit)
 #%% wrapup
-    msg='{} done looping'.format(argv[0]); print(msg); print(msg,file=stderr)
+    msg='{} done looping'.format(argv[0]); print(msg); #print(msg,file=stderr)
 
     png2multipage(progms,'.eps','.tif',descr=cmd,delete=False,verbose=verbose) #gif writing is not working yet
 
@@ -136,7 +136,7 @@ def doSim(ParamFN,savedump,makeplot,datadump,timeInds,overrides,progms,x1d,vlim,
             f["/Jflux"]=jAll
             f["/Vfit"]=PfitAll
 
-    msg ='{} program end'.format(argv[0]); print(msg); print(msg,file=stderr)
+    msg ='{} program end'.format(argv[0]); print(msg); #print(msg,file=stderr)
 
 #%% =======================================================================
 
