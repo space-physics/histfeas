@@ -117,10 +117,7 @@ def makeCamFOVpixelEnds(Fwd,sim,cam,makePlots,dbglvl):
 # we say (for now) that ell=area of polygon intersection between FOV pixel and sky voxel
     tic = time()
     #used .values for future use of Numba
-    L = EllLineLength(Fwd,xFOVpixelEnds,zFOVpixelEnds,
-                            sim.allCamXkm,
-                            sim.allCamZkm,
-                            sim.savefwdL,nCutPix,sim,makePlots,dbglvl)
+    L = EllLineLength(Fwd,xFOVpixelEnds,zFOVpixelEnds,nCutPix,sim,makePlots,dbglvl)
     print('computed L in {:0.1f}'.format(time()-tic) + ' seconds.')
     return L,Fwd,cam
 #%%

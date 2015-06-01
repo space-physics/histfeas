@@ -212,7 +212,7 @@ if __name__ == '__main__':
     try:
         makedirs(progms)#, exist_ok=True) #python 2.7 doesn't have exist_ok
     except (OSError,TypeError) as e:
-        pass #for python 2.7
+        print(e) #for python 2.7
 
 
     with open(join(progms,'cmd.log'),'w') as f:
