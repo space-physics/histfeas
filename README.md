@@ -47,9 +47,15 @@ plotting hints:
 ---------------
 ```-m rawpng``` saves the real video frames you chose to PNG with annotations/axes
 
-```-m realvid``` shows both cameras in one big figure
+```-m realvid``` both cameras in one big figure
 
-```-m singleraw``` shows each camera images individually, without axes (for powerpoint,posters, etc.)
+```-m singleraw``` each camera images individually, without axes (for powerpoint,posters, etc.)
+
+```-m eps``` ```-m png``` save figures as eps or png respectively
+
+```-m eig eig1d``` plot eigenprofiles
+
+```-m spectra``` plot TRANSCAR auroral spectra modulated by the filter used.
 
  calibration:
 -------------
