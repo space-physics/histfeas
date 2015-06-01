@@ -12,12 +12,12 @@ from transcarutils.eFluxGen import fluxgen
 from histutils.findnearest import find_nearest
 
 
-def getTranscarMp(sim,makeplot,dbglvl):
- #%% get VER/flux
-    Peigen, EKpcolor = getTranscar(sim, dbglvl)[:2]
-
-    #return Mp,zTranscar,Ek,EKpcolor
-    return asfortranarray(Peigen.values), Peigen.index.values, Peigen.columns.values, EKpcolor
+#def getTranscarMp(sim,makeplot,dbglvl):
+# #%% get VER/flux
+#    Peigen, EKpcolor = getTranscar(sim, dbglvl)[:2]
+#
+#    #return Mp,zTranscar,Ek,EKpcolor
+#    return asfortranarray(Peigen.values), Peigen.index.values, Peigen.columns.values, EKpcolor
 
 def getColumnVER(zgrid,zTranscar,Peig,Phi0,zKM):
     assert Phi0.shape[0] == Peig.shape[1]
@@ -39,19 +39,20 @@ def getMp(sim,zKM,makeplot,dbglvl):
         Ek = Peigen.columns.values
         zTranscar = Peigen.index.values
     except AttributeError as e:
-        warn('*** getMp: it appears there was trouble earlier on with getTranscar, aborting. {}'.format(e))
+        warn('trouble earlier on with getTranscar, aborting. {}'.format(e))
         return None
 #%% clip to Hist requested altitudes
     if not allclose(zKM,zTranscar):
-        warn('** getMp: warning, attempting to trim altitude grid, this may not be successful due to floating point error')
+        warn('attempting to trim altitude grid, this may not be successful due to floating point error')
         goodAltInd = (zKM[0] < zTranscar) &  (zTranscar < zKM[-1])
         Peig = asfortranarray(Peigen.values[goodAltInd,:])
     else:
         Peig = asfortranarray(Peigen.values)
 #%% repack, with optional downsample
     if sim.downsampleEnergy:
-        print('** downsampling in energy **')
+        warn('** downsampling in energy **')
         Ek,EKpcolor,Peigen = downsampleEnergy(Ek,EKpcolor,Peig, sim.downsampleEnergy)
+    #FIXME: just use a DataFrame!
     return {'Mp':Peig,'ztc':zTranscar,'Ek':Ek,'EKpcolor':EKpcolor}
 
 def downsampleEnergy(Ek,EKpcolor,Mp,downsamp):
@@ -69,7 +70,7 @@ def downsampleEnergy(Ek,EKpcolor,Mp,downsamp):
     fp = interp1d(log(Ek), log(Mp), kind='linear',axis=1)
     Mp2 = exp(fp(log(Ek2)))
     if isnan(Mp2).any():
-        print('** downsampleEnergy: should these NaNs be set to zero?')
+        warn('should these NaNs be set to zero?')
     return Ek2,EKpcolor2,Mp2
 
 def getPhi0(sim,ap,xKM,Ek,makeplots,verbose):
