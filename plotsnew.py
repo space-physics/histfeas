@@ -23,7 +23,7 @@ sns.set(context='paper', style='whitegrid',
 try:
     import plotly.plotly as py
     from plotly.graph_objs import Data,Figure,XAxis,YAxis,Contour, Layout
-except:
+except Exception:
     pass
 #
 try:
@@ -333,17 +333,16 @@ def plotadj(sim,cam,drn,dhat,nCutPix,xKM,xp,zKM,zp,vfit,fitp,vlim,
 def plotnoise(cam,tInd,makeplot,prefix,progms,verbose):
   try:
     fg = figure()
-    ax = fg.add_subplot(311)
+    ax = fg.add_subplot(211)
 
     for c in cam:
         ax.plot(cam[c].dnoise,label=cam[c].name)
         ax.set_ylabel('amplitude')
-        #ax.set_xlabel('pixel number')
-        ax.set_title('Noise injected into raw intensity data')
+        ax.set_title('Noise that was injected into raw intensity data')
         ax.grid(True)
     ax.legend(loc='best')
 
-    ax2 = fg.add_subplot(312)
+    ax2 = fg.add_subplot(212)
     for c in cam:
         ax2.plot(cam[c].noisy,label=cam[c].name)
         ax2.set_ylabel('amplitude')
@@ -351,16 +350,6 @@ def plotnoise(cam,tInd,makeplot,prefix,progms,verbose):
         ax2.set_title('Noisy data')
         ax2.grid(True)
     ax2.legend(loc='best')
-
-    ax3 = fg.add_subplot(313)
-    for c in cam:
-        ax3.plot(cam[c].nonneg,label=cam[c].name)
-        ax3.set_ylabel('amplitude')
-        ax3.set_xlabel('pixel number')
-        ax3.set_title('Noisy, zero-truncated data')
-        ax3.grid(True)
-    ax3.legend(loc='best')
-
 
     writeplots(fg,prefix,tInd,makeplot,progms,format1d,verbose)
   except Exception as e:
