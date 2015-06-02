@@ -60,7 +60,9 @@ plot selection:
 plot limits:
 ------------
 ``` --vlim xmin xmax zmin zmax pmin pmax ```  limits for VER plots
+
 ``` --jlim min max ``` flux limits for diff num flux plots
+
 ``` --blim min max ``` flux limits for brightness plots
 
  calibration:
