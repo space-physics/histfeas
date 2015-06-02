@@ -168,7 +168,7 @@ def goPlot(ParamFN,sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
     if 'jartadj' in makeplot:
         #fa,aa = subplots(nrows=1,ncols=2,sharex='col',num=992, figsize=(5,14))
         plotJ(sim,fitp['phiARTadjoint'],xKM,xp,fitp['EK'],fitp['EKpcolor'],vlim['j'],tInd,makeplot,'jartadj',
-              '$\phi_{art,adj}[E,x]$ Estimated (ADJOINT) from ART VER',
+              '$\phi_{art,adj}$ Estimated (ADJOINT) from ART VER',
               spfid,progms,verbose)
 #%% Forward model plots
     if 'fwd' in makeplot or 'optim' in makeplot:
@@ -185,7 +185,7 @@ def goPlot(ParamFN,sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
         gx0hat,gE0hat,x0hat,E0hat = getx0E0(fitp['gaussian'],fitp['EK'],xKM,tInd,progms,makeplot,verbose)
 #'Neval = {:d}'.format(fitp.nfev)
         plotJ(sim,fitp['gaussian'], xKM,xp, fitp['EK'],fitp['EKpcolor'], vlim['j'],tInd, makeplot,'jgaussian',
-              ('$\widehat{\phi_{gaussian,optim}}[E,x]$ estimated diff. number flux' +
+              ('$\widehat{\phi_{gaussian,optim}}$ estimated diff. number flux' +
                fwdloctxt ),
               spfid,progms,verbose)
 
@@ -244,7 +244,7 @@ def goPlot(ParamFN,sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
 #%% diff number flux from ART
     if 'jart' in makeplot:
         plotJ(sim,fitp['art'],xKM,xp,fitp['EK'],fitp['EKpcolor'],vlim['j'],tInd,makeplot,'jart',
-                        '$J_{art}[E,x]$ Estimated J from Kaczmarz ART on LT and b',
+                        '$\hat{\Phi}_{art}$ Estimated J from Kaczmarz ART on LT and b',
                          spfid,progms,verbose)
     if 'vart' in makeplot:
         assert isnan(vfit['art']).any() == False
@@ -299,7 +299,7 @@ def plotoptim(sim,cam,drn,dhat,nCutPix,bcomptxt,fwdloctxt,ver,Phi0,Jxi,
     print('Estimated $x_{{gauss,0}},E_{{gauss,0}}$={:0.2f}, {:0.0f}'.format(gx0hat,gE0hat))
 
     plotJ(sim,fitp.x,xKM,xp,fitp['EK'],fitp['EKpcolor'],vlim['j'],tInd,makeplot,'phiest',
-          ('$\widehat{\phi}[E,x]$ estimated diff. number flux' + fwdloctxt ),
+          ('$\hat{\phi}_{top}$ estimated diff. number flux' + fwdloctxt ),
           spfid,progms,verbose)
           #'Neval = {:d}'.format(fitp.nfev)
 
@@ -316,7 +316,7 @@ def plotadj(sim,cam,drn,dhat,nCutPix,xKM,xp,zKM,zp,vfit,fitp,vlim,
                                  bcomptxt,tInd,makeplot,spfid,progms,verbose):
     if 'phiadj' in makeplot:
         plotJ(sim,fitp['phiTJadjoint'],xKM,xp,fitp['EK'],fitp['EKpcolor'],vlim['j'],tInd,makeplot,'jadj',
-                    '$\Phi_{adj}[E,x]$ Estimated diff. number flux from $LT\Phi=B$',
+                    '$\hat{Phi}_{adj}$ Estimated diff. number flux from $LT\Phi=B$',
                      spfid,progms,verbose)
     if 'padj' in makeplot:
         plotVER(sim,vfit['adj'],xKM,xp,zKM,zp,vlim['p'],tInd,makeplot,'vadj',
