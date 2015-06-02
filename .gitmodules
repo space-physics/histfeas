@@ -16,3 +16,6 @@
 [submodule "pyimagevideo"]
 	path = pyimagevideo
 	url = https://github.com/scienceopen/pyimagevideo.git
+[submodule "pybashutils"]
+	path = pybashutils
+	url = https://github.com/scienceopen/pybashutils.git
