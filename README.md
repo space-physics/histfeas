@@ -59,7 +59,7 @@ plot selection:
 
 plot limits:
 ------------
-``` --vlim xmin xmax zmin zmax pmin pmax ```  limits for VER plots
+``` --vlim xmin xmax zmin zmax pmin pmax ```  limits for VER plots and eigenprofile plots (including 1-D)
 
 ``` --jlim min max ``` flux limits for diff num flux plots
 
