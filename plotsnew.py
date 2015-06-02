@@ -548,7 +548,7 @@ def plotJ1D(sim,PhiFwd,PhiInv,Ek,vlim,tInd,makeplot,prefix,titletxt,spfid,progms
 
     ax.grid(True)
     ax.autoscale(True,tight=False)
-    ax.set_ylim(10, vlim[1]*1.15)
+    ax.set_ylim(10, vlim[1]*1.5)
     ax.set_xlim([Ek[0]*0.98, Ek[-1]*1.05])
 
     ax.set_xlabel('particle energy [eV]', fontsize=afs,labelpad=0)
@@ -714,7 +714,7 @@ def plotVER1D(sim,pfwd,pinv,zKM,vlim,tInd,makeplot,prefix,titletxt,spfid,progms,
     ax.yaxis.set_minor_locator(MultipleLocator(dymin))
     ax.tick_params(axis='both', which='major', direction='in',labelsize=tkfs)
 
-    ax.set_ylim(bottom=vlim[0]*.8,top=vlim[1]*1.15)
+    ax.set_ylim(bottom=vlim[0]*.8,top=vlim[1]*1.5)
     ax.set_xlim(vlim[2:])
 
     writeplots(fg,prefix,tInd,makeplot,progms,format1d,verbose)
