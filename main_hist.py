@@ -24,7 +24,6 @@ from os import makedirs
 from numpy import absolute,zeros,asarray,in1d,arange
 from numpy.random import normal
 import h5py
-from sys import stderr
 #
 #import logging
 #logging.basicConfig(filename='hist.log',filemode='w',level=logging.DEBUG)
