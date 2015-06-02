@@ -31,7 +31,7 @@ try:
 except ImportError as e:
     warn('{}'.format(e))
 
-from histutils.findnearest import find_nearest
+from pybashutils.findnearest import find_nearest
 from transcarutils.opticalmod import plotOptMod
 #%% plot globals
 afs = None#20
