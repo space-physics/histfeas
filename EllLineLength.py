@@ -2,7 +2,7 @@ from __future__ import print_function, division,absolute_import
 import h5py
 #from numba import jit
 #from numbapro import vectorize
-from numpy import empty,ones,ravel_multi_index,hypot,zeros
+from numpy import empty,ones,ravel_multi_index,hypot,zeros,in1d,array
 from scipy.sparse import dok_matrix,issparse
 from shutil import copy2
 from os.path import basename,join
@@ -163,13 +163,18 @@ def doSaveEll(L,Fwd,sim,xFOVpixelEnds,zFOVpixelEnds,writeRays):
 
 def plotEll(nCam,xFOVpixelEnds,zFOVpixelEnds,xCam,zCam,Np,xpc,zpc,sz,sx,
             xzplot,EllFN,plotEachRay,makeplot,vlim):
+    import seaborn as sns
+    sns.color_palette(sns.color_palette("cubehelix"))
+    sns.set(context='paper', style='whitegrid',
+        rc={'image.cmap': 'cubehelix_r'}) #for contour
+
     from matplotlib.pyplot import figure, draw, pause
     from matplotlib.ticker import MultipleLocator
     decimfactor = 8
     clrs = ['r','g','y','m']
-    afs = 20
-    tkfs = 20
-    tfs = 22
+    afs = None#20
+    tkfs = None#20
+    tfs = None#22
 
     fg = figure()
     ax = fg.gca()
@@ -208,7 +213,11 @@ def plotEll(nCam,xFOVpixelEnds,zFOVpixelEnds,xCam,zCam,Np,xpc,zpc,sz,sx,
     ax.xaxis.set_major_locator(MultipleLocator(1))
     ax.xaxis.set_minor_locator(MultipleLocator(0.2))
     ax.tick_params(axis='both', which='both', labelsize=tkfs, direction='out')
-    if 'png' in makeplot:
-        figpng = EllFN + '.png'
+
+#%% write plot
+    tmpl = array(('eps','jpg','png','pdf'))
+    used = in1d(tmpl,makeplot)
+    if used.any():
+        figpng = EllFN + '.' + tmpl[used][0]
         print('saving', figpng)
         fg.savefig(figpng,bbox_inches='tight',dpi=600)  # this is slow and async
