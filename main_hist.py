@@ -227,19 +227,19 @@ if __name__ == '__main__':
 
     if doProfile: #devel debug
         #from subprocess import Popen, PIPE
-        import cProfile
-        from profileRunHSTsim0 import goCprofile
-        profFN = 'hstprofstats.pstats'
-        print('saving profile results to ' + profFN)
-        cProfile.run('doSim(ParamFN,savedump,makeplot,datadump,timeInds,overrides,progms,ar.x1d,vlim,ar.anim,ar.verbose)',profFN)
-
+        import cProfile,pstats
+        proffn = 'hstprofstats.pstats'
+        print('saving profile results to ' + proffn)
+        cProfile.run('doSim(ParamFN,savedump,makeplot,datadump,timeInds,'
+                 'overrides,progms,ar.x1d,vlim,ar.anim,' '.join(argv),ar.verbose)',proffn)
+        pstats.Stats(proffn).sort_stats('time','cumulative').print_stats(50)
         #binpath = expanduser('~/profile/')
         #sysCall = [binpath + 'gprof2dot.py','-f','pstats',profFN,'|','dot','-Tpng','-o','output.png']
         #print(sysCall)
         #po = Popen(sysCall, stdout=PIPE, cwd=binpath, shell=False)
         #so,serr = po.communicate(timeout=1) #timeout is incompatible with Python 2.
         #print(so.decode('utf8'))
-        goCprofile(profFN)
+
     else: #normal
         doSim(ParamFN,savedump,makeplot,datadump,timeInds,
                                       overrides,progms,ar.x1d, vlim,ar.anim,' '.join(argv), ar.verbose)
