@@ -163,7 +163,6 @@ def mogrifyData(data,cam):
     data = cam.scaleintens(data) #camera cross-calibration
 
     data = cam.donoise(data)
-    #print('noise std. deviation cam ',cam.name,'=',cam.std)
     data = cam.dosmooth(data)
     data = cam.dolowerthres(data)
 

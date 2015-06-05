@@ -4,7 +4,7 @@ GPLv3+
 """
 from __future__ import print_function, division, absolute_import
 from numpy import exp,outer, zeros_like,zeros
-from histutils.findnearest import find_nearest
+from pybashutils.findnearest import find_nearest
 
 from transcararc import getColumnVER,getpx
 

@@ -7,12 +7,12 @@
 [submodule "pymap3d"]
 	path = pymap3d
 	url = https://scienceopen@github.com/scienceopen/pymap3d.git
-[submodule "astrometry"]
-	path = astrometry
-	url = https://scienceopen@github.com/scienceopen/astrometry.git
 [submodule "histutils"]
 	path = histutils
 	url = https://scienceopen@github.com/scienceopen/histutils.git
 [submodule "pyimagevideo"]
 	path = pyimagevideo
 	url = https://github.com/scienceopen/pyimagevideo.git
+[submodule "pybashutils"]
+	path = pybashutils
+	url = https://github.com/scienceopen/pybashutils.git
