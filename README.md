@@ -38,12 +38,14 @@ dump raw frames with time superimposed to disk without axes (for draft, -f 30 70
 python3 main_hist.py in/jgr2013_realdata.xlsx /tmp -m singleraw rawpng -f 30 70 10
 ```
 
-plot eigenprofiles from 2013 JGR
+plot eigenprofiles from 2013 JGR and current transcar sim
 ```
-python3 main_hist.py in/jgr2013_2cam.xlsx /tmp --minev 150 -m eig eig1d show -f 0 1 1
+python3 main_hist.py in/jgr2013_2cam.xlsx /tmp -m eig eig1d -p  -f 0 1 1
+
+python3 main_hist.py in/2cam_flame.xlsx /tmp -m eig eig1d -p --vlim 0 0 90 1000 1e-1 5e3 -f 0 1 1
 ```
 
-plotting hints:
+plot selection:
 ---------------
 ```-m rawpng``` saves the real video frames you chose to PNG with annotations/axes
 
@@ -53,9 +55,17 @@ plotting hints:
 
 ```-m eps``` ```-m png``` save figures as eps or png respectively
 
-```-m eig eig1d``` plot eigenprofiles
+```-m eig ``` plot eigenprofiles
 
 ```-m spectra``` plot TRANSCAR auroral spectra modulated by the filter used.
+
+plot limits:
+------------
+``` --vlim xmin xmax zmin zmax pmin pmax ```  limits for VER plots and eigenprofile plots (including 1-D)
+
+``` --jlim min max ``` flux limits for diff num flux plots
+
+``` --blim min max ``` flux limits for brightness plots
 
  calibration:
 -------------
