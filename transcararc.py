@@ -9,7 +9,7 @@ from six import string_types
 #
 from transcarutils.readTranscar import getTranscar
 from transcarutils.eFluxGen import fluxgen
-from histutils.findnearest import find_nearest
+from pybashutils.findnearest import find_nearest
 
 
 #def getTranscarMp(sim,makeplot,dbglvl):

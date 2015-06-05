@@ -23,7 +23,7 @@ sns.set(context='paper', style='whitegrid',
 try:
     import plotly.plotly as py
     from plotly.graph_objs import Data,Figure,XAxis,YAxis,Contour, Layout
-except:
+except Exception:
     pass
 #
 try:
@@ -31,7 +31,7 @@ try:
 except ImportError as e:
     warn('{}'.format(e))
 
-from histutils.findnearest import find_nearest
+from pybashutils.findnearest import find_nearest
 from transcarutils.opticalmod import plotOptMod
 #%% plot globals
 afs = None#20
@@ -168,7 +168,7 @@ def goPlot(ParamFN,sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
     if 'jartadj' in makeplot:
         #fa,aa = subplots(nrows=1,ncols=2,sharex='col',num=992, figsize=(5,14))
         plotJ(sim,fitp['phiARTadjoint'],xKM,xp,fitp['EK'],fitp['EKpcolor'],vlim['j'],tInd,makeplot,'jartadj',
-              '$\phi_{art,adj}[E,x]$ Estimated (ADJOINT) from ART VER',
+              '$\phi_{art,adj}$ Estimated (ADJOINT) from ART VER',
               spfid,progms,verbose)
 #%% Forward model plots
     if 'fwd' in makeplot or 'optim' in makeplot:
@@ -185,7 +185,7 @@ def goPlot(ParamFN,sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
         gx0hat,gE0hat,x0hat,E0hat = getx0E0(fitp['gaussian'],fitp['EK'],xKM,tInd,progms,makeplot,verbose)
 #'Neval = {:d}'.format(fitp.nfev)
         plotJ(sim,fitp['gaussian'], xKM,xp, fitp['EK'],fitp['EKpcolor'], vlim['j'],tInd, makeplot,'jgaussian',
-              ('$\widehat{\phi_{gaussian,optim}}[E,x]$ estimated diff. number flux' +
+              ('$\widehat{\phi_{gaussian,optim}}$ estimated diff. number flux' +
                fwdloctxt ),
               spfid,progms,verbose)
 
@@ -244,7 +244,7 @@ def goPlot(ParamFN,sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
 #%% diff number flux from ART
     if 'jart' in makeplot:
         plotJ(sim,fitp['art'],xKM,xp,fitp['EK'],fitp['EKpcolor'],vlim['j'],tInd,makeplot,'jart',
-                        '$J_{art}[E,x]$ Estimated J from Kaczmarz ART on LT and b',
+                        '$\hat{\Phi}_{art}$ Estimated J from Kaczmarz ART on LT and b',
                          spfid,progms,verbose)
     if 'vart' in makeplot:
         assert isnan(vfit['art']).any() == False
@@ -299,7 +299,7 @@ def plotoptim(sim,cam,drn,dhat,nCutPix,bcomptxt,fwdloctxt,ver,Phi0,Jxi,
     print('Estimated $x_{{gauss,0}},E_{{gauss,0}}$={:0.2f}, {:0.0f}'.format(gx0hat,gE0hat))
 
     plotJ(sim,fitp.x,xKM,xp,fitp['EK'],fitp['EKpcolor'],vlim['j'],tInd,makeplot,'phiest',
-          ('$\widehat{\phi}[E,x]$ estimated diff. number flux' + fwdloctxt ),
+          ('$\hat{\phi}_{top}$ estimated diff. number flux' + fwdloctxt ),
           spfid,progms,verbose)
           #'Neval = {:d}'.format(fitp.nfev)
 
@@ -316,7 +316,7 @@ def plotadj(sim,cam,drn,dhat,nCutPix,xKM,xp,zKM,zp,vfit,fitp,vlim,
                                  bcomptxt,tInd,makeplot,spfid,progms,verbose):
     if 'phiadj' in makeplot:
         plotJ(sim,fitp['phiTJadjoint'],xKM,xp,fitp['EK'],fitp['EKpcolor'],vlim['j'],tInd,makeplot,'jadj',
-                    '$\Phi_{adj}[E,x]$ Estimated diff. number flux from $LT\Phi=B$',
+                    '$\hat{Phi}_{adj}$ Estimated diff. number flux from $LT\Phi=B$',
                      spfid,progms,verbose)
     if 'padj' in makeplot:
         plotVER(sim,vfit['adj'],xKM,xp,zKM,zp,vlim['p'],tInd,makeplot,'vadj',
@@ -333,17 +333,16 @@ def plotadj(sim,cam,drn,dhat,nCutPix,xKM,xp,zKM,zp,vfit,fitp,vlim,
 def plotnoise(cam,tInd,makeplot,prefix,progms,verbose):
   try:
     fg = figure()
-    ax = fg.add_subplot(311)
+    ax = fg.add_subplot(211)
 
     for c in cam:
         ax.plot(cam[c].dnoise,label=cam[c].name)
         ax.set_ylabel('amplitude')
-        #ax.set_xlabel('pixel number')
-        ax.set_title('Noise injected into raw intensity data')
+        ax.set_title('Noise that was injected into raw intensity data')
         ax.grid(True)
     ax.legend(loc='best')
 
-    ax2 = fg.add_subplot(312)
+    ax2 = fg.add_subplot(212)
     for c in cam:
         ax2.plot(cam[c].noisy,label=cam[c].name)
         ax2.set_ylabel('amplitude')
@@ -351,16 +350,6 @@ def plotnoise(cam,tInd,makeplot,prefix,progms,verbose):
         ax2.set_title('Noisy data')
         ax2.grid(True)
     ax2.legend(loc='best')
-
-    ax3 = fg.add_subplot(313)
-    for c in cam:
-        ax3.plot(cam[c].nonneg,label=cam[c].name)
-        ax3.set_ylabel('amplitude')
-        ax3.set_xlabel('pixel number')
-        ax3.set_title('Noisy, zero-truncated data')
-        ax3.grid(True)
-    ax3.legend(loc='best')
-
 
     writeplots(fg,prefix,tInd,makeplot,progms,format1d,verbose)
   except Exception as e:
@@ -559,7 +548,7 @@ def plotJ1D(sim,PhiFwd,PhiInv,Ek,vlim,tInd,makeplot,prefix,titletxt,spfid,progms
 
     ax.grid(True)
     ax.autoscale(True,tight=False)
-    ax.set_ylim(1, vlim[1])
+    ax.set_ylim(10, vlim[1]*1.5)
     ax.set_xlim([Ek[0]*0.98, Ek[-1]*1.05])
 
     ax.set_xlabel('particle energy [eV]', fontsize=afs,labelpad=0)
@@ -725,7 +714,7 @@ def plotVER1D(sim,pfwd,pinv,zKM,vlim,tInd,makeplot,prefix,titletxt,spfid,progms,
     ax.yaxis.set_minor_locator(MultipleLocator(dymin))
     ax.tick_params(axis='both', which='major', direction='in',labelsize=tkfs)
 
-    ax.set_ylim(vlim[:2])
+    ax.set_ylim(bottom=vlim[0]*.8,top=vlim[1]*1.5)
     ax.set_xlim(vlim[2:])
 
     writeplots(fg,prefix,tInd,makeplot,progms,format1d,verbose)

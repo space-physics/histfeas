@@ -191,7 +191,7 @@ class Cam: #use this like an advanced version of Matlab struct
              noisy += self.ccdbias
 
          # kept for diagnostic purposes
-         self.raw = data #these are untouched pixel intensities
+#         self.raw = data #these are untouched pixel intensities
          self.dnoise = dnoise
          self.noisy = noisy
 
@@ -205,25 +205,26 @@ class Cam: #use this like an advanced version of Matlab struct
         return data #LEAVE THIS AS SEPARATE LINE!
 
     def fixnegval(self,data):
-        negDataInd = data<0
-        if (self.verbose and negDataInd.any()) or negDataInd.sum()>0.1*self.nCutPix:
-            warn('Setting {} negative Data values to 0 for Camera #{}'.format(negDataInd.sum(), self.name))
+        mask = data<0
+        if (self.verbose and mask.any()) or mask.sum()>0.1*self.nCutPix:
+            warn('Setting {} negative Data values to 0 for Camera #{}'.format(mask.sum(), self.name))
 
-        data[negDataInd] = 0
+        data[mask] = 0
 
-        self.nonneg = data
+#        self.nonneg = data
         return data
+
     def scaleintens(self,data):
         if isfinite(self.intensityScaleFactor) and self.intensityScaleFactor !=1 :
             if self.verbose>0:
-                print('Scaling data to Cam #' + self.name + ' by factor of ',self.intensityScaleFactor )
+                print('Scaling data to Cam #{} by factor of {}'.format(self.name,self.intensityScaleFactor))
             data *= self.intensityScaleFactor
             #assert isnan(data).any() == False
         return data
 
     def dolowerthres(self,data):
         if isfinite(self.lowerthres):
-            print('Thresholding Data to 0 when DN <',self.lowerthres, 'for Camera #' + self.name )
+            print('Thresholding Data to 0 when DN < {} for Camera {}'.format(self.lowerthres,self.name))
             data[ data < self.lowerthres ] = 0
         return data
 
