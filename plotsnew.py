@@ -94,17 +94,18 @@ def goPlot(ParamFN,sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
 #%% eigenfunction
     if 'eig' in makeplot:
         ploteig(fitp['EKpcolor'],zKM,Tm,vlim['p'],sim,tInd,makeplot,'peig',progms,verbose)
- 
+
        #FIXME this is temporary hack until Peigen is passed to hist-feasibility as DataFrame
         Peigen = DataFrame(Peig['Mp'],index=zKM,columns=fitp['EK'])
         plotOptMod(None,Peigen)
-        
+
         ploteig1d(fitp['EK'],zKM,Tm,vlim['p'],sim,tInd,makeplot,'peig1d',progms,verbose)
 
     if 'tphi0' in makeplot:
         plottphi0(Tm,Phi0,Jxi,fitp['EK'],zKM,vlim['p'],sim,tInd,makeplot,'tphi0',progms,verbose)
 
     if 'spectra' in makeplot:
+        print('run spectral plots from calcemissions.py')
 #%% optional show plots
     if 'realvid' in makeplot and sim.realdata:
         plotRealImg(sim,cam,rawdata,tInd,makeplot,'realdata','$I$',1830,

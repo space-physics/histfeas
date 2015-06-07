@@ -93,6 +93,8 @@ class Sim:
         else:
             self.nArc = 0
 #%% transcar
+        self.lambminmax = (sp.at['lambdamin','Sim'],sp.at['lambdamax','Sim']) #for plotting only
+
         self.useztranscar = sp.at['UseTCz','Transcar'] == 1
         self.loadver = sp.at['loadVER','Transcar'] == 1
         self.loadverfn = sp.at['verfn','Transcar']
