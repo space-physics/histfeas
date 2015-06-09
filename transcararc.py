@@ -133,6 +133,8 @@ def upsampletime(ap,sim):
     f = interp1d(texp,ap.loc['Wkm'].values.astype(float));    Wkm = f(tsim)
     f = interp1d(texp,ap.loc['X0km'].values.astype(float));   X0  = f(tsim)
 
+    print('new E0 upsamp [eV]: {}'.format(E0))
+
     if ap.loc['Xshape'].eq(ap.at['Xshape',0]).all():
         Xshape = ap.at['Xshape',0]
     else:
