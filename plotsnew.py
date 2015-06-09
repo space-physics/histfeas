@@ -1136,13 +1136,17 @@ def writeplots(fg,plotprefix,tInd,method,progms,overridefmt=None,verbose=0):
         if verbose>0: print('save {}...'.format(cn),end='')
         fg.savefig(cn,bbox_inches='tight',dpi=dpi,format=fmt)  # this is slow and async
 #%%
-def getx0E0(jf,Ek,x,tInd,progms,makeplot,verbose):
+def getx0E0(Phi,Ek,x,tInd,progms,makeplot,verbose):
   try:
-    if jf is None or isnan(jf).any() or not 'optim' in makeplot:
+#%% E0 > 800eV
+    PhiGauss = Phi.copy()
+    PhiGauss[Ek<800,:] = 0.
+
+    if Phi is None or isnan(Phi).any():
         return nan, nan,nan,nan
 #%% interp log to linear
     Eklin = linspace(Ek[0],Ek[-1],200)
-    ff = interp1d(Ek,jf,kind='linear',axis=0)
+    ff = interp1d(Ek,PhiGauss,kind='linear',axis=0)
     jflin = ff(Eklin)
 #%% first guess of 2-D peak, take region of pixels near the peak to fit
     #note that unravel_index for jf must be order='C'
