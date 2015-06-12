@@ -48,6 +48,7 @@ epsdpi=300
 pstyle='contour'
 
 E0min=800 #eV
+phi1dmax = 5e5
 
 #%%
 def logfmt(makeplot,powlim=(-2,2)):
@@ -557,7 +558,7 @@ def plotJ1D(sim,PhiFwd,PhiInv,Ek,vlim,tInd,makeplot,prefix,titletxt,spfid,progms
 
     ax.grid(True)
     ax.autoscale(True,tight=False)
-    ax.set_ylim(10, vlim[1])
+    ax.set_ylim(100, phi1dmax)
     ax.set_xlim([Ek[0]*0.98, Ek[-1]*1.05])
 
     ax.set_xlabel('particle energy [eV]', fontsize=afs,labelpad=0)

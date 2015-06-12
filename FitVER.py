@@ -3,7 +3,7 @@ Michael Hirsch
 GPLv3+
 """
 from __future__ import print_function, division
-from numpy import absolute,asfortranarray,diff,zeros,inf,empty_like
+from numpy import absolute,asfortranarray,diff,ones,inf,empty_like
 from scipy.optimize import minimize
 from scipy.interpolate import interp1d
 from numpy.linalg import norm
@@ -57,8 +57,8 @@ def FitVERopt(L,bn,Phi0,MpDict,sim,cam,Fwd,makeplot,dbglvl):
         sx = Fwd['sx']
 
         cons = None
-        nonnegbound = zeros((nEnergy*sx,2))
-        nonnegbound[:,1] = inf  #None seems to give error
+        optimbound = sim.minflux*ones((nEnergy*sx,2))
+        optimbound[:,1] = inf  #None seems to give error
         if optimmeth.lower()=='nelder-mead':
             optimopt = {'maxiter':maxiter,'disp':True} #100
         elif optimmeth.lower()=='bfgs':
@@ -85,7 +85,7 @@ def FitVERopt(L,bn,Phi0,MpDict,sim,cam,Fwd,makeplot,dbglvl):
                               bnu, #scaled version of bn (do once instead of in loop)
                               nEnergy,sx),
                         method=optimmeth,
-                        bounds=nonnegbound, #non-negativity
+                        bounds=optimbound, #non-negativity
                         constraints=cons,
                         options=optimopt,
                         )
