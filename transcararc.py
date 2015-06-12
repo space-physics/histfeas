@@ -83,7 +83,7 @@ def getPhi0(sim,ap,xKM,Ek,makeplots,verbose):
         else:
             Phi0 = empty((Ek.size,xKM.size,sim.nArc-1),order='F')
 #%% upsample to sim time steps
-            E0,Q0,Wbc,bl,bm,bh,Bm,Bhf, Wkm,X0,Xshape = upsampletime(ap,sim)
+            E0,Q0,Wbc,bl,bm,bh,Bm,Bhf, Wkm,X0,Xshape = upsampletime(ap,sim,verbose)
 
 
             pz = fluxgen(Ek, E0,Q0,Wbc,bl,bm,bh,Bm,Bhf, verbose)[0]
@@ -102,7 +102,7 @@ def getPhi0(sim,ap,xKM,Ek,makeplots,verbose):
         Phi0 = None
     return Phi0,X0
 
-def upsampletime(ap,sim):
+def upsampletime(ap,sim,verbose):
     #%% obtain observation time steps from spreadsheet (for now, equal to kinetic time)
     texp = ap.loc['tReqOffsetSec'].values.astype(float)
     if abs(sim.kineticSec - diff(texp).mean()) > 1e-3:
@@ -133,7 +133,8 @@ def upsampletime(ap,sim):
     f = interp1d(texp,ap.loc['Wkm'].values.astype(float));    Wkm = f(tsim)
     f = interp1d(texp,ap.loc['X0km'].values.astype(float));   X0  = f(tsim)
 
-    print('new E0 upsamp [eV]: {}'.format(E0))
+    if verbose>0:
+        print('new E0 upsamp [eV]: {}'.format(E0))
 
     if ap.loc['Xshape'].eq(ap.at['Xshape',0]).all():
         Xshape = ap.at['Xshape',0]
