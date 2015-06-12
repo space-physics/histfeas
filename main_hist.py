@@ -98,7 +98,7 @@ def doSim(ParamFN,savedump,makeplot,datadump,timeInds,overrides,progms,x1d,vlim,
         jfitAll.append(jfit); bfitAll.append(bfit)
 #%% plot results
         goPlot(ParamFN,sim,Fwd,cam,Lfwd,Tm,bn,bfit,Pfwd,Pfit,Peig,Phi0,
-                     jfit,rawdata,ti,makeplot,progms,x1d[ti],vlim,verbose)
+                     jfit,rawdata,ti,makeplot,progms,x1d,vlim,verbose)
         if animtime is not None:
             plt.draw()
             plt.pause(animtime)
@@ -164,7 +164,7 @@ if __name__ == '__main__':
     p.add_argument('--cx',help='override cam positions (must specify all)',nargs='+',default=[None],type=float)
     p.add_argument('--influx',help='flux .h5 file to use (overrides XLS)',default=None,type=str)
     p.add_argument('--logplot',help='logarithmic axis scaling where appropriate',action='store_true')
-    p.add_argument('--x1d',help='required location [km] of x for 1-D flux plots',default=None,type=float)
+    p.add_argument('--x1d',help='required location [km] of x for 1-D flux plots',nargs='+',default=[None],type=float)
 #    p.add_argument('--saveall',help='saves "all" variables to disk, useful for registration case tracking',action='store_true')
     p.add_argument('-a','--anim',help='animate plots (crudely)',type=float,default=None)
     p.add_argument('--filter',help='optical filter choices: bg3   none',type=str,default=None)

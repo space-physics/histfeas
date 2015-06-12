@@ -47,6 +47,8 @@ plotdpi=100
 epsdpi=300
 pstyle='contour'
 
+E0min=800 #eV
+
 #%%
 def logfmt(makeplot,powlim=(-2,2)):
     """
@@ -86,10 +88,15 @@ def goPlot(ParamFN,sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
 
 #%% get xind
     if not sim.realdata:
-        if x1d is not None:
-            Jxi = find_nearest(xKM,x1d)[0]
+        if x1d[0] is not None:
+            try:
+                cx1d=x1d[tInd]
+            except IndexError:
+                cx1d=x1d[0] 
+            Jxi = find_nearest(xKM,cx1d)[0]
     else:
         Jxi = None
+    print('1-D plots of Phi and P taken at index {}  x={}'.format(Jxi,x1d))
 
 #%% eigenfunction
     if 'eig' in makeplot:
@@ -168,7 +175,7 @@ def goPlot(ParamFN,sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
 #%% ART Energy plots
     if 'jartadj' in makeplot:
         #fa,aa = subplots(nrows=1,ncols=2,sharex='col',num=992, figsize=(5,14))
-        plotJ(sim,fitp['phiARTadjoint'],xKM,xp,fitp['EK'],fitp['EKpcolor'],vlim['j'],tInd,makeplot,'jartadj',
+        plotJ(sim,fitp['phiARTadjoint'],xKM,xp,fitp['EK'],fitp['EKpcolor'],vlim['j'],vlim['p'][:2],tInd,makeplot,'jartadj',
               '$\phi_{art,adj}$ Estimated (ADJOINT) from ART VER',
               spfid,progms,verbose)
 #%% Forward model plots
@@ -185,7 +192,7 @@ def goPlot(ParamFN,sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
 
         gx0hat,gE0hat,x0hat,E0hat = getx0E0(fitp['gaussian'],fitp['EK'],xKM,tInd,progms,makeplot,verbose)
 #'Neval = {:d}'.format(fitp.nfev)
-        plotJ(sim,fitp['gaussian'], xKM,xp, fitp['EK'],fitp['EKpcolor'], vlim['j'],tInd, makeplot,'jgaussian',
+        plotJ(sim,fitp['gaussian'], xKM,xp, fitp['EK'],fitp['EKpcolor'], vlim['j'],vlim['p'][:2],tInd, makeplot,'jgaussian',
               ('$\widehat{\phi_{gaussian,optim}}$ estimated diff. number flux' +
                fwdloctxt ),
               spfid,progms,verbose)
@@ -205,7 +212,7 @@ def goPlot(ParamFN,sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
                                  bcomptxt,tInd,makeplot,spfid,progms,verbose)
 #%% maximum entropy
     if 'phimaxent' in makeplot:
-        plotJ(sim,fitp['maxent'],xKM,xp,fitp['EK'],fitp['EKpcolor'],vlim['j'],tInd,makeplot,'jme',
+        plotJ(sim,fitp['maxent'],xKM,xp,fitp['EK'],fitp['EKpcolor'],vlim['j'],vlim['p'][:2],tInd,makeplot,'jme',
                               '$\Phi_{maxent}$ estimated diff. number flux',
                             spfid,progms,verbose)
 
@@ -244,7 +251,7 @@ def goPlot(ParamFN,sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
                 warn('could not plot vfwd vmaxent comparison.  {}'.format(e))
 #%% diff number flux from ART
     if 'jart' in makeplot:
-        plotJ(sim,fitp['art'],xKM,xp,fitp['EK'],fitp['EKpcolor'],vlim['j'],tInd,makeplot,'jart',
+        plotJ(sim,fitp['art'],xKM,xp,fitp['EK'],fitp['EKpcolor'],vlim['j'],vlim['p'][:2],tInd,makeplot,'jart',
                         '$\hat{\Phi}_{art}$ Estimated J from Kaczmarz ART on LT and b',
                          spfid,progms,verbose)
     if 'vart' in makeplot:
@@ -269,7 +276,7 @@ def plotfwd(sim,cam,drn,nCutPix,xKM,xp,zKM,zp,
                     spfid,progms,verbose)
 
 #       print('max |diff(phifwd)| = ' + str(np.abs(np.diff(phiInit, n=1, axis=0)).max()))
-        plotJ(sim,Phi0,xKM,xp,fitp['EK'],fitp['EKpcolor'],vlim['j'],tInd,makeplot,'phifwd',
+        plotJ(sim,Phi0,xKM,xp,fitp['EK'],fitp['EKpcolor'],vlim['j'],vlim['p'][:2],tInd,makeplot,'phifwd',
               ('$\Phi_{{top}}$ input diff. number flux'+ fwdloctxt),
                         spfid,progms,verbose)
 
@@ -299,7 +306,7 @@ def plotoptim(sim,cam,drn,dhat,nCutPix,bcomptxt,fwdloctxt,ver,Phi0,Jxi,
     gx0hat,gE0hat,x0hat,E0hat = getx0E0(fitp.x,fitp['EK'],xKM,tInd,progms,makeplot,verbose)
     print('Estimated $x_{{gauss,0}},E_{{gauss,0}}$={:0.2f}, {:0.0f}'.format(gx0hat,gE0hat))
 
-    plotJ(sim,fitp.x,xKM,xp,fitp['EK'],fitp['EKpcolor'],vlim['j'],tInd,makeplot,'phiest',
+    plotJ(sim,fitp.x,xKM,xp,fitp['EK'],fitp['EKpcolor'],vlim['j'],vlim['p'][:2],tInd,makeplot,'phiest',
           ('$\hat{\phi}_{top}$ estimated diff. number flux' + fwdloctxt ),
           spfid,progms,verbose)
           #'Neval = {:d}'.format(fitp.nfev)
@@ -316,7 +323,7 @@ def plotoptim(sim,cam,drn,dhat,nCutPix,bcomptxt,fwdloctxt,ver,Phi0,Jxi,
 def plotadj(sim,cam,drn,dhat,nCutPix,xKM,xp,zKM,zp,vfit,fitp,vlim,
                                  bcomptxt,tInd,makeplot,spfid,progms,verbose):
     if 'phiadj' in makeplot:
-        plotJ(sim,fitp['phiTJadjoint'],xKM,xp,fitp['EK'],fitp['EKpcolor'],vlim['j'],tInd,makeplot,'jadj',
+        plotJ(sim,fitp['phiTJadjoint'],xKM,xp,fitp['EK'],fitp['EKpcolor'],vlim['j'],vlim['p'][:2],tInd,makeplot,'jadj',
                     '$\hat{Phi}_{adj}$ Estimated diff. number flux from $LT\Phi=B$',
                      spfid,progms,verbose)
     if 'padj' in makeplot:
@@ -530,14 +537,15 @@ def plotJ1D(sim,PhiFwd,PhiInv,Ek,vlim,tInd,makeplot,prefix,titletxt,spfid,progms
 
     for Phi,l in zip((PhiFwd,PhiInv),('$\Phi$','$\widehat{{\Phi}}$')):
         if Phi is not None:
-            iE0est = Phi.argmax()
+            Phitmp = Phi.copy(); Phitmp[Ek<E0min]=0
+            iE0est = Phitmp.argmax()
             E0est = Ek[iE0est]
 
             try:
                 ax.loglog(Ek,Phi,marker='.',
                           label= l+ ', {:0.0f} eV'.format(E0est))
-                ax.axvline(E0est,linestyle='--',color='red')
                 if anno:
+                    ax.axvline(E0est,linestyle='--',color='red')
                     ax.annotate(('$\hatE_0$={:0.0f}'.format(E0est) + ' eV'),
                              xy=(E0est,Phi[iE0est]),
                              xytext=(E0est*0.75, Phi[iE0est]*0.2),
@@ -549,7 +557,7 @@ def plotJ1D(sim,PhiFwd,PhiInv,Ek,vlim,tInd,makeplot,prefix,titletxt,spfid,progms
 
     ax.grid(True)
     ax.autoscale(True,tight=False)
-    ax.set_ylim(10, vlim[1]*1.5)
+    ax.set_ylim(10, vlim[1])
     ax.set_xlim([Ek[0]*0.98, Ek[-1]*1.05])
 
     ax.set_xlabel('particle energy [eV]', fontsize=afs,labelpad=0)
@@ -557,8 +565,8 @@ def plotJ1D(sim,PhiFwd,PhiInv,Ek,vlim,tInd,makeplot,prefix,titletxt,spfid,progms
     ax.set_title(titletxt,fontsize=tfs)
 
     ax.tick_params(axis='both', which='both',labelsize=tkfs)
-
-    ax.legend(loc='lower left')
+    
+    if anno:    ax.legend(loc='lower left')
 
     writeplots(fg,prefix,tInd,makeplot,progms,format1d,verbose)
 
@@ -567,7 +575,7 @@ def plotJ1D(sim,PhiFwd,PhiInv,Ek,vlim,tInd,makeplot,prefix,titletxt,spfid,progms
   except Exception as e:
     warn('tind {}   {}'.format(tInd,e))
 #%%
-def plotJ(sim,Jflux,x,xp,Ek,EKpcolor,vlim,tInd,makeplot,prefix,titletxt,spfid,progms,verbose):
+def plotJ(sim,Jflux,x,xp,Ek,EKpcolor,vlim,xlim,tInd,makeplot,prefix,titletxt,spfid,progms,verbose):
   try:
     cnorm,sfmt = logfmt(makeplot)
     plt3 = 'octave'         #'octave' #'mpl'#'mayavi'
@@ -624,6 +632,8 @@ def plotJ(sim,Jflux,x,xp,Ek,EKpcolor,vlim,tInd,makeplot,prefix,titletxt,spfid,pr
                 cbar.add_lines(hc)
 
             ax.set_yscale('log')
+            #print('phi xlim {}'.format(xlim))
+            ax.set_xlim(xlim)
 
             ax.grid(True)
 
@@ -654,7 +664,6 @@ def doJlbl(ax,titletxt):
     ax.xaxis.set_minor_locator(MultipleLocator(0.2))
 
     ax.tick_params(axis='both', which='both', direction='out',labelsize=afs)
-    ax.autoscale(True,tight=True) #need this to fill axes (does not resize axes)
 #%%
 def plotJ3(x,EKpcolor,Jflux,plt3):
   try:
@@ -715,7 +724,7 @@ def plotVER1D(sim,pfwd,pinv,zKM,vlim,tInd,makeplot,prefix,titletxt,spfid,progms,
     ax.yaxis.set_minor_locator(MultipleLocator(dymin))
     ax.tick_params(axis='both', which='major', direction='in',labelsize=tkfs)
 
-    ax.set_ylim(bottom=vlim[0]*.8,top=vlim[1]*1.5)
+    ax.set_ylim(bottom=vlim[0],top=vlim[1])
     ax.set_xlim(vlim[2:])
 
     writeplots(fg,prefix,tInd,makeplot,progms,format1d,verbose)
