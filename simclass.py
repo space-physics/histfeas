@@ -107,6 +107,8 @@ class Sim:
         self.transcarpath = sp.at['TranscarDataDir','Sim']
         self.reactionfn = sp.at['reactionParam','Transcar']
         self.transcarconfig = sp.at['simconfig','Transcar']
+        
+        self.minflux = sp.at['minflux','Recon']
 
         self.reacreq = ()
         if sp.at['metastable','Transcar'] == 1: self.reacreq += 'metastable',
