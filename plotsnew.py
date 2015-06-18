@@ -88,12 +88,11 @@ def goPlot(ParamFN,sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
     nCutPix = sim.nCutPix #FIXME assumes all cams same # of pixels
 
 #%% get xind
-    if not sim.realdata:
-        if x1d[0] is not None:
+    if x1d[0] is not None:
             try:
                 cx1d=x1d[tInd]
-            except IndexError:
-                cx1d=x1d[0] 
+            except IndexError: #single value of xInd
+                cx1d=x1d[0]
             Jxi = find_nearest(xKM,cx1d)[0]
     else:
         Jxi = None
@@ -566,7 +565,7 @@ def plotJ1D(sim,PhiFwd,PhiInv,Ek,vlim,tInd,makeplot,prefix,titletxt,spfid,progms
     ax.set_title(titletxt,fontsize=tfs)
 
     ax.tick_params(axis='both', which='both',labelsize=tkfs)
-    
+
     if anno:    ax.legend(loc='lower left')
 
     writeplots(fg,prefix,tInd,makeplot,progms,format1d,verbose)
