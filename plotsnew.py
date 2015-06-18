@@ -89,11 +89,11 @@ def goPlot(ParamFN,sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
 
 #%% get xind
     if x1d[0] is not None:
-            try:
-                cx1d=x1d[tInd]
-            except IndexError: #single value of xInd
-                cx1d=x1d[0]
-            Jxi = find_nearest(xKM,cx1d)[0]
+        try:
+            cx1d=x1d[tInd]
+        except IndexError: #single value of xInd
+            cx1d=x1d[0]
+        Jxi = find_nearest(xKM,cx1d)[0]
     else:
         Jxi = None
     print('1-D plots of Phi and P taken at index {}  x={}'.format(Jxi,x1d))
