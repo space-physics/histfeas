@@ -2,6 +2,8 @@
 sanity check for HST simulation parameters
 Michael Hirsch
 GPL v3+
+
+REQUIRES *** PANDAS 0.16 *** or newer for read_excel to work properly!
 """
 from pandas import read_excel
 from camclass import Cam
@@ -11,19 +13,24 @@ from warnings import warn
 
 def getParams(XLSfn,overrides,savedump,makeplot,progms,dbglvl):
 #%% read spreadsheet
-    paramSheets = ('Sim','Cameras','Arcs')
-    sp = read_excel(XLSfn,paramSheets[0],index_col=0,header=0)
-    cp = read_excel(XLSfn,paramSheets[1],index_col=0,header=0)
-    try:
-        ap = read_excel(XLSfn,paramSheets[2],index_col=0,header=0)
-    except XLRDError:
-        ap = None
+    #paramSheets = ('Sim','Cameras','Arc')
+    xl = read_excel(XLSfn,sheetname=None,index_col=0,header=0)
+    sp = xl['Sim']
+    cp = xl['Cameras']
+#%% read arcs (if any)
+    ap = {}; ntimeslice=None
+    for s in xl:
+        if s.startswith('Arc'):
+            ap[s] = xl[s]
+            if ntimeslice is not None and ap[s].shape[1] != ntimeslice:
+                raise ValueError('for now, all Arcs must have same number of times (columns)')
+            ntimeslice=ap[s].shape[1]
 #%% ***** must be outside camclass ********
     nCutPix = cp.loc['nCutPix'].values
     if not (nCutPix == nCutPix[0]).all():
         raise ValueError('sanityCheck: all cameras must have same 1D cut length')
 #%% class with parameters and function
-    sim = Sim(sp,cp,ap,overrides,makeplot,progms,dbglvl)
+    sim = Sim(sp,cp,ap,ntimeslice,overrides,makeplot,progms,dbglvl)
 #%% grid setup
     Fwd = sim.setupFwdXZ(sp)
 #%% setup cameras

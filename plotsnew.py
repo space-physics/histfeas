@@ -281,13 +281,13 @@ def plotfwd(sim,cam,drn,nCutPix,xKM,xp,zKM,zp,
               ('$\Phi_{{top}}$ input diff. number flux'+ fwdloctxt),
                         spfid,progms,verbose)
 
-        if not 'optim' in makeplot:
+        if not 'optim' in makeplot and Jxi is not None:
             plotJ1D(sim,Phi0[:,Jxi],None,fitp['EK'],vlim['j'],tInd,makeplot,'phifwd1d',
                  ('Differential Number flux at $B_\perp$={:0.2f} [km]'.format(xKM[Jxi])),
                        spfid,progms,verbose)
 
 
-        if not 'optim' in makeplot:
+        if not 'optim' in makeplot and Jxi is not None:
             plotVER1D(sim,ver[:,Jxi],None,zKM,vlim['p'][2:],tInd,makeplot,'pfwd1d',
               ('$P_{{fwd}}$ at $B_\perp$={:0.2f}  [km] {}'.format(xKM[Jxi],fwdloctxt)),
               spfid,progms,verbose)

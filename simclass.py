@@ -9,7 +9,7 @@ from transcarutils.readionoinit import getaltgrid
 
 class Sim:
 
-    def __init__(self,sp,cp,ap,overrides,makeplot,progms,dbglvl):
+    def __init__(self,sp,cp,ap,ntimeslice,overrides,makeplot,progms,dbglvl):
         self.dbglvl=dbglvl
         #%% how many cameras in use, and which ones?
         usecamreq = asarray(overrides['cam'])
@@ -87,11 +87,9 @@ class Sim:
 #            self.plots['optim'] = ('bnoise','best','pest','phiest','pest_1d','phiest_1d')
 #        if 'fwd' in makeplot:
 #            self.plots['fwd'] =   ('bnoise','bfwd','pfwd','phifwd','pfwd_1d','phifwd_1d')
-        #%%how many synthetic arcs are we using
-        if ap is not None:
-            self.nArc = ap.shape[1]
-        else:
-            self.nArc = 0
+#%%how many synthetic arcs are we using
+        self.nArc = len(ap)
+        self.nTimeSlice = ntimeslice
 #%% transcar
         self.lambminmax = (sp.at['lambdamin','Sim'],sp.at['lambdamax','Sim']) #for plotting only
 
