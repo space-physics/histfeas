@@ -73,13 +73,12 @@ def makeCamFOVpixelEnds(Fwd,sim,cam,makePlots,dbglvl):
          here we have 2 vertices per angle instead of 3 (line instead of polygon)
          the minus sign on x makes the angle origin at local east
         '''
-        xFOVpixelEnds[:,int(c)] = -(cam[c].fovmaxlen * cos(radians(cam[c].angle_deg) ) +
-                   cam[c].x_km )
-        zFOVpixelEnds[:,int(c)] =  (cam[c].fovmaxlen * sin(radians(cam[c].angle_deg) ) +
-                   cam[c].z_km)
+        ci=int(c)
+        xFOVpixelEnds[:,ci] = -(cam[c].fovmaxlen * cos(radians(cam[c].angle_deg))) + cam[c].x_km 
+        zFOVpixelEnds[:,ci] =  (cam[c].fovmaxlen * sin(radians(cam[c].angle_deg))) + cam[c].z_km
 
-        cam[c].xFOVpixelEnds = xFOVpixelEnds[:,int(c)] #for plots.py
-        cam[c].zFOVpixelEnds = zFOVpixelEnds[:,int(c)]
+        cam[c].xFOVpixelEnds = xFOVpixelEnds[:,ci] #for plots.py
+        cam[c].zFOVpixelEnds = zFOVpixelEnds[:,ci]
 
 #%% (2) observational model auroral pixels
 # now we make a matrix with the corner x,y coordinates of the auroral fwd
@@ -94,10 +93,10 @@ def makeCamFOVpixelEnds(Fwd,sim,cam,makePlots,dbglvl):
 # y-coordinates of corners
 #--------------
     if sim.useztranscar:
-        Zpc = empty(Fwd['sz']+1, dtype=float)
+        Zpc = empty(Fwd['sz']+1, float)
 
         #FIXME would gradient() be better here?
-        dz  = empty(Fwd['sz'],   dtype=float)
+        dz  = empty(Fwd['sz'],   float)
         dz[1:] = diff(Fwd['z'])
         dz[0] = dz[1] #FIXME assumes there was no grid jump (seems safe assumption)
 

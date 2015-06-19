@@ -170,7 +170,7 @@ def plotEll(nCam,xFOVpixelEnds,zFOVpixelEnds,xCam,zCam,Np,xpc,zpc,sz,sx,
 
     from matplotlib.pyplot import figure, draw, pause
     from matplotlib.ticker import MultipleLocator
-    decimfactor = 8
+    decimfactor = 8 #plot every Nth ray
     clrs = ['r','g','y','m']
     afs = None#20
     tkfs = None#20
