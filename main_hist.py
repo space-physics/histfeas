@@ -8,9 +8,8 @@
  0) ingest simulation parameters from XLS file, sanity check, load data
  1) Make an auroral phantom (if not real data, a Simulation, and optionally for a first guess for reconstruction)
  2) create projection matrix
- 3) reconstruction of VER
- 4) fit differential number flux to reconstructed VER
- 5) Test reconstruction & fit by reprojecting to synthetic image brightness
+ 3) fit differential number flux to reconstructed VER
+ 4) Test reconstruction & fit by reprojecting to synthetic image brightness
 
 example: (fwd model only)
 python3 main_hist.py in/2cam_trans.xlsx /dev/shm/rev_trans2/ -m fwd png --vlim -0.5 3.5 90 350 1e9 1e10 --jlim 1e5 5e5 --blim 0 1e4 -f 0 120 20
@@ -44,14 +43,13 @@ def doSim(ParamFN,savedump,makeplot,datadump,timeInds,overrides,progms,x1d,vlim,
 #%% setup loop
     if sim.realdata:
         cam,rawdata,sim = getSimulData(sim,cam,makeplot,progms,verbose)
-        nTimeSlice = cam['0'].keo.shape[1] #FIXME assumes equal num. of time slices list(cam)[0]
+        sim.nTimeSlice = cam['0'].keo.shape[1] #FIXME assumes equal num. of time slices list(cam)[0]
     else: #simulation
         rawdata = None
         if sim.raymap == 'astrometry': #and any('b' in m[:2] for m in makeplot):
             from get1Dcut import get1Dcut #we need cam.angle_deg for plotting
             cam = get1Dcut(cam,makeplot,progms,verbose)
-        nTimeSlice = ap.shape[1]-1 #last column is end of sim time
-    timeInds = sim.maketind(timeInds,nTimeSlice)
+    timeInds = sim.maketind(timeInds,sim.nTimeSlice)
 #%% Step 1) get projection matrix
     Lfwd,Fwd,cam = getEll(sim,cam,Fwd,makeplot,verbose)
 #%% preallocation
@@ -60,8 +58,7 @@ def doSim(ParamFN,savedump,makeplot,datadump,timeInds,overrides,progms,x1d,vlim,
     Peig = getMp(sim,Fwd['z'],makeplot,verbose)
 #%% synthetic diff. num flux
     if not sim.realdata:
-        Phi0all,X0 = getPhi0(sim,ap,Fwd['x'],Peig['Ek'], makeplot,verbose)
-        if not x1d: x1d = X0
+        Phi0all = getPhi0(sim,ap,Fwd['x'],Peig['Ek'], makeplot,verbose)
     if verbose>0: print('timeInds: {}'.format(timeInds))
 #%%start looping for each time slice in keogram (just once if simulated)
     for ti in timeInds:
@@ -74,13 +71,11 @@ def doSim(ParamFN,savedump,makeplot,datadump,timeInds,overrides,progms,x1d,vlim,
             """
             Phi0 = Phi0all[...,ti]
 #%% Step 1) Forward model
-        Pfwd = getSimVER(Phi0, Peig, Fwd, sim, ap.iloc[:,ti], ti, verbose)
+        Pfwd = getSimVER(Phi0, Peig, Fwd, sim, ap, ti, verbose)
 #%% Step 2) Observe Forward Model (create vector of observations)
         bn = getObs(sim,cam,Lfwd,ti,Pfwd,makeplot,verbose)
         drnAll.append(bn)
-#%% Step 3) Reconstruction (not used in long time)
-        #vhat,vr0 = ReconVER(L,bn,sim,ap,cp,Fwd,ti,makeplot,verbose)
-#%% Step 4) fit constituent energies to our estimated vHat and reproject
+#%% Step 3) fit constituent energies to our estimated vHat and reproject
         if overrides['fwdguess'][0] == 'true':
             Phi0r = Phi0.ravel(order='F')
             print('****************************************************************')
