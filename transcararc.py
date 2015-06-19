@@ -1,10 +1,9 @@
 from __future__ import division, absolute_import
 from numpy import (asfortranarray,atleast_3d, exp,sinc,pi,zeros, outer,
-                   isnan,log,logspace,where,empty,arange,allclose,diff)
+                   isnan,log,logspace,empty,arange,allclose,diff)
 import h5py
 from scipy.interpolate import interp1d
 from warnings import warn
-from scipy.interpolate import interp1d
 from six import string_types
 #
 from transcarutils.readTranscar import getTranscar
@@ -19,16 +18,17 @@ from pybashutils.findnearest import find_nearest
 #    #return Mp,zTranscar,Ek,EKpcolor
 #    return asfortranarray(Peigen.values), Peigen.index.values, Peigen.columns.values, EKpcolor
 
-def getColumnVER(zgrid,zTranscar,Peig,Phi0,zKM):
+def getColumnVER(zgrid,zTranscar,Peig,Phi0):
     assert Phi0.shape[0] == Peig.shape[1]
     assert zTranscar.shape[0] == Peig.shape[0]
 
     if zgrid: #using original transcar z-locations
         Tm = Peig
     else:
-        warn('* cubic interpolating Transcar altitude, use caution that VER peaks arent missed...')
-        fver = interp1d(zTranscar, Peig, axis=0, kind='cubic')
-        Tm = asfortranarray(fver(zKM))
+        raise NotImplementedError('this interpolation was rarely used so disabled it.')
+#        warn('* cubic interpolating Transcar altitude, use caution that VER peaks arent missed...')
+#        fver = interp1d(zTranscar, Peig, axis=0, kind='cubic')
+#        Tm = asfortranarray(fver(zKM))
 
     return Tm.dot(Phi0)
 
@@ -81,26 +81,30 @@ def getPhi0(sim,ap,xKM,Ek,makeplots,verbose):
             with h5py.File(sim.Jfwdh5,'r',libver='latest') as f:
                 Phi0 = asfortranarray(atleast_3d(f['/phiInit']))
         else:
-            Phi0 = empty((Ek.size,xKM.size,sim.nArc-1),order='F')
-#%% upsample to sim time steps
-            E0,Q0,Wbc,bl,bm,bh,Bm,Bhf, Wkm,X0,Xshape = upsampletime(ap,sim,verbose)
-
-
-            pz = fluxgen(Ek, E0,Q0,Wbc,bl,bm,bh,Bm,Bhf, verbose)[0]
-    #%% horizontal modulation
-            px = getpx(xKM,Wkm,X0,Xshape)
-            for i in range(sim.nArc-1):
-                #unsmeared in time
-                phi0sim = zeros((Ek.size,xKM.size),order='F') #MUST BE ZEROS SINCE WE'RE SUMMING!
-                for j in range(sim.timestepsperexp):
-                    phi0sim += outer(pz[:,i*sim.timestepsperexp+j],
-                                     px[i*sim.timestepsperexp+j,:])
-                Phi0[...,i]  = phi0sim
-
+            Phi0 = assemblePhi0(sim,ap,Ek,xKM,verbose)
         assert xKM.size == Phi0.shape[1]
     else:
         Phi0 = None
-    return Phi0,X0
+    return Phi0
+
+def assemblePhi0(sim,ap,Ek,xKM,verbose):
+    Phi0 = zeros((Ek.size,xKM.size,sim.nArc-1),order='F') #NOT empty, since we sum to build it!
+    
+    for a in ap: #iterate over arcs, using superposition
+#%% upsample to sim time steps
+        E0,Q0,Wbc,bl,bm,bh,Bm,Bhf, Wkm,X0,Xshape = upsampletime(ap[a],sim,verbose)
+    
+        pz = fluxgen(Ek, E0,Q0,Wbc,bl,bm,bh,Bm,Bhf, verbose)[0]
+#%% horizontal modulation
+        px = getpx(xKM,Wkm,X0,Xshape)
+        for i in range(sim.nArc-1):
+            #unsmeared in time
+            phi0sim = zeros((Ek.size,xKM.size),order='F') #NOT empty, since we're summing!
+            for j in range(sim.timestepsperexp):
+                phi0sim += outer(pz[:,i*sim.timestepsperexp+j],
+                                 px[i*sim.timestepsperexp+j,:])
+            Phi0[...,i] += phi0sim
+    return Phi0
 
 def upsampletime(ap,sim,verbose):
     #%% obtain observation time steps from spreadsheet (for now, equal to kinetic time)

@@ -6,20 +6,15 @@ from __future__ import print_function, division, absolute_import
 from numpy import exp,outer, zeros_like,zeros
 from pybashutils.findnearest import find_nearest
 
-from transcararc import getColumnVER,getpx
+from transcararc import getpx
 
-def getver(x,z,Mp,Phi0, w,h,x0,z0,xshape,zshape,zgrid,pmax):
+def getver(x,z,Mp,Phi0, w,h,x0,z0,xshape,zshape,pmax):
     if zshape=='chapman':
         return ChapmanArc(w, h, x0,z0, x, z,xshape,pmax)[0]
     elif zshape == 'rect':
         return RectArc(w,h, x0,z0, x,z, xshape,pmax)[0]
     elif zshape == 'transcar':
-        '''
-        recall that phi(z,E) is 2-D matrix, and other matrices involved
-        must be updated accordingly from original April 2014 try code
-        '''
-        return getColumnVER(zgrid, Mp['ztc'], Mp['Mp'], Phi0, z)
-
+        return TypeError('use gettranscar arc function')
     elif zshape == 'zero': #zeros, already set to zero
         return zeros((z.size,x.size))
     else:
