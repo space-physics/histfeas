@@ -94,9 +94,10 @@ def goPlot(ParamFN,sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
         except IndexError: #single value of xInd
             cx1d=x1d[0]
         Jxi = find_nearest(xKM,cx1d)[0]
+        print('1-D plots of Phi and P taken at index {}  x={}'.format(Jxi,x1d))
     else:
         Jxi = None
-    print('1-D plots of Phi and P taken at index {}  x={}'.format(Jxi,x1d))
+
 
 #%% eigenfunction
     if 'eig' in makeplot:

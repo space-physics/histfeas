@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 from numpy import (linspace, fliplr, flipud, rot90, arange,
-                   polyfit,polyval,rint,empty, isfinite,
+                   polyfit,polyval,rint,empty, isfinite, isclose,
                    absolute, hypot, logical_or, unravel_index, delete, where)
 from os.path import expanduser
 from dateutil.parser import parse
@@ -121,7 +121,9 @@ class Cam: #use this like an advanced version of Matlab struct
         #raySpacingDeg = self.arbfov / self.nCutPix
         maxAng = self.boresightEl + self.arbfov/2
         minAng = self.boresightEl - self.arbfov/2
-        return linspace(maxAng, minAng, num=self.nCutPix, endpoint=True)
+        angles=linspace(maxAng, minAng, num=self.nCutPix, endpoint=True)
+        assert isclose(angles[0],maxAng) & isclose(angles[-1],minAng)
+        return angles
 
     def astrometrymap(self):
         pass
