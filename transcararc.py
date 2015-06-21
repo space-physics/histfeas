@@ -1,6 +1,6 @@
 from __future__ import division, absolute_import
 from numpy import (asfortranarray,atleast_3d, exp,sinc,pi,zeros, outer,
-                   isnan,log,logspace,empty,arange,allclose,diff)
+                   isnan,log,logspace,empty,arange,allclose,diff,atleast_1d)
 import h5py
 from scipy.interpolate import interp1d
 from warnings import warn
@@ -77,7 +77,7 @@ def getPhi0(sim,ap,xKM,Ek,makeplots,verbose):
     #%% get flux
     if not sim.realdata:
         if sim.Jfwdh5 is not None:
-            print('Loading sim. input diff. number flux from', sim.Jfwdh5)
+            print('Loading sim. input diff. number flux from {}'.format(sim.Jfwdh5))
             with h5py.File(sim.Jfwdh5,'r',libver='latest') as f:
                 Phi0 = asfortranarray(atleast_3d(f['/phiInit']))
         else:
@@ -88,7 +88,7 @@ def getPhi0(sim,ap,xKM,Ek,makeplots,verbose):
     return Phi0
 
 def assemblePhi0(sim,ap,Ek,xKM,verbose):
-    Phi0 = zeros((Ek.size,xKM.size,sim.nArc-1),order='F') #NOT empty, since we sum to build it!
+    Phi0 = zeros((Ek.size,xKM.size,sim.nTimeSlice),order='F') #NOT empty, since we sum to build it!
     
     for a in ap: #iterate over arcs, using superposition
 #%% upsample to sim time steps
@@ -97,7 +97,7 @@ def assemblePhi0(sim,ap,Ek,xKM,verbose):
         pz = fluxgen(Ek, E0,Q0,Wbc,bl,bm,bh,Bm,Bhf, verbose)[0]
 #%% horizontal modulation
         px = getpx(xKM,Wkm,X0,Xshape)
-        for i in range(sim.nArc-1):
+        for i in range(sim.nTimeSlice):
             #unsmeared in time
             phi0sim = zeros((Ek.size,xKM.size),order='F') #NOT empty, since we're summing!
             for j in range(sim.timestepsperexp):
@@ -149,6 +149,7 @@ def upsampletime(ap,sim,verbose):
 
 def getpx(xKM,Wkm,X0,xs):
     assert isinstance(xs,string_types)
+    X0=atleast_1d(X0); Wkm=atleast_1d(Wkm)
     px = zeros((X0.size,xKM.size),order='F') #since numpy 2-D array naturally iterates over rows
 #%%
     if xs =='gaussian':

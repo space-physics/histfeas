@@ -11,9 +11,11 @@ from time import time
 from warnings import warn
 #
 from transcararc import getColumnVER
+from plotsnew import getx0E0
 
-def FitVERopt(L,bn,Phi0,MpDict,sim,cam,Fwd,makeplot,dbglvl):
-    vfit = {}; bfit = {}; jfit = {'x':None} #in case optim not run
+def FitVERopt(L,bn,Phi0,MpDict,sim,cam,Fwd,tInd,progms,makeplot,verbose):
+    vfit = {}; bfit = {}; Phifit = {'x':None} #in case optim not run
+    minverbose=bool(verbose)
 #%% scaling brightness
     """
     We could repeatedly downscale brightness in loop, but that consumes a lot of CPU.
@@ -40,9 +42,9 @@ def FitVERopt(L,bn,Phi0,MpDict,sim,cam,Fwd,makeplot,dbglvl):
     assert Tm.flags['F_CONTIGUOUS'] is True
 
     '''in case optim not run -- don't remove'''
-    jfit['x'] = None #nans((nEnergy,Fwd['sx'])) #don't remove this
-    jfit['EK'] = EK
-    jfit['EKpcolor'] = EKpcolor
+    Phifit['x'] = None #nans((nEnergy,Fwd['sx'])) #don't remove this
+    Phifit['EK'] = EK
+    Phifit['EKpcolor'] = EKpcolor
 #%% optimization
     '''
     Note: Only SLSQP and COBYA allow constraints (Not L-BFGS-B)
@@ -60,26 +62,27 @@ def FitVERopt(L,bn,Phi0,MpDict,sim,cam,Fwd,makeplot,dbglvl):
         optimbound = sim.minflux*ones((nEnergy*sx,2))
         optimbound[:,1] = inf  #None seems to give error
         if optimmeth.lower()=='nelder-mead':
-            optimopt = {'maxiter':maxiter,'disp':True} #100
+            optimopt = {'maxiter':maxiter,'disp':minverbose} #100
         elif optimmeth.lower()=='bfgs':
-            optimopt = {'maxiter':maxiter,'disp':True,'norm':2} #20
+            optimopt = {'maxiter':maxiter,'disp':minverbose,'norm':2} #20
         elif optimmeth.lower()=='tnc':
-            optimopt = {'maxiter':maxiter,'disp':True} #20
+            optimopt = {'maxiter':maxiter,'disp':minverbose} #20
         elif optimmeth.lower()=='l-bfgs-b':
             # defaults: maxfun=5*nEnergy*sx, maxiter=10
-            optimopt = {'maxfun':maxiter*nEnergy*sx,'maxiter':maxiter,'disp':True} #100 maxiter works well
+            optimopt = {'maxfun':maxiter*nEnergy*sx,'maxiter':maxiter,
+                        'disp':minverbose} #100 maxiter works well
         elif optimmeth.lower()=='slsqp':
-            optimopt = {'maxiter':maxiter,'disp':True} #2
+            optimopt = {'maxiter':maxiter,'disp':minverbose} #2
             cons = {'type': 'ineq',
                     'fun': difffun}
         elif optimmeth.lower()=='cobyla':
-            optimopt = {'maxiter':maxiter,'disp':True,'rhobeg':1e1,'tol':1} #10
+            optimopt = {'maxiter':maxiter,'disp':minverbose,'rhobeg':1e1,'tol':1} #10
         else:
             raise TypeError('unknown minimization method: {}'.format(optimmeth))
 
         tic = time()
         #
-        jfit = minimize(optfun,
+        Phifit = minimize(optfun,
                         x0=Phi0, #Phi0 is a vector b/c that's what minimize() needs
                         args=(L.tocsr(),Tm,
                               bnu, #scaled version of bn (do once instead of in loop)
@@ -91,26 +94,36 @@ def FitVERopt(L,bn,Phi0,MpDict,sim,cam,Fwd,makeplot,dbglvl):
                         )
         #
         print('{:0.1f} seconds to fit.'.format(time()-tic))
+        
+        print('Minimizer says: {}'.format(Phifit.message))
 
-        jfit.x = jfit.x.reshape(nEnergy,sx,order='F')
+        Phifit.x = Phifit.x.reshape(nEnergy,sx,order='F')
         #jfit['optimresidual'] = jfit.fun
-        if dbglvl>0:
-            print('residual={:0.1f} after {} func evaluations.'.format(jfit.fun,jfit.nfev))
+        print('residual={:.1e} after {} func evaluations.'.format(Phifit.fun, 
+                                                                  Phifit.nfev))
 
         # we do this here so that we don't have to carry so many variables around
-        vfit['optim'] = getColumnVER(sim.useztranscar,zTranscar, Mp, jfit.x, Fwd['z'])
+        vfit['optim'] = getColumnVER(sim.useztranscar,zTranscar, Mp, Phifit.x)
 #%% downscale result to complement upscaling
         bfitu = L.dot( vfit['optim'].ravel(order='F') )
+        
         for s,c in zip(bscale,cInd):
             bfitu[c] *= s
+            
         bfit['optim'] = bfitu
 #%%
         # this is repeated because the assignment overwrites from minimize()
-        jfit['EK'] = EK
-        jfit['EKpcolor'] = EKpcolor
+        Phifit['EK'] = EK
+        Phifit['EKpcolor'] = EKpcolor
         # don't remove the two lines above (ek,ekpcolor)
+#%% gaussian fit
+        #print('max |diff(phi)| = ' + str(np.abs(np.diff(fitp.x, n=1, axis=0)).max()))
+        gx0hat,gE0hat,x0hat,E0hat = getx0E0(Phifit['x'],Phifit['EK'],Fwd['x'],tInd,progms,makeplot,verbose)
+        print('Estimated $B_{{\perp,0}},E_0$={:0.2f}, {:0.0f}'.format(gx0hat,gE0hat))
+        Phifit['gx0'] = gx0hat
+        Phifit['gE0'] = gE0hat
 
-    return vfit,jfit,Tm,bfit
+    return vfit,Phifit,Tm,bfit
 
 def optfun(phiinv,L,Tm,b_obs,nEnergy,sx):
     """this provides the quantity to minimize

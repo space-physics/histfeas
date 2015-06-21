@@ -1,18 +1,16 @@
 from __future__ import print_function, division
-#import csv
 from plotsnew import getx0E0, plotB
-from matplotlib.pyplot import figure,show
+from matplotlib.pyplot import figure
 from matplotlib.ticker import MaxNLocator#,ScalarFormatter# ,LogFormatterMathtext, #for 1e4 -> 1 x 10^4, applied DIRECTLY in format=
 from numpy import diff, empty
 import h5py
 from plotsnew import writeplots
 from warnings import warn
-
 #
 from nans import nans
 
-def analyseres(sim,x,xp,cam,jfwd,jfit,drn,dhat,vlim,makeplot,progms,verbose):
-    if jfwd is None or jfit[0]['x'] is None:
+def analyseres(sim,cam,x,xp,Phifwd,Phifit,drn,dhat,vlim,makeplot,progms,verbose):
+    if Phifwd is None or Phifit[0]['x'] is None:
         return
     '''
     we need to fill zeros in jfwd with machine epsilon, since to get avg we need
@@ -21,8 +19,8 @@ def analyseres(sim,x,xp,cam,jfwd,jfit,drn,dhat,vlim,makeplot,progms,verbose):
     #jfwd[jfwd==0] = spacing(1) #a.k.a eps()
 
     sx = x.size
-    nEnergy = jfwd.shape[0]
-    nit = len(jfit)
+    nEnergy = Phifwd.shape[0]
+    nit = len(Phifit)
 
 #    with open('cord.csv','r') as e:
 #        reader = csv.reader(e, delimiter=',', quoting = csv.QUOTE_NONE);
@@ -33,8 +31,7 @@ def analyseres(sim,x,xp,cam,jfwd,jfit,drn,dhat,vlim,makeplot,progms,verbose):
     if 'optim' in makeplot:
         fg = figure()
         ax = fg.gca()
-        ax.plot([f.fun for f in jfit],
-                marker='.',linestyle='none')
+        ax.stem([f.fun for f in Phifit])
         ax.set_xlabel('instantiation',fontsize=afs)
         ax.set_ylabel('$||\hat{b} - b||_2$',fontsize=afs)
         ax.set_title('Residual $b$',fontsize=tfs)
@@ -42,49 +39,51 @@ def analyseres(sim,x,xp,cam,jfwd,jfit,drn,dhat,vlim,makeplot,progms,verbose):
         writeplots(fg,'error_boptim',9999,makeplot,progms)
 #%% brightness plot -- plotting ALL at once to show evolution of dispersive event!
     try:
-        if 'fwd' in makeplot:
+        if 'fwd' in makeplot and drn is not None:
             for i,b in enumerate(drn):
-                plotB(b,sim,cam,vlim['b'],9999,makeplot,'$b_{fwd',progms,verbose)
+                plotB(b,sim,cam,vlim['b'],9999,makeplot,'$bfwdall',progms,verbose)
     # reconstructed brightness plot
-        if 'optim' in makeplot and len(dhat[0])>0:
+        if 'optim' in makeplot and dhat is not None and len(dhat[0])>0:
             for i,b in enumerate(dhat):
-                plotB(b['optim'],sim,cam,vlim['b'],9999,makeplot,'$b_{optim', progms,verbose)
+                plotB(b['optim'],sim,cam,vlim['b'],9999,makeplot,'$bestall', progms,verbose)
     except Exception as e:
-        warn('ERROR plotting overall analysis plots of intensity.  {}'.format(e))
+        warn('skipping plotting overall analysis plots of intensity.  {}'.format(e))
 #%% energy flux plot amd calculations
-    x0fwd = nans(nit); E0fwd = nans(nit)
-    x0hat = nans(nit); E0hat = nans(nit)
+    x0fwd = nans(nit); E0fwd = nans(nit); gx0fwd=nans(nit); gE0fwd=nans(nit)
+    x0hat = nans(nit); E0hat = nans(nit); gx0hat=nans(nit); gE0hat=nans(nit)
+
 
     Eavgfwdx = nans((nit,sx))
     Eavghatx = nans((nit,sx))
     dE = empty(nEnergy)
     dE[0] = 9.952 #a priori for this pre-arranged EK
-    dE[1:] = diff(jfit[0]['EK']) #per Dahlgren matlab code line 276-280
+    dE[1:] = diff(Phifit[0]['EK']) #per Dahlgren matlab code line 276-280
 
 #%% back to work
-    for ji,jf in enumerate(jfit):
+    for i,jf in enumerate(Phifit):
         #note even if array is F_CONTIGUOUS, argmax is C-order!!
-        gx0fwd,gE0fwd, x0fwd[ji],E0fwd[ji] = getx0E0(jfwd[...,ji],jf['EK'],x,9999,progms,makeplot,verbose)
-        gx0hat,gE0hat, x0hat[ji],E0hat[ji] = getx0E0(jf['x'],     jf['EK'],x,9999,progms,makeplot,verbose)
+        gx0fwd[i],gE0fwd[i], x0fwd[i],E0fwd[i] = getx0E0(Phifwd[...,i],jf['EK'],x,9999,progms,makeplot,verbose)
+        gx0hat[i],gE0hat[i], x0hat[i],E0hat[i] = getx0E0(jf['x'],     jf['EK'],x,9999,progms,makeplot,verbose)
 
-        print('t={} gaussian 2-D fits for (x,E). Fwd: {:0.2f} {:0.1f} Optim: {:0.2f} {:0.1f}'.format(ji, gx0fwd,gE0fwd,gx0hat,gE0hat))
+        print('t={} gaussian 2-D fits for (x,E). Fwd: {:.2f} {:.0f}'
+              ' Optim: {:.2f} {:.0f}'.format(i, gx0fwd[i],gE0fwd[i],gx0hat[i],gE0hat[i]))
 
-        trythis(jfwd[...,ji], jf['x'], jf['EK'],x,dE,makeplot,progms,verbose)
+        trythis(Phifwd[...,i], jf['x'], jf['EK'],x,dE,makeplot,progms,verbose)
 #%% average energy per x-location
     # formula is per JGR 2013 Dahlgren et al.
     #E_avg = sum(flux*E*dE) / sum(flux*dE)
-        Eavgfwdx[ji,:] = ((jfwd[...,ji] * jf['EK'][:,None] * dE[:,None]).sum(axis=0) /
-                          (jfwd[...,ji] * dE[:,None]).sum(axis=0) )
+        Eavgfwdx[i,:] = ((Phifwd[...,i] * jf['EK'][:,None] * dE[:,None]).sum(axis=0) /
+                          (Phifwd[...,i] * dE[:,None]).sum(axis=0) )
 
-        Eavghatx[ji,:] =((jf['x'] * jf['EK'][:,None] * dE[:,None]).sum(axis=0) /
+        Eavghatx[i,:] =((jf['x'] * jf['EK'][:,None] * dE[:,None]).sum(axis=0) /
                          (jf['x'] * dE[:,None]).sum(axis=0)  )
     if 'fwd' in makeplot:
         fgf = figure()
         ax = fgf.gca()
         ax.semilogy(x,Eavgfwdx.T, marker='.')
-        ax.set_xlabel('x [km]')
-        ax.set_ylabel('Expected Value[Energy]')
-        ax.set_title('Fwd model: Average Energy $\overline{E}$ at each x-location')
+        ax.set_xlabel('$B_\perp$ [km]')
+        ax.set_ylabel('Expected Value $\overline{E}$ [eV]')
+        ax.set_title('Fwd model: Average Energy $\overline{E}$ vs $B_\perp$')
         ax.legend(['{:0.0f} eV'.format(g) for g in E0fwd],loc='best',fontsize=9)
         writeplots(fgf,'Eavg_fwd',9999,makeplot,progms)
 
@@ -92,29 +91,38 @@ def analyseres(sim,x,xp,cam,jfwd,jfit,drn,dhat,vlim,makeplot,progms,verbose):
         fgo = figure()
         ax = fgo.gca()
         ax.semilogy(x,Eavghatx.T, marker='.')
-        ax.set_xlabel('x [km]')
-        ax.set_ylabel('Expected Value[Energy]')
-        ax.set_title('ESTIMATED Average Energy $\overline{\hat{E}}$ at each x-location')
+        ax.set_xlabel('$B_\perp$ [km]')
+        ax.set_ylabel('Expected Value $\overline{E}$ [eV]')
+        ax.set_title('ESTIMATED Average Energy $\overline{\hat{E}}$ vs $B_\perp$')
         ax.legend(['{:0.0f} eV'.format(g) for g in E0fwd],loc='best',fontsize=9)
         writeplots(fgo,'Eavg_optim',9999,makeplot,progms)
 #%% overall error
-    x0err = x0hat-x0fwd
-    E0err = E0hat-E0fwd
+    gx0err = gx0hat-gx0fwd
+    gE0err = gE0hat-gE0fwd
 
-    print('Estimation-error in x-location=' + ' '.join(
-                                          ['{:0.2f}'.format(h) for h in x0err]))
-    print('Estimation-error in E0 estimate=' + ' '.join(
-                                          ['{:0.1f}'.format(j) for j in E0err]))
+    print('B_\perp,0 Estimation-error =' + ' '.join(
+                                          ['{:0.2f}'.format(h) for h in gx0err]))
+    print('E_0 Estimation-error =' + ' '.join(
+                                          ['{:0.1f}'.format(j) for j in gE0err]))
 
     if 'h5' in makeplot:
-        with h5py.File(progms + 'results.h5','w',libver='latest') as f:
+        fout = progms + '/fit_results.h5'
+        with h5py.File(fout,'w',libver='latest') as f:
+            f['/gx0/err']=gx0err
+            f['/gx0/fwd']=gx0fwd
+            f['/gx0/fit']=gx0hat
+            
+            f['/gE0/err']=gE0err
+            f['/gE0/fwd']=gE0fwd
+            f['/gE0/fit']=gE0hat
+
+            f['/x0/err']=x0hat-x0fwd
             f['/x0/fit']=x0hat
             f['/x0/fwd']=x0fwd
+            
+            f['/E0/err']=E0hat-E0fwd
             f['/E0/fit']=E0hat
             f['/E0/fwd']=E0fwd
-
-    if 'show' in makeplot:
-        show()
 
 def trythis(jfwd,jfit,Ek,x,dE,makeplot,progms,verbose):
     #from numpy.testing import assert_allclose
@@ -129,8 +137,8 @@ def trythis(jfwd,jfit,Ek,x,dE,makeplot,progms,verbose):
     #assert_allclose(Eavgfwd1d,Eavgfwd[xi])
 
     #print('E_avg: {:0.1f}'.format(Eavgfwd1d))
-
-    print('E_avg: ',Eavgfwd[0]) #TODO how to pick
+    if verbose:
+        print('E_avg: ',Eavgfwd[0]) #TODO how to pick
     if 'eavg' in makeplot:
         fg = figure()
         ax = fg.gca()

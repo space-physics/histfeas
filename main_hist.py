@@ -13,16 +13,14 @@
 
 example: (fwd model only)
 python3 main_hist.py in/2cam_trans.xlsx /dev/shm/rev_trans2/ -m fwd png --vlim -0.5 3.5 90 350 1e9 1e10 --jlim 1e5 5e5 --blim 0 1e4 -f 0 120 20
-
-
 """
 from __future__ import division,print_function
 from signal import signal,SIGINT #for Ctrl C
 from os.path import expanduser, join
 from os import makedirs
-from numpy import absolute,zeros,asarray,in1d,arange
+from numpy import absolute,zeros,in1d,arange,outer
 from numpy.random import normal
-import h5py
+from warnings import warn
 #
 #import logging
 #logging.basicConfig(filename='hist.log',filemode='w',level=logging.DEBUG)
@@ -31,29 +29,30 @@ from sanityCheck import getParams
 
 def doSim(ParamFN,savedump,makeplot,datadump,timeInds,overrides,progms,x1d,vlim,animtime, cmd,verbose):
     # local -- these were put here so that matplotlib backend autoselect could happen first
+    from transcarutils.eFluxGen import maxwellian
     from AuroraFwdModel import getSimVER
-    from transcararc import getMp,getPhi0 #calls matplotlib
+    from transcararc import getMp,getPhi0,getpx #calls matplotlib
     from observeVolume import getEll,getObs #calls matplotlib
     from FitVER import FitVERopt as FitVER #calls matplotlib
 #    from simulFrame import getSimulData
     from plotsnew import goPlot
     from analysehst import analyseres
 #%% Step 0) load data
-    ap,sim,cam,Fwd = getParams(ParamFN, overrides,savedump,makeplot,progms,verbose)
+    ap,sim,cam,Fwd = getParams(ParamFN, overrides,makeplot,progms,verbose)
 #%% setup loop
     if sim.realdata:
         cam,rawdata,sim = getSimulData(sim,cam,makeplot,progms,verbose)
-        sim.nTimeSlice = cam['0'].keo.shape[1] #FIXME assumes equal num. of time slices list(cam)[0]
+        sim.nTimeSliceReq = cam['0'].keo.shape[1] #FIXME assumes equal num. of time slices list(cam)[0]
     else: #simulation
         rawdata = None
         if sim.raymap == 'astrometry': #and any('b' in m[:2] for m in makeplot):
             from get1Dcut import get1Dcut #we need cam.angle_deg for plotting
             cam = get1Dcut(cam,makeplot,progms,verbose)
-    timeInds = sim.maketind(timeInds,sim.nTimeSlice)
+    timeInds = sim.maketind(timeInds)
 #%% Step 1) get projection matrix
     Lfwd,Fwd,cam = getEll(sim,cam,Fwd,makeplot,verbose)
 #%% preallocation
-    jfitAll = []; drnAll = []; bfitAll=[];  jAll= []; PfitAll = []
+    PhifitAll = []; drnAll = []; bfitAll=[]
 #%% load eigenprofiles from Transcar
     Peig = getMp(sim,Fwd['z'],makeplot,verbose)
 #%% synthetic diff. num flux
@@ -76,41 +75,40 @@ def doSim(ParamFN,savedump,makeplot,datadump,timeInds,overrides,progms,x1d,vlim,
         bn = getObs(sim,cam,Lfwd,ti,Pfwd,makeplot,verbose)
         drnAll.append(bn)
 #%% Step 3) fit constituent energies to our estimated vHat and reproject
-        if overrides['fwdguess'][0] == 'true':
+        if overrides['fwdguess'][0] == 'maxwellian':
+            Phi0z = maxwellian(Peig['Ek'],1e3,1e10)[0].ravel(order='F')
+            Phi0r = outer(Phi0z, getpx(Fwd['x'],Wkm=1e3,X0=0,xs='gaussian'))
+        elif overrides['fwdguess'][0] == 'true':
             Phi0r = Phi0.ravel(order='F')
-            print('****************************************************************')
-            print('** WARNING: feeding minimizer the true answer--testing only!! **')
-            print('****************************************************************')
+            warn('** WARNING: feeding minimizer the true answer--testing only!! **')
         elif overrides['fwdguess'][0] == 'randn':
             randfact = absolute(normal(1,overrides['fwdguess'][1], size=Phi0.size))
-            print('** WARNING: feeding minizer true answer times {}'.format(randfact))
+            warn('** WARNING: feeding minizer true answer times {}'.format(randfact))
             Phi0r = randfact * Phi0.ravel(order='F')
         else: #normal case, no a priori
             Phi0r = zeros(Fwd['sx']*Peig['Mp'].shape[1]) #ones() is NOT appropriate -- must be tapered down for higher energy beams to keep physically plausible.
 
-        Pfit,jfit,Tm,bfit = FitVER(Lfwd, bn, Phi0r, Peig, sim, cam,Fwd, makeplot,verbose)
+        Pfit,jfit,Tm,bfit = FitVER(Lfwd, bn, Phi0r, Peig, sim, cam,Fwd, ti,progms, makeplot,verbose)
 #%% collect results
-        jfitAll.append(jfit); bfitAll.append(bfit)
+        PhifitAll.append(jfit); bfitAll.append(bfit)
 #%% plot results
-        goPlot(ParamFN,sim,Fwd,cam,Lfwd,Tm,bn,bfit,Pfwd,Pfit,Peig,Phi0,
+        goPlot(sim,Fwd,cam,Lfwd,Tm,bn,bfit,Pfwd,Pfit,Peig,Phi0,
                      jfit,rawdata,ti,makeplot,progms,x1d,vlim,verbose)
         if animtime is not None:
-            plt.draw()
-            plt.pause(animtime)
+            draw()
+            pause(animtime)
         elif 'show' in makeplot:
-            plt.show()
+            show()
         else:
-            plt.close('all')
+            close('all')
 
-        if 'h5' in savedump:
-            PfitAll.append(Pfit)
 #%% wrapup
     msg='{} done looping'.format(argv[0]); print(msg); #print(msg,file=stderr)
 
     png2multipage(progms,'.eps','.tif',descr=cmd,delete=False,verbose=verbose) #gif writing is not working yet
 
-    analyseres(sim,Fwd['x'],Fwd['xPixCorn'],cam,
-                   Phi0all,jfitAll,drnAll,bfitAll,vlim,makeplot,progms,verbose)
+    analyseres(sim,cam,Fwd['x'],Fwd['xPixCorn'],
+                   Phi0all,PhifitAll,drnAll,bfitAll,vlim,makeplot,progms,verbose)
 #%% debug: save variables to MAT file
     if 'mat' in savedump:
         from scipy.io import savemat
@@ -122,13 +120,6 @@ def doSim(ParamFN,savedump,makeplot,datadump,timeInds,overrides,progms,x1d,vlim,
             savemat(cMatFN,oned_as='column',mdict=vd )
         except Exception as e:
             print('failed to save to mat file.  {}'.format(e))
-    if 'h5' in savedump:
-        ch5fn = ''.join((progms,'/fitted','.h5'))
-        jAll = asarray(jAll).transpose(axes=(1,2,0)) #asarray puts pages first
-        print('saving to:', ch5fn)
-        with h5py.File(ch5fn,'w',libver='latest') as f:
-            f["/Jflux"]=jAll
-            f["/Vfit"]=PfitAll
 
     msg ='{} program end'.format(argv[0]); print(msg); #print(msg,file=stderr)
 
@@ -136,7 +127,7 @@ def doSim(ParamFN,savedump,makeplot,datadump,timeInds,overrides,progms,x1d,vlim,
 
 def signal_handler(signal, frame):
     print('\n *** Aborting program as per user pressed Ctrl+C ! \n')
-    exit(0)
+    exit()
 #%% -----------------------------------------------------------
 if __name__ == '__main__':
     from argparse import ArgumentParser
@@ -164,7 +155,7 @@ if __name__ == '__main__':
     p.add_argument('-a','--anim',help='animate plots (crudely)',type=float,default=None)
     p.add_argument('--filter',help='optical filter choices: bg3   none',type=str,default=None)
     p.add_argument('--minev',help='minimum beam energy to include in fwd model',type=float,default=None)
-    p.add_argument('--fwdguess',help='feed minimizer fwd answer. true | randn stddev |',type=str,nargs='+',default=[None])
+    p.add_argument('-g','--fwdguess',help='feed minimizer fwd answer. true | randn stddev |',type=str,nargs='+',default=[None])
     p.add_argument('--fitm',help='override fit (minimization) method',type=str,default=None)
     p.add_argument('--vlim',help='xmin xmax zmin zmax pmin pmax   limits for VER plots',type=float,nargs=6,default=(None,None,None,None,None,None))
     p.add_argument('--jlim',help='MIN MAX flux limits for diff num flux plots',type=float,nargs=2,default=(None,None))
@@ -193,7 +184,7 @@ if __name__ == '__main__':
         pass
         #mpl.use('Qt4Agg') # NOT FOR ANACONDA3
         #mpl.use('Tkagg') # possibly faster than qt4agg
-    import matplotlib.pyplot as plt
+    from matplotlib.pyplot import show,draw,close,pause
     print(('matplotlib backend / version: ' + mpl.get_backend() +'  ' + mpl.__version__  ))
 #%%
     vlim = {'p':ar.vlim,'j':ar.jlim,'b':ar.blim}
@@ -238,7 +229,5 @@ if __name__ == '__main__':
         doSim(ParamFN,savedump,makeplot,datadump,timeInds,
                                       overrides,progms,ar.x1d, vlim,ar.anim,' '.join(argv), ar.verbose)
 
-#    if ar.saveall:
-#        with h5py.File(progms + 'validate.h5',libver='latest') as fid:
-#            fid['/fitp/residual']=fitpAll['/optimresidual'])
-#            fid.create_dataset("/L",data=L,        compression="gzip")
+    if 'show' in makeplot:
+        show()
