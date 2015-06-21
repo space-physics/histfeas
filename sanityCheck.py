@@ -12,8 +12,9 @@ from shutil import copy2
 from camclass import Cam
 from simclass import Sim
 
-def getParams(XLSfn,overrides,makeplot,progms,dbglvl):
-    copy2(XLSfn,progms)
+def getParams(XLSfn,overrides,makeplot,progms,verbose):
+    if progms is not None:
+        copy2(XLSfn,progms)
 #%% read spreadsheet
     #paramSheets = ('Sim','Cameras','Arc')
     xl = read_excel(XLSfn,sheetname=None,index_col=0,header=0)
@@ -32,11 +33,11 @@ def getParams(XLSfn,overrides,makeplot,progms,dbglvl):
     if not (nCutPix == nCutPix[0]).all():
         raise ValueError('sanityCheck: all cameras must have same 1D cut length')
 #%% class with parameters and function
-    sim = Sim(sp,cp,ap,ntimeslice,overrides,makeplot,progms,dbglvl)
+    sim = Sim(sp,cp,ap,ntimeslice,overrides,makeplot,progms,verbose)
 #%% grid setup
     Fwd = sim.setupFwdXZ(sp)
 #%% setup cameras
-    cam,cp = setupCam(sim,cp,Fwd['z'][-1],dbglvl)
+    cam,cp = setupCam(sim,cp,Fwd['z'][-1],verbose)
 
     print('fwd model voxels:\n'
           'B_perp: N={}   B_parallel: M={}'.format(Fwd['sx'],Fwd['sz']))
@@ -59,5 +60,5 @@ def setupCam(sim,cp,zmax,dbglvl):
                 cam[c] = Cam(sim,cp[c], c, zmax,dbglvl)
 
     if len(cam)==0:
-        raise ValueError('setupCam: 0 cams are configured, Nothing to do.')
+        raise ValueError('0 cams are configured, Nothing to do.')
     return cam,cp

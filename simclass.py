@@ -12,18 +12,27 @@ class Sim:
     def __init__(self,sp,cp,ap,ntimeslice,overrides,makeplot,progms,dbglvl):
         self.dbglvl=dbglvl
         #%% how many cameras in use, and which ones?
-        usecamreq = asarray(overrides['cam'])
-        if usecamreq[0] is not None: #override spreadsheet
-            warn(' Overriding XLS parameters, using cameras: {}'.format(usecamreq))
-            for ci,civ in enumerate(cp.loc['useCam']): # this might be a silly indexing method, but works
-                if (ci==usecamreq).any():
-                    cp.at['useCam',ci] = 1 #do not use boolean, it screws up other rows
-                else:
-                    cp.at['useCam',ci] = 0 #do not use boolean, it screws up other rows
+        if overrides is not None:
+            usecamreq = asarray(overrides['cam'])
+            if usecamreq[0] is not None: #override spreadsheet
+                warn(' Overriding XLS parameters, using cameras: {}'.format(usecamreq))
+                for ci,civ in enumerate(cp.loc['useCam']): # this might be a silly indexing method, but works
+                    if (ci==usecamreq).any():
+                        cp.at['useCam',ci] = 1 #do not use boolean, it screws up other rows
+                    else:
+                        cp.at['useCam',ci] = 0 #do not use boolean, it screws up other rows
+            if usecamreq[0] is not None:
+                assert np.all(where(self.useCamBool)[0] == usecamreq) #not .all() in case of different length
+            
+ # camera position override check (work done in sanityCheck.setupCam)
+            self.camxreq = overrides['camx']
+            if self.camxreq[0] is not None and len(self.camxreq) != self.nCamUsed:
+                raise ValueError('must specify same number of x-loc and used cameras')
+        else:
+            self.camxreq = [None]
+#%%
         self.useCamBool = cp.loc['useCam'].values.astype(bool)
 
-        if usecamreq[0] is not None:
-            assert np.all(where(self.useCamBool)[0] == usecamreq) #not .all() in case of different length
 
         self.nCamUsed = self.useCamBool.sum() #it is an int
 
@@ -34,25 +43,21 @@ class Sim:
         self.obsalt_km = cp.loc['Zkm'].values.mean() #FIXME assuming cameras are at a very similar altitudes
         self.zenang = 90-cp.loc['Bincl'].values.mean() #FIXME assuming all in same plane and that difference in boresight path length are 'small'
 
-        #%% camera position override
-        self.camxreq = overrides['camx']
-        if self.camxreq[0] is not None and len(self.camxreq) != self.nCamUsed:
-            raise ValueError('must specify same number of x-loc and used cameras')
         #%% manual override flux file
-        if overrides['Jfwd'] is not None:
+        if overrides and overrides['Jfwd'] is not None:
             print('* overriding J0 flux with file: ' + overrides['Jfwd'])
             self.Jfwdh5 = overrides['Jfwd']
         else:
             self.Jfwdh5 = None
         #%% manual override filter
-        if overrides['filter'] is not None:
+        if overrides and overrides['filter'] is not None:
             print('* overriding filter choice with:',overrides['filter'])
             #sp.loc['OpticalFilter','Transcar'] = overrides['filter']
             self.opticalfilter = overrides['filter'].lower()
         else:
             self.opticalfilter = sp.at['OpticalFilter','Transcar'].lower()
         #%% manual override minimum beam energy
-        if overrides['minev'] is not None:
+        if overrides and overrides['minev'] is not None:
             print('* minimum beam energy set to:',overrides['minev'])
             #sp.loc['minBeameV','Transcar']  = overrides['minev']
             self.minbeamev = overrides['minev']
@@ -63,7 +68,7 @@ class Sim:
             else:
                 self.minbeamev = 0.
         #%% fit method
-        if overrides['fitm'] is not None:
+        if overrides and overrides['fitm'] is not None:
             print('* setting fit method to', overrides['fitm'])
             #sp.loc['OptimFluxMethod','Recon'] = overrides['fitm']
             self.optimfitmeth = overrides['fitm']
@@ -72,7 +77,7 @@ class Sim:
 
         self.optimmaxiter = sp.at['OptimMaxiter','Recon']
         #%% force compute ell
-        if overrides['ell']:
+        if overrides and overrides['ell']:
             #sp.loc['saveEll','Sim'] = 1 #we'll save to out/date directory!
             #sp.loc['loadEll','Sim'] = 0
             self.savefwdL = True
@@ -125,7 +130,7 @@ class Sim:
         else:
             self.downsampleEnergy = False
 
-        if overrides['ell'] and progms:
+        if progms and overrides['ell']:
             self.FwdLfn = join(progms,self.getEllHash(sp,cp))
         else:
             self.FwdLfn = join('precompute',self.getEllHash(sp,cp))
