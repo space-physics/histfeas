@@ -6,12 +6,14 @@ GPL v3+
 REQUIRES *** PANDAS 0.16 *** or newer for read_excel to work properly!
 """
 from pandas import read_excel
+from warnings import warn
+from shutil import copy2
+#
 from camclass import Cam
 from simclass import Sim
-from xlrd.biffh import XLRDError
-from warnings import warn
 
-def getParams(XLSfn,overrides,savedump,makeplot,progms,dbglvl):
+def getParams(XLSfn,overrides,makeplot,progms,dbglvl):
+    copy2(XLSfn,progms)
 #%% read spreadsheet
     #paramSheets = ('Sim','Cameras','Arc')
     xl = read_excel(XLSfn,sheetname=None,index_col=0,header=0)
@@ -22,9 +24,9 @@ def getParams(XLSfn,overrides,savedump,makeplot,progms,dbglvl):
     for s in xl:
         if s.startswith('Arc'):
             ap[s] = xl[s]
-            if ntimeslice is not None and ap[s].shape[1] != ntimeslice:
+            if ntimeslice is not None and ap[s].shape[1]-1 != ntimeslice:
                 raise ValueError('for now, all Arcs must have same number of times (columns)')
-            ntimeslice=ap[s].shape[1]
+            ntimeslice=ap[s].shape[1]-1
 #%% ***** must be outside camclass ********
     nCutPix = cp.loc['nCutPix'].values
     if not (nCutPix == nCutPix[0]).all():
@@ -57,5 +59,5 @@ def setupCam(sim,cp,zmax,dbglvl):
                 cam[c] = Cam(sim,cp[c], c, zmax,dbglvl)
 
     if len(cam)==0:
-        raise ValueError('setupCam: 0 cams are configured, Nothing to do, exiting now.')
+        raise ValueError('setupCam: 0 cams are configured, Nothing to do.')
     return cam,cp
