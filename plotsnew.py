@@ -1144,7 +1144,7 @@ def writeplots(fg,plotprefix,tInd,method,progms,overridefmt=None,verbose=0):
 
     tmpl = ('eps','jpg','png','pdf')
     used = in1d(tmpl,method)
-    if used.any():
+    if progms and used.any():
         if overridefmt is not None:
             fmt = overridefmt; dpi = epsdpi
         else:
@@ -1191,27 +1191,23 @@ def getx0E0(Phi,Ek,x,tInd,progms,makeplot,verbose):
         gE0 = Eklin[Ghrow]
 
         if 'gfit' in makeplot:
-            fgb = figure()
-            axb = fgb.gca()
-            hb = axb.pcolormesh(x,Eklin,jflin)
-            fgb.colorbar(hb)
-            axb.set_title('base')
-            axb.set_xlabel('x [km]')
-            axb.set_ylabel('Beam Energy [eV]')
-            axb.set_yscale('log')
-            axb.autoscale(True,tight=True)
+            fg,(ax1,ax2) = subplots(1,2,sharey=True)
+            hb = ax1.pcolormesh(x,Eklin,jflin)
+            fg.colorbar(hb)
+            ax1.set_title('base')
+            ax1.set_xlabel('x [km]')
+            ax1.set_ylabel('Beam Energy [eV]')
+            ax1.set_yscale('log')
+            ax1.autoscale(True,tight=True)
 
-            fg = figure()
-            axg = fg.gca()
-            hp = axg.pcolormesh(x,Eklin,gpix)
+            hp = ax2.pcolormesh(x,Eklin,gpix)
             fg.colorbar(hp)
-            axg.set_title('gaussian fit: $x_{{gauss,0}},E_{{gauss0}}$={:0.2f},{:0.0f})'.format(gx0,gE0))
-            axg.set_xlabel('x [km]')
-            axg.set_ylabel('Beam Energy [eV]')
-            axg.set_yscale('log')
-            axg.autoscale(True,tight=True)
+            ax2.set_title('gaussian fit: $B_{{\perp,0}},E_0$={:.2f},{:.0f})'.format(gx0,gE0))
+            ax2.set_xlabel('x [km]')
+            ax2.set_ylabel('Beam Energy [eV]')
+            ax2.set_yscale('log')
+            ax2.autoscale(True,tight=True)
 
-            writeplots(fgb,'fluxlininterp',tInd,makeplot,progms,verbose=verbose)
             writeplots(fg,'gaussfitlin',tInd,makeplot,progms,verbose=verbose)
 
         #Ghrow,Ghcol = np.unravel_index(gfit.argmax(axis=None),gfit.shape, order='C')
