@@ -94,22 +94,22 @@ def FitVERopt(L,bn,Phi0,MpDict,sim,cam,Fwd,tInd,progms,makeplot,verbose):
                         )
         #
         print('{:0.1f} seconds to fit.'.format(time()-tic))
-        
+
         print('Minimizer says: {}'.format(Phifit.message))
 
         Phifit.x = Phifit.x.reshape(nEnergy,sx,order='F')
-        #jfit['optimresidual'] = jfit.fun
-        print('residual={:.1e} after {} func evaluations.'.format(Phifit.fun, 
+
+        print('residual={:.1e} after {} func evaluations.'.format(Phifit.fun,
                                                                   Phifit.nfev))
 
         # we do this here so that we don't have to carry so many variables around
         vfit['optim'] = getColumnVER(sim.useztranscar,zTranscar, Mp, Phifit.x)
 #%% downscale result to complement upscaling
         bfitu = L.dot( vfit['optim'].ravel(order='F') )
-        
+
         for s,c in zip(bscale,cInd):
             bfitu[c] *= s
-            
+
         bfit['optim'] = bfitu
 #%%
         # this is repeated because the assignment overwrites from minimize()
@@ -118,10 +118,10 @@ def FitVERopt(L,bn,Phi0,MpDict,sim,cam,Fwd,tInd,progms,makeplot,verbose):
         # don't remove the two lines above (ek,ekpcolor)
 #%% gaussian fit
         #print('max |diff(phi)| = ' + str(np.abs(np.diff(fitp.x, n=1, axis=0)).max()))
-        gx0hat,gE0hat,x0hat,E0hat = getx0E0(Phifit['x'],Phifit['EK'],Fwd['x'],tInd,progms,makeplot,verbose)
-        print('Estimated $B_{{\perp,0}},E_0$={:0.2f}, {:0.0f}'.format(gx0hat,gE0hat))
-        Phifit['gx0'] = gx0hat
-        Phifit['gE0'] = gE0hat
+        gx0,gE0 = getx0E0(None,Phifit['x'],Phifit['EK'],Fwd['x'],tInd,None,[None],verbose)
+        print('Estimated $B_{{\perp,0}},E_0$={:0.2f}, {:0.0f}'.format(gx0[1],gE0[1]))
+        Phifit['gx0'] = gx0[1]
+        Phifit['gE0'] = gE0[1]
 
     return vfit,Phifit,Tm,bfit
 

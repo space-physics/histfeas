@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 from plotsnew import getx0E0, plotB
-from matplotlib.pyplot import figure
+from matplotlib.pyplot import figure,close
 from matplotlib.ticker import MaxNLocator#,ScalarFormatter# ,LogFormatterMathtext, #for 1e4 -> 1 x 10^4, applied DIRECTLY in format=
 from numpy import diff, empty
 import h5py
@@ -20,7 +20,8 @@ def analyseres(sim,cam,x,xp,Phifwd,Phifit,drn,dhat,vlim,makeplot,progms,verbose)
 
     sx = x.size
     nEnergy = Phifwd.shape[0]
-    nit = len(Phifit)
+    nit = len(Phifit) if Phifit is not None else len(Phifwd)
+
 
 #    with open('cord.csv','r') as e:
 #        reader = csv.reader(e, delimiter=',', quoting = csv.QUOTE_NONE);
@@ -29,14 +30,18 @@ def analyseres(sim,cam,x,xp,Phifwd,Phifit,drn,dhat,vlim,makeplot,progms,verbose)
 
 #%% brightness residual plot
     if 'optim' in makeplot:
-        fg = figure()
-        ax = fg.gca()
-        ax.stem([f.fun for f in Phifit])
-        ax.set_xlabel('instantiation',fontsize=afs)
-        ax.set_ylabel('$||\hat{b} - b||_2$',fontsize=afs)
-        ax.set_title('Residual $b$',fontsize=tfs)
-        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-        writeplots(fg,'error_boptim',9999,makeplot,progms)
+        try:
+            fg = figure()
+            ax = fg.gca()
+            ax.stem([f.fun for f in Phifit])
+            ax.set_xlabel('instantiation',fontsize=afs)
+            ax.set_ylabel('$||\hat{b} - b||_2$',fontsize=afs)
+            ax.set_title('Residual $b$',fontsize=tfs)
+            ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+            writeplots(fg,'error_boptim',9999,makeplot,progms)
+        except AttributeError:
+            close(fg)
+            pass
 #%% brightness plot -- plotting ALL at once to show evolution of dispersive event!
     try:
         if 'fwd' in makeplot and drn is not None:
@@ -49,22 +54,23 @@ def analyseres(sim,cam,x,xp,Phifwd,Phifit,drn,dhat,vlim,makeplot,progms,verbose)
     except Exception as e:
         warn('skipping plotting overall analysis plots of intensity.  {}'.format(e))
 #%% energy flux plot amd calculations
-    x0fwd = nans(nit); E0fwd = nans(nit); gx0fwd=nans(nit); gE0fwd=nans(nit)
-    x0hat = nans(nit); E0hat = nans(nit); gx0hat=nans(nit); gE0hat=nans(nit)
+    gx0= nans((nit,2)); gE0 = nans((nit,2))
+
     Eavgfwdx = nans((nit,sx))
     Eavghatx = nans((nit,sx))
-    
+
     dE = empty(nEnergy)
     dE[0] = 9.952 #a priori for this pre-arranged EK
     dE[1:] = diff(Phifit[0]['EK']) #per Dahlgren matlab code line 276-280
 #%% back to work
     for i,jf in enumerate(Phifit):
         #note even if array is F_CONTIGUOUS, argmax is C-order!!
-        gx0fwd[i],gE0fwd[i], x0fwd[i],E0fwd[i] = getx0E0(Phifwd[...,i],jf['EK'],x,9999,progms,makeplot,verbose)
-        gx0hat[i],gE0hat[i], x0hat[i],E0hat[i] = getx0E0(jf['x'],     jf['EK'],x,9999,progms,makeplot,verbose)
+        gx0[i,:],gE0[i,:] = getx0E0(Phifwd[...,i], jf['x'],
+                                        jf['EK'],x,9999,progms,makeplot,verbose)
+
 
         print('t={} gaussian 2-D fits for (x,E). Fwd: {:.2f} {:.0f}'
-              ' Optim: {:.2f} {:.0f}'.format(i, gx0fwd[i],gE0fwd[i],gx0hat[i],gE0hat[i]))
+              ' Optim: {:.2f} {:.0f}'.format(i, gx0[i,0],gE0[i,0],gx0[i,1],gE0[i,1]))
 
         trythis(Phifwd[...,i], jf['x'], jf['EK'],x,dE,makeplot,progms,verbose)
 #%% average energy per x-location
@@ -82,7 +88,7 @@ def analyseres(sim,cam,x,xp,Phifwd,Phifit,drn,dhat,vlim,makeplot,progms,verbose)
         ax.set_xlabel('$B_\perp$ [km]')
         ax.set_ylabel('Expected Value $\overline{E}$ [eV]')
         ax.set_title('Fwd model: Average Energy $\overline{E}$ vs $B_\perp$')
-        ax.legend(['{:.0f} eV'.format(g) for g in E0fwd],loc='best',fontsize=9)
+        ax.legend(['{:.0f} eV'.format(g) for g in gE0[:,0]],loc='best',fontsize=9)
         writeplots(fgf,'Eavg_fwd',9999,makeplot,progms)
 
     if 'optim' in makeplot:
@@ -92,11 +98,11 @@ def analyseres(sim,cam,x,xp,Phifwd,Phifit,drn,dhat,vlim,makeplot,progms,verbose)
         ax.set_xlabel('$B_\perp$ [km]')
         ax.set_ylabel('Expected Value $\overline{E}$ [eV]')
         ax.set_title('ESTIMATED Average Energy $\overline{\hat{E}}$ vs $B_\perp$')
-        ax.legend(['{:.0f} eV'.format(g) for g in E0fwd],loc='best',fontsize=9)
+        ax.legend(['{:.0f} eV'.format(g) for g in gE0[:,0]],loc='best',fontsize=9)
         writeplots(fgo,'Eavg_optim',9999,makeplot,progms)
 #%% overall error
-    gx0err = gx0hat-gx0fwd
-    gE0err = gE0hat-gE0fwd
+    gx0err = gx0[:,1]-gx0[:,0]
+    gE0err = gE0[:,1]-gE0[:,0]
 
     print('B_\perp,0 Estimation-error =' + ' '.join(
                                           ['{:.2f}'.format(h) for h in gx0err]))
@@ -107,20 +113,10 @@ def analyseres(sim,cam,x,xp,Phifwd,Phifit,drn,dhat,vlim,makeplot,progms,verbose)
         fout = progms + '/fit_results.h5'
         with h5py.File(fout,'w',libver='latest') as f:
             f['/gx0/err']=gx0err
-            f['/gx0/fwd']=gx0fwd
-            f['/gx0/fit']=gx0hat
-            
-            f['/gE0/err']=gE0err
-            f['/gE0/fwd']=gE0fwd
-            f['/gE0/fit']=gE0hat
+            f['/gx0/fwdfit']=gx0
 
-            f['/x0/err']=x0hat-x0fwd
-            f['/x0/fit']=x0hat
-            f['/x0/fwd']=x0fwd
-            
-            f['/E0/err']=E0hat-E0fwd
-            f['/E0/fit']=E0hat
-            f['/E0/fwd']=E0fwd
+            f['/gE0/err']=gE0err
+            f['/gE0/fwdfit']=gE0
 
 def trythis(jfwd,jfit,Ek,x,dE,makeplot,progms,verbose):
     #from numpy.testing import assert_allclose
