@@ -4,10 +4,12 @@ import h5py
 from os.path import join,expanduser,splitext
 from numpy import asarray
 from warnings import warn
+from matplotlib.pyplot import show
 #
 from analysehst import analyseres
 from sanityCheck import getParams
 from plotsnew import plotB
+from observeVolume import definecamind
 
 vlim={'b':(None,None)}
 
@@ -24,11 +26,9 @@ def runtest(h5list,xlsfn,overrides,makeplot,verbose=0):
             Phifwd.append(f['/phifwd/phi'].value)
             Phidict.append({'x':f['/phiest/phi'].value, 
                             'EK':f['/phiest/Ek'].value})
-            try:
-                dhat.append(['/best/bfit'].value)
-                drn.append(f['/best/braw'].value)
-            except Exception:
-                pass
+
+            dhat.append(f['/best/bfit'].value)
+            drn.append(f['/best/braw'].value)
 #%%  
     stem,ext = splitext(h5)  #all in same directory
     
@@ -45,6 +45,7 @@ def runtest(h5list,xlsfn,overrides,makeplot,verbose=0):
         return
         
     ap,sim,cam,Fwd = getParams(xlsfn,overrides,makeplot,progms=None,verbose=verbose)
+    cam = definecamind(cam,sim.nCutPix)
  
     for ti in range(nt):
         plotB(drn[ti],sim.realdata,cam,vlim['b'],ti,makeplot,'$br',None,verbose)
@@ -64,4 +65,6 @@ if __name__ == '__main__':
     xlsfn = glob(expanduser(join(p.h5path,'*.xlsx')))
     if len(xlsfn) == 0: xlsfn=[None]
     
-    runtest(h5list,xlsfn[0],overrides=None)
+    runtest(h5list,xlsfn[0],overrides=None,makeplot=('fwd','optim'))
+    
+    show()
