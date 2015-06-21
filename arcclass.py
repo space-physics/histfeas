@@ -10,7 +10,7 @@ from transcararc import getpx
 
 def getver(x,z,Mp,Phi0, w,h,x0,z0,xshape,zshape,pmax):
     if zshape=='chapman':
-        return ChapmanArc(w, h, x0,z0, x, z,xshape,pmax)[0]
+        return ChapmanArc(w, h, x0,z0, x, z,xshape,pmax)
     elif zshape == 'rect':
         return RectArc(w,h, x0,z0, x,z, xshape,pmax)[0]
     elif zshape == 'transcar':
@@ -22,13 +22,12 @@ def getver(x,z,Mp,Phi0, w,h,x0,z0,xshape,zshape,pmax):
 
 def ChapmanArc(Wkm,H,X0,Z0,xKM,zKM,xshape, PC0=1):
     # chapman vert
-        pz = PC0 * exp(.5*(1-(zKM-Z0)/H - exp((Z0-zKM)/H)))
+    pz = PC0 * exp(.5*(1-(zKM-Z0)/H - exp((Z0-zKM)/H)))
     # horizontal model
-        px = getpx(xKM,Wkm,X0,xshape)
+    px = getpx(xKM,Wkm,X0,xshape)
     # 2D model output
-        ''' Make 2D Auroral Blob (original idea JLS)'''
-        pzx  = outer(pz, px)
-        return pzx,pz,px
+    ''' Make 2D Auroral Blob (original idea JLS)'''
+    return outer(pz, px)
 
 def RectArc(Wkm,Hkm,X0,Z0,xKM,zKM,xshape, PC0=1):
 

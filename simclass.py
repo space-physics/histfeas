@@ -137,7 +137,7 @@ class Sim:
         elif self.raymap == 'arbitrary':
             print('Using arbitrary linear per-pixel 1D cut mapping to 2D model space')
         else:
-            exit('*** Unknown Ray Angle Mapping method: ' + str(self.raymap))
+            raise ValueError('Unknown Ray Angle Mapping method: ' + str(self.raymap))
 
         self.cal1dpath = sp.at['cal1Ddir','Cams']
 
@@ -171,7 +171,7 @@ class Sim:
             self.fwd_dzKM = sp.at['ZcellKM','Fwdf']
             (Fwd['x'], Fwd['z']) = makexzgrid(self.fwd_xlim, self.fwd_zlim, self.fwd_dxKM, self.fwd_dzKM)
         if Fwd['z'] is None:
-            exit('*** sanitycheck: You must specify zmax zmin zcell when not using transcar altitudes in XLS')
+            raise ValueError('You must specify zmax zmin zcell when not using transcar altitudes in XLS')
 
         assert Fwd['x'].ndim == Fwd['z'].ndim ==1
         Fwd['sx'] = Fwd['x'].size #this is a vector
@@ -186,14 +186,14 @@ class Sim:
             print('** sanityCheck: Fwd Grid size seems excessive at more than 10 million cells')
         return Fwd
 
-    def maketind(self,timeInds,nTimeSlice):
-        if nTimeSlice == 0:
-            exit('*** zero frame indices were specified to process, exiting')
+    def maketind(self,timeInds):
+        if self.nTimeSlice == 0:
+            raise ValueError('zero frame indices were specified to process')
 
         if timeInds is None:
-            timeInds = arange(nTimeSlice) #NOT range!
+            timeInds = arange(self.nTimeSlice) #NOT range!
 
-        return timeInds[timeInds<nTimeSlice] #(it's <, not <=) slice off commond line requests beyond number of frames
+        return timeInds[timeInds<self.nTimeSlice] #(it's <, not <=) slice off commond line requests beyond number of frames
 
     def getEllHash(self,sp,cp):
         from hashlib import md5
