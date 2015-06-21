@@ -1,7 +1,6 @@
 from __future__ import print_function, division,absolute_import
 from numpy import (in1d,s_,empty,empty_like,isnan,asfortranarray,linspace,outer,
-                   sin,cos,pi,ones_like,array,nan,rint,unravel_index,meshgrid,
-                   )
+                   sin,cos,pi,ones_like,array,nan,unravel_index,meshgrid)
 from matplotlib.pyplot import (figure,subplots, clf,text,draw)
 #from matplotlib.cm import get_cmap
 from matplotlib.colors import LogNorm
@@ -75,7 +74,7 @@ def placetxt(x,y,txt,ax):
 
 def goPlot(sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
             fitp,rawdata,tInd,makeplot,progms,x1d,vlim,verbose):
-    
+
     spfid = None if progms is None else join(progms,'dump_t{:3d}.h5'.format(tInd))
     #cord = ['b','g','k','r','m','y']
 
@@ -166,7 +165,7 @@ def goPlot(sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
     if 'berror' in makeplot:
         plotB(drn - dhat['art'],sim.realdata,cam,vlim['b'],tInd,makeplot,'$\Delta{b}$',progms,verbose)
 #%% characteristic energy determination for title labels
-#    gx0,gE0,x0,E0 = getx0E0(Phi0,fitp['EK'],xKM,tInd,progms,makeplot,verbose)
+#    gx0,gE0 = getx0E0(Phi0,None,fitp['EK'],xKM,tInd,progms,makeplot,verbose)
 #    if longtitle:
 #        fwdloctxt = ('\n$x_{{cam}}=${} $(x_0,E_0)=({:0.2f},{:0.0f})$ [km,eV]'.format(sim.allCamXkm,x0,E0))
 #    else:
@@ -192,14 +191,14 @@ def goPlot(sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
         plotBcompare(sim,drn,dhat['gaussian'],cam,sim.nCamUsed,
                      'bgaussfit',spfid, vlim['b'],tInd, makeplot,progms,verbose)
 
-        gx0hat,gE0hat,x0hat,E0hat = getx0E0(fitp['gaussian'],fitp['EK'],xKM,tInd,progms,makeplot,verbose)
+        gx0,gE0 = getx0E0(None,fitp['gaussian'],fitp['EK'],xKM,tInd,progms,makeplot,verbose)
 #'Neval = {:d}'.format(fitp.nfev)
-        plotJ(sim,fitp['gaussian'], xKM,xp, fitp['EK'],fitp['EKpcolor'], 
+        plotJ(sim,fitp['gaussian'], xKM,xp, fitp['EK'],fitp['EKpcolor'],
               vlim['j'],vlim['p'][:2],tInd, makeplot,'jgaussian',
               '$\hat{\phi}_{gaussian,optim}$ estimated diff. number flux',
               spfid,progms,verbose)
 
-        print('Estimated $x_{{gauss,0}},E_{{gauss,0}}$={:0.2f}, {:0.0f}'.format(gx0hat,gE0hat))
+        print('Estimated $x_{{gauss,0}},E_{{gauss,0}}$={:0.2f}, {:0.0f}'.format(gx0[:,1],gE0[:,1]))
 
         plotVER(sim,vfit['gaussian'],xKM,xp,zKM,zp,vlim['p'],tInd,makeplot,'vgaussian',
               '$\hat{P}_{gaussian,optim}$ volume emission rate',
@@ -1118,7 +1117,7 @@ def planviewkml(cam,xKM,zKM,makeplot,figh,progms,verbose=0):
 def dumph5(fn,prefix,tInd,**writevar): #used in other .py too
     if fn is None or prefix is None:
         return
-        
+
     print('dumping to '+ fn)
     with h5py.File(fn,'a',libver='latest') as f:
         for k,v in writevar.items():
@@ -1153,69 +1152,150 @@ def writeplots(fg,plotprefix,tInd,method,progms,overridefmt=None,verbose=0):
         if verbose>0: print('save {}...'.format(cn),end='')
         fg.savefig(cn,bbox_inches='tight',dpi=dpi,format=fmt)  # this is slow and async
 #%%
-def getx0E0(Phi,Ek,x,tInd,progms,makeplot,verbose):
-  gaussEmin=800.
-  try:
-#%% E0 > 800eV
-    PhiGauss = Phi.copy()
-    PhiGauss[Ek<gaussEmin,:] = 0.
+def getx0E0(Phifwd,Phifit,E,x,tInd,progms,makeplot,verbose):
 
-    if Phi is None or isnan(Phi).any():
-        return nan, nan,nan,nan
-#%% interp log to linear
-    Eklin = linspace(Ek[0],Ek[-1],200)
-    ff = interp1d(Ek,PhiGauss,kind='linear',axis=0)
-    jflin = ff(Eklin)
+  gaussEmin=500.
+  Npts = 200
+  Nptsfits = (int(Npts/20), int(Npts/10))
+
+  try:
+    def clipPhi(fwd,fit,E):
+        Elin = linspace(E[0],E[-1],Npts)
+
+        try:
+            phifwd = fwd.copy();
+            phifwd[E<gaussEmin,:] = 0.
+            f = interp1d(E,phifwd,kind='linear',axis=0)
+            fwdlin = f(Elin)
+        except AttributeError:
+            fwdlin = None
+
+        try:
+            phifit = fit.copy()
+            phifit[E<gaussEmin,:] = 0.
+            f = interp1d(E,phifit,kind='linear',axis=0)
+            fitlin = f(Elin)
+        except AttributeError:
+            fitlin = None
+
+        return fwdlin, fitlin, Elin
+
+    cPhifwd,cPhifit,Elin = clipPhi(Phifwd,Phifit,E)
 #%% first guess of 2-D peak, take region of pixels near the peak to fit
     #note that unravel_index for jf must be order='C'
-    pkrow,pkcol = unravel_index(jflin.argmax(axis=None),  jflin.shape,   order='C')
-    nh = (5,20) #MxN region to extract
-    rcpluck = pkrow-nh[0], pkcol-nh[1]
-    gpix = jflin[rcpluck[0]:pkrow+nh[0],rcpluck[1]:pkcol+nh[1]]
-    #set_trace()
-    try:
-        gparam = gaussfit(gpix,returnfitimage=False)
-    except ValueError:
-        warn('gaussian fit doesnt work when peak is against edge of model space. gpix shape {} row {} col {}'.format(gpix.shape,pkrow,pkcol))
-        return nan, nan,nan,nan
+    def gfitphi(Philin,Elin):
+        if Philin is None:
+            return nan, nan,None,None
 
-    Ghcol = rint(gparam[2] + rcpluck[1])
-    Ghrow = rint(gparam[3] + rcpluck[0]) + 1# altitude of peak
+        pkrow,pkcol = unravel_index(Philin.argmax(axis=None),  Philin.shape,  order='C')
+        nh = Nptsfits #MxN region to extract
+        rcpluck = pkrow-nh[0], pkcol-nh[1]
+        gpeak = Philin[rcpluck[0]:pkrow+nh[0],rcpluck[1]:pkcol+nh[1]]
+        #set_trace()
+        try:
+            gparam = gaussfit(gpeak,returnfitimage=False)
+        except ValueError:
+            warn('gaussian fit doesnt work when peak is against edge of model space.'
+                 'gpix shape {} row {} col {}'.format(gpeak.shape,pkrow,pkcol))
+            return nan, nan,None,None
 
-    gparamshift = gparam.copy()
-    gparamshift[2] = gparam[2] + rcpluck[1]
-    gparamshift[3] = gparam[3] + rcpluck[0]
-    gpix = twodgaussian(gparamshift,shape=jflin.shape)
-    try: #gx0, gE0 and the rest need to be inside this try:
-        gx0 = x[Ghcol]
-        gE0 = Eklin[Ghrow]
+        Ghcol = int(round(gparam[2] + rcpluck[1]))
+        Ghrow = int(round(gparam[3] + rcpluck[0])) + 1# altitude of peak
 
-        if 'gfit' in makeplot:
-            fg,(ax1,ax2) = subplots(1,2,sharey=True)
-            hb = ax1.pcolormesh(x,Eklin,jflin)
-            fg.colorbar(hb)
-            ax1.set_title('base')
-            ax1.set_xlabel('x [km]')
-            ax1.set_ylabel('Beam Energy [eV]')
-            ax1.set_yscale('log')
-            ax1.autoscale(True,tight=True)
+        gparamshift = gparam.copy()
+        gparamshift[2] = gparam[2] + rcpluck[1]
+        gparamshift[3] = gparam[3] + rcpluck[0]
+        gpix = twodgaussian(gparamshift,shape=Philin.shape)
 
-            hp = ax2.pcolormesh(x,Eklin,gpix)
-            fg.colorbar(hp)
-            ax2.set_title('gaussian fit: $B_{{\perp,0}},E_0$={:.2f},{:.0f})'.format(gx0,gE0))
-            ax2.set_xlabel('x [km]')
-            ax2.set_ylabel('Beam Energy [eV]')
-            ax2.set_yscale('log')
-            ax2.autoscale(True,tight=True)
+        try:
+            return x[Ghcol], Elin[Ghrow], gpix, gpeak
+        except IndexError:
+            warn('gaussian fit was outside model space')
+            return nan, nan, None, None
 
-            writeplots(fg,'gaussfitlin',tInd,makeplot,progms,verbose=verbose)
+    gx0=empty(2); gE0=empty(2); gpix=[]; gpeak=[]
+    for i,p in enumerate((cPhifwd,cPhifit)):
+        gx0[i], gE0[i],gp,gk = gfitphi(p,Elin)
+        gpix.append(gp);  gpeak.append(gk)
 
-        #Ghrow,Ghcol = np.unravel_index(gfit.argmax(axis=None),gfit.shape, order='C')
+    if 'gfit' in makeplot:
+        fg,ax = subplots(2,3, sharey=False, sharex=False)
 
-        return gx0, gE0, x[pkcol], Eklin[pkrow]
-    except IndexError:
-        warn('gaussian fit was outside model space')
-        return nan, nan, nan, nan
+        ca = ax[0,0]
+        try:
+            hb = ca.pcolormesh(x,Elin,cPhifwd)
+            fg.colorbar(hb,ax=ca)
+            ca.set_title('$\Phi$ fwd precip. intensity')
+            #ca.set_xlabel('$B_\perp$ [km]')
+            ca.set_ylabel('Beam Energy [eV]')
+            ca.set_yscale('log')
+            ca.autoscale(True,tight=True)
+        except AttributeError:
+            ca.text(0,0,'$\Phi$ Not Used')
+
+        ca = ax[0,1]
+        try:
+            hp = ca.pcolormesh(gpeak[0])
+            fg.colorbar(hp, ax=ca)
+            ca.set_title('$\Phi$ peak region to fit:'
+                   ' $B_{{\perp,0}},E_0$={:.2f},{:.0f})'.format(gx0[0],gE0[0]))
+            #ca.set_yscale('log')
+            ca.autoscale(True,tight=True) #ValueError: cannot convert float NaN to integer
+        except AttributeError:
+            ca.text(0,0,'$\Phi$ not used')
+
+        ca = ax[0,2]
+        try:
+            hp = ca.pcolormesh(x,Elin,gpix[0])
+            fg.colorbar(hp, ax=ca)
+            ca.set_title('$\Phi$ gaussian fit:'
+                   ' $B_{{\perp,0}},E_0$={:.2f},{:.0f})'.format(gx0[0],gE0[0]))
+            ca.set_yscale('log')
+            ca.autoscale(True,tight=True)
+        except AttributeError:
+            ca.text(0,0,'$\Phi$ not used')
+
+        ca = ax[1,0]
+        try:
+            hb = ca.pcolormesh(x,Elin,cPhifit)
+            fg.colorbar(hb, ax=ca)
+            ca.set_title('$\hat{\Phi}$ estimated precip. intensity')
+            ca.set_xlabel('$B_\perp$ [km]')
+            ca.set_ylabel('Beam Energy [eV]')
+            ca.set_yscale('log')
+            ca.autoscale(True,tight=True)
+        except AttributeError:
+            ca.text(0,0,'$\hat{\Phi} not used')
+
+        ca = ax[1,1]
+        try:
+            hp = ca.pcolormesh(gpeak[1])
+            fg.colorbar(hp, ax=ca)
+            ca.set_title('$\hat{{\Phi}}$ peak region to fit:'
+                   ' $B_{{\perp,0}},E_0$={:.2f},{:.0f})'.format(gx0[1],gE0[1]))
+            #ca.set_yscale('log')
+            ca.autoscale(True,tight=True)
+        except AttributeError:
+            ca.text(0,0,'$\hat{\Phi}$ not used')
+
+
+        ca = ax[1,2]
+        try:
+            hp = ca.pcolormesh(x,Elin,gpix[1])
+            fg.colorbar(hp, ax=ca)
+            ca.set_title('$\hat{{\Phi}}$ estimate via gaussian fit:'
+                   ' $\hat{{B}}_{{\perp,0}}, \hat{{E}}_0$={:.2f},{:.0f})'.format(gx0[1],gE0[1]))
+            ca.set_xlabel('$B_\perp$ [km]')
+            ca.set_yscale('log')
+            ca.autoscale(True,tight=True)
+        except AttributeError:
+            ca.text(0,0,'$\hat{\Phi} not used')
+
+        writeplots(fg,'gaussfitlin',tInd,makeplot,progms,verbose=verbose)
+
+    #Ghrow,Ghcol = np.unravel_index(gfit.argmax(axis=None),gfit.shape, order='C')
+
+    return gx0, gE0#, x[pkcol], Elin[pkrow]
   except Exception as e:
       warn('gauss fit failure {}'.format(e))
-      return nan,nan,nan,nan
+      return nan,nan
