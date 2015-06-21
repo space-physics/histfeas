@@ -8,13 +8,13 @@ from matplotlib.pyplot import show
 #
 from analysehst import analyseres
 from sanityCheck import getParams
-from plotsnew import plotB, plotJ
+from plotsnew import plotB, plotJ, plotVER
 from observeVolume import definecamind
 
-vlim={'b':(None,None),'j':(None,None),'p':(None,None)}
+vlim={'b':(None,None),'j':(None,None),'p':[None]*6}
 
 def runtest(h5list,xlsfn,overrides,makeplot,verbose=0):
-    Phifwd =[]; Phidict =[]; dhat=[]; drn=[]
+    Phifwd =[]; Phidict =[]; dhat=[]; drn=[]; Pest=[]; Pfwd=[]
     
     nt = len(h5list)
     
@@ -26,6 +26,11 @@ def runtest(h5list,xlsfn,overrides,makeplot,verbose=0):
             Phifwd.append(f['/phifwd/phi'].value)
             Phidict.append({'x':f['/phiest/phi'].value, 
                             'EK':f['/phiest/Ek'].value})
+                            
+            Pest.append(f['/pest/p'].value)
+            Pfwd.append(f['/pfwd/p'].value)
+            z = f['/pest/z'].value
+            zp = f['/pest/zp'].value
 
             dhat.append(f['/best/bfit'].value)
             drn.append(f['/best/braw'].value)
@@ -48,12 +53,27 @@ def runtest(h5list,xlsfn,overrides,makeplot,verbose=0):
     cam = definecamind(cam,sim.nCutPix)
  
     for ti in range(nt):
-        plotB(drn[ti],sim.realdata,cam,vlim['b'],ti,makeplot,'$br',None,verbose)
+        if 'fwd' in makeplot:
+            plotB(drn[ti],sim.realdata,cam,vlim['b'],ti,makeplot,'$br',None,verbose)
+
+            plotJ(sim,Phifwd[...,ti],x,xp,Phidict[ti]['EK'],None,
+                  vlim['j'],vlim['p'][:2],ti,makeplot,'phifwd',
+                  '$\phi_{top}$ fwd diff. number flux',
+                  None,None,verbose)
+                  
+            plotVER(sim,Pfwd[ti],x,xp,z,zp,vlim['p'],ti,makeplot,'pfwd',
+                    '$P$ fwd volume emission rate', 
+                    None,None,verbose)
         
-        plotJ(sim,Phidict[ti]['x'],x,xp,Phidict[ti]['EK'],None,
-          vlim['j'],vlim['p'][:2],ti,makeplot,'phiest',
-          '$\hat{\phi}_{top}$ estimated diff. number flux',
-          None,None,verbose)
+        if 'optim' in makeplot:
+            plotJ(sim,Phidict[ti]['x'],x,xp,Phidict[ti]['EK'],None,
+                  vlim['j'],vlim['p'][:2],ti,makeplot,'phiest',
+                  '$\hat{\phi}_{top}$ estimated diff. number flux',
+                  None,None,verbose)
+                  
+            plotVER(sim,Pest[ti],x,xp,z,zp,vlim['p'],ti,makeplot,'pest',
+                    '$\hat{P}$ estimated volume emission rate', 
+                    None,None,verbose)
     
 if __name__ == '__main__':
     from glob import glob    
@@ -61,6 +81,7 @@ if __name__ == '__main__':
     from argparse import ArgumentParser
     p = ArgumentParser(description="load HiST output and plot/analyse")
     p.add_argument('h5path',help='path containing dump.h5 outputs (Hist output)')
+    p.add_argument('-m','--makeplot',help='plots to make',default=[None])
     p = p.parse_args()
     
     h5list = glob(expanduser(join(p.h5path,'dump_*.h5')))
@@ -69,6 +90,6 @@ if __name__ == '__main__':
     xlsfn = glob(expanduser(join(p.h5path,'*.xlsx')))
     if len(xlsfn) == 0: xlsfn=[None]
     
-    runtest(h5list,xlsfn[0],overrides=None,makeplot=('fwd','optim'))
+    runtest(h5list,xlsfn[0],None,p.makeplot)
     
     show()
