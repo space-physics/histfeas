@@ -51,14 +51,12 @@ def analyseres(sim,cam,x,xp,Phifwd,Phifit,drn,dhat,vlim,makeplot,progms,verbose)
 #%% energy flux plot amd calculations
     x0fwd = nans(nit); E0fwd = nans(nit); gx0fwd=nans(nit); gE0fwd=nans(nit)
     x0hat = nans(nit); E0hat = nans(nit); gx0hat=nans(nit); gE0hat=nans(nit)
-
-
     Eavgfwdx = nans((nit,sx))
     Eavghatx = nans((nit,sx))
+    
     dE = empty(nEnergy)
     dE[0] = 9.952 #a priori for this pre-arranged EK
     dE[1:] = diff(Phifit[0]['EK']) #per Dahlgren matlab code line 276-280
-
 #%% back to work
     for i,jf in enumerate(Phifit):
         #note even if array is F_CONTIGUOUS, argmax is C-order!!
@@ -84,7 +82,7 @@ def analyseres(sim,cam,x,xp,Phifwd,Phifit,drn,dhat,vlim,makeplot,progms,verbose)
         ax.set_xlabel('$B_\perp$ [km]')
         ax.set_ylabel('Expected Value $\overline{E}$ [eV]')
         ax.set_title('Fwd model: Average Energy $\overline{E}$ vs $B_\perp$')
-        ax.legend(['{:0.0f} eV'.format(g) for g in E0fwd],loc='best',fontsize=9)
+        ax.legend(['{:.0f} eV'.format(g) for g in E0fwd],loc='best',fontsize=9)
         writeplots(fgf,'Eavg_fwd',9999,makeplot,progms)
 
     if 'optim' in makeplot:
@@ -94,16 +92,16 @@ def analyseres(sim,cam,x,xp,Phifwd,Phifit,drn,dhat,vlim,makeplot,progms,verbose)
         ax.set_xlabel('$B_\perp$ [km]')
         ax.set_ylabel('Expected Value $\overline{E}$ [eV]')
         ax.set_title('ESTIMATED Average Energy $\overline{\hat{E}}$ vs $B_\perp$')
-        ax.legend(['{:0.0f} eV'.format(g) for g in E0fwd],loc='best',fontsize=9)
+        ax.legend(['{:.0f} eV'.format(g) for g in E0fwd],loc='best',fontsize=9)
         writeplots(fgo,'Eavg_optim',9999,makeplot,progms)
 #%% overall error
     gx0err = gx0hat-gx0fwd
     gE0err = gE0hat-gE0fwd
 
     print('B_\perp,0 Estimation-error =' + ' '.join(
-                                          ['{:0.2f}'.format(h) for h in gx0err]))
+                                          ['{:.2f}'.format(h) for h in gx0err]))
     print('E_0 Estimation-error =' + ' '.join(
-                                          ['{:0.1f}'.format(j) for j in gE0err]))
+                                          ['{:.1f}'.format(j) for j in gE0err]))
 
     if 'h5' in makeplot:
         fout = progms + '/fit_results.h5'

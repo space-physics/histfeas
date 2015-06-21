@@ -41,7 +41,7 @@ def runtest(h5list,xlsfn,overrides,makeplot,verbose=0):
         
     analyseres(None,None,
                x, xp, Phifwd, Phidict, drn, dhat,
-               vlim=vlim, makeplot=[None],
+               vlim, makeplot,
                progms=ext, verbose=verbose)
 
 #%%
@@ -81,7 +81,7 @@ if __name__ == '__main__':
     from argparse import ArgumentParser
     p = ArgumentParser(description="load HiST output and plot/analyse")
     p.add_argument('h5path',help='path containing dump.h5 outputs (Hist output)')
-    p.add_argument('-m','--makeplot',help='plots to make',default=[None])
+    p.add_argument('-m','--makeplot',help='plots to make',default=['gfit'])
     p = p.parse_args()
     
     h5list = glob(expanduser(join(p.h5path,'dump_*.h5')))

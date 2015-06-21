@@ -180,7 +180,7 @@ def getEll(sim,cam,Fwd,makePlots,dbglvl):
     else:
         L,Fwd,cam = loadEll(Fwd,cam,sim.FwdLfn,dbglvl)
 
-    L,cam = removeUnusedCamera(L,sim.useCamBool,sim.nCutPix)
+    L = removeUnusedCamera(L,sim.useCamBool,sim.nCutPix)
     cam = definecamind(cam,sim.nCutPix)
 
     return L,Fwd,cam
