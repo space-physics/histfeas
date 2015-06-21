@@ -8,10 +8,10 @@ from matplotlib.pyplot import show
 #
 from analysehst import analyseres
 from sanityCheck import getParams
-from plotsnew import plotB
+from plotsnew import plotB, plotJ
 from observeVolume import definecamind
 
-vlim={'b':(None,None)}
+vlim={'b':(None,None),'j':(None,None),'p':(None,None)}
 
 def runtest(h5list,xlsfn,overrides,makeplot,verbose=0):
     Phifwd =[]; Phidict =[]; dhat=[]; drn=[]
@@ -49,7 +49,11 @@ def runtest(h5list,xlsfn,overrides,makeplot,verbose=0):
  
     for ti in range(nt):
         plotB(drn[ti],sim.realdata,cam,vlim['b'],ti,makeplot,'$br',None,verbose)
-    
+        
+        plotJ(sim,Phidict[ti]['x'],x,xp,Phidict[ti]['EK'],None,
+          vlim['j'],vlim['p'][:2],ti,makeplot,'phiest',
+          '$\hat{\phi}_{top}$ estimated diff. number flux',
+          None,None,verbose)
     
 if __name__ == '__main__':
     from glob import glob    
