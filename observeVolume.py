@@ -180,17 +180,19 @@ def getEll(sim,cam,Fwd,makePlots,dbglvl):
     else:
         L,Fwd,cam = loadEll(Fwd,cam,sim.FwdLfn,dbglvl)
 
-    L,cam = removeUnusedCamera(L,sim.useCamBool,sim.nCutPix,cam)
+    L,cam = removeUnusedCamera(L,sim.useCamBool,sim.nCutPix)
+    cam = definecamind(cam,sim.nCutPix)
 
     return L,Fwd,cam
 
-def removeUnusedCamera(L,useCamBool,nCutPix,cam):
+def removeUnusedCamera(L,useCamBool,nCutPix):
     ''' remove unused cameras (rows of L) '''
     arow = ones(nCutPix).astype(bool)
     grow = outer(arow,useCamBool).ravel(order='F')
-    L = L[grow,:]
+    return L[grow,:]
+    
+def definecamind(cam,nCutPix):
     ''' store indices of b vector corresponding to each camera (in case some cameras not used) '''
     for i,c in enumerate(cam):
         cam[c].ind = s_[ i*nCutPix : (i+1)*nCutPix ]
-
-    return L,cam
+    return cam
