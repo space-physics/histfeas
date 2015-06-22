@@ -6,6 +6,10 @@ from numpy import diff, empty
 import h5py
 from plotsnew import writeplots
 from warnings import warn
+import seaborn as sns
+sns.color_palette(sns.color_palette("cubehelix"))
+sns.set(context='poster', style='whitegrid',
+        rc={'image.cmap': 'cubehelix_r'})
 #
 from nans import nans
 
@@ -106,15 +110,19 @@ def analyseres(sim,cam,x,xp,Phifwd,Phifit,drn,dhat,vlim,x0true=None,E0true=None,
     gE0err = gE0[:,1] - E0true # gE0[:,0]
 
     fg,(axx,axE) = subplots(1,2,sharey=False)
-    axx.stem(gx0err)
-    axx.set_xlabel('$t_i$ time index')
+    axx.stem(x0true,gx0err)
+    axx.set_xlabel('$B_\perp$ [km]')
     axx.set_ylabel('$\hat{B}_{\perp,0}$ error [km]')    
-    axx.set_title('$\hat{B}_{\perp,0}$ error vs. time & position')    
+    axx.set_title('$\hat{B}_{\perp,0}$ error vs. time & position')  
+    axx.set_ylim(-0.5,0.5)
+    axx.set_xlim(-7,7) #[km]
     
-    axE.stem(gE0err)
-    axE.set_xlabel('$t_i$ time index')
-    axE.set_ylabel('$\hat{E}_0$ error [km]')    
+    axE.stem(x0true,gE0err)
+    axE.set_xlabel('$B_\perp$ [km]')
+    axE.set_ylabel('$\hat{E}_0$ error [km]',labelpad=-0.5)    
     axE.set_title('$\hat{E}_0$ error vs. time & position')   
+    axE.set_ylim(-200,200)
+    axE.set_xlim(-7,7) #[km]
 
     print('B_\perp,0 Estimation-error =' + ' '.join(
                                           ['{:.2f}'.format(h) for h in gx0err]))
