@@ -75,7 +75,7 @@ def placetxt(x,y,txt,ax):
 def goPlot(sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
             fitp,rawdata,tInd,makeplot,progms,x1d,vlim,verbose):
 
-    spfid = None if progms is None else join(progms,'dump_t{:3d}.h5'.format(tInd))
+    spfid = None if progms is None else join(progms,'dump_t{:03d}.h5'.format(tInd))
     #cord = ['b','g','k','r','m','y']
 
     xKM = Fwd['x']
