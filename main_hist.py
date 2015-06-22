@@ -16,6 +16,7 @@ python3 main_hist.py in/2cam_trans.xlsx /dev/shm/rev_trans2/ -m fwd png --vlim -
 """
 from __future__ import division,print_function
 from signal import signal,SIGINT #for Ctrl C
+from sys import argv
 from os.path import expanduser, join
 from os import makedirs
 from numpy import absolute,zeros,in1d,arange,outer
@@ -24,11 +25,11 @@ from warnings import warn
 #
 #import logging
 #logging.basicConfig(filename='hist.log',filemode='w',level=logging.DEBUG)
-from pyimagevideo.imageconv import png2multipage
-from sanityCheck import getParams
 
 def doSim(ParamFN,savedump,makeplot,datadump,timeInds,overrides,progms,x1d,vlim,animtime, cmd,verbose):
     # local -- these were put here so that matplotlib backend autoselect could happen first
+    from pyimagevideo.imageconv import png2multipage
+    from sanityCheck import getParams
     from transcarutils.eFluxGen import maxwellian
     from AuroraFwdModel import getSimVER
     from transcararc import getMp,getPhi0,getpx #calls matplotlib
@@ -131,7 +132,6 @@ def signal_handler(signal, frame):
 #%% -----------------------------------------------------------
 if __name__ == '__main__':
     from argparse import ArgumentParser
-    from sys import argv
 
     signal(SIGINT, signal_handler) #allows friendly ctrl-c interrupt
 
