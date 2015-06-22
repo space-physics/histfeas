@@ -2,9 +2,13 @@
 from __future__ import division,absolute_import
 import h5py
 from os.path import join,expanduser,splitext
-from numpy import asarray
+from numpy import asarray,diff
 from warnings import warn
 from matplotlib.pyplot import show
+import seaborn as sns
+sns.color_palette(sns.color_palette("cubehelix"))
+sns.set(context='poster', style='whitegrid',
+        rc={'image.cmap': 'cubehelix_r'})
 #
 from analysehst import analyseres
 from sanityCheck import getParams
@@ -47,8 +51,9 @@ def runtest(h5list,xlsfn,overrides,makeplot,verbose=0):
     cam = definecamind(cam,sim.nCutPix)
     
     for a in ap:
-        x0true = ap[a].loc['X0km',:][:-1]
-        E0true= ap[a].loc['E0',:][:-1]
+        #TODO assumes all are same distance apart
+        x0true = ap[a].loc['X0km',:][:-1] + 0.5*diff(ap[a].loc['X0km',:])
+        E0true= ap[a].loc['E0',:][:-1]    + 0.5*diff(ap[a].loc['E0',:])
             
         analyseres(None,None,
                    x, xp, Phifwd, Phidict, drn, dhat,
