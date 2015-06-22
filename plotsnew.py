@@ -1156,7 +1156,7 @@ def getx0E0(Phifwd,Phifit,E,x,tInd,progms,makeplot,verbose):
 
   gaussEmin=500.
   Npts = 200
-  Nptsfits = (int(Npts/20), int(Npts/10))
+  Nptsfits = (int(Npts/30), int(Npts/20))
 
   try:
     def clipPhi(fwd,fit,E):
