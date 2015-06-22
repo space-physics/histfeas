@@ -38,20 +38,24 @@ def runtest(h5list,xlsfn,overrides,makeplot,verbose=0):
     stem,ext = splitext(h5)  #all in same directory
     
     Phifwd = asarray(Phifwd).transpose(1,2,0)
-        
-    analyseres(None,None,
-               x, xp, Phifwd, Phidict, drn, dhat,
-               vlim, makeplot,
-               progms=ext, verbose=verbose)
-
-#%%
+    
     if xlsfn is None: 
         warn('No XLSX parameter file found')
         return
         
     ap,sim,cam,Fwd = getParams(xlsfn,overrides,makeplot,progms=None,verbose=verbose)
     cam = definecamind(cam,sim.nCutPix)
- 
+    
+    for a in ap:
+        x0true = ap[a].loc['X0km',:][:-1]
+        E0true= ap[a].loc['E0',:][:-1]
+            
+        analyseres(None,None,
+                   x, xp, Phifwd, Phidict, drn, dhat,
+                   vlim, x0true,E0true,makeplot,
+                   progms=ext, verbose=verbose)
+
+#%% 
     for ti in range(nt):
         if 'fwd' in makeplot:
             plotB(drn[ti],sim.realdata,cam,vlim['b'],ti,makeplot,'$br',None,verbose)
@@ -81,7 +85,7 @@ if __name__ == '__main__':
     from argparse import ArgumentParser
     p = ArgumentParser(description="load HiST output and plot/analyse")
     p.add_argument('h5path',help='path containing dump.h5 outputs (Hist output)')
-    p.add_argument('-m','--makeplot',help='plots to make',default=['gfit'])
+    p.add_argument('-m','--makeplot',help='plots to make',default=[])
     p = p.parse_args()
     
     h5list = glob(expanduser(join(p.h5path,'dump_*.h5')))

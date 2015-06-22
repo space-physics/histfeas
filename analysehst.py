@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 from plotsnew import getx0E0, plotB
-from matplotlib.pyplot import figure,close
+from matplotlib.pyplot import figure,close,subplots
 from matplotlib.ticker import MaxNLocator#,ScalarFormatter# ,LogFormatterMathtext, #for 1e4 -> 1 x 10^4, applied DIRECTLY in format=
 from numpy import diff, empty
 import h5py
@@ -9,7 +9,8 @@ from warnings import warn
 #
 from nans import nans
 
-def analyseres(sim,cam,x,xp,Phifwd,Phifit,drn,dhat,vlim,makeplot,progms,verbose):
+def analyseres(sim,cam,x,xp,Phifwd,Phifit,drn,dhat,vlim,x0true=None,E0true=None,
+               makeplot=[None], progms=None,verbose=0):
     if Phifwd is None or Phifit[0]['x'] is None:
         return
     '''
@@ -101,8 +102,19 @@ def analyseres(sim,cam,x,xp,Phifwd,Phifit,drn,dhat,vlim,makeplot,progms,verbose)
         ax.legend(['{:.0f} eV'.format(g) for g in gE0[:,0]],loc='best',fontsize=9)
         writeplots(fgo,'Eavg_optim',9999,makeplot,progms)
 #%% overall error
-    gx0err = gx0[:,1]-gx0[:,0]
-    gE0err = gE0[:,1]-gE0[:,0]
+    gx0err = gx0[:,1] - x0true #-gx0[:,0]
+    gE0err = gE0[:,1] - E0true # gE0[:,0]
+
+    fg,(axx,axE) = subplots(1,2,sharey=False)
+    axx.stem(gx0err)
+    axx.set_xlabel('$t_i$ time index')
+    axx.set_ylabel('$\hat{B}_{\perp,0}$ error [km]')    
+    axx.set_title('$\hat{B}_{\perp,0}$ error vs. time & position')    
+    
+    axE.stem(gE0err)
+    axE.set_xlabel('$t_i$ time index')
+    axE.set_ylabel('$\hat{E}_0$ error [km]')    
+    axE.set_title('$\hat{E}_0$ error vs. time & position')   
 
     print('B_\perp,0 Estimation-error =' + ' '.join(
                                           ['{:.2f}'.format(h) for h in gx0err]))
