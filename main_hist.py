@@ -26,7 +26,7 @@ from warnings import warn
 #import logging
 #logging.basicConfig(filename='hist.log',filemode='w',level=logging.DEBUG)
 
-def doSim(ParamFN,savedump,makeplot,datadump,timeInds,overrides,progms,x1d,vlim,animtime, cmd,verbose):
+def doSim(ParamFN,makeplot,timeInds,overrides,progms,x1d,vlim,animtime, cmd,verbose):
     # local -- these were put here so that matplotlib backend autoselect could happen first
     from pyimagevideo.imageconv import png2multipage
     from sanityCheck import getParams
@@ -111,7 +111,7 @@ def doSim(ParamFN,savedump,makeplot,datadump,timeInds,overrides,progms,x1d,vlim,
     analyseres(sim,cam,Fwd['x'],Fwd['xPixCorn'],
                    Phi0all,PhifitAll,drnAll,bfitAll,vlim,makeplot,progms,verbose)
 #%% debug: save variables to MAT file
-    if 'mat' in savedump:
+    if 'mat' in makeplot:
         from scipy.io import savemat
         cMatFN = ''.join((progms,'/comparePy','.mat'))
         try:
@@ -120,7 +120,7 @@ def doSim(ParamFN,savedump,makeplot,datadump,timeInds,overrides,progms,x1d,vlim,
                   'xPixCorn':Fwd['xPixCorn'],'zPixCorn':Fwd['zPixCorn']}
             savemat(cMatFN,oned_as='column',mdict=vd )
         except Exception as e:
-            print('failed to save to mat file.  {}'.format(e))
+            warn('failed to save to mat file.  {}'.format(e))
 
     msg ='{} program end'.format(argv[0]); print(msg); #print(msg,file=stderr)
 
@@ -141,7 +141,6 @@ if __name__ == '__main__':
     p.add_argument('-v','--verbose',help='set debugging verbosity e.g. -v -vv -vvv',action='count',default=0)
     p.add_argument('--mat',help='save matlab .mat file of results',action="store_true")
     p.add_argument('--h5',help='save HDF5 .h5 file of fit results',action="store_true")
-    p.add_argument('--dump',help='dump debugging data to .h5 at key points of program',action="store_true")
     p.add_argument('-m','--makeplot',help='list plots you want made',nargs='+',default=[''],type=str) #None gave type errors in generators & list comp.
     p.add_argument('-p','--showplot',help='show plots on screen',action="store_true")
     p.add_argument('-f','--frames',help='START STOP STEP of time indices',nargs=3,default=None,type=int)
@@ -164,11 +163,10 @@ if __name__ == '__main__':
     ar = p.parse_args()
 
     ParamFN = expanduser(ar.infile)
-    savedump=[None]
-    if ar.mat: savedump.append('mat')
-    if ar.h5: savedump.append('h5')
 #%% plot setup
     makeplot = ar.makeplot
+    if ar.h5: makeplot.append('h5')
+    if ar.mat: makeplot.append('mat')
     if ar.showplot: makeplot.append('show')
     if ar.logplot: makeplot.append('log')
     # these matplotlib imports MUST GO IN THIS ORDER
@@ -191,7 +189,6 @@ if __name__ == '__main__':
 #%%
     timeInds = ar.frames
     doProfile = ar.profile
-    datadump = ar.dump
 #%% output directory
     progms = ar.outdir
     try:
@@ -215,7 +212,7 @@ if __name__ == '__main__':
         import cProfile,pstats
         proffn = 'hstprofstats.pstats'
         print('saving profile results to ' + proffn)
-        cProfile.run('doSim(ParamFN,savedump,makeplot,datadump,timeInds,'
+        cProfile.run('doSim(ParamFN,makeplot,timeInds,'
                  'overrides,progms,ar.x1d,vlim,ar.anim,' '.join(argv),ar.verbose)',proffn)
         pstats.Stats(proffn).sort_stats('time','cumulative').print_stats(50)
         #binpath = expanduser('~/profile/')
@@ -226,8 +223,7 @@ if __name__ == '__main__':
         #print(so.decode('utf8'))
 
     else: #normal
-        doSim(ParamFN,savedump,makeplot,datadump,timeInds,
-                                      overrides,progms,ar.x1d, vlim,ar.anim,' '.join(argv), ar.verbose)
+        doSim(ParamFN,makeplot,timeInds,overrides,progms,ar.x1d, vlim,ar.anim,' '.join(argv), ar.verbose)
 
     if 'show' in makeplot:
         show()
