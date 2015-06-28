@@ -6,9 +6,9 @@ from scipy.interpolate import interp1d
 from warnings import warn
 from six import string_types
 #
-from transcarutils.readTranscar import getTranscar
-from transcarutils.eFluxGen import fluxgen
+from gridaurora.eFluxGen import fluxgen
 from pybashutils.findnearest import find_nearest
+from arcexcite import getTranscar
 
 
 #def getTranscarMp(sim,makeplot,dbglvl):
@@ -89,11 +89,11 @@ def getPhi0(sim,ap,xKM,Ek,makeplots,verbose):
 
 def assemblePhi0(sim,ap,Ek,xKM,verbose):
     Phi0 = zeros((Ek.size,xKM.size,sim.nTimeSlice),order='F') #NOT empty, since we sum to build it!
-    
+
     for a in ap: #iterate over arcs, using superposition
 #%% upsample to sim time steps
         E0,Q0,Wbc,bl,bm,bh,Bm,Bhf, Wkm,X0,Xshape = upsampletime(ap[a],sim,verbose)
-    
+
         pz = fluxgen(Ek, E0,Q0,Wbc,bl,bm,bh,Bm,Bhf, verbose)[0]
 #%% horizontal modulation
         px = getpx(xKM,Wkm,X0,Xshape)

@@ -31,7 +31,7 @@ except ImportError as e:
     warn('{}'.format(e))
 
 from pybashutils.findnearest import find_nearest
-from transcarutils.opticalmod import plotOptMod
+from gridaurora.opticalmod import plotOptMod
 #%% plot globals
 afs = None#20
 tfs = None#22
