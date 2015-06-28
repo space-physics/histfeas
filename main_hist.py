@@ -30,7 +30,7 @@ def doSim(ParamFN,savedump,makeplot,datadump,timeInds,overrides,progms,x1d,vlim,
     # local -- these were put here so that matplotlib backend autoselect could happen first
     from pyimagevideo.imageconv import png2multipage
     from sanityCheck import getParams
-    from transcarutils.eFluxGen import maxwellian
+    from gridaurora.eFluxGen import maxwellian
     from AuroraFwdModel import getSimVER
     from transcararc import getMp,getPhi0,getpx #calls matplotlib
     from observeVolume import getEll,getObs #calls matplotlib
