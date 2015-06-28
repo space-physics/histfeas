@@ -46,7 +46,7 @@ def getTranscar(sim,dbglvl=0):
             else:
                 tReq = tReq.astimezone(UTC)
         except (ValueError,AttributeError) as e:
-            warn('*** getTranscar: You must specify a tReq in the spreadsheet for when you want to use transcar data' + str(e))
+            warn('You must specify a tReq in the spreadsheet for when you want to use transcar data' + str(e))
             tReq = None
 
         lowestBeamUsedInd = getbeamsused(zeroUnusedBeams,Ek,sim.minbeamev)
@@ -55,10 +55,10 @@ def getTranscar(sim,dbglvl=0):
         PlambdaAccum=None #for later testing
         for iEn in range(nEnergy):
 
-            spec,tTC = calcVERtc(sim.excratesfn, sim.transcarpath,
+            spec,tTC,tTCind = calcVERtc(sim.excratesfn, sim.transcarpath,
                                     Ek[iEn], tReq, sim, dbglvl)
-            #FIXME: move calcemissions up to hist-feasibility
-            Plambda = calcemissions(spec,tReq,sim,Ek[iEn])[0]
+
+            Plambda = calcemissions(spec,tTCind,sim,Ek[iEn])[0]
             if Plambda is None: #couldn't read this beam
                 continue
             z = Plambda.columns.values
