@@ -16,3 +16,6 @@
 [submodule "pybashutils"]
 	path = pybashutils
 	url = https://github.com/scienceopen/pybashutils.git
+[submodule "gridaurora"]
+	path = gridaurora
+	url = https://github.com/scienceopen/gridaurora
