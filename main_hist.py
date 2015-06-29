@@ -117,7 +117,7 @@ def doSim(ParamFN,makeplot,timeInds,overrides,progms,x1d,vlim,animtime, cmd,verb
 #%% debug: save variables to MAT file
     if 'mat' in makeplot and progms is not None:
         from scipy.io import savemat
-        cMatFN = (progms,'comparePy.mat')
+        cMatFN = join(progms,'comparePy.mat')
         try:
             print('saving to:',cMatFN)
             vd = {'drnP':bn,'LP':Lfwd,'vP':Pfwd,'vfitP':Pfit,#'vhatP':Phat['vART'],
