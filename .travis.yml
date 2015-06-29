@@ -1,6 +1,6 @@
 sudo: false
 git:
-  depth: 1
+  submodules: false
 language: python
 python:
   - "3.4"
@@ -16,6 +16,7 @@ before_install:
   - export PATH=$HOME/miniconda/bin:$PATH
   - conda update --yes conda
   - python --version #just checking
+  - git submodule update --init --recursive
 
 install:
  - if [[ -z $pyv ]]; then
