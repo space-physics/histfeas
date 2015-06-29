@@ -29,7 +29,7 @@ def get1Dcut(cam,makeplot,progms,dbglvl):
         cam[c].findClosestAzel(discardEdgepix)
 
 #%%
-    if dbglvl>2:
+    if dbglvl>2 and progms is not None:
         dbgfn = join(progms,'debugLSQ.h5')
         print('writing', dbgfn)
         with h5py.File(dbgfn,libver='latest') as fid:
@@ -76,7 +76,7 @@ def plotLOSecef(cam,makeplot,progms,dbglvl):
 
     if dbglvl>0:
         axecef.legend()
-    if 'kmlell' in makeplot:
+    if 'kmlell' in makeplot and progms is not None:
         kmlfn = join(progms,'debug1dcut.kmz')
         print('saving', kmlfn)
         kml1d.savekmz(kmlfn)

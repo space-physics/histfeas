@@ -13,7 +13,7 @@ from warnings import warn
 from transcararc import getColumnVER
 from plotsnew import getx0E0
 
-def FitVERopt(L,bn,Phi0,MpDict,sim,cam,Fwd,tInd,progms,makeplot,verbose):
+def FitVERopt(L,bn,Phi0,MpDict,sim,cam,Fwd,tInd,makeplot,verbose):
     vfit = {}; bfit = {}; Phifit = {'x':None} #in case optim not run
     minverbose=bool(verbose)
 #%% scaling brightness
