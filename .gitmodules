@@ -1,9 +1,6 @@
 [submodule "CVutils"]
 	path = CVutils
 	url = https://scienceopen@github.com/scienceopen/CVutils.git
-[submodule "transcarutils"]
-	path = transcarutils
-	url = https://scienceopen@bitbucket.org/scienceopen/transcarutils.git
 [submodule "pymap3d"]
 	path = pymap3d
 	url = https://scienceopen@github.com/scienceopen/pymap3d.git
@@ -19,3 +16,6 @@
 [submodule "gridaurora"]
 	path = gridaurora
 	url = https://github.com/scienceopen/gridaurora
+[submodule "transcarread"]
+	path = transcarread
+	url = https://github.com/scienceopen/transcarread

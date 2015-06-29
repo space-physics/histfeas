@@ -28,8 +28,8 @@ def hist_registration():
         assert_allclose(f['/Phi/0'],Phi0)
         # noise makes inversion result differ uniquely each run
         # here I allow 10% error to pass
-        assert isclose(f['/Phi/params/gE0'],Phifit[0]['gE0'],rtol=0.1)
-        assert isclose(f['/Phi/params/gx0'],Phifit[0]['gx0'],rtol=0.1)
+        assert isclose(f['/Phi/params/E0'],Phifit[0]['gE0'],rtol=0.1)
+        assert isclose(f['/Phi/params/x0'],Phifit[0]['gx0'],rtol=0.1)
 
     return Phi0,Phifit
 
