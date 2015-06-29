@@ -1,4 +1,5 @@
 [![Code Climate](https://codeclimate.com/github/scienceopen/hist-feasibility/badges/gpa.svg)](https://codeclimate.com/github/scienceopen/hist-feasibility)
+[![Build Status](https://travis-ci.org/scienceopen/hist-feasibility.svg)](https://travis-ci.org/scienceopen/hist-feasibility)
 
 hist-feasibility
 ================
