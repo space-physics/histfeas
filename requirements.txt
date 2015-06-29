@@ -5,3 +5,4 @@ scipy>=0.15
 pandas>=0.16.2
 astropy>=1.0
 scikit-image>=0.10
+seaborn
