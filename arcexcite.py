@@ -10,11 +10,11 @@ from os.path import expanduser
 try:
     from .gridaurora.opticalmod import opticalModel
     from .gridaurora.calcemissions import calcemissions, sortelimlambda
-    from .transcarutils.readTranscar import calcVERtc
+    from .transcarread.readTranscar import calcVERtc
 except:
     from gridaurora.opticalmod import opticalModel
     from gridaurora.calcemissions import calcemissions, sortelimlambda
-    from transcarutils.readTranscar import calcVERtc
+    from transcarread.readTranscar import calcVERtc
 
 def getTranscar(sim,dbglvl=0):
     zeroUnusedBeams = False

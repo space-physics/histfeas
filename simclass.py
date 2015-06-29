@@ -5,7 +5,10 @@ from os.path import join
 from dateutil.parser import parse
 from warnings import warn
 #
-from transcarutils.readionoinit import getaltgrid
+try:
+    from .transcarread.readionoinit import getaltgrid
+except:
+    from transcarread.readionoinit import getaltgrid
 
 class Sim:
 
