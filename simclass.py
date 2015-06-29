@@ -23,7 +23,7 @@ class Sim:
                         cp.at['useCam',ci] = 0 #do not use boolean, it screws up other rows
             if usecamreq[0] is not None:
                 assert np.all(where(self.useCamBool)[0] == usecamreq) #not .all() in case of different length
-            
+
  # camera position override check (work done in sanityCheck.setupCam)
             self.camxreq = overrides['camx']
             if self.camxreq[0] is not None and len(self.camxreq) != self.nCamUsed:
@@ -110,7 +110,7 @@ class Sim:
         self.transcarpath = sp.at['TranscarDataDir','Sim']
         self.reactionfn = sp.at['reactionParam','Transcar']
         self.transcarconfig = sp.at['simconfig','Transcar']
-        
+
         self.minflux = sp.at['minflux','Recon']
 
         self.reacreq = ()
@@ -130,7 +130,7 @@ class Sim:
         else:
             self.downsampleEnergy = False
 
-        if progms and overrides['ell']:
+        if progms is not None and overrides['ell']:
             self.FwdLfn = join(progms,self.getEllHash(sp,cp))
         else:
             self.FwdLfn = join('precompute',self.getEllHash(sp,cp))

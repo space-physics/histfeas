@@ -28,6 +28,7 @@ from warnings import warn
 
 def doSim(ParamFN,makeplot,timeInds,overrides,progms,x1d,vlim,animtime, cmd,verbose):
     # local -- these were put here so that matplotlib backend autoselect could happen first
+    from matplotlib.pyplot import close
     from pyimagevideo.imageconv import png2multipage
     from sanityCheck import getParams
     from gridaurora.eFluxGen import maxwellian
@@ -76,20 +77,21 @@ def doSim(ParamFN,makeplot,timeInds,overrides,progms,x1d,vlim,animtime, cmd,verb
         bn = getObs(sim,cam,Lfwd,ti,Pfwd,makeplot,verbose)
         drnAll.append(bn)
 #%% Step 3) fit constituent energies to our estimated vHat and reproject
-        if overrides['fwdguess'][0] == 'maxwellian':
+
+        if overrides and overrides['fwdguess'][0] == 'maxwellian':
             Phi0z = maxwellian(Peig['Ek'],1e3,1e10)[0].ravel(order='F')
             Phi0r = outer(Phi0z, getpx(Fwd['x'],Wkm=1e3,X0=0,xs='gaussian'))
-        elif overrides['fwdguess'][0] == 'true':
+        elif overrides and overrides['fwdguess'][0] == 'true':
             Phi0r = Phi0.ravel(order='F')
             warn('** WARNING: feeding minimizer the true answer--testing only!! **')
-        elif overrides['fwdguess'][0] == 'randn':
+        elif overrides and overrides['fwdguess'][0] == 'randn':
             randfact = absolute(normal(1,overrides['fwdguess'][1], size=Phi0.size))
             warn('** WARNING: feeding minizer true answer times {}'.format(randfact))
             Phi0r = randfact * Phi0.ravel(order='F')
         else: #normal case, no a priori
             Phi0r = zeros(Fwd['sx']*Peig['Mp'].shape[1]) #ones() is NOT appropriate -- must be tapered down for higher energy beams to keep physically plausible.
 
-        Pfit,jfit,Tm,bfit = FitVER(Lfwd, bn, Phi0r, Peig, sim, cam,Fwd, ti,progms, makeplot,verbose)
+        Pfit,jfit,Tm,bfit = FitVER(Lfwd, bn, Phi0r, Peig, sim, cam,Fwd, ti, makeplot,verbose)
 #%% collect results
         PhifitAll.append(jfit); bfitAll.append(bfit)
 #%% plot results
@@ -109,11 +111,13 @@ def doSim(ParamFN,makeplot,timeInds,overrides,progms,x1d,vlim,animtime, cmd,verb
     png2multipage(progms,'.eps','.tif',descr=cmd,delete=False,verbose=verbose) #gif writing is not working yet
 
     analyseres(sim,cam,Fwd['x'],Fwd['xPixCorn'],
-                   Phi0all,PhifitAll,drnAll,bfitAll,vlim,makeplot,progms,verbose)
+                   Phi0all,PhifitAll,drnAll,bfitAll,vlim,
+                   x0true=None,E0true=None,
+                   makeplot=makeplot,progms=progms,verbose=verbose)
 #%% debug: save variables to MAT file
-    if 'mat' in makeplot:
+    if 'mat' in makeplot and progms is not None:
         from scipy.io import savemat
-        cMatFN = ''.join((progms,'/comparePy','.mat'))
+        cMatFN = (progms,'comparePy.mat')
         try:
             print('saving to:',cMatFN)
             vd = {'drnP':bn,'LP':Lfwd,'vP':Pfwd,'vfitP':Pfit,#'vhatP':Phat['vART'],
@@ -124,7 +128,8 @@ def doSim(ParamFN,makeplot,timeInds,overrides,progms,x1d,vlim,animtime, cmd,verb
 
     msg ='{} program end'.format(argv[0]); print(msg); #print(msg,file=stderr)
 
-#%% =======================================================================
+    return Phi0all,PhifitAll
+
 
 def signal_handler(signal, frame):
     print('\n *** Aborting program as per user pressed Ctrl+C ! \n')
@@ -156,7 +161,7 @@ if __name__ == '__main__':
     p.add_argument('--minev',help='minimum beam energy to include in fwd model',type=float,default=None)
     p.add_argument('-g','--fwdguess',help='feed minimizer fwd answer. true | randn stddev |',type=str,nargs='+',default=[None])
     p.add_argument('--fitm',help='override fit (minimization) method',type=str,default=None)
-    p.add_argument('--vlim',help='xmin xmax zmin zmax pmin pmax   limits for VER plots',type=float,nargs=6,default=(None,None,None,None,None,None))
+    p.add_argument('--vlim',help='xmin xmax zmin zmax pmin pmax   limits for VER plots',type=float,nargs=6,default=[None]*6)
     p.add_argument('--jlim',help='MIN MAX flux limits for diff num flux plots',type=float,nargs=2,default=(None,None))
     p.add_argument('--blim',help='MIN MAX flux limits for brightness plots',type=float,nargs=2,default=(None,None))
     p.add_argument('-L','--ell',help='force recomputation of sparse matrix L',action='store_true')
@@ -182,7 +187,7 @@ if __name__ == '__main__':
         pass
         #mpl.use('Qt4Agg') # NOT FOR ANACONDA3
         #mpl.use('Tkagg') # possibly faster than qt4agg
-    from matplotlib.pyplot import show,draw,close,pause
+    from matplotlib.pyplot import show,draw,pause
     print(('matplotlib backend / version: ' + mpl.get_backend() +'  ' + mpl.__version__  ))
 #%%
     vlim = {'p':ar.vlim,'j':ar.jlim,'b':ar.blim}
