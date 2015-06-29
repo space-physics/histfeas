@@ -1,2 +1,3 @@
+tifffile
 -e git://github.com/scienceopen/gaussfitter.git#egg=gaussfitter
 
