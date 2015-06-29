@@ -4,18 +4,19 @@ from matplotlib.pyplot import figure,close,subplots
 from matplotlib.ticker import MaxNLocator#,ScalarFormatter# ,LogFormatterMathtext, #for 1e4 -> 1 x 10^4, applied DIRECTLY in format=
 from numpy import diff, empty
 import h5py
-from plotsnew import writeplots
+from os.path import join
 from warnings import warn
 import seaborn as sns
 sns.color_palette(sns.color_palette("cubehelix"))
 sns.set(context='poster', style='whitegrid',
         rc={'image.cmap': 'cubehelix_r'})
 #
+from plotsnew import writeplots
 from nans import nans
 
 def analyseres(sim,cam,x,xp,Phifwd,Phifit,drn,dhat,vlim,x0true=None,E0true=None,
                makeplot=[None], progms=None,verbose=0):
-    if Phifwd is None or Phifit[0]['x'] is None:
+    if Phifwd is None or Phifit[0]['x'] is None or x0true is None or E0true is None:
         return
     '''
     we need to fill zeros in jfwd with machine epsilon, since to get avg we need
@@ -112,15 +113,15 @@ def analyseres(sim,cam,x,xp,Phifwd,Phifit,drn,dhat,vlim,x0true=None,E0true=None,
     fg,(axx,axE) = subplots(1,2,sharey=False)
     axx.stem(x0true,gx0err)
     axx.set_xlabel('$B_\perp$ [km]')
-    axx.set_ylabel('$\hat{B}_{\perp,0}$ error [km]')    
-    axx.set_title('$\hat{B}_{\perp,0}$ error vs. time & position')  
+    axx.set_ylabel('$\hat{B}_{\perp,0}$ error [km]')
+    axx.set_title('$\hat{B}_{\perp,0}$ error vs. time & position')
     axx.set_ylim(-0.5,0.5)
     axx.set_xlim(-7,7) #[km]
-    
+
     axE.stem(x0true,gE0err)
     axE.set_xlabel('$B_\perp$ [km]')
-    axE.set_ylabel('$\hat{E}_0$ error [km]',labelpad=-0.5)    
-    axE.set_title('$\hat{E}_0$ error vs. time & position')   
+    axE.set_ylabel('$\hat{E}_0$ error [km]',labelpad=-0.5)
+    axE.set_title('$\hat{E}_0$ error vs. time & position')
     axE.set_ylim(-200,200)
     axE.set_xlim(-7,7) #[km]
 
@@ -129,8 +130,8 @@ def analyseres(sim,cam,x,xp,Phifwd,Phifit,drn,dhat,vlim,x0true=None,E0true=None,
     print('E_0 Estimation-error =' + ' '.join(
                                           ['{:.1f}'.format(j) for j in gE0err]))
 
-    if 'h5' in makeplot:
-        fout = progms + '/fit_results.h5'
+    if 'h5' in makeplot and progms is not None:
+        fout = join(progms,'fit_results.h5')
         with h5py.File(fout,'w',libver='latest') as f:
             f['/gx0/err']=gx0err
             f['/gx0/fwdfit']=gx0
