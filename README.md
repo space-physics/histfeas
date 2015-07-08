@@ -10,18 +10,25 @@ This program should be runnable on any Python 3.4 platform. Primarily tested on 
 
 installation:
 ------------
+go to the directory where you want to install this program under e.g. ~/code
+
+then, in Terminal (for Linux, Mac or Cygwin on Windows), copy and paste:
+
 ```
 git clone --recursive --depth 1 https://github.com/scienceopen/hist-feasibility
-sudo apt-get install libfreeimage3
-pip install -r requirements.txt
-git submodule update --init --remote
-git submodule foreach "(git checkout master; git pull)"
-cd transcar-utils
-git submodule update --init --remote
-git submodule foreach "(git checkout master; git pull)"
-cd lowtran
-make -f Makefile.f2py
+
+cd hist-feasibility
+
+./setup.sh
 ```
+
+You can check that things are working OK by:
+    python registration.py
+
+which should give a few lines of text ending with:
+    registration.py done looping
+    registration.py program end
+
 
 examples:
 ---------
