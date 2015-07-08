@@ -172,12 +172,6 @@ def goPlot(sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
 
     bcomptxt = ('best')
                #'($x_0$,$E_0$)=(' +'{:0.2f}'.format(x0) + ',' + '{:0.0f}'.format(E0) + ') [km,eV]')
-#%% ART Energy plots
-    if 'jartadj' in makeplot:
-        #fa,aa = subplots(nrows=1,ncols=2,sharex='col',num=992, figsize=(5,14))
-        plotJ(sim,fitp['phiARTadjoint'],xKM,xp,fitp['EK'],fitp['EKpcolor'],vlim['j'],vlim['p'][:2],tInd,makeplot,'jartadj',
-              '$\phi_{art,adj}$ Estimated (ADJOINT) from ART VER',
-              spfid,progms,verbose)
 #%% Forward model plots
     if 'fwd' in makeplot or 'optim' in makeplot:
         plotnoise(cam,tInd,makeplot,'bnoise',progms,verbose)
@@ -206,10 +200,6 @@ def goPlot(sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
     if 'optim' in makeplot:
         plotoptim(sim,cam,drn,dhat,nCutPix,bcomptxt,ver,Phi0,Jxi,
                   vfit,fitp,xKM,xp,zKM,zp,vlim,tInd,makeplot,spfid,progms,verbose)
-#%% Adjoint TJ plots
-    if 'adj' in makeplot:
-        plotadj(sim,cam,drn,dhat,nCutPix,xKM,xp,zKM,zp,vfit,fitp,vlim,
-                                 bcomptxt,tInd,makeplot,spfid,progms,verbose)
 #%% maximum entropy
     if 'phimaxent' in makeplot:
         plotJ(sim,fitp['maxent'],xKM,xp,fitp['EK'],fitp['EKpcolor'],vlim['j'],vlim['p'][:2],tInd,makeplot,'jme',
@@ -314,24 +304,6 @@ def plotoptim(sim,cam,drn,dhat,nCutPix,bcomptxt,ver,Phi0,Jxi,
         plotJ1D(sim,Phi0[:,Jxi],fitp.x[:,Jxi],fitp['EK'],vlim['j'],tInd,makeplot,'phiest1d',
         ('$\hat{\phi}_{top}$ estimated diff. number flux at $B_\perp$={:0.2f} [km]'.format(xKM[Jxi])),
                            spfid,progms,verbose)
-#%%
-def plotadj(sim,cam,drn,dhat,nCutPix,xKM,xp,zKM,zp,vfit,fitp,vlim,
-                                 bcomptxt,tInd,makeplot,spfid,progms,verbose):
-    if 'phiadj' in makeplot:
-        plotJ(sim,fitp['phiTJadjoint'],xKM,xp,fitp['EK'],fitp['EKpcolor'],vlim['j'],vlim['p'][:2],tInd,makeplot,'jadj',
-                    '$\hat{Phi}_{adj}$ Estimated diff. number flux from $LT\Phi=B$',
-                     spfid,progms,verbose)
-    if 'padj' in makeplot:
-        plotVER(sim,vfit['adj'],xKM,xp,zKM,zp,vlim['p'],tInd,makeplot,'vadj',
-              '$\hat{P}_{adj}$ from unfiltered backprojection $A^+b$',
-              spfid,progms,verbose)
-    if 'badj' in makeplot:
-        plotBcompare(sim,drn,dhat['fit_adj'],cam,sim.nCamUsed,
-                     'badj',spfid,vlim['b'],tInd,makeplot,progms,verbose)
-#    if 'vbackproj' in makeplot:
-#        plotVER(sim,Phat['vBackProj'],xKM,xp,zKM,zp,vlim['p'],tInd,makeplot,'vadj',
-#              '$\hat{v}_{back_projection}$ from unfiltered backprojection $A^+b$',
-#              spfid,progms)
 #%% ############################################################################
 def plotnoise(cam,tInd,makeplot,prefix,progms,verbose):
   try:

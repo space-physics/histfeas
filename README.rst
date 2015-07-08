@@ -150,6 +150,25 @@ to the simulation (for real data, we don't have this)
 
 Our IEEE TGARS article (in review) details the math and algorithm.
 
+------------------
+Output Processing
+------------------
+The .h5 HDF5 files output by the ``-h5`` command-line parameter can be loaded in nearly any analysis
+software such as GNU Octave, Matlab, IDL, Mathematica, etc.
+Some of the 1-D variables are duplicated because we don't know a-priori simulation parts will be run--
+disk space use is trivial, so we have left this alone.
+
+The naming of the variables follows `Plot explanation`_
+
+For Python, we have the hollow function ``loadAnalyze.py`` which loads the HDF5 data to call 
+the same ``analysehst.py`` that's used by the simulation online--good coding practice.
+
+**Example of offline output processing**::
+ python loadAnalyze.py test/registration.h5
+
+
+
+-------------
 Calibration
 -------------
 The first program, rawDMCreader.py, accesses the raw camera data and averages the selected frames and writes the average as a FITS file

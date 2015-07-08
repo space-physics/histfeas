@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+"""
+To generate inputs for this program, run main_hist.py with
+-m h5
+option
+"""
+
 from __future__ import division,absolute_import
 import h5py
 from os.path import join,expanduser,splitext
