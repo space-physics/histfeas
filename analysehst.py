@@ -16,7 +16,8 @@ from nans import nans
 
 def analyseres(sim,cam,x,xp,Phifwd,Phifit,drn,dhat,vlim,x0true=None,E0true=None,
                makeplot=[None], progms=None,verbose=0):
-    if Phifwd is None or Phifit[0]['x'] is None or x0true is None or E0true is None:
+    #not Phifit tests for None and []
+    if Phifwd is None or not Phifit or Phifit[0]['x'] is None or x0true is None or E0true is None:
         return
     '''
     we need to fill zeros in jfwd with machine epsilon, since to get avg we need
