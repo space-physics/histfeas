@@ -35,7 +35,7 @@ def readCheck(Phi0,Phifit):
         assert isclose(f['/phifwd/E0'],Phifit[0]['gE0'],rtol=0.15)
         assert isclose(f['/phifwd/x0'],Phifit[0]['gx0'],rtol=0.15)
 
-        print('E0 estimation error is {} eV  {} km'.format(
+        print('E0 estimation error is {:.0f} eV  {} km'.format(
                                     f['/phifwd/E0']-Phifit[0]['gE0'],
                                     f['/phifwd/x0']-Phifit[0]['gx0']
                                     ))
