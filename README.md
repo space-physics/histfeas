@@ -104,9 +104,23 @@ type of program output
 ```spectra``` plot modeled auroral spectra modulated by the filter used.
 
 
+time selection
+--------------
 
-plot limits
-------------
+The simulation configuration in the in/*.xlsx file may be very large. Maybe you want to pick
+only a few times to run. 
+
+Example: to use only the first time step, use option ``` -f 0 1 1 ``` which works like Python 
+``` range() ``` in selecting times from the spreadsheet Arc* tab.
+
+#####Note
+
+The simulation time currently runs 10x faster than the columns in the in/*.xlsx
+under the Arc* tabs. You should normally have the times of the Arc* .xlsx columns
+evenly spaced. If not, you can skip over the jump times by taking say every other time.
+
+plot limit selection
+--------------------
 ``` --vlim xmin xmax zmin zmax pmin pmax ```  limits for VER plots and eigenprofile plots (including 1-D)
 
 ``` --jlim min max ``` flux limits for diff num flux plots
