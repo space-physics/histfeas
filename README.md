@@ -10,7 +10,7 @@ This program should be runnable on any Python 3.4 or 2.7 platform.
 
 Primarily tested on Linux, but should work on Mac or Cygwin (windows) as well.
 
-![montage of output](test/montout.png "montage of output")
+![montage of output](doc/montout.png "montage of output")
 
 installation:
 ------------
