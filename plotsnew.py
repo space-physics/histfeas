@@ -28,7 +28,7 @@ except Exception:
 try:
     from gaussfitter import gaussfit,twodgaussian
 except ImportError as e:
-    warn('{}'.format(e))
+    warn('you need to install github.com/keflavich/gaussfitter  {}'.format(e))
 
 from pybashutils.findnearest import find_nearest
 from gridaurora.opticalmod import plotOptMod
@@ -41,7 +41,6 @@ longtitle=False
 #pcmcmap.set_under('white')
 dymaj=100
 dymin=20
-format1d='eps'
 plotdpi=100
 epsdpi=300
 pstyle='contour'
@@ -355,7 +354,7 @@ def plotnoise(cam,tInd,makeplot,prefix,progms,verbose):
         ax2.grid(True)
     ax2.legend(loc='best')
 
-    writeplots(fg,prefix,tInd,makeplot,progms,format1d,verbose)
+    writeplots(fg,prefix,tInd,makeplot,progms,verbose)
   except Exception as e:
     warn('tind {}   {}'.format(tInd,e))
 
@@ -564,7 +563,7 @@ def plotJ1D(sim,PhiFwd,PhiInv,Ek,vlim,tInd,makeplot,prefix,titletxt,spfid,progms
 
     if anno:    ax.legend(loc='lower left')
 
-    writeplots(fg,prefix,tInd,makeplot,progms,format1d,verbose)
+    writeplots(fg,prefix,tInd,makeplot,progms,verbose)
 
     if 'h5' in makeplot:
         dumph5(spfid,prefix,tInd,PhiFwd1d=PhiFwd,PhiInv1d=PhiInv,Ek=Ek)
@@ -636,7 +635,7 @@ def plotJ(sim,Jflux,x,xp,Ek,EKpcolor,vlim,xlim,tInd,makeplot,prefix,titletxt,spf
 
             fg.subplots_adjust(top=0.85)
             doJlbl(ax,titletxt)
-            writeplots(fg,prefix+p,tInd,makeplot,progms,format1d,verbose=verbose)
+            writeplots(fg,prefix+p,tInd,makeplot,progms,verbose=verbose)
 
 #%% 3-D
     if '3d' in makeplot:
@@ -724,7 +723,7 @@ def plotVER1D(sim,pfwd,pinv,zKM,vlim,tInd,makeplot,prefix,titletxt,spfid,progms,
     ax.set_ylim(bottom=vlim[0],top=vlim[1])
     ax.set_xlim(vlim[2:])
 
-    writeplots(fg,prefix,tInd,makeplot,progms,format1d,verbose)
+    writeplots(fg,prefix,tInd,makeplot,progms,verbose)
 
     if 'h5' in makeplot: #a separate stanza
         dumph5(spfid,prefix,tInd,pfwd1d=pfwd,pinv1d=pinv,z=zKM)
@@ -804,7 +803,7 @@ def plotVER(sim,ver,x,xp,z,zp,vlim,tInd,makeplot,prefix,titletxt,spfid,progms,ve
 
             ax.grid(True)
 
-            writeplots(fg,prefix+p,tInd,makeplot,progms,format1d,verbose=verbose)
+            writeplots(fg,prefix+p,tInd,makeplot,progms,verbose=verbose)
     else:
         text(0,0,'Using Actual Data (ver=None)')
 
@@ -892,7 +891,7 @@ def plotBcompare(sim,braw,bfit,cam,nCam,prefix, spfid,vlim,tInd,makeplot,progms,
     if 'h5' in makeplot: #a separate stanza
         dumph5(spfid,prefix,tInd,angle=[cam[c].angle_deg for c in cam],braw=braw,bfit=bfit)
 
-    writeplots(fg,prefix,tInd,makeplot,progms,format1d,verbose)
+    writeplots(fg,prefix,tInd,makeplot,progms,verbose)
   except Exception as e:
     warn('tind {}   {}'.format(tInd,e))
 #%%
@@ -929,7 +928,7 @@ def plotB(bpix,isrealdata,cam,vlim,tInd,makeplot,labeltxt,progms,verbose):
                  #marker='.',
                  #color=cord[c])
     doBlbl(ax1,isrealdata,sfmt[0],vlim,labeltxt,std) #b is never log
-    writeplots(fgb,'bfwd'+labeltxt[4:-2],tInd,makeplot,progms,format1d,verbose=verbose)
+    writeplots(fgb,'bfwd'+labeltxt[4:-2],tInd,makeplot,progms,verbose=verbose)
   except Exception as e:
     warn('tind {}   {}'.format(tInd,e))
 

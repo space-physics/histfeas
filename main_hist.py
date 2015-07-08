@@ -132,8 +132,7 @@ def doSim(ParamFN,makeplot,timeInds,overrides,progms,x1d,vlim,animtime, cmd,verb
 
 
 def signal_handler(signal, frame):
-    print('\n *** Aborting program as per user pressed Ctrl+C ! \n')
-    exit()
+    exit('\n *** Aborting program as per user pressed Ctrl+C ! \n')
 #%% -----------------------------------------------------------
 if __name__ == '__main__':
     from argparse import ArgumentParser
@@ -141,29 +140,29 @@ if __name__ == '__main__':
     signal(SIGINT, signal_handler) #allows friendly ctrl-c interrupt
 
     p = ArgumentParser(description='analyzes HST data and makes simulations')
-    p.add_argument('infile',help='.xls filename with simulation parameters',type=str)
-    p.add_argument('outdir',help='directory for output',type=str)
+    p.add_argument('infile',help='.xls filename with simulation parameters')
+    p.add_argument('outdir',help='directory for output')
     p.add_argument('-v','--verbose',help='set debugging verbosity e.g. -v -vv -vvv',action='count',default=0)
     p.add_argument('--mat',help='save matlab .mat file of results',action="store_true")
     p.add_argument('--h5',help='save HDF5 .h5 file of fit results',action="store_true")
-    p.add_argument('-m','--makeplot',help='list plots you want made',nargs='+',default=[''],type=str) #None gave type errors in generators & list comp.
+    p.add_argument('-m','--makeplot',help='list plots you want made',nargs='+',default=['']) #None gave type errors in generators & list comp.
     p.add_argument('-p','--showplot',help='show plots on screen',action="store_true")
-    p.add_argument('-f','--frames',help='START STOP STEP of time indices',nargs=3,default=None,type=int)
+    p.add_argument('-f','--frames',help='START STOP STEP of time indices',nargs=3,type=int)
     p.add_argument('--profile',help='Profile performance of program (development/debug only)',action='store_true')
     p.add_argument('-c','--cam',help='zero-indexed cameras to use (overrides XLS)',nargs='+',default=[None],type=int)
     p.add_argument('--cx',help='override cam positions (must specify all)',nargs='+',default=[None],type=float)
-    p.add_argument('--influx',help='flux .h5 file to use (overrides XLS)',default=None,type=str)
+    p.add_argument('--influx',help='flux .h5 file to use (overrides XLS)')
     p.add_argument('--logplot',help='logarithmic axis scaling where appropriate',action='store_true')
     p.add_argument('--x1d',help='required location [km] of x for 1-D flux plots',nargs='+',default=[None],type=float)
 #    p.add_argument('--saveall',help='saves "all" variables to disk, useful for registration case tracking',action='store_true')
-    p.add_argument('-a','--anim',help='animate plots (crudely)',type=float,default=None)
-    p.add_argument('--filter',help='optical filter choices: bg3   none',type=str,default=None)
-    p.add_argument('--minev',help='minimum beam energy to include in fwd model',type=float,default=None)
-    p.add_argument('-g','--fwdguess',help='feed minimizer fwd answer. true | randn stddev |',type=str,nargs='+',default=[None])
-    p.add_argument('--fitm',help='override fit (minimization) method',type=str,default=None)
+    p.add_argument('-a','--anim',help='animate plots (crudely)',type=float)
+    p.add_argument('--filter',help='optical filter choices: bg3   none')
+    p.add_argument('--minev',help='minimum beam energy to include in fwd model',type=float)
+    p.add_argument('-g','--fwdguess',help='feed minimizer fwd answer. true | randn stddev |',nargs='+',default=[None])
+    p.add_argument('--fitm',help='override fit (minimization) method')
     p.add_argument('--vlim',help='xmin xmax zmin zmax pmin pmax   limits for VER plots',type=float,nargs=6,default=[None]*6)
-    p.add_argument('--jlim',help='MIN MAX flux limits for diff num flux plots',type=float,nargs=2,default=(None,None))
-    p.add_argument('--blim',help='MIN MAX flux limits for brightness plots',type=float,nargs=2,default=(None,None))
+    p.add_argument('--jlim',help='MIN MAX flux limits for diff num flux plots',type=float,nargs=2,default=(None,)*2)
+    p.add_argument('--blim',help='MIN MAX flux limits for brightness plots',type=float,nargs=2,default=(None,)*2)
     p.add_argument('-L','--ell',help='force recomputation of sparse matrix L',action='store_true')
     ar = p.parse_args()
 
@@ -178,10 +177,10 @@ if __name__ == '__main__':
     import matplotlib as mpl
     #from mpl_toolkits.mplot3d import Axes3D #causes  TypeError: unhashable type: 'list'
     if in1d(makeplot,('png','eps')).any():
-        print('** using Agg backend: Visibly displayed plots are disabled!')
+        print('using Agg backend: Visibly displayed plots are disabled!')
         mpl.use('Agg') #for fast PNG writing, but does NOT display at all!
     elif in1d(makeplot,'pdf').any():
-        print('** using PDF backend: Visibly displayed plots are disabled!')
+        print('using PDF backend: Visibly displayed plots are disabled!')
         mpl.use('pdf') #for multipage PDF writing, but does NOT display at all!
     else:
         pass
@@ -199,7 +198,7 @@ if __name__ == '__main__':
     try:
         makedirs(progms)#, exist_ok=True) #python 2.7 doesn't have exist_ok
     except (OSError,TypeError) as e:
-        print(e) #for python 2.7
+        pass
 
 
     with open(join(progms,'cmd.log'),'w') as f:
