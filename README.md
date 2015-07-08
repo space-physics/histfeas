@@ -48,7 +48,7 @@ examples:
 
 simulate flaming aurora with two cameras:
 
-    python -u main_hist.py in/2cam_flame.xlsx out/rev1_flame2/ -m fwd optim png
+    python main_hist.py in/2cam_flame.xlsx out/rev1_flame2/ -m fwd optim png show png h5
 
 below this line examples may be out of date (may not work at the moment)
 
@@ -72,19 +72,38 @@ plot eigenprofiles from 2013 JGR and current transcar sim
 
     python3 main_hist.py in/2cam_flame.xlsx /tmp -m eig eig1d -p --vlim 0 0 90 1000 1e-1 5e3 -f 0 1 1
 
-plot selection
----------------
-```-m rawpng``` saves the real video frames you chose to PNG with annotations/axes
+output selection (via -m command)
+---------------------------------
+combine the following commands as desired under the ```-m``` option to control the
+type of program output
 
-```-m realvid``` both cameras in one big figure
+#####simulation selection
+```fwd``` run foward model 
 
-```-m singleraw``` each camera images individually, without axes (for powerpoint,posters, etc.)
+```optim``` run optimization to estimate input quantities
 
-```-m eps``` ```-m png``` save figures as eps or png respectively
 
-```-m eig ``` plot eigenprofiles
+#####graphics selection
 
-```-m spectra``` plot modeled auroral spectra modulated by the filter used.
+```h5``` dumps HDF5 files of the quantities selected in -m
+
+```eps``` ```png``` save figures as eps or png respectively
+
+#####real data only
+
+```rawpng``` saves the real video frames you chose to PNG with annotations/axes
+
+```realvid``` both cameras in one big figure
+
+```singleraw``` each camera images individually, without axes (for powerpoint,posters, etc.)
+
+#####excitation rates plots
+
+```eig ``` plot eigenprofiles
+
+```spectra``` plot modeled auroral spectra modulated by the filter used.
+
+
 
 plot limits
 ------------
