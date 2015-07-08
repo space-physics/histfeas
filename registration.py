@@ -26,20 +26,28 @@ def hist_registration():
                   verbose=0
                   )
 
-    with h5py.File(regh5,'r',libver='latest') as f:
-        assert_allclose(f['/Phi/0'],Phi0)
-        # noise makes inversion result differ uniquely each run
-        assert isclose(f['/Phi/params/E0'],Phifit[0]['gE0'],rtol=0.15)
-        assert isclose(f['/Phi/params/x0'],Phifit[0]['gx0'],rtol=0.15)
-
     return Phi0,Phifit
 
+def readCheck(Phi0,Phifit):
+    with h5py.File(regh5,'r',libver='latest') as f:
+        assert_allclose(f['/phifwd/phi'],Phi0)
+        # noise makes inversion result differ uniquely each run
+        assert isclose(f['/phifwd/E0'],Phifit[0]['gE0'],rtol=0.15)
+        assert isclose(f['/phifwd/x0'],Phifit[0]['gx0'],rtol=0.15)
+
+        print('E0 estimation error is {} eV  {} km'.format(
+                                    f['/phifwd/E0']-Phifit[0]['gE0'],
+                                    f['/phifwd/x0']-Phifit[0]['gx0']
+                                    ))
+
 def writeout(Phi0,Phifit):
-    with h5py.Filt(regh5,'w',libver='latest') as f:
-        f['/Phi/0'] = Phi0
-        f['/Phi/params/E0'] = 6687.
-        f['/Phi/params/x0'] = 1.
-        f['/Phi/E'] = Phifit[0]['EK']
+    with h5py.File(regh5,'w',libver='latest') as f:
+        f['/phifwd/phi'] = Phi0
+        f['/phifwd/E0'] = 6687.
+        f['/phifwd/x0'] = 1.
+        f['/phifwd/Ek'] = Phifit[0]['EK']
 
 if __name__ == '__main__':
     Phi0,Phifit=hist_registration()
+
+    readCheck(Phi0,Phifit)
