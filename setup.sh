@@ -7,6 +7,7 @@ conda install --file requirements.txt
 pip install -r piprequirements.txt
 
 # can be used in the future to refresh
+git submodule update --init --recursive
 git submodule foreach "(git checkout master; git pull)"
 
 cd gridaurora/lowtran
