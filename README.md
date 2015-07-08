@@ -14,45 +14,59 @@ go to the directory where you want to install this program under e.g. ~/code
 
 then, in Terminal (for Linux, Mac or Cygwin on Windows), copy and paste:
 
-```
-git clone --recursive --depth 1 https://github.com/scienceopen/hist-feasibility
+    git clone --recursive --depth 1 https://github.com/scienceopen/hist-feasibility
 
-cd hist-feasibility
+    cd hist-feasibility
 
-./setup.sh
-```
+    ./setup.sh
 
 You can check that things are working OK by:
+
     python registration.py
 
-which should give a few lines of text ending with:
+which should give several lines of text ending with:
+
     registration.py done looping
+
     registration.py program end
 
 
+Usage notes:
+------------
+if upon changing the in/*.xlsx files to make a new simulation, you get an error message
+including
+``` use --ell command line option to save new Ell file ```
+rerun your simulation command, adding --ell to compute (one-time) the projection
+matrix for your new simulation geometry.
+
 examples:
 ---------
-draft 2015 SIMULATION commands were like:
-```
-python3 main_hist.py in/jgr2013_2cam_flame.xlsx /tmp --minev 150 -m fwd optim gfit eig eig1d ell eavg png --vlim -3.8 7.1 90 350 1e5 1e8 --jlim 0 7e4 --blim 0 2.5e9 -f 2 5 1 --ell
-```
 
+simulate flaming aurora with two cameras:
+
+    python -u main_hist.py in/2cam_flame.xlsx out/rev1_flame2/ -m fwd optim png
+
+below this line examples may be out of date (may not work at the moment)
+
+------------
+
+draft 2015 SIMULATION commands were like:
+    
+    python3 main_hist.py in/jgr2013_2cam_flame.xlsx /tmp --minev 150 -m fwd optim gfit eig eig1d ell eavg png --vlim -3.8 7.1 90 350 1e5 1e8 --jlim 0 7e4 --blim 0 2.5e9 -f 2 5 1 --ell
+    
 reading real data:
-```
-python3 main_hist.py in/jgr2013_realdata.xlsx /tmp -m realvid fwd optim png rawpng --vlim -3.8 7.1 90 350 0 30 --jlim nan 0.15 --blim 0 2500 -f 0 1 1
-```
+
+    python3 main_hist.py in/jgr2013_realdata.xlsx /tmp -m realvid fwd optim png rawpng --vlim -3.8 7.1 90 350 0 30 --jlim nan 0.15 --blim 0 2500 -f 0 1 1
 
 dump raw frames with time superimposed to disk without axes (for draft, -f 30 70 10)
-```
-python3 main_hist.py in/jgr2013_realdata.xlsx /tmp -m singleraw rawpng -f 30 70 10
-```
+    
+    python3 main_hist.py in/jgr2013_realdata.xlsx /tmp -m singleraw rawpng -f 30 70 10
 
 plot eigenprofiles from 2013 JGR and current transcar sim
-```
-python3 main_hist.py in/jgr2013_2cam.xlsx /tmp -m eig eig1d -p  -f 0 1 1
+    
+    python3 main_hist.py in/jgr2013_2cam.xlsx /tmp -m eig eig1d -p  -f 0 1 1
 
-python3 main_hist.py in/2cam_flame.xlsx /tmp -m eig eig1d -p --vlim 0 0 90 1000 1e-1 5e3 -f 0 1 1
-```
+    python3 main_hist.py in/2cam_flame.xlsx /tmp -m eig eig1d -p --vlim 0 0 90 1000 1e-1 5e3 -f 0 1 1
 
 plot selection:
 ---------------
