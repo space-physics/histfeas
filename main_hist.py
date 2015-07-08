@@ -128,7 +128,7 @@ def doSim(ParamFN,makeplot,timeInds,overrides,progms,x1d,vlim,animtime, cmd,verb
 
     msg ='{} program end'.format(argv[0]); print(msg); #print(msg,file=stderr)
 
-    return Phi0all,PhifitAll
+    return Phi0all,PhifitAll #keep these, used for registration.py
 
 
 def signal_handler(signal, frame):
