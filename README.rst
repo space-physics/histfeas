@@ -163,7 +163,7 @@ The naming of the variables follows `Plot explanation`_
 For Python, we have the hollow function ``loadAnalyze.py`` which loads the HDF5 data to call 
 the same ``analysehst.py`` that's used by the simulation online--good coding practice.
 
-**Example of offline output processing**::
+**Example of offline output processing** ::
  python loadAnalyze.py test/registration.h5
 
 
