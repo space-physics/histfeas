@@ -6,7 +6,11 @@ hist-feasibility
 ================
 Feasibility study for auroral tomography
 
-This program should be runnable on any Python 3.4 platform. Primarily tested on Linux.
+This program should be runnable on any Python 3.4 or 2.7 platform. 
+
+Primarily tested on Linux, but should work on Mac or Cygwin (windows) as well.
+
+![montage of output](test/montout.png "montage of output")
 
 installation:
 ------------
@@ -68,7 +72,7 @@ plot eigenprofiles from 2013 JGR and current transcar sim
 
     python3 main_hist.py in/2cam_flame.xlsx /tmp -m eig eig1d -p --vlim 0 0 90 1000 1e-1 5e3 -f 0 1 1
 
-plot selection:
+plot selection
 ---------------
 ```-m rawpng``` saves the real video frames you chose to PNG with annotations/axes
 
@@ -80,9 +84,9 @@ plot selection:
 
 ```-m eig ``` plot eigenprofiles
 
-```-m spectra``` plot TRANSCAR auroral spectra modulated by the filter used.
+```-m spectra``` plot modeled auroral spectra modulated by the filter used.
 
-plot limits:
+plot limits
 ------------
 ``` --vlim xmin xmax zmin zmax pmin pmax ```  limits for VER plots and eigenprofile plots (including 1-D)
 
@@ -90,7 +94,23 @@ plot limits:
 
 ``` --blim min max ``` flux limits for brightness plots
 
- calibration:
+Plot explanation
+-----------------
+The plots you see under your out/ direction (assuming you used -m png or -m eps or the like)
+follow this naming convention
+
+``` phifwd ``` this is your "known" input differntial number flux of the electron precipitation 
+to the simulation (for real data, we don't have this)
+
+``` phiest ``` this is the unobservable "unknown" we estimate with this program (for real and simulated data)
+
+``` pfwd ``` and ``` pest ``` volume emission rate due to simulated / estimated flux respectively
+
+``` bfwd ``` and ``` best ``` camera optical intensity due to simulated / estimated flux respectively
+
+Our IEEE TGARS article (in review) details the math and algorithm.
+
+calibration
 -------------
 The first program, rawDMCreader.py, accesses the raw camera data and averages the selected frames and writes the average as a FITS file
 
