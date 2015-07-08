@@ -29,37 +29,6 @@ def analyseres(sim,cam,x,xp,Phifwd,Phifit,drn,dhat,vlim,x0true=None,E0true=None,
     nEnergy = Phifwd.shape[0]
     nit = len(Phifit) if Phifit is not None else len(Phifwd)
 
-
-#    with open('cord.csv','r') as e:
-#        reader = csv.reader(e, delimiter=',', quoting = csv.QUOTE_NONE);
-#        cord = [[r.strip() for r in row] for row in reader][0]
-    afs=14; tfs=16
-
-#%% brightness residual plot
-    if 'optim' in makeplot:
-        try:
-            fg = figure()
-            ax = fg.gca()
-            ax.stem([f.fun for f in Phifit])
-            ax.set_xlabel('instantiation',fontsize=afs)
-            ax.set_ylabel('$||\hat{b} - b||_2$',fontsize=afs)
-            ax.set_title('Residual $b$',fontsize=tfs)
-            ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-            writeplots(fg,'error_boptim',9999,makeplot,progms)
-        except AttributeError:
-            close(fg)
-            pass
-#%% brightness plot -- plotting ALL at once to show evolution of dispersive event!
-    try:
-        if 'fwd' in makeplot and drn is not None:
-            for i,b in enumerate(drn):
-                plotB(b,sim,cam,vlim['b'],9999,makeplot,'$bfwdall',progms,verbose)
-    # reconstructed brightness plot
-        if 'optim' in makeplot and dhat is not None and len(dhat[0])>0:
-            for i,b in enumerate(dhat):
-                plotB(b['optim'],sim,cam,vlim['b'],9999,makeplot,'$bestall', progms,verbose)
-    except Exception as e:
-        warn('skipping plotting overall analysis plots of intensity.  {}'.format(e))
 #%% energy flux plot amd calculations
     gx0= nans((nit,2)); gE0 = nans((nit,2))
 
@@ -88,6 +57,37 @@ def analyseres(sim,cam,x,xp,Phifwd,Phifit,drn,dhat,vlim,x0true=None,E0true=None,
 
         Eavghatx[i,:] =((jf['x'] * jf['EK'][:,None] * dE[:,None]).sum(axis=0) /
                          (jf['x'] * dE[:,None]).sum(axis=0)  )
+
+#%% overall error
+    gx0err = gx0[:,1] - x0true #-gx0[:,0]
+    gE0err = gE0[:,1] - E0true # gE0[:,0]
+#%% plots
+    extplot(sim,cam,drn,dhat,vlim,makeplot,progms,verbose)
+
+    doplot(x,gE0,Eavgfwdx,Eavghatx, makeplot,progms)
+
+    plotgauss(x0true,gx0,gE0,gx0err,gE0err,makeplot,progms)
+
+
+def doplot(x,Phifit,gE0,Eavgfwdx,Eavghatx, makeplot,progms):
+#    with open('cord.csv','r') as e:
+#        reader = csv.reader(e, delimiter=',', quoting = csv.QUOTE_NONE);
+#        cord = [[r.strip() for r in row] for row in reader][0]
+
+    if 'optim' in makeplot:
+        try:
+            fg = figure()
+            ax = fg.gca()
+            ax.stem([f.fun for f in Phifit])
+            ax.set_xlabel('instantiation')
+            ax.set_ylabel('$||\hat{b} - b||_2$')
+            ax.set_title('Residual $b$')
+            ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+            writeplots(fg,'error_boptim',9999,makeplot,progms)
+        except AttributeError:
+            close(fg)
+            pass
+
     if 'fwd' in makeplot:
         fgf = figure()
         ax = fgf.gca()
@@ -107,10 +107,21 @@ def analyseres(sim,cam,x,xp,Phifwd,Phifit,drn,dhat,vlim,x0true=None,E0true=None,
         ax.set_title('ESTIMATED Average Energy $\overline{\hat{E}}$ vs $B_\perp$')
         ax.legend(['{:.0f} eV'.format(g) for g in gE0[:,0]],loc='best',fontsize=9)
         writeplots(fgo,'Eavg_optim',9999,makeplot,progms)
-#%% overall error
-    gx0err = gx0[:,1] - x0true #-gx0[:,0]
-    gE0err = gE0[:,1] - E0true # gE0[:,0]
 
+def extplot(sim,cam,drn,dhat,vlim,makeplot,progms,verbose):
+#%% brightness plot -- plotting ALL at once to show evolution of dispersive event!
+    try:
+        if 'fwd' in makeplot and drn is not None:
+            for i,b in enumerate(drn):
+                plotB(b,sim,cam,vlim['b'],9999,makeplot,'$bfwdall',progms,verbose)
+    # reconstructed brightness plot
+        if 'optim' in makeplot and dhat is not None and len(dhat[0])>0:
+            for i,b in enumerate(dhat):
+                plotB(b['optim'],sim,cam,vlim['b'],9999,makeplot,'$bestall', progms,verbose)
+    except Exception as e:
+        warn('skipping plotting overall analysis plots of intensity.  {}'.format(e))
+
+def plotgauss(x0true,gx0,gE0,gx0err,gE0err,makeplot,progms):
     fg,(axx,axE) = subplots(1,2,sharey=False)
     axx.stem(x0true,gx0err)
     axx.set_xlabel('$B_\perp$ [km]')
