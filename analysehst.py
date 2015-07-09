@@ -5,10 +5,6 @@ from numpy import diff, empty,nan
 import h5py
 from os.path import join
 from warnings import warn
-import seaborn as sns
-sns.color_palette(sns.color_palette("cubehelix"))
-sns.set(context='poster', style='whitegrid',
-        rc={'image.cmap': 'cubehelix_r'})
 #
 from plotsnew import writeplots,getx0E0,plotB
 from nans import nans
