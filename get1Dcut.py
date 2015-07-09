@@ -19,10 +19,10 @@ def get1Dcut(cam,makeplot,progms,dbglvl):
     #optional: plot ECEF of points between each camera and magnetic zenith (lying at az,el relative to each camera)
     plotLOSecef(cam,makeplot,progms,dbglvl)
 #%% (2) get az,el of these points from camera to the other camera's points
-    cam['0'].az2pts,cam['0'].el2pts,cam['0'].r2pts = ecef2aer(cam['1'].x2mz, cam['1'].y2mz, cam['1'].z2mz,
-                                                             cam['0'].lat, cam['0'].lon, cam['0'].alt_m)
-    cam['1'].az2pts,cam['1'].el2pts,cam['1'].r2pts = ecef2aer(cam['0'].x2mz, cam['0'].y2mz, cam['0'].z2mz,
-                                                             cam['1'].lat, cam['1'].lon, cam['1'].alt_m)
+    cam[0].az2pts,cam[0].el2pts,cam[0].r2pts = ecef2aer(cam[1].x2mz, cam[1].y2mz, cam[1].z2mz,
+                                                             cam[0].lat, cam[0].lon, cam[0].alt_m)
+    cam[1].az2pts,cam[1].el2pts,cam[1].r2pts = ecef2aer(cam[0].x2mz, cam[0].y2mz, cam[0].z2mz,
+                                                             cam[1].lat, cam[1].lon, cam[1].alt_m)
 #%% (3) find indices corresponding to these az,el in each image
         # and Least squares fit line to nearest points found in step 3
     for c in cam:
