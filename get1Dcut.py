@@ -2,6 +2,8 @@ from __future__ import division,absolute_import
 from numpy import logspace
 import h5py
 from os.path import join
+from mpl_toolkits.mplot3d import Axes3D #needed for this file
+#
 from pymap3d.coordconv3d import ecef2aer, ecef2geodetic
 
 def get1Dcut(cam,makeplot,progms,dbglvl):
@@ -42,7 +44,7 @@ def get1Dcut(cam,makeplot,progms,dbglvl):
 def plotLOSecef(cam,makeplot,progms,dbglvl):
     from matplotlib.pyplot import figure
     if dbglvl>0:
-        figecef = figure(238923)
+        figecef = figure()
         clr = ['b','r','g','m']
         if dbglvl>1:
             import simplekml as skml
