@@ -15,11 +15,11 @@ from get1Dcut import get1Dcut
 #INPUT FILE FORMAT: intended for use with "DMCdata" raw format, 4-byte
 # "footer" containing frame index (must use typecast)
 
-def getSimulData(sim,cam,makeplot,progms,dbglvl=0):
+def getSimulData(sim,cam,makeplot,progms,verbose=0):
 #%% synchronize
-    cam,sim = HSTsync(sim,cam,dbglvl)
+    cam,sim = HSTsync(sim,cam,verbose)
 #%% load 1-D cut slices into keogram array
-    cam,rawdata = HSTframeHandler(sim,cam,makeplot,progms,dbglvl)
+    cam,rawdata = HSTframeHandler(sim,cam,makeplot,progms,verbose)
     return cam,rawdata,sim
 
 def HSTsync(sim,cam,dbglvl):
@@ -44,7 +44,7 @@ def HSTsync(sim,cam,dbglvl):
 #FIXME check for off-by-one
 #FIXME there is probably a list comprehension way to do this
     alltReq = [mutualStart] #makes a list so we can append
-    while alltReq[-1] < mutualStop:
+    while alltReq[-1] < (mutualStop - relativedelta(seconds=sim.kineticSec)):
         alltReq.append( alltReq[-1] + relativedelta(seconds=sim.kineticSec) )
 
     nMutRawFrame = len(alltReq)  # NOT alltReq.size--it's a list as it should be!
@@ -64,10 +64,7 @@ def HSTsync(sim,cam,dbglvl):
 
 
     for c in cam:
-        #put current cam times into a temporary vector (sigh)
-        tCamUnix = asarray([calendar.timegm(t.utctimetuple()) + t.microsecond / 1e6 for t in cam[c].tCam ])
-
-        ft = interp1d(tCamUnix, arange(cam[c].nFrame,dtype=int), kind='nearest')
+        ft = interp1d(cam[c].tCamUnix, arange(cam[c].nFrame,dtype=int), kind='nearest')
         cam[c].pbInd = ft(alltReqUnix).astype(int) #these are the indices for each time (the slower camera will use some frames twice in a row)
 
 
@@ -75,61 +72,62 @@ def HSTsync(sim,cam,dbglvl):
 
     return cam,sim
 
-def HSTframeHandler(sim,cam,makeplot,progms,dbglvl=0):
+def HSTframeHandler(sim,cam,makeplot,progms,verbose=0):
 
 #%% load 1D cut coord
-    cam = get1Dcut(cam,sim.useCamInd,makeplot,progms,dbglvl)
+    cam = get1Dcut(cam,makeplot,progms,verbose)
 
 #%% use 1D cut coord
-    if dbglvl>0: print('frameHandler: Loading and 1-D cutting data...',end='')
+    if verbose>0:
+        print('frameHandler: Loading and 1-D cutting data...')
     tic = time()
     rawdata = {}
-    for ci in sim.useCamInd.astype(str):
-        nProcFrame = cam[ci].pbInd.size #should be the same for all cameras! FIXME add assert
+    for c in cam:
+        nProcFrame = cam[c].pbInd.size #should be the same for all cameras! FIXME add assert
 
-        keo = empty( ( cam[ci].nCutPix, len(cam[ci].pbInd) ),dtype=uint16,order='F') #1-D cut data
+        keo = empty( ( cam[c].nCutPix, len(cam[c].pbInd) ),dtype=uint16,order='F') #1-D cut data
         tKeo = empty( nProcFrame,dtype=object) #datetime of each frame
         #yes rawdata is order C!
-        rawdata[ci] = empty( ( nProcFrame, cam[ci].SuperX, cam[ci].SuperY),
+        rawdata[c] = empty( ( nProcFrame, cam[c].SuperX, cam[c].SuperY),
                              dtype=uint16,order='C')
-        with open(cam[ci].fnStemCam, 'rb') as fid:
-            finf = {'bytesperframe':cam[ci].BytesPerFrame,
-                    'pixelsperimage':cam[ci].PixelsPerImage,
-                    'nmetadata':cam[ci].Nmetadata,
-                    'superx':cam[ci].SuperX,
-                    'supery':cam[ci].SuperY
+        with open(cam[c].fnStemCam, 'rb') as fid:
+            finf = {'bytesperframe':cam[c].BytesPerFrame,
+                    'pixelsperimage':cam[c].PixelsPerImage,
+                    'nmetadata':cam[c].Nmetadata,
+                    'superx':cam[c].SuperX,
+                    'supery':cam[c].SuperY
                     }
 
-            for j,iFrm in enumerate(cam[ci].pbInd):
+            for j,iFrm in enumerate(cam[c].pbInd):
 
                 #FIXME compare rawFrameInd with truly requested frame to catch off-by-one errors
                 frame,rawFrameInd = rdr.getDMCframe(fid,iFrm,finf,verbose=-1)
                 #print(frame.flags)
                 #print(iFrm)
-                if cam[ci].transpose:
+                if cam[c].transpose:
                     frame = frame.T
                 # rotate -- note if you use origin='lower', rotCCW -> rotCW !
-                if cam[ci].rotCCW != 0:
-                    frame = rot90(frame,k=cam[ci].rotCCW)
+                if cam[c].rotCCW != 0:
+                    frame = rot90(frame,k=cam[c].rotCCW)
                 # flip
-                if cam[ci].flipLR:
+                if cam[c].flipLR:
                     frame = fliplr(frame)
-                if cam[ci].flipUD:
+                if cam[c].flipUD:
                     frame = flipud(frame)
                 # declare frame UTC time based on raw Index, start time, and kinetic rate
-                tKeo[j] = ( cam[ci].startUT +
-                           relativedelta(seconds= (rawFrameInd - cam[ci].firstFrameNum) * cam[ci].kineticSec ) +
-                           relativedelta(seconds = cam[ci].timeShiftSec) )
+                tKeo[j] = ( cam[c].startUT +
+                           relativedelta(seconds= (rawFrameInd - cam[c].firstFrameNum) * cam[c].kineticSec ) +
+                           relativedelta(seconds = cam[c].timeShiftSec) )
                 #%% do pixel cutting
-                keo[:,j] = frame[cam[ci].cutrow,cam[ci].cutcol]
+                keo[:,j] = frame[cam[c].cutrow,cam[c].cutcol]
                 #store raw frame for playback synchronized of raw video
-                rawdata[ci][j,:,:] = frame
+                rawdata[c][j,:,:] = frame
 
         #assign slice & time to class variables
-        cam[ci].keo = keo
-        cam[ci].tKeo = tKeo
+        cam[c].keo = keo
+        cam[c].tKeo = tKeo
 
-    if dbglvl >0: print('DONE  in {:0.2f}'.format(time() - tic) + ' seconds.')
+    if verbose >0: print('DONE  in {:.2f} seconds.'.format(time() - tic))
     return cam,rawdata
 
 #def loadmatcut(matcutfn,useCamInd,cam):

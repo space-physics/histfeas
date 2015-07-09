@@ -9,6 +9,7 @@ from scipy.signal import savgol_filter
 from six import string_types
 from numpy.random import poisson
 from warnings import warn
+from calendar import timegm
 #
 from pymap3d.azel2radec import azel2radec
 from pymap3d.haversine import angledist
@@ -141,19 +142,21 @@ class Cam: #use this like an advanced version of Matlab struct
         self.nFrame = self.lastFrameNum - self.firstFrameNum + 1
 
         fullFileStartUT = parse(self.fullstart)
+        #FIXME check for off-by-one error
+        basestart = fullFileStartUT + relativedelta(seconds=self.timeShiftSec)  #in this order
         #start/stop frame times of THIS camera data file
-        self.startUT = fullFileStartUT + relativedelta(seconds= (self.firstFrameNum - 1) * self.kineticSec )
-        self.stopUT =  fullFileStartUT + relativedelta(seconds= (self.lastFrameNum -  1) * self.kineticSec )
+        self.startUT = basestart + relativedelta(seconds= (self.firstFrameNum - 1) * self.kineticSec )
+        self.stopUT =  basestart + relativedelta(seconds= (self.lastFrameNum -  1) * self.kineticSec )
 
         if self.timeShiftSec != 0 and self.verbose >0:
             print('cam{} Time Shifted by {} seconds'.format(self.name,self.timeShiftSec))
 
-        #FIXME check for off-by-one error
-        basestart = fullFileStartUT + relativedelta(seconds=self.timeShiftSec)  #in this order
+
         #now we create a vector of time deltas using list comprehension
-        #FIXME check for off-by-one
-        deltarange = arange(self.firstFrameNum, self.lastFrameNum+1) * self.kineticSec
+        #Fixed: it's -1 because first frame number is 1 !
+        deltarange = arange(self.firstFrameNum-1, self.lastFrameNum) * self.kineticSec
         self.tCam = asarray([basestart + relativedelta(seconds = vx) for vx in deltarange])
+        self.tCamUnix = asarray([timegm(t.utctimetuple()) + t.microsecond / 1e6 for t in self.tCam ])
 
         if self.verbose >0:
             print('Camera {} start/stop UTC: {} / {}, {} frames.'.format(
