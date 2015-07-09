@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 from numpy import asarray,where,arange,isfinite,ceil,hypot
 import numpy as np
-from os.path import join
+from os.path import join,expanduser
 from dateutil.parser import parse
 from warnings import warn
 #
@@ -125,7 +125,7 @@ class Sim:
         if sp.at['N21PG','Transcar'] == 1: self.reacreq += 'n21pg',
 
         self.realdata = sp.at['useActualData','Sim'] == 1
-        self.realdatapath = sp.at['ActualDataDir','Cams']
+        self.realdatapath = expanduser(sp.at['ActualDataDir','Cams'])
         self.raymap = str(sp.at['RayAngleMapping','Obs']).lower()
 
         if sp.loc['downsampleEnergy','Transcar'] >1:

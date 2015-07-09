@@ -1,8 +1,8 @@
-from __future__ import division
+from __future__ import division,absolute_import
 from numpy import logspace
 import h5py
 from os.path import join
-from coordconv3d import ecef2aer, ecef2geodetic
+from pymap3d.coordconv3d import ecef2aer, ecef2geodetic
 
 def get1Dcut(cam,makeplot,progms,dbglvl):
     discardEdgepix = True #gets rid of duplicates beyond FOV of image that cause lsq estimation error
