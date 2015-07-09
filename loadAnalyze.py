@@ -7,7 +7,7 @@ option
 
 from __future__ import division,absolute_import
 import h5py
-from os.path import join,expanduser,splitext
+from os.path import join,expanduser,splitext,isfile
 from numpy import asarray,diff
 from warnings import warn
 from matplotlib.pyplot import show
@@ -62,7 +62,7 @@ def runtest(h5list,xlsfn,overrides,makeplot,verbose=0):
     for a in ap:
         #TODO assumes all are same distance apart
         x0true = ap[a].loc['X0km',:][:-1] + 0.5*diff(ap[a].loc['X0km',:])
-        E0true= ap[a].loc['E0',:][:-1]    + 0.5*diff(ap[a].loc['E0',:])
+        E0true = ap[a].loc['E0',:][:-1]   + 0.5*diff(ap[a].loc['E0',:])
 
         analyseres(None,None,
                    x, xp, Phifwd, Phidict, drn, dhat,
@@ -95,6 +95,7 @@ def runtest(h5list,xlsfn,overrides,makeplot,verbose=0):
 
 if __name__ == '__main__':
     from glob import glob
+    from os.path import dirname
     #
     from argparse import ArgumentParser
     p = ArgumentParser(description="load HiST output and plot/analyse")
@@ -102,11 +103,17 @@ if __name__ == '__main__':
     p.add_argument('-m','--makeplot',help='plots to make',default=[])
     p = p.parse_args()
 
-    h5list = glob(expanduser(join(p.h5path,'dump_*.h5')))
-    h5list.sort()
+    h5path = expanduser(p.h5path)
 
-    xlsfn = glob(expanduser(join(p.h5path,'*.xlsx')))
-    if len(xlsfn) == 0: xlsfn=[None]
+    if isfile(h5path):
+        h5list = [h5path]
+        xlsfn = glob(join(dirname(h5path),'*.xlsx'))
+    else:
+        h5list = glob(join(h5path,'dump_*.h5'))
+        h5list.sort()
+        xlsfn = glob(join(h5path,'*.xlsx'))
+
+    if len(xlsfn) == 0: xlsfn=None
 
     runtest(h5list,xlsfn[0],None,p.makeplot)
 
