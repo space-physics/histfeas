@@ -4,6 +4,7 @@
  May 2014
  GPL v3+
 
+
  Procedure:
  0) ingest simulation parameters from XLS file, sanity check, load data
  1) Make an auroral phantom (if not real data, a Simulation, and optionally for a first guess for reconstruction)
