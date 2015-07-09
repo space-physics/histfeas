@@ -1,8 +1,7 @@
 from __future__ import print_function, division
-from plotsnew import getx0E0, plotB
 from matplotlib.pyplot import figure,close,subplots
 from matplotlib.ticker import MaxNLocator#,ScalarFormatter# ,LogFormatterMathtext, #for 1e4 -> 1 x 10^4, applied DIRECTLY in format=
-from numpy import diff, empty
+from numpy import diff, empty,nan
 import h5py
 from os.path import join
 from warnings import warn
@@ -11,7 +10,7 @@ sns.color_palette(sns.color_palette("cubehelix"))
 sns.set(context='poster', style='whitegrid',
         rc={'image.cmap': 'cubehelix_r'})
 #
-from plotsnew import writeplots
+from plotsnew import writeplots,getx0E0,plotB
 from nans import nans
 
 def analyseres(sim,cam,x,xp,Phifwd,Phifit,drn,dhat,vlim,x0true=None,E0true=None,
@@ -19,25 +18,24 @@ def analyseres(sim,cam,x,xp,Phifwd,Phifit,drn,dhat,vlim,x0true=None,E0true=None,
     #not Phifit tests for None and []
     if Phifwd is None or not Phifit or Phifit[0]['x'] is None or x0true is None or E0true is None:
         return
-    '''
+    """
     we need to fill zeros in jfwd with machine epsilon, since to get avg we need
     to divide by jfwd and we'll get NaN if we divide by zero
-    '''
-    #jfwd[jfwd==0] = spacing(1) #a.k.a eps()
 
+    gx0:  [:,0]: true x0 gaussian fit (true),   [:,1]: optim x0 gaussian fit (estimate)
+    gE0:  [:,0]: true E0 gaussian fit (true),   [:,1]: optim E0 gaussian fit (estimate)
+    """
+
+
+    #jfwd[jfwd==0] = spacing(1) #a.k.a eps()
     sx = x.size
-    nEnergy = Phifwd.shape[0]
     nit = len(Phifit) if Phifit is not None else len(Phifwd)
 
 #%% energy flux plot amd calculations
     gx0= nans((nit,2)); gE0 = nans((nit,2))
-
     Eavgfwdx = nans((nit,sx))
     Eavghatx = nans((nit,sx))
 
-    dE = empty(nEnergy)
-    dE[0] = 9.952 #a priori for this pre-arranged EK
-    dE[1:] = diff(Phifit[0]['EK']) #per Dahlgren matlab code line 276-280
 #%% back to work
     for i,jf in enumerate(Phifit):
         #note even if array is F_CONTIGUOUS, argmax is C-order!!
@@ -48,23 +46,15 @@ def analyseres(sim,cam,x,xp,Phifwd,Phifit,drn,dhat,vlim,x0true=None,E0true=None,
         print('t={} gaussian 2-D fits for (x,E). Fwd: {:.2f} {:.0f}'
               ' Optim: {:.2f} {:.0f}'.format(i, gx0[i,0],gE0[i,0],gx0[i,1],gE0[i,1]))
 
-        trythis(Phifwd[...,i], jf['x'], jf['EK'],x,dE,makeplot,progms,verbose)
-#%% average energy per x-location
-    # formula is per JGR 2013 Dahlgren et al.
-    #E_avg = sum(flux*E*dE) / sum(flux*dE)
-        Eavgfwdx[i,:] = ((Phifwd[...,i] * jf['EK'][:,None] * dE[:,None]).sum(axis=0) /
-                          (Phifwd[...,i] * dE[:,None]).sum(axis=0) )
-
-        Eavghatx[i,:] =((jf['x'] * jf['EK'][:,None] * dE[:,None]).sum(axis=0) /
-                         (jf['x'] * dE[:,None]).sum(axis=0)  )
+        Eavgfwdx,Eavghatx = avgcomp(Phifwd[...,i], jf['x'], jf['EK'],x,makeplot,progms,verbose)
 
 #%% overall error
     gx0err = gx0[:,1] - x0true #-gx0[:,0]
-    gE0err = gE0[:,1] - E0true # gE0[:,0]
+    gE0err = gE0[:,1] - E0true #-gE0[:,0]
 #%% plots
     extplot(sim,cam,drn,dhat,vlim,makeplot,progms,verbose)
 
-    doplot(x,gE0,Eavgfwdx,Eavghatx, makeplot,progms)
+    doplot(x,Phifit,gE0,Eavgfwdx,Eavghatx, makeplot,progms)
 
     plotgauss(x0true,gx0,gE0,gx0err,gE0err,makeplot,progms)
 
@@ -88,7 +78,7 @@ def doplot(x,Phifit,gE0,Eavgfwdx,Eavghatx, makeplot,progms):
             close(fg)
             pass
 
-    if 'fwd' in makeplot:
+    if 'fwd' in makeplot and Eavgfwdx:
         fgf = figure()
         ax = fgf.gca()
         ax.semilogy(x,Eavgfwdx.T, marker='.')
@@ -98,7 +88,7 @@ def doplot(x,Phifit,gE0,Eavgfwdx,Eavghatx, makeplot,progms):
         ax.legend(['{:.0f} eV'.format(g) for g in gE0[:,0]],loc='best',fontsize=9)
         writeplots(fgf,'Eavg_fwd',9999,makeplot,progms)
 
-    if 'optim' in makeplot:
+    if 'optim' in makeplot and Eavghatx:
         fgo = figure()
         ax = fgo.gca()
         ax.semilogy(x,Eavghatx.T, marker='.')
@@ -151,10 +141,15 @@ def plotgauss(x0true,gx0,gE0,gx0err,gE0err,makeplot,progms):
             f['/gE0/err']=gE0err
             f['/gE0/fwdfit']=gE0
 
-def trythis(jfwd,jfit,Ek,x,dE,makeplot,progms,verbose):
+def avgcomp(Phifwd,Phifit,Ek,x,makeplot,progms,verbose):
+    nEnergy = Phifwd.shape[0]
+
+    dE = empty(nEnergy)
+    dE[0] = 9.952 #a priori for this pre-arranged EK
+    dE[1:] = diff(Ek) #per Dahlgren matlab code line 276-280
     #from numpy.testing import assert_allclose
-    Eavgfwd = ((jfwd * Ek[:,None] * dE[:,None]).sum(axis=0) /
-               (jfwd * dE[:,None]).sum(axis=0) )
+    Eavgfwd = ((Phifwd * Ek[:,None] * dE[:,None]).sum(axis=0) /
+               (Phifwd * dE[:,None]).sum(axis=0) )
 
     #xi = 43 #a priori from x=0.5km
 
@@ -179,3 +174,14 @@ def trythis(jfwd,jfit,Ek,x,dE,makeplot,progms,verbose):
         ax.set_ylabel('diff. num. flux')
 
         writeplots(fg,'Eavg_fwd1d',9999,makeplot,progms)
+
+    #%% average energy per x-location
+    # formula is per JGR 2013 Dahlgren et al.
+    #E_avg = sum(flux*E*dE) / sum(flux*dE)
+        Eavgfwdx = ((Phifwd * Ek[:,None] * dE[:,None]).sum(axis=0) /
+                          (Phifwd * dE[:,None]).sum(axis=0) )
+
+        Eavghatx =((x * Ek[:,None] * dE[:,None]).sum(axis=0) /
+                         (x * dE[:,None]).sum(axis=0)  )
+        return Eavgfwdx,Eavghatx
+    return nan,nan
