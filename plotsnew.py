@@ -12,10 +12,12 @@ from scipy.interpolate import interp1d
 from warnings import warn
 from pandas import DataFrame
 #
-import seaborn as sns
-sns.color_palette(sns.color_palette("cubehelix"))
-sns.set(context='paper', style='whitegrid',
-        rc={'image.cmap': 'cubehelix_r'}) #for contour
+
+if False:
+    import seaborn as sns
+    sns.color_palette(sns.color_palette("cubehelix"))
+    sns.set(context='paper', style='whitegrid',
+            rc={'image.cmap': 'cubehelix_r'}) #for contour
 
 #sns.set_palette(sns.cubehelix_palette(6)) #all one color, hard to see
 #
@@ -116,11 +118,11 @@ def goPlot(sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
 #%% optional show plots
     if 'realvid' in makeplot and sim.realdata:
         plotRealImg(sim,cam,rawdata,tInd,makeplot,'realdata','$I$',1830,
-                               spfid,'gray',progms,verbose)
+                               spfid,progms,verbose)
 
     if 'singleraw' in makeplot and sim.realdata:
         plotPlainImg(sim,cam,rawdata,tInd,makeplot,'realdata','$I$',1831,
-                               spfid,'gray',progms,verbose)
+                               spfid,progms,verbose)
 
 #%% scatter plot of LOS
     if 'kml' in makeplot or 'kmlrays' in makeplot:
@@ -424,7 +426,7 @@ def plotPlainImg(sim,cam,rawdata,t,makeplot,prefix,titletxt,figh,spfid,progms,ve
     for c in cam:
         figure(figh).clf()
         fg = figure(figh)
-        ax = fg.gca() #Axes(fg,[0,0,1,1])
+        ax = fg.gca()
         ax.set_axis_off()
         ax.imshow(rawdata[c][t,:,:],
                   origin='lower',
@@ -440,16 +442,17 @@ def plotPlainImg(sim,cam,rawdata,t,makeplot,prefix,titletxt,figh,spfid,progms,ve
                     )
         if in1d(('rawpng','save'),makeplot).any():
             writeplots(fg,'cam{}rawFrame'.format(c),t,'png',progms,verbose=verbose)
-        else:
-            draw()
+"""
+note draw and pause are in main_hist.py
+"""
 
 #%%
 def plotRealImg(sim,cam,rawdata,t,makeplot,prefix,titletxt,figh,spfid,progms,verbose):
-  try:
-    showcb = True
+    showcb = False
     #alltReq = sim.alltReq
     figure(figh).clf()
-    fg,axm = subplots(nrows=1,ncols=2,sharey='row',num=figh, figsize=(11.5,5))
+
+    fg,axm = subplots(nrows=1,ncols=2,sharey='row',num=figh, dpi=plotdpi, figsize=(15,5))
     for c,ax in zip(cam,axm):
         #fixme this would need help if one of the cameras isn't plotted (this will probably never happen)
 
@@ -461,27 +464,24 @@ def plotRealImg(sim,cam,rawdata,t,makeplot,prefix,titletxt,figh,spfid,progms,ver
         if showcb:
             hc = fg.colorbar(hi, ax=ax) #not cax!
             hc.set_label(str(rawdata[c].dtype) + ' data numbers')
-        ax.set_title('Cam{} time: {}'.format(c,cam[c].tKeo[t]) ,fontsize=9)
+        ax.set_title('Cam{}: {}'.format(c,cam[c].tKeo[t]))
         #ax.set_xlabel('x-pixel')
-        if c=='0':
-            ax.set_ylabel('y-pixel') #save horizontal space
+        if c==0:
+            ax.set_ylabel('y-pixel')
     #%% plotting 1D cut line
         ax.plot(cam[c].cutcol,cam[c].cutrow,
-                 marker='.',linestyle='none',markersize=1)
+                 marker='.',linestyle='none',color='blue',markersize=1)
         #plot magnetic zenith
         ax.plot(cam[c].cutcol[cam[c].angleMagzenind],
                 cam[c].cutrow[cam[c].angleMagzenind],
                 marker='*',linestyle='none',color='red',markersize=10)
     #%% plot cleanup
         ax.autoscale(True,tight=True) #fills existing axes
+        ax.grid(False) #in case Seaborn is used
 
 
-    if in1d(('rawpng','save'),makeplot).any():
+    if in1d(('rawpng'),makeplot).any():
         writeplots(fg,'rawFrame',t,'png',progms,verbose=verbose)
-    else:
-        draw() #This draw must be here for multiplot animations or this window won't update!
-  except Exception as e:
-    warn('{}'.format(e))
 
 def plotPicard(A,b,cvar=None,verbose=0):
     from picard import picard
