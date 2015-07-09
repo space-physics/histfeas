@@ -45,7 +45,7 @@ def doSim(ParamFN,makeplot,timeInds,overrides,progms,x1d,vlim,animtime, cmd,verb
 #%% setup loop
     if sim.realdata:
         cam,rawdata,sim = getSimulData(sim,cam,makeplot,progms,verbose)
-        sim.nTimeSliceReq = cam['0'].keo.shape[1] #FIXME assumes equal num. of time slices list(cam)[0]
+        sim.nTimeSliceReq = cam[0].keo.shape[1] #FIXME assumes equal num. of time slices list(cam)[0]
     else: #simulation
         rawdata = None
         if sim.raymap == 'astrometry': #and any('b' in m[:2] for m in makeplot):
