@@ -30,19 +30,19 @@ def hist_registration(regh5,regXLS):
 
 def readCheck(Phi0,Phifit):
     with h5py.File(regh5,'r',libver='latest') as f:
-        assert_allclose(f['/phifwd/phi'],Phi0)
+        assert_allclose(f['/phifwd/phi'],Phi0[...,0])
         # noise makes inversion result differ uniquely each run
         assert isclose(f['/phifwd/E0'],Phifit[0]['gE0'],rtol=0.15)
         assert isclose(f['/phifwd/x0'],Phifit[0]['gx0'],rtol=0.15)
 
-        print('E0 estimation error is {:.0f} eV  {} km'.format(
-                                    f['/phifwd/E0']-Phifit[0]['gE0'],
-                                    f['/phifwd/x0']-Phifit[0]['gx0']
-                                    ))
+        #the str() are needed instead of format() !
+        print('E0 estimation error [eV] ' +str(f['/phifwd/E0']-Phifit[0]['gE0']))
+        print('x0 estimation error [km] ' +str(f['/phifwd/x0']-Phifit[0]['gx0']))
+
 
 def writeout(regh5):
     with h5py.File(regh5,'a',libver='latest') as f:
-        f['/phifwd/E0'] = 6687.
+        f['/phifwd/E0'] = 7500.
         f['/phifwd/x0'] = 1.
 
 if __name__ == '__main__':
