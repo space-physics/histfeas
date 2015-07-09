@@ -1,9 +1,10 @@
-from __future__ import print_function, division
+from __future__ import print_function, division,absolute_import
 from numpy import (linspace, fliplr, flipud, rot90, arange,
                    polyfit,polyval,rint,empty, isfinite, isclose,
-                   absolute, hypot, logical_or, unravel_index, delete, where)
-from os.path import expanduser
+                   absolute, hypot, logical_or, unravel_index, delete, where,asarray)
+from os.path import expanduser,join
 from dateutil.parser import parse
+from dateutil.relativedelta import relativedelta
 from scipy.signal import savgol_filter
 from six import string_types
 from numpy.random import poisson
@@ -12,6 +13,8 @@ from warnings import warn
 from pymap3d.azel2radec import azel2radec
 from pymap3d.haversine import angledist
 from pymap3d.coordconv3d import aer2ecef
+from histutils.getRawInd import getRawInd
+from histutils.rawDMCreader import getDMCparam
 
 
 class Cam: #use this like an advanced version of Matlab struct
@@ -24,7 +27,7 @@ class Cam: #use this like an advanced version of Matlab struct
         self.alt_m = cp['Zkm']*1e3
         self.z_km = cp['Zkm']
         self.x_km = cp['Xkm']
-        self.fn = cp['fn']
+        self.fn = expanduser(cp['fn'])
 #        self.startTime = startTime
 #        self.stopTime = stopTime
         self.nCutPix = int(cp['nCutPix'])
@@ -49,7 +52,8 @@ class Cam: #use this like an advanced version of Matlab struct
         self.transpose = cp['transpose'] == 1
         self.flipLR =    cp['flipLR'] == 1
         self.flipUD =   cp['flipUD'] == 1
-        self.timeShiftSec = cp['timeShiftSec']
+
+        self.timeShiftSec = cp['timeShiftSec'] if isfinite(cp['timeShiftSec']) else 0.
 
         self.plotminmax = (cp['plotMinVal'], cp['plotMaxVal'])
         self.fullstart = cp['fullFileStartUTC']
@@ -70,7 +74,7 @@ class Cam: #use this like an advanced version of Matlab struct
         self.boresightEl = cp['boresightElevDeg']
         self.arbfov = cp['FOVdeg']
 #%%
-        self.kineticSec = 1. / cp['frameRateHz']
+        self.kineticSec = 1 / cp['frameRateHz']
 #%% camera model
         """
         A model for sensor gain
@@ -106,12 +110,58 @@ class Cam: #use this like an advanced version of Matlab struct
         self.savgolOrder = cp['savgolOrder']
 
 
-    def ingestcamparam(self,finf):
+    def ingestcamparam(self,sim):
+
+        # data file name
+        try:
+            self.fnStemCam = expanduser(join(sim.realdatapath, self.fn))
+        except AttributeError:
+            raise AttributeError('You must specify the filename to read. file: {}'.format(self.fn))
+
+        # parameters for this camera
+        finf = getDMCparam(self.fnStemCam,(self.xpix, self.ypix),
+                                          (self.xbin, self.ybin), verbose=-1)
+
+
         self.SuperX=finf['superx']
         self.SuperY=finf['supery']
         self.Nmetadata = finf['nmetadata']
         self.BytesPerFrame= finf['bytesperframe']
         self.PixelsPerImage = finf['pixelsperimage']
+        #FIXME is this silly? should be assigned in getDMCparam?
+        self.nHeadBytes = self.BytesPerFrame - self.PixelsPerImage * 16 // 8
+        self.BytesPerImage = self.BytesPerFrame - self.nHeadBytes
+        #get start/end raw frame indices
+        self.firstFrameNum,self.lastFrameNum = getRawInd(self.fnStemCam,
+                                                         self.BytesPerImage,
+                                                         self.nHeadBytes,
+                                                         self.Nmetadata)
+
+        #number of frames in file
+        self.nFrame = self.lastFrameNum - self.firstFrameNum + 1
+
+        fullFileStartUT = parse(self.fullstart)
+        #start/stop frame times of THIS camera data file
+        self.startUT = fullFileStartUT + relativedelta(seconds= (self.firstFrameNum - 1) * self.kineticSec )
+        self.stopUT =  fullFileStartUT + relativedelta(seconds= (self.lastFrameNum -  1) * self.kineticSec )
+
+        if self.timeShiftSec != 0 and self.verbose >0:
+            print('cam{} Time Shifted by {} seconds'.format(self.name,self.timeShiftSec))
+
+        #FIXME check for off-by-one error
+        basestart = fullFileStartUT + relativedelta(seconds=self.timeShiftSec)  #in this order
+        #now we create a vector of time deltas using list comprehension
+        #FIXME check for off-by-one
+        deltarange = arange(self.firstFrameNum, self.lastFrameNum+1) * self.kineticSec
+        self.tCam = asarray([basestart + relativedelta(seconds = vx) for vx in deltarange])
+
+        if self.verbose >0:
+            print('Camera {} start/stop UTC: {} / {}, {} frames.'.format(
+                                                      self.name,
+                                                      self.startUT,
+                                                      self.stopUT,
+                                                      self.nFrame))
+
 
     def arbanglemap(self):
         '''
