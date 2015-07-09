@@ -321,7 +321,7 @@ class Cam: #use this like an advanced version of Matlab struct
             ax.set_title('polyfit with computed ray points')
 
             ax =figure().gca()
-            ax.plot(angle_deg,color=clr[self.name],label='cam'+self.name,
+            ax.plot(angle_deg,color=clr[self.name],label='cam {}'.format(self.name),
                     linestyle='None',marker='.')
             ax.legend()
             ax.set_xlabel('x-pixel'); ax.set_ylabel('$\theta$ [deg.]')

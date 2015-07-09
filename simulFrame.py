@@ -69,6 +69,7 @@ def HSTsync(sim,cam,dbglvl):
 
 
     sim.alltReq = alltReqAdj
+    sim.nTimeSlice = alltReqAdj.size
 
     return cam,sim
 
