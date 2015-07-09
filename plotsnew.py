@@ -45,7 +45,7 @@ plotdpi=100
 epsdpi=300
 pstyle='contour'
 
-E0min=800 #eV
+E0min=500 #eV
 phi1dmax = 5e5
 
 #%%
@@ -1125,9 +1125,8 @@ def writeplots(fg,plotprefix,tInd,method,progms,overridefmt=None,verbose=0):
 #%%
 def getx0E0(Phifwd,Phifit,E,x,tInd,progms,makeplot,verbose):
 
-  gaussEmin=500.
   Npts = 200
-  Nptsfits = (int(Npts/30), int(Npts/20))
+  Nptsfits = (Npts//40, Npts//20)  #(nEnergyToUse+-, nXtouse+-)
 
   try:
     def clipPhi(fwd,fit,E):
@@ -1135,7 +1134,7 @@ def getx0E0(Phifwd,Phifit,E,x,tInd,progms,makeplot,verbose):
 
         try:
             phifwd = fwd.copy();
-            phifwd[E<gaussEmin,:] = 0.
+            phifwd[E<E0min,:] = 0.
             f = interp1d(E,phifwd,kind='linear',axis=0)
             fwdlin = f(Elin)
         except AttributeError:
@@ -1143,7 +1142,7 @@ def getx0E0(Phifwd,Phifit,E,x,tInd,progms,makeplot,verbose):
 
         try:
             phifit = fit.copy()
-            phifit[E<gaussEmin,:] = 0.
+            phifit[E<E0min,:] = 0.
             f = interp1d(E,phifit,kind='linear',axis=0)
             fitlin = f(Elin)
         except AttributeError:

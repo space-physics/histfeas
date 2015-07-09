@@ -11,10 +11,10 @@ import h5py
 #
 from main_hist import doSim
 
-regh5='test/registration.h5'
 
-def hist_registration():
-    Phi0,Phifit =doSim(ParamFN='test/registration.xlsx',
+
+def hist_registration(regh5,regXLS):
+    Phi0,Phifit =doSim(ParamFN=regXLS,
                   makeplot=['fwd','optim'],
                   timeInds=None,
                   overrides = None, #{'minev': minev,'filter':filt, 'fwdguess':fwdguess, 'fitm':fitm,'cam':cam,'camx':acx,'ell':ell,'Jfwd':influx},
@@ -40,14 +40,13 @@ def readCheck(Phi0,Phifit):
                                     f['/phifwd/x0']-Phifit[0]['gx0']
                                     ))
 
-def writeout(Phi0,Phifit):
-    with h5py.File(regh5,'w',libver='latest') as f:
-        f['/phifwd/phi'] = Phi0
+def writeout(regh5):
+    with h5py.File(regh5,'a',libver='latest') as f:
         f['/phifwd/E0'] = 6687.
         f['/phifwd/x0'] = 1.
-        f['/phifwd/Ek'] = Phifit[0]['EK']
 
 if __name__ == '__main__':
-    Phi0,Phifit=hist_registration()
+    regh5='test/registration.h5';     regXLS='test/registration.xlsx'
 
+    Phi0,Phifit=hist_registration(regh5,regXLS)
     readCheck(Phi0,Phifit)
