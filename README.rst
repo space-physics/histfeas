@@ -63,6 +63,11 @@ reading real data and displaying a live video::
 
  python main_hist.py in/apr14.xlsx out/apr14 -m realvid -a 0.1
 
+reading real data and saving the joint image frames to disk::
+
+  python main_hist.py in/apr14.xlsx out/apr14 -m realvid rawpng -a 0.1
+
+
 
 below this line examples may be out of date (may not work at the moment)
 
@@ -104,7 +109,9 @@ type of program output
 
 ``rawpng`` saves the real video frames you chose to PNG with annotations/axes
 
-``realvid`` both cameras in one big figure
+``realvid`` both cameras in one figure
+
+``realvid rawpng`` both cameras in one figure, save figure to disk as png to specifed directory
 
 ``singleraw`` each camera images individually, without axes (for powerpoint,posters, etc.)
 
