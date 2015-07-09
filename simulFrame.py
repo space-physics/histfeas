@@ -3,11 +3,9 @@ from time import time
 from numpy import arange, empty, asarray, uint16, rot90, fliplr, flipud
 from dateutil import parser
 from dateutil.relativedelta import relativedelta
-from os.path import expanduser,join
 import calendar
 from scipy.interpolate import interp1d
 # local
-import histutils.getRawInd as gri
 import histutils.rawDMCreader as rdr
 from get1Dcut import get1Dcut
 
@@ -26,59 +24,21 @@ def getSimulData(sim,cam,makeplot,progms,dbglvl=0):
 
 def HSTsync(sim,cam,dbglvl):
 
-    reqStart = parser.parse(sim.startutc)
-    reqStop = parser.parse(sim.stoputc)
+    try:
+        reqStart = parser.parse(sim.startutc)
+        reqStop = parser.parse(sim.stoputc)
+    except AttributeError: #no specified time
+        reqStart = parser.parse("1970-01-01T00:00:00Z") #arbitrary time in the past
+        reqStop =  parser.parse("2100-01-01T00:00:00Z")#arbitrary time in the future
 
-#%% get more parameters per used camera (candidate for class def)
-    for c in cam.keys():
-        # data file name
-        cam[c].fnStemCam = expanduser(join(sim.realdatapath, cam[c].fn))
-        # parameters for this camera
-        finf = rdr.getDMCparam(cam[c].fnStemCam,
-                                 (cam[c].xpix,cam[c].ypix),
-                                 (cam[c].xbin,cam[c].ybin),
-                                 None,verbose=-1)
-
-        cam[c].ingestcamparam(finf)
-
-        fullFileStartUT = parser.parse(cam[c].fullstart)
-        #get start/end raw frame indices
-        #FIXME is this silly? should be assigned in getDMCparam?
-        cam[c].nHeadBytes = cam[c].BytesPerFrame - cam[c].PixelsPerImage * 16 // 8
-        cam[c].BytesPerImage = cam[c].BytesPerFrame - cam[c].nHeadBytes
-
-        (cam[c].firstFrameNum,
-         cam[c].lastFrameNum ) = gri.getRawInd(cam[c].fnStemCam,
-                                                cam[c].BytesPerImage,
-                                                cam[c].nHeadBytes,
-                                                cam[c].Nmetadata)
-
-        #number of frames in file
-        cam[c].nFrame = cam[c].lastFrameNum - cam[c].firstFrameNum + 1
-        #start/stop frame times of THIS camera data file
-        cam[c].startUT = fullFileStartUT + relativedelta(seconds= (cam[c].firstFrameNum - 1) * cam[c].kineticSec )
-        cam[c].stopUT =  fullFileStartUT + relativedelta(seconds= (cam[c].lastFrameNum -  1) * cam[c].kineticSec )
-
-        if cam[c].timeShiftSec != 0 and dbglvl >0:
-            print(('HST1 Time Shifted by ' + str(cam[c].timeShiftSec) + ' seconds'))
-
-        #FIXME check for off-by-one error
-        basestart = fullFileStartUT + relativedelta(seconds=cam[c].timeShiftSec)  #in this order
-        #now we create a vector of time deltas using list comprehension
-        #FIXME check for off-by-one
-        deltarange = arange(cam[c].firstFrameNum, cam[c].lastFrameNum+1) * cam[c].kineticSec
-        cam[c].tCam = asarray([basestart + relativedelta(seconds = vx) for vx in deltarange])
-
-        if dbglvl >0:
-            print('Camera ' + c + ' start/stop UTC: ' + str(cam[c].startUT) +
-              ' / ' + str(cam[c].stopUT) + ', ' + str(cam[c].nFrame) + ' frames.')
-
+#%% get more parameters per used camera
+    for c in cam:
+        cam[c].ingestcamparam(sim)
 #%% determine mutual start/stop frame
 # FIXME: assumes that all cameras overlap in time at least a little.
-# FiXME: learn how to do this more efficently with Python class
 # we will play only over UTC times for which both sites have frames available
-    mutualStart = max( [cam[str(x)].startUT for x in sim.useCamInd] ) #who started last
-    mutualStop =  min( [cam[str(x)].stopUT for x in sim.useCamInd] )   # who ended first
+    mutualStart = max( [cam[c].startUT for c in cam] ) #who started last
+    mutualStop =  min( [cam[c].stopUT  for c in cam] )   # who ended first
 #%% make playback time steps
 # based on the "simulated" UTC times that do not correspond exactly with either camera, necessarily.
 #FIXME check for off-by-one
@@ -100,15 +60,15 @@ def HSTsync(sim,cam,dbglvl):
 #%% use *nearest neighbor* interpolation to find mutual frames to display.
 #   sometimes one camera will have frames repeated, while the other camera
 #   might skip some frames altogether
-    alltReqUnix = asarray([calendar.timegm(t.utctimetuple()) + t.microsecond / 1.e6 for t in alltReqAdj ])
+    alltReqUnix = asarray([calendar.timegm(t.utctimetuple()) + t.microsecond / 1e6 for t in alltReqAdj ])
 
 
-    for ci in sim.useCamInd.astype(str):
+    for c in cam:
         #put current cam times into a temporary vector (sigh)
-        tCamUnix = asarray([calendar.timegm(t.utctimetuple()) + t.microsecond / 1.e6 for t in cam[ci].tCam ])
+        tCamUnix = asarray([calendar.timegm(t.utctimetuple()) + t.microsecond / 1e6 for t in cam[c].tCam ])
 
-        ft = interp1d(tCamUnix, arange(cam[ci].nFrame,dtype=int), kind='nearest')
-        cam[ci].pbInd = ft(alltReqUnix).astype(int) #these are the indices for each time (the slower camera will use some frames twice in a row)
+        ft = interp1d(tCamUnix, arange(cam[c].nFrame,dtype=int), kind='nearest')
+        cam[c].pbInd = ft(alltReqUnix).astype(int) #these are the indices for each time (the slower camera will use some frames twice in a row)
 
 
     sim.alltReq = alltReqAdj
