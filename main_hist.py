@@ -27,6 +27,7 @@ from simulFrame import getSimulData
 #import logging
 #logging.basicConfig(filename='hist.log',filemode='w',level=logging.DEBUG)
 
+
 def doSim(ParamFN,makeplot,timeInds,overrides,progms,x1d,vlim,animtime, cmd,verbose):
     # local -- these were put here so that matplotlib backend autoselect could happen first
     from matplotlib.pyplot import close
