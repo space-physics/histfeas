@@ -54,7 +54,10 @@ Examples
 
 simulate flaming aurora with two cameras::
 
- python main_hist.py in/2cam_flame.xlsx out/rev1_flame2/ -m fwd optim png show png h5
+ python main_hist.py in/2cam_flame.xlsx out/test_flame2/ -m fwd optim png show h5
+
+you can then look to the `Output Processing`_ section for how to load the HDF5 files 
+you just produced in ``out/test_flame2``
 
 below this line examples may be out of date (may not work at the moment)
 
