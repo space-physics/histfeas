@@ -23,6 +23,7 @@ from numpy import absolute,zeros,in1d,arange,outer
 from numpy.random import normal
 from warnings import warn
 #
+from simulFrame import getSimulData
 #import logging
 #logging.basicConfig(filename='hist.log',filemode='w',level=logging.DEBUG)
 
