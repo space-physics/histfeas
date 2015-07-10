@@ -125,7 +125,9 @@ class Sim:
         if sp.at['N21PG','Transcar'] == 1: self.reacreq += 'n21pg',
 
         self.realdata = sp.at['useActualData','Sim'] == 1
-        self.realdatapath = expanduser(sp.at['ActualDataDir','Cams'])
+        if self.realdata:
+            self.realdatapath = expanduser(sp.at['ActualDataDir','Cams'])
+
         self.raymap = str(sp.at['RayAngleMapping','Obs']).lower()
 
         if sp.loc['downsampleEnergy','Transcar'] >1:
