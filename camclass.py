@@ -28,7 +28,8 @@ class Cam: #use this like an advanced version of Matlab struct
         self.alt_m = cp['Zkm']*1e3
         self.z_km = cp['Zkm']
         self.x_km = cp['Xkm']
-        self.fn = expanduser(cp['fn'])
+
+        if sim.realdata:  self.fn = expanduser(cp['fn'])
 #        self.startTime = startTime
 #        self.stopTime = stopTime
         self.nCutPix = int(cp['nCutPix'])
