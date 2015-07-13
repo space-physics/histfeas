@@ -1,7 +1,7 @@
 from __future__ import print_function, division,absolute_import
 from numpy import (in1d,s_,empty,empty_like,isnan,asfortranarray,linspace,outer,
                    sin,cos,pi,ones_like,array,nan,unravel_index,meshgrid)
-from matplotlib.pyplot import (figure,subplots, clf,text,draw)
+from matplotlib.pyplot import figure,subplots, clf,text,draw
 #from matplotlib.cm import get_cmap
 from matplotlib.colors import LogNorm
 from matplotlib.ticker import LogFormatterMathtext, MultipleLocator, ScalarFormatter #for 1e4 -> 1 x 10^4, applied DIRECTLY in format=
@@ -175,8 +175,8 @@ def goPlot(sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
     bcomptxt = ('best')
                #'($x_0$,$E_0$)=(' +'{:0.2f}'.format(x0) + ',' + '{:0.0f}'.format(E0) + ') [km,eV]')
 #%% Forward model plots
-    if 'fwd' in makeplot or 'optim' in makeplot:
-        plotnoise(cam,tInd,makeplot,'bnoise',progms,verbose)
+    if not sim.realdata and ('fwd' in makeplot or 'optim' in makeplot):
+        plotnoise(cam,tInd,253,makeplot,'bnoise',progms,verbose)
 
     if 'fwd' in makeplot:
         plotfwd(sim,cam,drn,nCutPix,xKM,xp,zKM,zp,
@@ -197,7 +197,7 @@ def goPlot(sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
 
         plotVER(sim,vfit['gaussian'],xKM,xp,zKM,zp,vlim['p'],tInd,makeplot,'vgaussian',
               '$\hat{P}_{gaussian,optim}$ volume emission rate',
-              spfid,progms,verbose)
+              1810,spfid,progms,verbose)
 #%% optimize search plots
     if 'optim' in makeplot:
         plotoptim(sim,cam,drn,dhat,nCutPix,bcomptxt,ver,Phi0,Jxi,
@@ -218,7 +218,7 @@ def goPlot(sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
     if 'pmaxent' in makeplot:
         plotVER(sim,vfit['maxent'],xKM,xp,zKM,zp,vlim['p'],tInd,makeplot,'maxent',
               '$\hat{v}_{maxent}$ from maximum entropy regularization',
-              spfid,progms,verbose)
+              1811,spfid,progms,verbose)
     if 'pmaxent1d' in makeplot and Jxi is not None:
         plotVER1D(sim,vfit['maxent'][:,Jxi],zKM,vlim['p'][2:],tInd,makeplot,
                   'vermaxent_1D',
@@ -250,7 +250,7 @@ def goPlot(sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
         assert isnan(vfit['art']).any() == False
         plotVER(sim,vfit['art'],xKM,xp,zKM,zp,vlim['p'],tInd,makeplot,'vart',
               '$\hat{P}_{art}$ from ART estimation of $J$',
-              spfid,progms,verbose)
+              1812,spfid,progms,verbose)
     if 'bart' in makeplot:
         plotBcompare(sim,drn,dhat['fit_art'],cam,sim.nCamUsed,
                      'bart',spfid,vlim['b'],tInd, makeplot,progms,verbose)
@@ -259,17 +259,19 @@ def goPlot(sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
 def plotfwd(sim,cam,drn,nCutPix,xKM,xp,zKM,zp,
             ver,Phi0,fitp,Jxi,vlim,tInd,makeplot,spfid,progms,verbose):
 
-    plotB(drn,sim.realdata,cam,vlim['b'],tInd,makeplot,'$br',progms,verbose)
+    plotB(drn,sim.realdata,cam,vlim['b'],tInd,1500,makeplot,'$br',progms,verbose)
 
     if not sim.realdata:
         # Forward model VER
         plotVER(sim,ver,xKM,xp,zKM,zp,vlim['p'],tInd,makeplot,'pfwd',
-            '$P_{{fwd}}$ volume emission rate',  spfid,progms,verbose)
+            '$P_{{fwd}}$ volume emission rate',
+            1813,spfid,progms,verbose)
 
 #       print('max |diff(phifwd)| = ' + str(np.abs(np.diff(phiInit, n=1, axis=0)).max()))
         plotJ(sim,Phi0,xKM,xp,fitp['EK'],fitp['EKpcolor'],
               vlim['j'],vlim['p'][:2],tInd,makeplot,'phifwd',
-              '$\Phi_{{top}}$ input diff. number flux', spfid,progms,verbose)
+              '$\Phi_{{top}}$ input diff. number flux',
+              1900,spfid,progms,verbose)
 
         if not 'optim' in makeplot and Jxi is not None:
             plotJ1D(sim,Phi0[:,Jxi],None,fitp['EK'],vlim['j'],tInd,makeplot,'phifwd1d',
@@ -286,15 +288,16 @@ def plotoptim(sim,cam,drn,dhat,nCutPix,bcomptxt,ver,Phi0,Jxi,
               vfit,fitp,xKM,xp,zKM,zp,vlim,tInd,makeplot,spfid,progms,verbose):
 
     plotBcompare(sim,drn,dhat['optim'],cam,sim.nCamUsed,
-                 'best', spfid,vlim['b'],tInd,makeplot,progms,verbose)
+                 'best', spfid,vlim['b'],tInd,1501,makeplot,progms,verbose)
 
     plotVER(sim,vfit['optim'],xKM,xp,zKM,zp,vlim['p'],tInd,makeplot,'pest',
-          '$\hat{P}$ estimated volume emission rate',  spfid,progms,verbose)
+          '$\hat{P}$ estimated volume emission rate',
+          1815,spfid,progms,verbose)
 #%% flux
     plotJ(sim,fitp.x,xKM,xp,fitp['EK'],fitp['EKpcolor'],
           vlim['j'],vlim['p'][:2],tInd,makeplot,'phiest',
           '$\hat{\phi}_{top}$ estimated diff. number flux',
-          spfid,progms,verbose)
+          1901,spfid,progms,verbose)
           #'Neval = {:d}'.format(fitp.nfev)
 
     if Jxi is not None:
@@ -307,9 +310,10 @@ def plotoptim(sim,cam,drn,dhat,nCutPix,bcomptxt,ver,Phi0,Jxi,
         ('$\hat{\phi}_{top}$ estimated diff. number flux at $B_\perp$={:0.2f} [km]'.format(xKM[Jxi])),
                            spfid,progms,verbose)
 #%% ############################################################################
-def plotnoise(cam,tInd,makeplot,prefix,progms,verbose):
+def plotnoise(cam,tInd,figh,makeplot,prefix,progms,verbose):
   try:
-    fg = figure()
+    figure(figh).clf()
+    fg = figure(figh)
     ax = fg.add_subplot(211)
 
     for c in cam:
@@ -440,11 +444,9 @@ def plotPlainImg(sim,cam,rawdata,t,makeplot,prefix,titletxt,figh,spfid,progms,ve
                      #weight='bold',
                      size=24
                     )
-        if in1d(('rawpng','save'),makeplot).any():
-            writeplots(fg,'cam{}rawFrame'.format(c),t,'png',progms,verbose=verbose)
-"""
-note draw and pause are in main_hist.py
-"""
+
+    if in1d(('rawpng','save'),makeplot).any():
+        writeplots(fg,'cam{}rawFrame'.format(c),t,'png',progms,verbose=verbose)
 
 #%%
 def plotRealImg(sim,cam,rawdata,t,makeplot,prefix,titletxt,figh,spfid,progms,verbose):
@@ -479,7 +481,7 @@ def plotRealImg(sim,cam,rawdata,t,makeplot,prefix,titletxt,figh,spfid,progms,ver
         ax.autoscale(True,tight=True) #fills existing axes
         ax.grid(False) #in case Seaborn is used
 
-
+    draw() #Must have this here or plot doesn't update in animation multiplot mode!
     if in1d(('rawpng'),makeplot).any():
         writeplots(fg,'rawFrame',t,'png',progms,verbose=verbose)
 
@@ -542,7 +544,7 @@ def plotJ1D(sim,PhiFwd,PhiInv,Ek,vlim,tInd,makeplot,prefix,titletxt,spfid,progms
   except Exception as e:
     warn('tind {}   {}'.format(tInd,e))
 #%%
-def plotJ(sim,Jflux,x,xp,Ek,EKpcolor,vlim,xlim,tInd,makeplot,prefix,titletxt,spfid,progms,verbose):
+def plotJ(sim,Jflux,x,xp,Ek,EKpcolor,vlim,xlim,tInd,makeplot,prefix,titletxt,figh,spfid,progms,verbose):
   try:
     cnorm,sfmt = logfmt(makeplot)
     plt3 = 'octave'         #'octave' #'mpl'#'mayavi'
@@ -569,7 +571,8 @@ def plotJ(sim,Jflux,x,xp,Ek,EKpcolor,vlim,xlim,tInd,makeplot,prefix,titletxt,spf
             py.plot(dfg, filename='{}_{}_{}'.format(progms,prefix,tInd),auto_open=False)
             #print(plot_url)
         else:
-            fg = figure()
+            figure(figh).clf()
+            fg = figure(figh)
             ax = fg.gca()
             if pstyle == 'pcolor':
                 hc = ax.pcolormesh(xp,EKpcolor,Jflux,edgecolors='none',
@@ -607,6 +610,7 @@ def plotJ(sim,Jflux,x,xp,Ek,EKpcolor,vlim,xlim,tInd,makeplot,prefix,titletxt,spf
 
             fg.subplots_adjust(top=0.85)
             doJlbl(ax,titletxt)
+
             writeplots(fg,prefix+p,tInd,makeplot,progms,verbose=verbose)
 
 #%% 3-D
@@ -702,7 +706,7 @@ def plotVER1D(sim,pfwd,pinv,zKM,vlim,tInd,makeplot,prefix,titletxt,spfid,progms,
   except Exception as e:
     warn('tind {}   {}'.format(tInd,e))
 #%%
-def plotVER(sim,ver,x,xp,z,zp,vlim,tInd,makeplot,prefix,titletxt,spfid,progms,verbose):
+def plotVER(sim,ver,x,xp,z,zp,vlim,tInd,makeplot,prefix,titletxt,figh,spfid,progms,verbose):
   try:
     cnorm,sfmt = logfmt(makeplot)
     '''
@@ -731,7 +735,8 @@ def plotVER(sim,ver,x,xp,z,zp,vlim,tInd,makeplot,prefix,titletxt,spfid,progms,ve
             py.plot(dfg, filename='{}_{}_{}'.format(progms,prefix,tInd), auto_open=False)
             #print(plot_url)
           else:
-            fg = figure()
+            figure(figh).clf()
+            fg = figure(figh)
             ax = fg.gca()
             if pstyle=='pcolor':
                 hc = ax.pcolormesh(xp,zp,ver,edgecolors='none',
@@ -784,11 +789,12 @@ def plotVER(sim,ver,x,xp,z,zp,vlim,tInd,makeplot,prefix,titletxt,spfid,progms,ve
   except Exception as e:
     warn('tind {}   {}'.format(tInd,e))
 #%%
-def plotBcompare(sim,braw,bfit,cam,nCam,prefix, spfid,vlim,tInd,makeplot,progms,verbose):
+def plotBcompare(sim,braw,bfit,cam,nCam,prefix, spfid,vlim,tInd,figh,makeplot,progms,verbose):
   try:
     dosubtract = False
 
-    fg = figure()
+    figure(figh),clf()
+    fg = figure(figh)
     ax1 = fg.gca()
 
 #%% plot raw
@@ -867,11 +873,12 @@ def plotBcompare(sim,braw,bfit,cam,nCam,prefix, spfid,vlim,tInd,makeplot,progms,
   except Exception as e:
     warn('tind {}   {}'.format(tInd,e))
 #%%
-def plotB(bpix,isrealdata,cam,vlim,tInd,makeplot,labeltxt,progms,verbose):
+def plotB(bpix,isrealdata,cam,vlim,tInd,figh,makeplot,labeltxt,progms,verbose):
   try:
     cnorm,sfmt = logfmt(makeplot)
 
-    fgb = figure()
+    figure(figh).clf()
+    fgb = figure(figh)
     ax1 = fgb.gca()
 
     std = []
@@ -900,6 +907,7 @@ def plotB(bpix,isrealdata,cam,vlim,tInd,makeplot,labeltxt,progms,verbose):
                  #marker='.',
                  #color=cord[c])
     doBlbl(ax1,isrealdata,sfmt[0],vlim,labeltxt,std) #b is never log
+
     writeplots(fgb,'bfwd'+labeltxt[4:-2],tInd,makeplot,progms,verbose=verbose)
   except Exception as e:
     warn('tind {}   {}'.format(tInd,e))
@@ -1107,6 +1115,7 @@ def dumph5(fn,prefix,tInd,**writevar): #used in other .py too
 #        imsave(cn,img,vmin=minmax[0],vmax=minmax[1],format=fmt,cmap='gray')
 
 def writeplots(fg,plotprefix,tInd,method,progms,overridefmt=None,verbose=0):
+    draw() #Must have this here or plot doesn't update in animation multiplot mode!
     #TIF was not faster and was 100 times the file size!
     #PGF is slow and big file,
     #RAW crashes
