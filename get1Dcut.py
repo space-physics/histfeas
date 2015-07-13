@@ -1,8 +1,10 @@
-from __future__ import division
+from __future__ import division,absolute_import
 from numpy import logspace
 import h5py
 from os.path import join
-from coordconv3d import ecef2aer, ecef2geodetic
+from mpl_toolkits.mplot3d import Axes3D #needed for this file
+#
+from pymap3d.coordconv3d import ecef2aer, ecef2geodetic
 
 def get1Dcut(cam,makeplot,progms,dbglvl):
     discardEdgepix = True #gets rid of duplicates beyond FOV of image that cause lsq estimation error
@@ -19,10 +21,10 @@ def get1Dcut(cam,makeplot,progms,dbglvl):
     #optional: plot ECEF of points between each camera and magnetic zenith (lying at az,el relative to each camera)
     plotLOSecef(cam,makeplot,progms,dbglvl)
 #%% (2) get az,el of these points from camera to the other camera's points
-    cam['0'].az2pts,cam['0'].el2pts,cam['0'].r2pts = ecef2aer(cam['1'].x2mz, cam['1'].y2mz, cam['1'].z2mz,
-                                                             cam['0'].lat, cam['0'].lon, cam['0'].alt_m)
-    cam['1'].az2pts,cam['1'].el2pts,cam['1'].r2pts = ecef2aer(cam['0'].x2mz, cam['0'].y2mz, cam['0'].z2mz,
-                                                             cam['1'].lat, cam['1'].lon, cam['1'].alt_m)
+    cam[0].az2pts,cam[0].el2pts,cam[0].r2pts = ecef2aer(cam[1].x2mz, cam[1].y2mz, cam[1].z2mz,
+                                                             cam[0].lat, cam[0].lon, cam[0].alt_m)
+    cam[1].az2pts,cam[1].el2pts,cam[1].r2pts = ecef2aer(cam[0].x2mz, cam[0].y2mz, cam[0].z2mz,
+                                                             cam[1].lat, cam[1].lon, cam[1].alt_m)
 #%% (3) find indices corresponding to these az,el in each image
         # and Least squares fit line to nearest points found in step 3
     for c in cam:
@@ -42,7 +44,7 @@ def get1Dcut(cam,makeplot,progms,dbglvl):
 def plotLOSecef(cam,makeplot,progms,dbglvl):
     from matplotlib.pyplot import figure
     if dbglvl>0:
-        figecef = figure(238923)
+        figecef = figure()
         clr = ['b','r','g','m']
         if dbglvl>1:
             import simplekml as skml

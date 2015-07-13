@@ -59,6 +59,16 @@ simulate flaming aurora with two cameras::
 you can then look to the `Output Processing`_ section for how to load the HDF5 files 
 you just produced in ``out/test_flame2``
 
+reading real data and displaying a live video::
+
+ python main_hist.py in/apr14.xlsx out/apr14 -m realvid -a 0.1
+
+reading real data and saving the joint image frames to disk::
+
+  python main_hist.py in/apr14.xlsx out/apr14 -m realvid rawpng -a 0.1
+
+
+
 below this line examples may be out of date (may not work at the moment)
 
 ------------
@@ -67,10 +77,6 @@ draft 2015 SIMULATION commands were like::
     
  python3 main_hist.py in/jgr2013_2cam_flame.xlsx /tmp --minev 150 -m fwd optim gfit eig eig1d ell eavg png --vlim -3.8 7.1 90 350 1e5 1e8 --jlim 0 7e4 --blim 0 2.5e9 -f 2 5 1 --ell
     
-reading real data::
-
- python3 main_hist.py in/jgr2013_realdata.xlsx /tmp -m realvid fwd optim png rawpng --vlim -3.8 7.1 90 350 0 30 --jlim nan 0.15 --blim 0 2500 -f 0 1 1
-
 dump raw frames with time superimposed to disk without axes (for draft, -f 30 70 10)::
     
  python3 main_hist.py in/jgr2013_realdata.xlsx /tmp -m singleraw rawpng -f 30 70 10
@@ -103,7 +109,9 @@ type of program output
 
 ``rawpng`` saves the real video frames you chose to PNG with annotations/axes
 
-``realvid`` both cameras in one big figure
+``realvid`` both cameras in one figure
+
+``realvid rawpng`` both cameras in one figure, save figure to disk as png to specifed directory
 
 ``singleraw`` each camera images individually, without axes (for powerpoint,posters, etc.)
 
