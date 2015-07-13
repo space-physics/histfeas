@@ -90,7 +90,7 @@ class Cam: #use this like an advanced version of Matlab struct
         self.pedn = cp['pedn']
         self.ampgain = cp['ampgain']
 
-        if isfinite(self.kineticSec) and isfinite(self.pixarea_sqcm) and isfinite(self.pedn):
+        if not sim.realdata and (isfinite(self.kineticSec) and isfinite(self.pixarea_sqcm) and isfinite(self.pedn)):
             self.intens2dn = self.kineticSec * self.pixarea_sqcm * self.ampgain / self.pedn
         else:
             self.intens2dn = 1
