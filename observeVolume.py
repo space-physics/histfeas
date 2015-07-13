@@ -74,7 +74,7 @@ def makeCamFOVpixelEnds(Fwd,sim,cam,makePlots,dbglvl):
          the minus sign on x makes the angle origin at local east
         '''
         ci=int(c)
-        xFOVpixelEnds[:,ci] = -(cam[c].fovmaxlen * cos(radians(cam[c].angle_deg))) + cam[c].x_km 
+        xFOVpixelEnds[:,ci] = -(cam[c].fovmaxlen * cos(radians(cam[c].angle_deg))) + cam[c].x_km
         zFOVpixelEnds[:,ci] =  (cam[c].fovmaxlen * sin(radians(cam[c].angle_deg))) + cam[c].z_km
 
         cam[c].xFOVpixelEnds = xFOVpixelEnds[:,ci] #for plots.py
@@ -148,7 +148,7 @@ def loadEll(Fwd,cam,EllFN,verbose):
                 warn('could not load FOV ends, maybe this is an old Ell file')
 
     except (IOError) as e: #python 2.7 doesn't have FileNotFoundError
-      raise IOError('*** loadEll: {} not found.\nuse --ell command line option to save new Ell file. {}'.format(EllFN,e))
+      raise IOError('{} not found.\nuse --ell command line option to save new Ell file. {}'.format(EllFN,e))
     except AttributeError as e:
         raise AttributeError('grid mismatch detected. use --ell command line option to save new Ell file. {}'.format(e))
 
@@ -158,6 +158,7 @@ def loadEll(Fwd,cam,EllFN,verbose):
 
 def mogrifyData(data,cam):
     #steps should be in this order!
+    data = data.astype(float)
     data *= cam.intens2dn #considers pixel area and camera amplifier gain
     data = cam.scaleintens(data) #camera cross-calibration
 
@@ -190,7 +191,7 @@ def removeUnusedCamera(L,useCamBool,nCutPix):
     arow = ones(nCutPix).astype(bool)
     grow = outer(arow,useCamBool).ravel(order='F')
     return L[grow,:]
-    
+
 def definecamind(cam,nCutPix):
     ''' store indices of b vector corresponding to each camera (in case some cameras not used) '''
     for i,c in enumerate(cam):
