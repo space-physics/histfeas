@@ -28,6 +28,7 @@ from simulFrame import getSimulData
 #import logging
 #logging.basicConfig(filename='hist.log',filemode='w',level=logging.DEBUG)
 
+
 def doSim(ParamFN,makeplot,timeInds,overrides,progms,x1d,vlim,animtime, cmd,verbose):
     # local -- these were put here so that matplotlib backend autoselect could happen first
     from matplotlib.pyplot import close
@@ -46,7 +47,7 @@ def doSim(ParamFN,makeplot,timeInds,overrides,progms,x1d,vlim,animtime, cmd,verb
 #%% setup loop
     if sim.realdata:
         cam,rawdata,sim = getSimulData(sim,cam,makeplot,progms,verbose)
-        sim.nTimeSliceReq = cam['0'].keo.shape[1] #FIXME assumes equal num. of time slices list(cam)[0]
+        sim.nTimeSliceReq = cam[0].keo.shape[1] #FIXME assumes equal num. of time slices list(cam)[0]
     else: #simulation
         rawdata = None
         if sim.raymap == 'astrometry': #and any('b' in m[:2] for m in makeplot):
@@ -62,6 +63,8 @@ def doSim(ParamFN,makeplot,timeInds,overrides,progms,x1d,vlim,animtime, cmd,verb
 #%% synthetic diff. num flux
     if not sim.realdata:
         Phi0all = getPhi0(sim,ap,Fwd['x'],Peig['Ek'], makeplot,verbose)
+    else:
+        Phi0all = None
     if verbose>0: print('timeInds: {}'.format(timeInds))
 #%%start looping for each time slice in keogram (just once if simulated)
     for ti in timeInds:

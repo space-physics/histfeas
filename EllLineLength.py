@@ -5,7 +5,6 @@ import h5py
 from numpy import empty,ones,ravel_multi_index,hypot,zeros,in1d,array
 from scipy.sparse import dok_matrix,issparse
 from shutil import copy2
-from os.path import basename,join
 # local
 from CVutils.lineClipping import cohensutherland
 
@@ -163,10 +162,6 @@ def doSaveEll(L,Fwd,sim,xFOVpixelEnds,zFOVpixelEnds,writeRays):
 
 def plotEll(nCam,xFOVpixelEnds,zFOVpixelEnds,xCam,zCam,Np,xpc,zpc,sz,sx,
             xzplot,EllFN,plotEachRay,makeplot,vlim):
-    import seaborn as sns
-    sns.color_palette(sns.color_palette("cubehelix"))
-    sns.set(context='paper', style='whitegrid',
-        rc={'image.cmap': 'cubehelix_r'}) #for contour
 
     from matplotlib.pyplot import figure, draw, pause
     from matplotlib.ticker import MultipleLocator

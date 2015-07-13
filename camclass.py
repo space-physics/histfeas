@@ -1,17 +1,21 @@
-from __future__ import print_function, division
+from __future__ import print_function, division,absolute_import
 from numpy import (linspace, fliplr, flipud, rot90, arange,
                    polyfit,polyval,rint,empty, isfinite, isclose,
-                   absolute, hypot, logical_or, unravel_index, delete, where)
-from os.path import expanduser
+                   absolute, hypot, logical_or, unravel_index, delete, where,asarray)
+from os.path import expanduser,join
 from dateutil.parser import parse
+from dateutil.relativedelta import relativedelta
 from scipy.signal import savgol_filter
 from six import string_types
 from numpy.random import poisson
 from warnings import warn
+from calendar import timegm
 #
 from pymap3d.azel2radec import azel2radec
 from pymap3d.haversine import angledist
 from pymap3d.coordconv3d import aer2ecef
+from histutils.getRawInd import getRawInd
+from histutils.rawDMCreader import getDMCparam
 
 
 class Cam: #use this like an advanced version of Matlab struct
@@ -24,7 +28,8 @@ class Cam: #use this like an advanced version of Matlab struct
         self.alt_m = cp['Zkm']*1e3
         self.z_km = cp['Zkm']
         self.x_km = cp['Xkm']
-        self.fn = cp['fn']
+
+        if sim.realdata:  self.fn = expanduser(cp['fn'])
 #        self.startTime = startTime
 #        self.stopTime = stopTime
         self.nCutPix = int(cp['nCutPix'])
@@ -49,9 +54,13 @@ class Cam: #use this like an advanced version of Matlab struct
         self.transpose = cp['transpose'] == 1
         self.flipLR =    cp['flipLR'] == 1
         self.flipUD =   cp['flipUD'] == 1
-        self.timeShiftSec = cp['timeShiftSec']
 
-        self.plotminmax = (cp['plotMinVal'], cp['plotMaxVal'])
+        self.timeShiftSec = cp['timeShiftSec'] if isfinite(cp['timeShiftSec']) else 0.
+
+        self.plotminmax = [None]*2
+        if isfinite(cp['plotMinVal']): self.plotminmax[0] =  cp['plotMinVal']
+        if isfinite(cp['plotMaxVal']): self.plotminmax[1] =  cp['plotMaxVal']
+
         self.fullstart = cp['fullFileStartUTC']
 
         self.intensityScaleFactor = cp['intensityScaleFactor']
@@ -70,7 +79,7 @@ class Cam: #use this like an advanced version of Matlab struct
         self.boresightEl = cp['boresightElevDeg']
         self.arbfov = cp['FOVdeg']
 #%%
-        self.kineticSec = 1. / cp['frameRateHz']
+        self.kineticSec = 1 / cp['frameRateHz']
 #%% camera model
         """
         A model for sensor gain
@@ -81,7 +90,7 @@ class Cam: #use this like an advanced version of Matlab struct
         self.pedn = cp['pedn']
         self.ampgain = cp['ampgain']
 
-        if isfinite(self.kineticSec) and isfinite(self.pixarea_sqcm) and isfinite(self.pedn):
+        if not sim.realdata and (isfinite(self.kineticSec) and isfinite(self.pixarea_sqcm) and isfinite(self.pedn)):
             self.intens2dn = self.kineticSec * self.pixarea_sqcm * self.ampgain / self.pedn
         else:
             self.intens2dn = 1
@@ -106,12 +115,60 @@ class Cam: #use this like an advanced version of Matlab struct
         self.savgolOrder = cp['savgolOrder']
 
 
-    def ingestcamparam(self,finf):
+    def ingestcamparam(self,sim):
+
+        # data file name
+        try:
+            self.fnStemCam = expanduser(join(sim.realdatapath, self.fn))
+        except AttributeError:
+            raise AttributeError('You must specify the filename to read. file: {}'.format(self.fn))
+
+        # parameters for this camera
+        finf = getDMCparam(self.fnStemCam,(self.xpix, self.ypix),
+                                          (self.xbin, self.ybin), verbose=-1)
+
+
         self.SuperX=finf['superx']
         self.SuperY=finf['supery']
         self.Nmetadata = finf['nmetadata']
         self.BytesPerFrame= finf['bytesperframe']
         self.PixelsPerImage = finf['pixelsperimage']
+        #FIXME is this silly? should be assigned in getDMCparam?
+        self.nHeadBytes = self.BytesPerFrame - self.PixelsPerImage * 16 // 8
+        self.BytesPerImage = self.BytesPerFrame - self.nHeadBytes
+        #get start/end raw frame indices
+        self.firstFrameNum,self.lastFrameNum = getRawInd(self.fnStemCam,
+                                                         self.BytesPerImage,
+                                                         self.nHeadBytes,
+                                                         self.Nmetadata)
+
+        #number of frames in file
+        self.nFrame = self.lastFrameNum - self.firstFrameNum + 1
+
+        fullFileStartUT = parse(self.fullstart)
+        #FIXME check for off-by-one error
+        basestart = fullFileStartUT + relativedelta(seconds=self.timeShiftSec)  #in this order
+        #start/stop frame times of THIS camera data file
+        self.startUT = basestart + relativedelta(seconds= (self.firstFrameNum - 1) * self.kineticSec )
+        self.stopUT =  basestart + relativedelta(seconds= (self.lastFrameNum -  1) * self.kineticSec )
+
+        if self.timeShiftSec != 0 and self.verbose >0:
+            print('cam{} Time Shifted by {} seconds'.format(self.name,self.timeShiftSec))
+
+
+        #now we create a vector of time deltas using list comprehension
+        #Fixed: it's -1 because first frame number is 1 !
+        deltarange = arange(self.firstFrameNum-1, self.lastFrameNum) * self.kineticSec
+        self.tCam = asarray([basestart + relativedelta(seconds = vx) for vx in deltarange])
+        self.tCamUnix = asarray([timegm(t.utctimetuple()) + t.microsecond / 1e6 for t in self.tCam ])
+
+        if self.verbose >0:
+            print('Camera {} start/stop UTC: {} / {}, {} frames.'.format(
+                                                      self.name,
+                                                      self.startUT,
+                                                      self.stopUT,
+                                                      self.nFrame))
+
 
     def arbanglemap(self):
         '''
@@ -268,7 +325,7 @@ class Cam: #use this like an advanced version of Matlab struct
             ax.set_title('polyfit with computed ray points')
 
             ax =figure().gca()
-            ax.plot(angle_deg,color=clr[self.name],label='cam'+self.name,
+            ax.plot(angle_deg,color=clr[self.name],label='cam {}'.format(self.name),
                     linestyle='None',marker='.')
             ax.legend()
             ax.set_xlabel('x-pixel'); ax.set_ylabel('$\theta$ [deg.]')
