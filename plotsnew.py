@@ -445,6 +445,7 @@ def plotPlainImg(sim,cam,rawdata,t,makeplot,prefix,titletxt,figh,spfid,progms,ve
                      size=24
                     )
 
+    draw() #Must have this here or plot doesn't update in animation multiplot mode!
     if in1d(('rawpng','save'),makeplot).any():
         writeplots(fg,'cam{}rawFrame'.format(c),t,'png',progms,verbose=verbose)
 
