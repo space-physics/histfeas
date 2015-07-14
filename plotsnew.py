@@ -872,7 +872,7 @@ def plotBcompare(sim,braw,bfit,cam,nCam,prefix, spfid,vlim,tInd,figh,makeplot,pr
 
     writeplots(fg,prefix,tInd,makeplot,progms,verbose)
   except Exception as e:
-    warn('tind {}   {}'.format(tInd,e))
+    warn('failed to plot brightness at tind {}   {}'.format(tInd,e))
 #%%
 def plotB(bpix,isrealdata,cam,vlim,tInd,figh,makeplot,labeltxt,progms,verbose):
   try:
