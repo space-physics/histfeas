@@ -464,7 +464,8 @@ def plotRealImg(sim,cam,rawdata,t,makeplot,prefix,titletxt,figh,spfid,progms,ver
                          origin='lower',
                          vmin=cam[c].plotminmax[0], vmax=cam[c].plotminmax[1],
                          cmap='gray')
-        if showcb:
+
+        if showcb: #showing the colorbar makes the plotting go 5-10x more slowly
             hc = fg.colorbar(hi, ax=ax) #not cax!
             hc.set_label(str(rawdata[c].dtype) + ' data numbers')
         ax.set_title('Cam{}: {}'.format(c,cam[c].tKeo[t]))
@@ -477,7 +478,7 @@ def plotRealImg(sim,cam,rawdata,t,makeplot,prefix,titletxt,figh,spfid,progms,ver
         #plot magnetic zenith
         ax.plot(cam[c].cutcol[cam[c].angleMagzenind],
                 cam[c].cutrow[cam[c].angleMagzenind],
-                marker='*',linestyle='none',color='red',markersize=10)
+                marker='o',linestyle='none',color='red',markersize=16)
     #%% plot cleanup
         ax.autoscale(True,tight=True) #fills existing axes
         ax.grid(False) #in case Seaborn is used
@@ -872,7 +873,7 @@ def plotBcompare(sim,braw,bfit,cam,nCam,prefix, spfid,vlim,tInd,figh,makeplot,pr
 
     writeplots(fg,prefix,tInd,makeplot,progms,verbose)
   except Exception as e:
-    warn('tind {}   {}'.format(tInd,e))
+    warn('failed to plot brightness at tind {}   {}'.format(tInd,e))
 #%%
 def plotB(bpix,isrealdata,cam,vlim,tInd,figh,makeplot,labeltxt,progms,verbose):
   try:
