@@ -92,34 +92,34 @@ Output selection (via -m command)
 combine the following commands as desired under the ``-m`` option to control the
 type of program output
 
+*Almost all of these ``-m`` options can be combined in various ways desired by the user*
+
 **Simulation selection**
 
-``fwd`` run foward model 
+-m fwd      run foward model 
 
-``optim`` run optimization to estimate input quantities
+-m optim    run optimization to estimate input quantities
 
 
 **Graphics selection**
 
-``h5`` dumps HDF5 files of the quantities selected in -m
+-m h5       dumps HDF5 files of the quantities selected in -m
 
-``eps`` ``png`` save figures as eps or png respectively
+-m eps      saves figures as eps
+
+-m png      saves figures as png
 
 **real data only**
 
-``rawpng`` saves the real video frames you chose to PNG with annotations/axes
+-m realvid      both cameras in one figure
 
-``realvid`` both cameras in one figure
-
-``realvid rawpng`` both cameras in one figure, save figure to disk as png to specifed directory
-
-``singleraw`` each camera images individually, without axes (for powerpoint,posters, etc.)
+-m singleraw    each camera images individually, without axes (for powerpoint,posters, etc.)
 
 **excitation rates plots**
 
-``eig`` plot eigenprofiles
+-m eig         plot eigenprofiles
 
-``spectra`` plot modeled auroral spectra modulated by the filter used.
+-m spectra     plot modeled auroral spectra modulated by the filter used.
 
 
 Time selection
@@ -139,11 +139,11 @@ evenly spaced. If not, you can skip over the jump times by taking say every othe
 
 plot limit selection
 --------------------
-``--vlim xmin xmax zmin zmax pmin pmax``  limits for VER plots and eigenprofile plots (including 1-D)
+--vlim xmin xmax zmin zmax pmin pmax   limits for VER plots and eigenprofile plots (including 1-D)
 
-``--jlim min max`` flux limits for diff num flux plots
+--jlim min max                         flux limits for diff num flux plots
 
-``--blim min max`` flux limits for brightness plots
+--blim min max                         flux limits for brightness plots
 
 Plot explanation
 -----------------
