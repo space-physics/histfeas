@@ -139,7 +139,8 @@ evenly spaced. If not, you can skip over the jump times by taking say every othe
 
 plot limit selection
 --------------------
-
+You may want to select fixed limits for your plots instead of the default autoscaling, particularly when
+comparing a time series of plots.
 
 --vlim xmin xmax zmin zmax pmin pmax      limits for VER plots and eigenprofile plots (including 1-D)
 
