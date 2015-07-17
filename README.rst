@@ -92,7 +92,7 @@ Output selection (via -m command)
 combine the following commands as desired under the ``-m`` option to control the
 type of program output
 
-*Almost all of these ``-m`` options can be combined in various ways desired by the user*
+*Almost all of these* ``-m`` *options can be combined in various ways desired by the user*
 
 **Simulation selection**
 
@@ -133,18 +133,20 @@ Example: to use only the first time step, use option ``-f 0 1 1`` which works li
 
 **Note**
 
-The simulation time currently runs 10x faster than the columns in the in/*.xlsx
-under the Arc* tabs. You should normally have the times of the Arc* .xlsx columns
+The simulation time currently runs 10x faster than the columns in the in/\*.xlsx
+under the Arc\* tabs. You should normally have the times of the Arc\* .xlsx columns
 evenly spaced. If not, you can skip over the jump times by taking say every other time.
 
 plot limit selection
 --------------------
 
---vlim xmin xmax zmin zmax pmin pmax   limits for VER plots and eigenprofile plots (including 1-D)
 
---jlim min max                         flux limits for diff num flux plots
+--vlim xmin xmax zmin zmax pmin pmax      limits for VER plots and eigenprofile plots (including 1-D)
 
---blim min max                         flux limits for brightness plots
+--jlim min max                            flux limits for diff num flux plots
+
+--blim min max                            flux limits for brightness plots
+
 
 Plot explanation
 -----------------
