@@ -97,28 +97,23 @@ type of program output
 **Simulation selection**
 
 -m fwd      run foward model 
-
 -m optim    run optimization to estimate input quantities
 
 
 **Graphics selection**
 
 -m h5       dumps HDF5 files of the quantities selected in -m
-
 -m eps      saves figures as eps
-
 -m png      saves figures as png
 
 **real data only**
 
 -m realvid      both cameras in one figure
-
 -m singleraw    each camera images individually, without axes (for powerpoint,posters, etc.)
 
 **excitation rates plots**
 
 -m eig         plot eigenprofiles
-
 -m spectra     plot modeled auroral spectra modulated by the filter used.
 
 
@@ -142,11 +137,11 @@ plot limit selection
 You may want to select fixed limits for your plots instead of the default autoscaling, particularly when
 comparing a time series of plots.
 
---vlim xmin xmax zmin zmax pmin pmax      limits for VER plots and eigenprofile plots (including 1-D)
+``--vlim xmin xmax zmin zmax pmin pmax``      limits for VER plots and eigenprofile plots (including 1-D)
 
---jlim min max                            flux limits for diff num flux plots
+``--jlim min max``                            flux limits for diff num flux plots
 
---blim min max                            flux limits for brightness plots
+``--blim min max``                            flux limits for brightness plots
 
 
 Plot explanation
@@ -170,15 +165,17 @@ Output Processing
 ------------------
 The .h5 HDF5 files output by the ``-h5`` command-line parameter can be loaded in nearly any analysis
 software such as GNU Octave, Matlab, IDL, Mathematica, etc.
-Some of the 1-D variables are duplicated because we don't know a-priori simulation parts will be run--
-disk space use is trivial, so we have left this alone.
+Some of the 1-D variables are duplicated because we don't know a-priori simulation parts will be run--disk space use is trivial, so we have left this alone.
 
 The naming of the variables follows `Plot explanation`_
 
 For Python, we have the hollow function ``loadAnalyze.py`` which loads the HDF5 data to call 
 the same ``analysehst.py`` that's used by the simulation online--good coding practice.
 
-**Example of offline output processing** ::
+**Example of offline output processing** 
+
+.. code:: bash
+
  python loadAnalyze.py test/registration.h5
 
 
@@ -186,11 +183,10 @@ the same ``analysehst.py`` that's used by the simulation online--good coding pra
 -------------
 Calibration
 -------------
-The first program, rawDMCreader.py, accesses the raw camera data and averages the selected frames and writes the average as a FITS file
 
-The second line moves this FITS file to the user-selected calibration directory
-
-The third line uses my wrapper and post-processing based on Astrometry.net to make an HDF5 file of the mapping from each pixel to sky coordinates (ra/dec and az/el). 
+# ``rawDMCreader.py``  accesses the raw camera data and averages the selected frames and writes the average as a FITS file
+# The second line moves this FITS file to the user-selected calibration directory
+# The third line uses my wrapper and post-processing based on Astrometry.net to make an HDF5 file of the mapping from each pixel to sky coordinates (ra/dec and az/el). 
 
 cam0::
 
