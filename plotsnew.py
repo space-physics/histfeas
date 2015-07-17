@@ -478,14 +478,13 @@ def plotRealImg(sim,cam,rawdata,t,makeplot,prefix,titletxt,figh,spfid,progms,ver
         #plot magnetic zenith
         ax.plot(cam[c].cutcol[cam[c].angleMagzenind],
                 cam[c].cutrow[cam[c].angleMagzenind],
-                marker='o',linestyle='none',color='red',markersize=16)
+                marker='o',linestyle='none',color='red',markersize=22)
     #%% plot cleanup
         ax.autoscale(True,tight=True) #fills existing axes
         ax.grid(False) #in case Seaborn is used
 
     draw() #Must have this here or plot doesn't update in animation multiplot mode!
-    if in1d(('rawpng'),makeplot).any():
-        writeplots(fg,'rawFrame',t,'png',progms,verbose=verbose)
+    writeplots(fg,'rawFrame',t,makeplot,progms,overridefmt='png',verbose=verbose)
 
 def plotPicard(A,b,cvar=None,verbose=0):
     from picard import picard
