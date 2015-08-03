@@ -25,15 +25,15 @@ go to the directory where you want to install this program under e.g. ~/code
 
 then, in Terminal (for Linux, Mac or Cygwin on Windows), copy and paste::
 
- git clone --recursive --depth 1 https://github.com/scienceopen/hist-feasibility
+    git clone --depth 1 https://github.com/scienceopen/hist-feasibility
 
- cd hist-feasibility
+    cd hist-feasibility
 
- ./setup.sh
+    ./setup.sh
 
 You can check that things are working OK by::
 
-  python registration.py
+    python registration.py
 
 which should give several lines of text ending with::
 

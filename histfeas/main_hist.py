@@ -24,7 +24,7 @@ from numpy import absolute,zeros,in1d,arange,outer
 from numpy.random import normal
 from warnings import warn
 #
-from simulFrame import getSimulData
+from .simulFrame import getSimulData
 #import logging
 #logging.basicConfig(filename='hist.log',filemode='w',level=logging.DEBUG)
 
@@ -32,16 +32,16 @@ from simulFrame import getSimulData
 def doSim(ParamFN,makeplot,timeInds,overrides,progms,x1d,vlim,animtime, cmd,verbose):
     # local -- these were put here so that matplotlib backend autoselect could happen first
     from matplotlib.pyplot import close
-    from pyimagevideo.imageconv import png2multipage
-    from sanityCheck import getParams
+    from histutils.imageconv import png2multipage
+    from .sanityCheck import getParams
     from gridaurora.eFluxGen import maxwellian
-    from AuroraFwdModel import getSimVER
-    from transcararc import getMp,getPhi0,getpx #calls matplotlib
-    from observeVolume import getEll,getObs #calls matplotlib
-    from FitVER import FitVERopt as FitVER #calls matplotlib
+    from .AuroraFwdModel import getSimVER
+    from .transcararc import getMp,getPhi0,getpx #calls matplotlib
+    from .observeVolume import getEll,getObs #calls matplotlib
+    from .FitVER import FitVERopt as FitVER #calls matplotlib
 #    from simulFrame import getSimulData
-    from plotsnew import goPlot
-    from analysehst import analyseres
+    from .plotsnew import goPlot
+    from .analysehst import analyseres
 #%% Step 0) load data
     ap,sim,cam,Fwd = getParams(ParamFN, overrides,makeplot,progms,verbose)
 #%% setup loop
