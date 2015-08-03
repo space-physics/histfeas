@@ -1,14 +1,14 @@
 from __future__ import division, absolute_import
 from numpy import (asfortranarray,atleast_3d, exp,sinc,pi,zeros, outer,
-                   isnan,log,logspace,empty,arange,allclose,diff,atleast_1d)
+                   isnan,log,logspace,arange,allclose,diff,atleast_1d)
 import h5py
 from scipy.interpolate import interp1d
 from warnings import warn
 from six import string_types
 #
 from gridaurora.eFluxGen import fluxgen
-from pybashutils.findnearest import find_nearest
-from arcexcite import getTranscar
+from histutils.findnearest import find_nearest
+from .arcexcite import getTranscar
 
 
 #def getTranscarMp(sim,makeplot,dbglvl):
