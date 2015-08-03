@@ -1,5 +1,6 @@
+sudo: true
 git:
-  submodules: false
+  depth: 1
 language: python
 python:
   - "3.4"
@@ -15,21 +16,21 @@ before_install:
   - export PATH=$HOME/miniconda/bin:$PATH
   - conda update --yes conda
   - python --version #just checking
-  - git submodule update --init --recursive
+  - sudo apt-get update && sudo apt-get install gfortran
 
 install:
  - if [[ -z $pyv ]]; then
    pip -q install coveralls;
   fi
  - conda install --yes --file requirements.txt
- - pip install -qr piprequirements.txt
+ - python setup.py develop
 
 script:
    - if [[ -z $pyv ]]; then
          echo "running coverage";
-        coverage run registration.py;
+        coverage run test/registration.py;
      else
-        python registration.py;
+        python test/registration.py;
     fi
 
 after_success:

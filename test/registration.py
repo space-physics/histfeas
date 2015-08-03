@@ -9,7 +9,7 @@ from sys import argv
 import h5py
 #from os import devnull
 #
-from main_hist import doSim
+from histfeas.main_hist import doSim
 
 
 
