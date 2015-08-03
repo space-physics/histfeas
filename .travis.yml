@@ -28,9 +28,9 @@ install:
 script:
    - if [[ -z $pyv ]]; then
          echo "running coverage";
-        coverage run registration.py;
+        coverage run test/registration.py;
      else
-        python registration.py;
+        python test/registration.py;
     fi
 
 after_success:
