@@ -32,7 +32,7 @@ try:
 except ImportError as e:
     warn('you need to install github.com/keflavich/gaussfitter  {}'.format(e))
 
-from pybashutils.findnearest import find_nearest
+from histutils.findnearest import find_nearest
 from gridaurora.opticalmod import plotOptMod
 #%% plot globals
 afs = None#20
