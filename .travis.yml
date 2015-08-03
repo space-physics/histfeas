@@ -15,14 +15,13 @@ before_install:
   - export PATH=$HOME/miniconda/bin:$PATH
   - conda update --yes conda
   - python --version #just checking
-  - git submodule update --init --recursive
 
 install:
  - if [[ -z $pyv ]]; then
    pip -q install coveralls;
   fi
  - conda install --yes --file requirements.txt
- - pip install -qr piprequirements.txt
+ - python setup.py develop
 
 script:
    - if [[ -z $pyv ]]; then
