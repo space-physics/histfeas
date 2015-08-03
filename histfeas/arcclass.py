@@ -4,9 +4,9 @@ GPLv3+
 """
 from __future__ import print_function, division, absolute_import
 from numpy import exp,outer, zeros_like,zeros
-from pybashutils.findnearest import find_nearest
-
-from transcararc import getpx
+#
+from histutils.findnearest import find_nearest
+from .transcararc import getpx
 
 def getver(x,z,Mp,Phi0, w,h,x0,z0,xshape,zshape,pmax):
     if zshape=='chapman':
