@@ -265,7 +265,7 @@ class Cam: #use this like an advanced version of Matlab struct
 
     def fixnegval(self,data):
         mask = data<0
-        if (self.verbose and mask.any()) or mask.sum()>0.1*self.nCutPix:
+        if (self.verbose and mask.any()) or mask.sum()>0.2*self.nCutPix:
             warn('Setting {} negative Data values to 0 for Camera #{}'.format(mask.sum(), self.name))
 
         data[mask] = 0
