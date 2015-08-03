@@ -1,5 +1,6 @@
+sudo: true
 git:
-  submodules: false
+  depth: 1
 language: python
 python:
   - "3.4"
@@ -15,6 +16,7 @@ before_install:
   - export PATH=$HOME/miniconda/bin:$PATH
   - conda update --yes conda
   - python --version #just checking
+  - sudo apt-get update && sudo apt-get install gfortran
 
 install:
  - if [[ -z $pyv ]]; then
