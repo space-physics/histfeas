@@ -1,4 +1,4 @@
-from __future__ import print_function,division
+from __future__ import print_function,division,absolute_import
 from time import time
 from numpy import arange, empty, asarray, uint16, rot90, fliplr, flipud
 from dateutil import parser
@@ -7,7 +7,7 @@ import calendar
 from scipy.interpolate import interp1d
 # local
 import histutils.rawDMCreader as rdr
-from get1Dcut import get1Dcut
+from .get1Dcut import get1Dcut
 
 #this contains function for loading HST data
 # michael hirsch 2014, ported from Matlab code
