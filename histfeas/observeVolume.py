@@ -1,13 +1,17 @@
 from numpy import empty,empty_like,s_,isnan,sin,cos,radians,append,diff,ones,outer
-import numpy as np
+import numpy as np #need this here
 from scipy.sparse import csc_matrix
-from EllLineLength import EllLineLength
 import h5py
 from warnings import warn
 from time import time
-from nans import nans
-#from pdb import set_trace
-
+#
+try:
+    from .nans import nans
+    from .EllLineLength import EllLineLength
+except:
+    from nans import nans
+    from EllLineLength import EllLineLength
+    
 def getObs(sim,cam,L,tDataInd,ver,makePlots,dbglvl):
     """
     real data: extract brightness vector from disk data
