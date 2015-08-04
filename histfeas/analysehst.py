@@ -1,13 +1,17 @@
 from __future__ import print_function, division
 from matplotlib.pyplot import figure,close,subplots
 from matplotlib.ticker import MaxNLocator#,ScalarFormatter# ,LogFormatterMathtext, #for 1e4 -> 1 x 10^4, applied DIRECTLY in format=
-from numpy import diff, empty,nan,atleast_1d
+from numpy import diff, empty,nan
 import h5py
 from os.path import join
 from warnings import warn
 #
-from plotsnew import writeplots,getx0E0,plotB
-from nans import nans
+try:
+    from .plotsnew import writeplots,getx0E0,plotB
+    from .nans import nans
+except:
+    from plotsnew import writeplots,getx0E0,plotB
+    from nans import nans
 
 def analyseres(sim,cam,x,xp,Phifwd,Phifit,drn,dhat,vlim,x0true=None,E0true=None,
                makeplot=[None], progms=None,verbose=0):

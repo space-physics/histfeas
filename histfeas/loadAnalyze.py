@@ -11,6 +11,8 @@ from os.path import join,expanduser,splitext,isfile
 from numpy import asarray,diff
 from warnings import warn
 from matplotlib.pyplot import show
+from glob import glob
+from os.path import dirname
 import seaborn as sns
 sns.color_palette(sns.color_palette("cubehelix"))
 sns.set(context='poster', style='whitegrid',
@@ -29,8 +31,9 @@ except:
     
 vlim={'b':(None,None),'j':(None,None),'p':[None]*6}
 
-def runtest(h5list,xlsfn,overrides,makeplot,verbose=0):
+def readresults(h5list,xlsfn,overrides,makeplot,verbose=0):
     Phifwd =[]; Phidict =[]; dhat=[]; drn=[]; Pest=[]; Pfwd=[]
+    tInd = [];
 
     nt = len(h5list)
     if nt==0:
@@ -38,6 +41,8 @@ def runtest(h5list,xlsfn,overrides,makeplot,verbose=0):
         return
 
     for h5 in h5list:
+        stem = splitext(h5)[0]
+        tInd.append(int(stem[-3:])) #NOTE assumes last 3 digits are time ind
         with h5py.File(h5,'r',libver='latest') as f:
             x  = f['/pfwd/x'].value #same for all in directory
             xp = f['/pfwd/xp'].value
@@ -54,11 +59,11 @@ def runtest(h5list,xlsfn,overrides,makeplot,verbose=0):
             dhat.append(f['/best/bfit'].value)
             drn.append(f['/best/braw'].value)
 #%%
-    stem,ext = splitext(h5)  #all in same directory
+    stem,ext = splitext(h5)  #all in same directory, left here for clarity
 
     Phifwd = asarray(Phifwd).transpose(1,2,0)
 
-    if xlsfn is None:
+    if not xlsfn:
         warn('No XLSX parameter file found')
         return
 
@@ -67,8 +72,8 @@ def runtest(h5list,xlsfn,overrides,makeplot,verbose=0):
 
     for a in ap:
         #TODO assumes all are same distance apart
-        x0true = ap[a].loc['X0km',:][:-1] + 0.5*diff(ap[a].loc['X0km',:])
-        E0true = ap[a].loc['E0',:][:-1]   + 0.5*diff(ap[a].loc['E0',:])
+        x0true = (ap[a].loc['X0km',:][:-1] + 0.5*diff(ap[a].loc['X0km',:]))[tInd]
+        E0true = (ap[a].loc['E0',:][:-1]   + 0.5*diff(ap[a].loc['E0',:]))[tInd]
 
         analyseres(None,None,
                    x, xp, Phifwd, Phidict, drn, dhat,
@@ -99,17 +104,8 @@ def runtest(h5list,xlsfn,overrides,makeplot,verbose=0):
                     '$\hat{P}$ estimated volume emission rate',
                     None,None,None,verbose)
 
-if __name__ == '__main__':
-    from glob import glob
-    from os.path import dirname
-    #
-    from argparse import ArgumentParser
-    p = ArgumentParser(description="load HiST output and plot/analyse")
-    p.add_argument('h5path',help='path containing dump.h5 outputs (Hist output)')
-    p.add_argument('-m','--makeplot',help='plots to make',default=[])
-    p = p.parse_args()
-
-    h5path = expanduser(p.h5path)
+def findxlsh5(h5path):
+    h5path = expanduser(h5path)
 
     if isfile(h5path):
         h5list = [h5path]
@@ -118,9 +114,20 @@ if __name__ == '__main__':
         h5list = glob(join(h5path,'dump_*.h5'))
         h5list.sort()
         xlsfn = glob(join(h5path,'*.xlsx'))
+        
+    if xlsfn: xlsfn = xlsfn[0]
+        
+    return h5list,xlsfn
 
-    if len(xlsfn) == 0: xlsfn=None
+if __name__ == '__main__':
+    from argparse import ArgumentParser
+    p = ArgumentParser(description="load HiST output and plot/analyse")
+    p.add_argument('h5path',help='path containing dump.h5 outputs (Hist output)')
+    p.add_argument('-m','--makeplot',help='plots to make',default=[],nargs='+')
+    p = p.parse_args()
 
-    runtest(h5list,xlsfn[0],None,p.makeplot)
+    h5list,xlsfn = findxlsh5(p.h5path)
+
+    readresults(h5list,xlsfn,None,p.makeplot)
 
     show()
