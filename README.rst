@@ -29,11 +29,11 @@ then, in Terminal (for Linux, Mac or Cygwin on Windows), copy and paste::
 
     cd hist-feasibility
 
-    ./setup.sh
+    python setup.py develop
 
 You can check that things are working OK by::
 
-    python registration.py
+    python test/registration.py
 
 which should give several lines of text ending with::
 
