@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 from matplotlib.pyplot import figure,close,subplots
 from matplotlib.ticker import MaxNLocator#,ScalarFormatter# ,LogFormatterMathtext, #for 1e4 -> 1 x 10^4, applied DIRECTLY in format=
-from numpy import diff, empty,nan
+from numpy import diff, empty,nan,atleast_1d
 import h5py
 from os.path import join
 from warnings import warn
@@ -50,6 +50,7 @@ def analyseres(sim,cam,x,xp,Phifwd,Phifit,drn,dhat,vlim,x0true=None,E0true=None,
 #%% plots
     extplot(sim,cam,drn,dhat,vlim,makeplot,progms,verbose)
 
+    
     doplot(x,Phifit,gE0,Eavgfwdx,Eavghatx, makeplot,progms)
 
     plotgauss(x0true,gx0,gE0,gx0err,gE0err,makeplot,progms)
@@ -60,39 +61,42 @@ def doplot(x,Phifit,gE0,Eavgfwdx,Eavghatx, makeplot,progms):
 #        reader = csv.reader(e, delimiter=',', quoting = csv.QUOTE_NONE);
 #        cord = [[r.strip() for r in row] for row in reader][0]
 
-    if 'optim' in makeplot:
-        try:
-            fg = figure()
-            ax = fg.gca()
-            ax.stem([f.fun for f in Phifit])
-            ax.set_xlabel('instantiation')
-            ax.set_ylabel('$||\hat{b} - b||_2$')
-            ax.set_title('Residual $b$')
-            ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-            writeplots(fg,'error_boptim',9999,makeplot,progms)
-        except AttributeError:
-            close(fg)
-            pass
+    try:
+        if 'optim' in makeplot:
+            try:
+                fg = figure()
+                ax = fg.gca()
+                ax.stem([f.fun for f in Phifit])
+                ax.set_xlabel('instantiation')
+                ax.set_ylabel('$||\hat{b} - b||_2$')
+                ax.set_title('Residual $b$')
+                ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+                writeplots(fg,'error_boptim',9999,makeplot,progms)
+            except AttributeError:
+                close(fg)
+                pass
 
-    if 'fwd' in makeplot and Eavgfwdx:
-        fgf = figure()
-        ax = fgf.gca()
-        ax.semilogy(x,Eavgfwdx.T, marker='.')
-        ax.set_xlabel('$B_\perp$ [km]')
-        ax.set_ylabel('Expected Value $\overline{E}$ [eV]')
-        ax.set_title('Fwd model: Average Energy $\overline{E}$ vs $B_\perp$')
-        ax.legend(['{:.0f} eV'.format(g) for g in gE0[:,0]],loc='best',fontsize=9)
-        writeplots(fgf,'Eavg_fwd',9999,makeplot,progms)
+        if 'fwd' in makeplot and Eavgfwdx:
+            fgf = figure()
+            ax = fgf.gca()
+            ax.semilogy(x,Eavgfwdx.T, marker='.')
+            ax.set_xlabel('$B_\perp$ [km]')
+            ax.set_ylabel('Expected Value $\overline{E}$ [eV]')
+            ax.set_title('Fwd model: Average Energy $\overline{E}$ vs $B_\perp$')
+            ax.legend(['{:.0f} eV'.format(g) for g in gE0[:,0]],loc='best',fontsize=9)
+            writeplots(fgf,'Eavg_fwd',9999,makeplot,progms)
 
-    if 'optim' in makeplot and Eavghatx:
-        fgo = figure()
-        ax = fgo.gca()
-        ax.semilogy(x,Eavghatx.T, marker='.')
-        ax.set_xlabel('$B_\perp$ [km]')
-        ax.set_ylabel('Expected Value $\overline{E}$ [eV]')
-        ax.set_title('ESTIMATED Average Energy $\overline{\hat{E}}$ vs $B_\perp$')
-        ax.legend(['{:.0f} eV'.format(g) for g in gE0[:,0]],loc='best',fontsize=9)
-        writeplots(fgo,'Eavg_optim',9999,makeplot,progms)
+        if 'optim' in makeplot and Eavghatx:
+            fgo = figure()
+            ax = fgo.gca()
+            ax.semilogy(x,Eavghatx.T, marker='.')
+            ax.set_xlabel('$B_\perp$ [km]')
+            ax.set_ylabel('Expected Value $\overline{E}$ [eV]')
+            ax.set_title('ESTIMATED Average Energy $\overline{\hat{E}}$ vs $B_\perp$')
+            ax.legend(['{:.0f} eV'.format(g) for g in gE0[:,0]],loc='best',fontsize=9)
+            writeplots(fgo,'Eavg_optim',9999,makeplot,progms)
+    except Exception as e:
+        print('skipping average energy plotting.   {}'.format(e))
 
 def extplot(sim,cam,drn,dhat,vlim,makeplot,progms,verbose):
 #%% brightness plot -- plotting ALL at once to show evolution of dispersive event!
