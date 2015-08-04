@@ -8,8 +8,12 @@ from __future__ import print_function, division
 from numpy import isnan,zeros
 from warnings import warn
 #
-from arcclass import getver
-from transcararc import getColumnVER
+try:
+    from .arcclass import getver
+    from .transcararc import getColumnVER
+except:
+    from arcclass import getver
+    from transcararc import getColumnVER
 
 def getSimVER(Phi0,Mp,Fwd,sim,ap,tInd,verbose):
     if not sim.realdata:

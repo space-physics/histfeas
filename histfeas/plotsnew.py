@@ -27,13 +27,15 @@ try:
 except Exception:
     pass
 #
-try:
-    from gaussfitter import gaussfit,twodgaussian
-except ImportError as e:
-    warn('you need to install github.com/keflavich/gaussfitter  {}'.format(e))
+from gaussfitter import gaussfit,twodgaussian
 
-from histutils.findnearest import find_nearest
-from gridaurora.opticalmod import plotOptMod
+try:
+    from .histutils.findnearest import find_nearest
+    from .gridaurora.opticalmod import plotOptMod
+except:
+    from histutils.findnearest import find_nearest
+    from gridaurora.opticalmod import plotOptMod
+
 #%% plot globals
 afs = None#20
 tfs = None#22
