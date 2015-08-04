@@ -1,8 +1,8 @@
 .. image:: https://codeclimate.com/github/scienceopen/hist-feasibility/badges/gpa.svg
    :target: https://codeclimate.com/github/scienceopen/hist-feasibility
 
-.. image:: https://travis-ci.org/scienceopen/hist-feasibility.svg?branch=master
-    :target: https://travis-ci.org/scienceopen/hist-feasibility
+.. image:: https://travis-ci.org/scienceopen/histfeas.svg?branch=master
+    :target: https://travis-ci.org/scienceopen/histfeas
 
 .. image:: https://coveralls.io/repos/scienceopen/hist-feasibility/badge.svg?branch=master&service=github 
     :target: https://coveralls.io/github/scienceopen/hist-feasibility?branch=master 

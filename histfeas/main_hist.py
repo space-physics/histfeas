@@ -82,18 +82,20 @@ def doSim(ParamFN,makeplot,timeInds,overrides,progms,x1d,vlim,animtime, cmd,verb
         bn = getObs(sim,cam,Lfwd,ti,Pfwd,makeplot,verbose)
         drnAll.append(bn)
 #%% Step 3) fit constituent energies to our estimated vHat and reproject
-
-        if overrides and overrides['fwdguess'][0] == 'maxwellian':
-            Phi0z = maxwellian(Peig['Ek'],1e3,1e10)[0].ravel(order='F')
-            Phi0r = outer(Phi0z, getpx(Fwd['x'],Wkm=1e3,X0=0,xs='gaussian'))
-        elif overrides and overrides['fwdguess'][0] == 'true':
-            Phi0r = Phi0.ravel(order='F')
-            warn('** WARNING: feeding minimizer the true answer--testing only!! **')
-        elif overrides and overrides['fwdguess'][0] == 'randn':
-            randfact = absolute(normal(1,overrides['fwdguess'][1], size=Phi0.size))
-            warn('** WARNING: feeding minizer true answer times {}'.format(randfact))
-            Phi0r = randfact * Phi0.ravel(order='F')
-        else: #normal case, no a priori
+        try:
+            if overrides['fwdguess'][0] == 'maxwellian':
+                Phi0z = maxwellian(Peig['Ek'],1e3,1e10)[0].ravel(order='F')
+                Phi0r = outer(Phi0z, getpx(Fwd['x'],Wkm=1e3,X0=0,xs='gaussian'))
+            elif overrides['fwdguess'][0] == 'true':
+                Phi0r = Phi0.ravel(order='F')
+                warn('** WARNING: feeding minimizer the true answer--testing only!! **')
+            elif overrides['fwdguess'][0] == 'randn':
+                randfact = absolute(normal(1,overrides['fwdguess'][1], size=Phi0.size))
+                warn('** WARNING: feeding minizer true answer times {}'.format(randfact))
+                Phi0r = randfact * Phi0.ravel(order='F')
+            else: #normal case, no a priori
+                Phi0r = zeros(Fwd['sx']*Peig['Mp'].shape[1]) #ones() is NOT appropriate -- must be tapered down for higher energy beams to keep physically plausible.
+        except KeyError:
             Phi0r = zeros(Fwd['sx']*Peig['Mp'].shape[1]) #ones() is NOT appropriate -- must be tapered down for higher energy beams to keep physically plausible.
 
         Pfit,jfit,Tm,bfit = FitVER(Lfwd, bn, Phi0r, Peig, sim, cam,Fwd, ti, makeplot,verbose)
@@ -155,7 +157,7 @@ if __name__ == '__main__':
     p.add_argument('-f','--frames',help='START STOP STEP of time indices',nargs=3,type=int)
     p.add_argument('--profile',help='Profile performance of program (development/debug only)',action='store_true')
     p.add_argument('-c','--cam',help='zero-indexed cameras to use (overrides XLS)',nargs='+',default=[None],type=int)
-    p.add_argument('--cx',help='override cam positions (must specify all)',nargs='+',default=[None],type=float)
+    p.add_argument('--cx',help='override cam positions (must specify all)',nargs='+',type=float)
     p.add_argument('--influx',help='flux .h5 file to use (overrides XLS)')
     p.add_argument('--logplot',help='logarithmic axis scaling where appropriate',action='store_true')
     p.add_argument('--x1d',help='required location [km] of x for 1-D flux plots',nargs='+',default=[None],type=float)
