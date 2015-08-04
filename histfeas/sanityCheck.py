@@ -9,8 +9,8 @@ from pandas import read_excel
 from warnings import warn
 from shutil import copy2
 #
-from camclass import Cam
-from simclass import Sim
+from .camclass import Cam
+from .simclass import Sim
 
 def getParams(XLSfn,overrides,makeplot,progms,verbose):
     if progms is not None:
@@ -28,6 +28,8 @@ def getParams(XLSfn,overrides,makeplot,progms,verbose):
             if ntimeslice is not None and ap[s].shape[1]-1 != ntimeslice:
                 raise ValueError('for now, all Arcs must have same number of times (columns)')
             ntimeslice=ap[s].shape[1]-1
+
+    print('# of observer time steps in spreadsheet: {}'.format(ntimeslice))
 #%% ***** must be outside camclass ********
     nCutPix = cp.loc['nCutPix'].values
     if not (nCutPix == nCutPix[0]).all():

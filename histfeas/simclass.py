@@ -1,21 +1,17 @@
 from __future__ import print_function, division
-from numpy import asarray,where,arange,isfinite,ceil,hypot
-import numpy as np
+from numpy import asarray,where,arange,isfinite,ceil,hypot,atleast_1d
 from os.path import join,expanduser
 from dateutil.parser import parse
 from warnings import warn
 #
-try:
-    from .transcarread.readionoinit import getaltgrid
-except:
-    from transcarread.readionoinit import getaltgrid
+from transcarread.readionoinit import getaltgrid
 
 class Sim:
 
     def __init__(self,sp,cp,ap,ntimeslice,overrides,makeplot,progms,dbglvl):
         self.dbglvl=dbglvl
         #%% how many cameras in use, and which ones?
-        if overrides:
+        try:
             usecamreq = asarray(overrides['cam'])
             if usecamreq[0]: #override spreadsheet
                 warn(' Overriding XLS parameters, using cameras: {}'.format(usecamreq))
@@ -31,7 +27,7 @@ class Sim:
             self.camxreq = overrides['camx']
             if self.camxreq[0] and len(self.camxreq) != self.nCamUsed:
                 raise ValueError('must specify same number of x-loc and used cameras')
-        else:
+        except: #cam override not specified
             self.camxreq = [None]
 #%%
         self.useCamBool = cp.loc['useCam'].values.astype(bool)
@@ -46,48 +42,52 @@ class Sim:
         self.obsalt_km = cp.loc['Zkm'].values.mean() #FIXME assuming cameras are at a very similar altitudes
         self.zenang = 90-cp.loc['Bincl'].values.mean() #FIXME assuming all in same plane and that difference in boresight path length are 'small'
 
-        #%% manual override flux file
-        if overrides and overrides['Jfwd']:
+#%% manual override flux file
+        try:
             print('* overriding J0 flux with file: ' + overrides['Jfwd'])
             self.Jfwdh5 = overrides['Jfwd']
-        else:
+        except:
             self.Jfwdh5 = None
-        #%% manual override filter
-        if overrides and overrides['filter']:
+#%% manual override filter
+        try:
             print('* overriding filter choice with:',overrides['filter'])
             #sp.loc['OpticalFilter','Transcar'] = overrides['filter']
             self.opticalfilter = overrides['filter'].lower()
-        else:
+        except:
             self.opticalfilter = sp.at['OpticalFilter','Transcar'].lower()
-        #%% manual override minimum beam energy
-        if overrides and overrides['minev']:
+#%% manual override minimum beam energy
+        try:
             print('* minimum beam energy set to:',overrides['minev'])
             #sp.loc['minBeameV','Transcar']  = overrides['minev']
             self.minbeamev = overrides['minev']
-        else:
+        except:
             mbe = sp.at['minBeameV','Transcar']
             if isfinite(mbe):
                 self.minbeamev = mbe
             else:
                 self.minbeamev = 0.
-        #%% fit method
-        if overrides and overrides['fitm']:
+#%% fit method
+        try:
             print('* setting fit method to', overrides['fitm'])
             #sp.loc['OptimFluxMethod','Recon'] = overrides['fitm']
             self.optimfitmeth = overrides['fitm']
-        else:
+        except:
             self.optimfitmeth = sp.at['OptimFluxMethod','Recon']
 
         self.optimmaxiter = sp.at['OptimMaxiter','Recon']
-        #%% force compute ell
-        if overrides and overrides['ell']:
-            #sp.loc['saveEll','Sim'] = 1 #we'll save to out/date directory!
-            #sp.loc['loadEll','Sim'] = 0
-            self.savefwdL = True
-            self.loadfwdL = False
-        else:
-            self.savefwdL = sp.at['saveEll','Sim']
-            self.loadfwdL = sp.at['loadEll','Sim']
+#%% force compute ell
+        try:
+            if overrides and overrides['ell']:
+                #sp.loc['saveEll','Sim'] = 1 #we'll save to out/date directory!
+                #sp.loc['loadEll','Sim'] = 0
+                self.savefwdL = True
+                self.loadfwdL = False
+            else:
+                self.savefwdL = sp.at['saveEll','Sim']
+                self.loadfwdL = sp.at['loadEll','Sim']
+        except:
+                self.savefwdL = True
+                self.loadfwdL = False
 #%% setup plotting
 #        self.plots = {}
 #
@@ -202,7 +202,9 @@ class Sim:
 
         if timeInds is None:
             timeInds = arange(self.nTimeSlice) #NOT range!
-
+        
+        timeInds = atleast_1d(timeInds) #necessary for next indexing step
+            
         return timeInds[timeInds<self.nTimeSlice] #(it's <, not <=) slice off commond line requests beyond number of frames
 
     def getEllHash(self,sp,cp):
