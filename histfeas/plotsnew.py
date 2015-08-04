@@ -809,7 +809,7 @@ def plotBcompare(sim,braw,bfit,cam,nCam,prefix, spfid,vlim,tInd,figh,makeplot,pr
     for c in cam:
         cInd = cam[c].ind
         ax1.plot(cam[c].angle_deg,braw[cInd],
-                 label=('$\mathbf{{B}}_{{camP{:d}}}$'.format(c)),)
+                 label=('$\mathbf{{B}}_{{camP{}}}$'.format(c)),)
                  #color=cord[icm])#, marker='.')
         icm+=1
 #%% plot fit
@@ -859,7 +859,7 @@ def plotBcompare(sim,braw,bfit,cam,nCam,prefix, spfid,vlim,tInd,figh,makeplot,pr
             bias.append(bfit[cInd].max() - braw[cInd].max())
             ax3.plot(cam[c].angle_deg,braw[cInd] - (bfit[cInd]))#-bias[iCam]))
 
-        ax3.set_title('error $\mathbf{B}_{fwdf} - B_{est}, bias={}'.format(bias),fontsize=12)
+        ax3.set_title('error $\mathbf{{B}}_{{fwdf}} - B_{{est}}, bias={}'.format(bias),fontsize=12)
         #  $t_i=' + str(tInd) + '$'
         ax3.set_xlabel('local view angle [deg.]')
         ax3.xaxis.set_major_locator(MultipleLocator(1))
@@ -1129,7 +1129,7 @@ def writeplots(fg,plotprefix,tInd,method,progms,overridefmt=None,verbose=0):
             fmt = overridefmt; dpi = epsdpi
         else:
             fmt = array(tmpl)[used][0]; dpi=plotdpi
-        cn = join(progms,(plotprefix + '_t{:03d}.{:s}'.format(tInd,fmt)))
+        cn = join(progms,(plotprefix + '_t{:03d}.{}'.format(tInd,fmt)))
         if verbose>0: print('save {}...'.format(cn),end='')
         fg.savefig(cn,bbox_inches='tight',dpi=dpi,format=fmt)  # this is slow and async
 #%%

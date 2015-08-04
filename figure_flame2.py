@@ -12,7 +12,7 @@ from histfeas.main_hist import doSim
 
 def hist_figure():
     Phi0,Phifit =doSim(ParamFN=regXLS,
-                  makeplot=['fwd','optim'],
+                  makeplot=['fwd','optim','png','h5'],
                   timeInds=timeInds,
                   overrides = overrides, #{'minev': minev,'filter':filt, 'fwdguess':fwdguess, 
 				                    #'fitm':fitm,'cam':cam,'camx':acx,'ell':ell,'Jfwd':influx},
@@ -32,7 +32,7 @@ if __name__ == '__main__':
     timeInds=[1,3]
     outdir='out/rev2_flame2'
     x1d = 1.
-    vlim = {'p':[0,5,90,300,5e7,5e9], 'j':[1e5,1e6], 'b':[0,3e3]}
+    vlim = {'p':[0,5,90,300,5e7,5e9], 'j':[5e4,4e5], 'b':[0,3e3]}
     overrides = {'ell':False}
     
     Phi0,Phifit=hist_figure()
