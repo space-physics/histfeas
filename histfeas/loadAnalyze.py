@@ -16,11 +16,17 @@ sns.color_palette(sns.color_palette("cubehelix"))
 sns.set(context='poster', style='whitegrid',
         rc={'image.cmap': 'cubehelix_r'})
 #
-from analysehst import analyseres
-from sanityCheck import getParams
-from plotsnew import plotB, plotJ, plotVER
-from observeVolume import definecamind
-
+try:
+    from .analysehst import analyseres
+    from .sanityCheck import getParams
+    from .plotsnew import plotB, plotJ, plotVER
+    from .observeVolume import definecamind
+except:
+    from analysehst import analyseres
+    from sanityCheck import getParams
+    from plotsnew import plotB, plotJ, plotVER
+    from observeVolume import definecamind
+    
 vlim={'b':(None,None),'j':(None,None),'p':[None]*6}
 
 def runtest(h5list,xlsfn,overrides,makeplot,verbose=0):
@@ -67,7 +73,7 @@ def runtest(h5list,xlsfn,overrides,makeplot,verbose=0):
         analyseres(None,None,
                    x, xp, Phifwd, Phidict, drn, dhat,
                    vlim, x0true,E0true,makeplot,
-                   progms=ext, verbose=verbose)
+                   progms=None, verbose=verbose)
 
 #%%
     for ti in range(nt):
@@ -77,7 +83,7 @@ def runtest(h5list,xlsfn,overrides,makeplot,verbose=0):
             plotJ(sim,Phifwd[...,ti],x,xp,Phidict[ti]['EK'],None,
                   vlim['j'],vlim['p'][:2],ti,makeplot,'phifwd',
                   '$\phi_{top}$ fwd diff. number flux',
-                  None,None,verbose)
+                  None,None,None,verbose)
 
             plotVER(sim,Pfwd[ti],x,xp,z,zp,vlim['p'],ti,makeplot,'pfwd',
                     '$P$ fwd volume emission rate',
@@ -87,11 +93,11 @@ def runtest(h5list,xlsfn,overrides,makeplot,verbose=0):
             plotJ(sim,Phidict[ti]['x'],x,xp,Phidict[ti]['EK'],None,
                   vlim['j'],vlim['p'][:2],ti,makeplot,'phiest',
                   '$\hat{\phi}_{top}$ estimated diff. number flux',
-                  None,None,verbose)
+                  None,None,None,verbose)
 
             plotVER(sim,Pest[ti],x,xp,z,zp,vlim['p'],ti,makeplot,'pest',
                     '$\hat{P}$ estimated volume emission rate',
-                    None,None,verbose)
+                    None,None,None,verbose)
 
 if __name__ == '__main__':
     from glob import glob
