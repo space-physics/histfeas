@@ -1,5 +1,8 @@
 out/
 Ell*.h5
+precompute/*.eps
+precompute/*.png
+precompute/*.tif
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -41,6 +41,7 @@ if __name__ == '__main__':
     overrides = {'ell':False}
 
     if not p.load:
+        print('running Hist program -- will write png and h5 to ' + outdir)
         Phi0,Phifit=hist_figure()
 
 

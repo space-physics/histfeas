@@ -289,8 +289,7 @@ def plotfwd(sim,cam,drn,nCutPix,xKM,xp,zKM,zp,
 def plotoptim(sim,cam,drn,dhat,nCutPix,bcomptxt,ver,Phi0,Jxi,
               vfit,fitp,xKM,xp,zKM,zp,vlim,tInd,makeplot,spfid,progms,verbose):
 
-    plotBcompare(sim,drn,dhat['optim'],cam,sim.nCamUsed,
-                 'best', spfid,vlim['b'],tInd,1501,makeplot,progms,verbose)
+    plotBcompare(sim,drn,dhat['optim'],cam,'best', spfid,vlim['b'],tInd,1501,makeplot,progms,verbose)
 
     plotVER(sim,vfit['optim'],xKM,xp,zKM,zp,vlim['p'],tInd,makeplot,'pest',
           '$\hat{P}$ estimated volume emission rate',
@@ -1131,7 +1130,8 @@ def writeplots(fg,plotprefix,tInd,method,progms,overridefmt=None,verbose=0):
         else:
             fmt = array(tmpl)[used][0]; dpi=plotdpi
         cn = join(progms,(plotprefix + '_t{:03d}.{}'.format(tInd,fmt)))
-        if verbose>0: print('save {}...'.format(cn),end='')
+        if verbose>-1:
+            print('write {}'.format(cn))
         fg.savefig(cn,bbox_inches='tight',dpi=dpi,format=fmt)  # this is slow and async
 #%%
 def getx0E0(Phifwd,Phifit,E,x,tInd,progms,makeplot,verbose):
