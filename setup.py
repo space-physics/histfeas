@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
-from setuptools import setup 
+from setuptools import setup
 
 with open('README.rst') as f:
 	long_description = f.read()
-	
+
 setup(name='histfeas',
       version='0.1',
 	  description='Feasibility study for HiST auroral tomography system',
@@ -13,8 +13,7 @@ setup(name='histfeas',
 	  author_email='hirsch617@gmail.com',
 	  url='https://github.com/scienceopen/histfeas',
 	  install_requires=['histutils','lowtran','pymap3d','astrometry_azel','CVutils','gridaurora','transcarread','gaussfitter',
-                        'tifffile','seaborn',
-                        'numpy','pytz','pandas','scipy','astropy'],
+                        'tifffile'],
       dependency_links = ['https://github.com/scienceopen/histutils/tarball/master#egg=histutils',
                           'https://github.com/scienceopen/lowtran/tarball/master#egg=lowtran',
                           'https://github.com/scienceopen/pymap3d/tarball/master#egg=pymap3d',
