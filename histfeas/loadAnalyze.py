@@ -19,16 +19,11 @@ sns.color_palette(sns.color_palette("cubehelix"))
 sns.set(context='poster', style='whitegrid',
         rc={'image.cmap': 'cubehelix_r'})
 #
-try:
-    from .analysehst import analyseres
-    from .sanityCheck import getParams
-    from .plotsnew import plotB, plotJ, plotVER,plotBcompare
-    from .observeVolume import definecamind
-except:
-    from analysehst import analyseres
-    from sanityCheck import getParams
-    from plotsnew import plotB, plotJ, plotVER,plotBcompare
-    from observeVolume import definecamind
+from .analysehst import analyseres
+from .sanityCheck import getParams
+from .plotsnew import plotB, plotJ, plotVER,plotBcompare
+from .observeVolume import definecamind
+
 
 vlim={'b':(None,None),'j':(None,None),'p':[None]*6}
 
@@ -45,6 +40,10 @@ def readresults(h5list,xlsfn,overrides,makeplot,verbose=0):
         stem = splitext(h5)[0]
 
         tInd.append(int(stem[-3:])) #NOTE assumes last 3 digits are time ind
+
+        if verbose>0:
+            print('tind {}  reading {}'.format(tInd[-1],h5))
+
         with h5py.File(h5,'r',libver='latest') as f:
             x  = f['/pfwd/x'].value #same for all in directory
             xp = f['/pfwd/xp'].value
@@ -62,7 +61,7 @@ def readresults(h5list,xlsfn,overrides,makeplot,verbose=0):
             drn.append(f['/best/braw'].value)
 #%%
     stem,ext = splitext(h5)  #all in same directory, left here for clarity
-    progms = join(gettempdir(),dirname(h5))
+    progms = join(dirname(h5),'reader')
     try:
         makedirs(progms)
     except:
