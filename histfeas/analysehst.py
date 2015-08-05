@@ -52,7 +52,7 @@ def analyseres(sim,cam,x,xp,Phifwd,Phifit,drn,dhat,vlim,x0true=None,E0true=None,
     gx0err = gx0[:,1] - x0true #-gx0[:,0]
     gE0err = gE0[:,1] - E0true #-gE0[:,0]
 #%% plots
-    extplot(sim,cam,drn,dhat,vlim,makeplot,progms,verbose)
+    #extplot(sim,cam,drn,dhat,vlim,makeplot,progms,verbose)
 
 
     doplot(x,Phifit,gE0,Eavgfwdx,Eavghatx, makeplot,progms,verbose)
@@ -106,13 +106,13 @@ def doplot(x,Phifit,gE0,Eavgfwdx,Eavghatx, makeplot,progms,verbose):
 def extplot(sim,cam,drn,dhat,vlim,makeplot,progms,verbose):
 #%% brightness plot -- plotting ALL at once to show evolution of dispersive event!
     try:
-        if 'fwd' in makeplot and drn is not None:
+        if 'fwd' in makeplot and drn:
             for i,b in enumerate(drn):
-                plotB(b,         sim.realdata,cam,vlim['b'],9999,19999,makeplot,'$bfwdall',progms,verbose)
+                plotB(b,sim.realdata,cam,vlim['b'],9999,19999,makeplot,'$bfwdall',progms,verbose)
     # reconstructed brightness plot
         if 'optim' in makeplot and dhat is not None and len(dhat[0])>0:
             for i,b in enumerate(dhat):
-                plotB(b['optim'],sim.realdata,cam,vlim['b'],9999,29999,makeplot,'$bestall', progms,verbose)
+                plotB(b,sim.realdata,cam,vlim['b'],9999,29999,makeplot,'$bestall', progms,verbose)
     except Exception as e:
         warn('skipping plotting overall analysis plots of intensity.  {}'.format(e))
 

@@ -792,7 +792,7 @@ def plotVER(sim,ver,x,xp,z,zp,vlim,tInd,makeplot,prefix,titletxt,figh,spfid,prog
   except Exception as e:
     warn('tind {}   {}'.format(tInd,e))
 #%%
-def plotBcompare(sim,braw,bfit,cam,nCam,prefix, spfid,vlim,tInd,figh,makeplot,progms,verbose):
+def plotBcompare(sim,braw,bfit,cam,prefix, spfid,vlim,tInd,figh,makeplot,progms,verbose):
   try:
     dosubtract = False
 
@@ -807,13 +807,11 @@ def plotBcompare(sim,braw,bfit,cam,nCam,prefix, spfid,vlim,tInd,figh,makeplot,pr
     ax1.yaxis.get_offset_text().set_size(afs)
     ax1.tick_params(axis='both', which='both', direction='out',labelsize=afs)
 
-    icm = 0
     for c in cam:
         cInd = cam[c].ind
         ax1.plot(cam[c].angle_deg,braw[cInd],
                  label=('$\mathbf{{B}}_{{camP{}}}$'.format(c)),)
                  #color=cord[icm])#, marker='.')
-        icm+=1
 #%% plot fit
     # do we need twinax? Let's find out if they're within factor of 10
     maxfit = bfit.max(); maxraw = braw.max()
@@ -833,7 +831,7 @@ def plotBcompare(sim,braw,bfit,cam,nCam,prefix, spfid,vlim,tInd,figh,makeplot,pr
         ax2.plot(cam[c].angle_deg,bfit[cInd],
                  label=('$\mathbf{{\widehat{{B}}}}_{{cam{}}}$'.format(c)),)
                  #color=cord[icm])#, marker='.')
-        icm+=1
+
     if singax:
         ax1.legend(loc='upper left', fontsize=afs)
     else:
@@ -872,7 +870,7 @@ def plotBcompare(sim,braw,bfit,cam,nCam,prefix, spfid,vlim,tInd,figh,makeplot,pr
     if 'h5' in makeplot: #a separate stanza
         dumph5(spfid,prefix,tInd,angle=[cam[c].angle_deg for c in cam],braw=braw,bfit=bfit)
 
-    writeplots(fg,prefix,tInd,makeplot,progms,verbose)
+    writeplots(fg,prefix,tInd,makeplot,progms,None,verbose)
   except Exception as e:
     warn('failed to plot brightness at tind {}   {}'.format(tInd,e))
 #%%
@@ -904,14 +902,15 @@ def plotB(bpix,isrealdata,cam,vlim,tInd,figh,makeplot,labeltxt,progms,verbose):
     for c in cam:
         std.append('{:0.1e}'.format(cam[c].noiselam))
         cInd = cam[c].ind
-        ax1.plot(cam[c].angle_deg,
-                bpix[cInd],
-                 label=(labeltxt + ',cam{}$'.format(c)),)
+
+        ax1.plot(cam[c].angle_deg,  bpix[cInd],
+                 label = labeltxt + ',' +str(c) + '}$'
+                 )
                  #marker='.',
                  #color=cord[c])
     doBlbl(ax1,isrealdata,sfmt[0],vlim,labeltxt,std) #b is never log
 
-    writeplots(fgb,'bfwd'+labeltxt[4:-2],tInd,makeplot,progms,verbose=verbose)
+    writeplots(fgb,'b'+labeltxt[4:7],tInd,makeplot,progms,verbose=verbose)
   except Exception as e:
     warn('tind {}   {}'.format(tInd,e))
 
