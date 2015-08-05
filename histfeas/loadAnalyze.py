@@ -7,12 +7,13 @@ option
 
 from __future__ import division,absolute_import
 import h5py
-from os.path import join,expanduser,splitext,isfile
+from os import makedirs
+from os.path import join,expanduser,splitext,isfile,dirname
+from tempfile import gettempdir
 from numpy import asarray,diff
 from warnings import warn
 from matplotlib.pyplot import show
 from glob import glob
-from os.path import dirname
 import seaborn as sns
 sns.color_palette(sns.color_palette("cubehelix"))
 sns.set(context='poster', style='whitegrid',
@@ -21,12 +22,12 @@ sns.set(context='poster', style='whitegrid',
 try:
     from .analysehst import analyseres
     from .sanityCheck import getParams
-    from .plotsnew import plotB, plotJ, plotVER
+    from .plotsnew import plotB, plotJ, plotVER,plotBcompare
     from .observeVolume import definecamind
 except:
     from analysehst import analyseres
     from sanityCheck import getParams
-    from plotsnew import plotB, plotJ, plotVER
+    from plotsnew import plotB, plotJ, plotVER,plotBcompare
     from observeVolume import definecamind
 
 vlim={'b':(None,None),'j':(None,None),'p':[None]*6}
@@ -42,6 +43,7 @@ def readresults(h5list,xlsfn,overrides,makeplot,verbose=0):
 
     for h5 in h5list:
         stem = splitext(h5)[0]
+
         tInd.append(int(stem[-3:])) #NOTE assumes last 3 digits are time ind
         with h5py.File(h5,'r',libver='latest') as f:
             x  = f['/pfwd/x'].value #same for all in directory
@@ -60,6 +62,11 @@ def readresults(h5list,xlsfn,overrides,makeplot,verbose=0):
             drn.append(f['/best/braw'].value)
 #%%
     stem,ext = splitext(h5)  #all in same directory, left here for clarity
+    progms = join(gettempdir(),dirname(h5))
+    try:
+        makedirs(progms)
+    except:
+        pass
 
     Phifwd = asarray(Phifwd).transpose(1,2,0)
 
@@ -67,7 +74,7 @@ def readresults(h5list,xlsfn,overrides,makeplot,verbose=0):
         warn('No XLSX parameter file found')
         return
 
-    ap,sim,cam,Fwd = getParams(xlsfn,overrides,makeplot,progms=None,verbose=verbose)
+    ap,sim,cam,Fwd = getParams(xlsfn,overrides,makeplot,progms,verbose=verbose)
     cam = definecamind(cam,sim.nCutPix)
 
     for a in ap:
@@ -78,31 +85,34 @@ def readresults(h5list,xlsfn,overrides,makeplot,verbose=0):
         analyseres(sim,cam,
                    x, xp, Phifwd, Phidict, drn, dhat,
                    vlim, x0true,E0true,makeplot,
-                   progms=None, verbose=verbose)
+                   progms, verbose=verbose)
 
 #%%
-    for ti in range(nt):
+    for ti,t in enumerate(tInd):
         if 'fwd' in makeplot:
-            plotB(drn[ti],sim.realdata,cam,vlim['b'],ti,2893,makeplot,'$br',None,verbose)
+            plotB(drn[ti],sim.realdata,cam,vlim['b'],t,2893,makeplot,'$b_{fwd',progms,verbose)
 
             plotJ(sim,Phifwd[...,ti],x,xp,Phidict[ti]['EK'],None,
-                  vlim['j'],vlim['p'][:2],ti,makeplot,'phifwd',
+                  vlim['j'],vlim['p'][:2],t,makeplot,'phifwd',
                   '$\phi_{top}$ fwd diff. number flux',
-                  None,None,None,verbose)
+                  None,None,progms,verbose)
 
-            plotVER(sim,Pfwd[ti],x,xp,z,zp,vlim['p'],ti,makeplot,'pfwd',
+            plotVER(sim,Pfwd[ti],x,xp,z,zp,vlim['p'],t,makeplot,'pfwd',
                     '$P$ fwd volume emission rate',
-                    None,None,None,verbose)
+                    None,None,progms,verbose)
 
         if 'optim' in makeplot:
-            plotJ(sim,Phidict[ti]['x'],x,xp,Phidict[ti]['EK'],None,
-                  vlim['j'],vlim['p'][:2],ti,makeplot,'phiest',
-                  '$\hat{\phi}_{top}$ estimated diff. number flux',
-                  None,None,None,verbose)
+           # plotB(dhat[ti],sim.realdata,cam,vlim['b'],t,2894,makeplot,'$b_{est',progms,verbose)
+            plotBcompare(sim,drn[ti],dhat[ti],cam,'best',None,vlim['b'],t,2894,makeplot,progms,verbose)
 
-            plotVER(sim,Pest[ti],x,xp,z,zp,vlim['p'],ti,makeplot,'pest',
+            plotJ(sim,Phidict[ti]['x'],x,xp,Phidict[ti]['EK'],None,
+                  vlim['j'],vlim['p'][:2],t,makeplot,'phiest',
+                  '$\hat{\phi}_{top}$ estimated diff. number flux',
+                  None,None,progms,verbose)
+
+            plotVER(sim,Pest[ti],x,xp,z,zp,vlim['p'],t,makeplot,'pest',
                     '$\hat{P}$ estimated volume emission rate',
-                    None,None,None,verbose)
+                    None,None,progms,verbose)
 
 def findxlsh5(h5path):
     h5path = expanduser(h5path)
