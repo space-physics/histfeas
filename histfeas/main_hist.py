@@ -42,6 +42,14 @@ def doSim(ParamFN,makeplot,timeInds,overrides,progms,x1d,vlim,animtime, cmd,verb
 #    from simulFrame import getSimulData
     from .plotsnew import goPlot
     from .analysehst import analyseres
+    #%% output directory
+    try:
+        makedirs(progms)#, exist_ok=True) #python 2.7 doesn't have exist_ok
+    except (OSError,TypeError) as e:
+        pass
+
+    with open(join(progms,'cmd.log'),'w') as f:
+        f.write(' '.join(argv))
 #%% Step 0) load data
     ap,sim,cam,Fwd = getParams(ParamFN, overrides,makeplot,progms,verbose)
 #%% setup loop
@@ -200,16 +208,6 @@ if __name__ == '__main__':
 #%%
     timeInds = ar.frames
     doProfile = ar.profile
-#%% output directory
-    progms = ar.outdir
-    try:
-        makedirs(progms)#, exist_ok=True) #python 2.7 doesn't have exist_ok
-    except (OSError,TypeError) as e:
-        pass
-
-
-    with open(join(progms,'cmd.log'),'w') as f:
-        f.write(' '.join(argv))
 #%% overrides
     overrides = {'minev': ar.minev,'filter':ar.filter,
                  'fwdguess':ar.fwdguess, 'fitm':ar.fitm,'cam':ar.cam,
@@ -224,7 +222,7 @@ if __name__ == '__main__':
         proffn = 'hstprofstats.pstats'
         print('saving profile results to ' + proffn)
         cProfile.run('doSim(ParamFN,makeplot,timeInds,'
-                 'overrides,progms,ar.x1d,vlim,ar.anim,' '.join(argv),ar.verbose)',proffn)
+                 'overrides,ar.outdir,ar.x1d,vlim,ar.anim,' '.join(argv),ar.verbose)',proffn)
         pstats.Stats(proffn).sort_stats('time','cumulative').print_stats(50)
         #binpath = expanduser('~/profile/')
         #sysCall = [binpath + 'gprof2dot.py','-f','pstats',profFN,'|','dot','-Tpng','-o','output.png']
@@ -234,7 +232,7 @@ if __name__ == '__main__':
         #print(so.decode('utf8'))
 
     else: #normal
-        doSim(ParamFN,makeplot,timeInds,overrides,progms,ar.x1d, vlim,ar.anim,' '.join(argv), ar.verbose)
+        doSim(ParamFN,makeplot,timeInds,overrides,ar.outdir,ar.x1d, vlim,ar.anim,' '.join(argv), ar.verbose)
 
     if 'show' in makeplot:
         show()
