@@ -28,7 +28,7 @@ except:
     from sanityCheck import getParams
     from plotsnew import plotB, plotJ, plotVER
     from observeVolume import definecamind
-    
+
 vlim={'b':(None,None),'j':(None,None),'p':[None]*6}
 
 def readresults(h5list,xlsfn,overrides,makeplot,verbose=0):
@@ -75,7 +75,7 @@ def readresults(h5list,xlsfn,overrides,makeplot,verbose=0):
         x0true = (ap[a].loc['X0km',:][:-1] + 0.5*diff(ap[a].loc['X0km',:]))[tInd]
         E0true = (ap[a].loc['E0',:][:-1]   + 0.5*diff(ap[a].loc['E0',:]))[tInd]
 
-        analyseres(None,None,
+        analyseres(sim,cam,
                    x, xp, Phifwd, Phidict, drn, dhat,
                    vlim, x0true,E0true,makeplot,
                    progms=None, verbose=verbose)
@@ -83,7 +83,7 @@ def readresults(h5list,xlsfn,overrides,makeplot,verbose=0):
 #%%
     for ti in range(nt):
         if 'fwd' in makeplot:
-            plotB(drn[ti],sim.realdata,cam,vlim['b'],ti,makeplot,'$br',None,verbose)
+            plotB(drn[ti],sim.realdata,cam,vlim['b'],ti,2893,makeplot,'$br',None,verbose)
 
             plotJ(sim,Phifwd[...,ti],x,xp,Phidict[ti]['EK'],None,
                   vlim['j'],vlim['p'][:2],ti,makeplot,'phifwd',
@@ -92,7 +92,7 @@ def readresults(h5list,xlsfn,overrides,makeplot,verbose=0):
 
             plotVER(sim,Pfwd[ti],x,xp,z,zp,vlim['p'],ti,makeplot,'pfwd',
                     '$P$ fwd volume emission rate',
-                    None,None,verbose)
+                    None,None,None,verbose)
 
         if 'optim' in makeplot:
             plotJ(sim,Phidict[ti]['x'],x,xp,Phidict[ti]['EK'],None,
@@ -114,9 +114,9 @@ def findxlsh5(h5path):
         h5list = glob(join(h5path,'dump_*.h5'))
         h5list.sort()
         xlsfn = glob(join(h5path,'*.xlsx'))
-        
+
     if xlsfn: xlsfn = xlsfn[0]
-        
+
     return h5list,xlsfn
 
 if __name__ == '__main__':

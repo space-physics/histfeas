@@ -46,7 +46,7 @@ def analyseres(sim,cam,x,xp,Phifwd,Phifit,drn,dhat,vlim,x0true=None,E0true=None,
         print('t={} gaussian 2-D fits for (x,E). Fwd: {:.2f} {:.0f}'
               ' Optim: {:.2f} {:.0f}'.format(i, gx0[i,0],gE0[i,0],gx0[i,1],gE0[i,1]))
 
-        Eavgfwdx,Eavghatx = avgcomp(Phifwd[...,i], jf['x'], jf['EK'],x,makeplot,progms,verbose)
+        Eavgfwdx[i,:],Eavghatx[i,:] = avgcomp(Phifwd[...,i], jf['x'], jf['EK'],x,makeplot,progms,verbose)
 
 #%% overall error
     gx0err = gx0[:,1] - x0true #-gx0[:,0]
@@ -54,13 +54,13 @@ def analyseres(sim,cam,x,xp,Phifwd,Phifit,drn,dhat,vlim,x0true=None,E0true=None,
 #%% plots
     extplot(sim,cam,drn,dhat,vlim,makeplot,progms,verbose)
 
-    
-    doplot(x,Phifit,gE0,Eavgfwdx,Eavghatx, makeplot,progms)
+
+    doplot(x,Phifit,gE0,Eavgfwdx,Eavghatx, makeplot,progms,verbose)
 
     plotgauss(x0true,gx0,gE0,gx0err,gE0err,makeplot,progms)
 
 
-def doplot(x,Phifit,gE0,Eavgfwdx,Eavghatx, makeplot,progms):
+def doplot(x,Phifit,gE0,Eavgfwdx,Eavghatx, makeplot,progms,verbose):
 #    with open('cord.csv','r') as e:
 #        reader = csv.reader(e, delimiter=',', quoting = csv.QUOTE_NONE);
 #        cord = [[r.strip() for r in row] for row in reader][0]
@@ -100,18 +100,19 @@ def doplot(x,Phifit,gE0,Eavgfwdx,Eavghatx, makeplot,progms):
             ax.legend(['{:.0f} eV'.format(g) for g in gE0[:,0]],loc='best',fontsize=9)
             writeplots(fgo,'Eavg_optim',9999,makeplot,progms)
     except Exception as e:
-        print('skipping average energy plotting.   {}'.format(e))
+        if verbose>0:
+            print('skipping average energy plotting.   {}'.format(e))
 
 def extplot(sim,cam,drn,dhat,vlim,makeplot,progms,verbose):
 #%% brightness plot -- plotting ALL at once to show evolution of dispersive event!
     try:
         if 'fwd' in makeplot and drn is not None:
             for i,b in enumerate(drn):
-                plotB(b,sim,cam,vlim['b'],9999,makeplot,'$bfwdall',progms,verbose)
+                plotB(b,         sim.realdata,cam,vlim['b'],9999,19999,makeplot,'$bfwdall',progms,verbose)
     # reconstructed brightness plot
         if 'optim' in makeplot and dhat is not None and len(dhat[0])>0:
             for i,b in enumerate(dhat):
-                plotB(b['optim'],sim,cam,vlim['b'],9999,makeplot,'$bestall', progms,verbose)
+                plotB(b['optim'],sim.realdata,cam,vlim['b'],9999,29999,makeplot,'$bestall', progms,verbose)
     except Exception as e:
         warn('skipping plotting overall analysis plots of intensity.  {}'.format(e))
 
