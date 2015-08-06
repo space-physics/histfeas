@@ -1,5 +1,6 @@
 from __future__ import print_function, division
 from numpy import asarray,where,arange,isfinite,ceil,hypot,atleast_1d
+import numpy as np # needed for all
 from os.path import join,expanduser
 from dateutil.parser import parse
 from warnings import warn
@@ -114,7 +115,10 @@ class Sim:
         self.reactionfn = sp.at['reactionParam','Transcar']
         self.transcarconfig = sp.at['simconfig','Transcar']
 
-        self.minflux = sp.at['minflux','Recon']
+        if isfinite(sp.at['minflux','Recon']) and sp.at['minflux','Recon']>0:
+            self.minflux= sp.at['minflux','Recon']
+        else:
+            self.minflux= np.spacing(1)
 
         self.reacreq = ()
         if sp.at['metastable','Transcar'] == 1: self.reacreq += 'metastable',
@@ -202,9 +206,9 @@ class Sim:
 
         if timeInds is None:
             timeInds = arange(self.nTimeSlice) #NOT range!
-        
+
         timeInds = atleast_1d(timeInds) #necessary for next indexing step
-            
+
         return timeInds[timeInds<self.nTimeSlice] #(it's <, not <=) slice off commond line requests beyond number of frames
 
     def getEllHash(self,sp,cp):
