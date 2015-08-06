@@ -76,6 +76,7 @@ def doSim(ParamFN,makeplot,timeInds,overrides,progms,x1d,vlim,animtime, cmd,verb
     if verbose>0: print('timeInds: {}'.format(timeInds))
 #%%start looping for each time slice in keogram (just once if simulated)
     for ti in timeInds:
+        print('entering time '.format(ti))
         if sim.realdata:
             Phi0 = None; Pfwd = None
         else: #sim
