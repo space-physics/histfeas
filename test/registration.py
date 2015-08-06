@@ -7,6 +7,7 @@ from numpy import isclose
 from numpy.testing import assert_allclose
 from sys import argv
 import h5py
+from tempfile import gettempdir
 #from os import devnull
 #
 from histfeas.main_hist import doSim
@@ -18,7 +19,7 @@ def hist_registration(regh5,regXLS):
                   makeplot=['fwd','optim'],
                   timeInds=None,
                   overrides = None, #{'minev': minev,'filter':filt, 'fwdguess':fwdguess, 'fitm':fitm,'cam':cam,'camx':acx,'ell':ell,'Jfwd':influx},
-                  progms = 'out',
+                  progms = gettempdir(),
                   x1d=[None],
                   vlim = {'p':[None]*6,'j':[None]*2,'b':[None]*2},
                   animtime=None,
