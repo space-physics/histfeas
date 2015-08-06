@@ -118,7 +118,7 @@ class Sim:
         if isfinite(sp.at['minflux','Recon']) and sp.at['minflux','Recon']>0:
             self.minflux= sp.at['minflux','Recon']
         else:
-            self.minflux= np.spacing(1)
+            self.minflux= 0
 
         self.reacreq = ()
         if sp.at['metastable','Transcar'] == 1: self.reacreq += 'metastable',
