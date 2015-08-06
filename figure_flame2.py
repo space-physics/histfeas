@@ -38,7 +38,8 @@ if __name__ == '__main__':
     timeInds=[1,3]
     outdir='out/rev2_flame2'
     x1d = [1,1,1]
-    vlim = {'p':[-1.5,4.5,90,300,5e7,8e8,5e7,2e9], 'j':[1e3,1.1e5, 1e3,8e5], 'b':[0,3e3]}
+    vlim = {'p':[-1.5,4.5,90,300,5e7,8e8,5e7,2e9], 'j':[1e3,1.1e5, 1e3,8e5],
+            'b':[0,1.5e3]}
     overrides = {'ell':False}
 
     if not p.load:
