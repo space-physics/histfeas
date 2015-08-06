@@ -1,6 +1,7 @@
 from __future__ import print_function, division,absolute_import
 from numpy import (in1d,s_,empty,empty_like,isnan,asfortranarray,linspace,outer,
-                   sin,cos,pi,ones_like,array,nan,unravel_index,meshgrid)
+                   sin,cos,pi,ones_like,array,nan,unravel_index,meshgrid,logspace,
+                   log10)
 from matplotlib.pyplot import figure,subplots, clf,text,draw
 #from matplotlib.cm import get_cmap
 from matplotlib.colors import LogNorm
@@ -28,13 +29,9 @@ except Exception:
     pass
 #
 from gaussfitter import gaussfit,twodgaussian
-
-try:
-    from .histutils.findnearest import find_nearest
-    from .gridaurora.opticalmod import plotOptMod
-except:
-    from histutils.findnearest import find_nearest
-    from gridaurora.opticalmod import plotOptMod
+#
+from histutils.findnearest import find_nearest
+from gridaurora.opticalmod import plotOptMod
 
 #%% plot globals
 afs = None#20
@@ -76,9 +73,12 @@ def placetxt(x,y,txt,ax):
             bbox=dict(boxstyle="round,pad=0.0",fc='black', alpha=0.25))
 
 def goPlot(sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
-            fitp,rawdata,tInd,makeplot,progms,x1d,vlim,verbose):
+                            fitp,rawdata,tInd,makeplot,progms,x1d,vlim,verbose):
 
-    spfid = None if progms is None else join(progms,'dump_t{:03d}.h5'.format(tInd))
+    if not progms:
+        spfid = None
+    else:
+        spfid = join(progms,'dump_t{:03d}.h5'.format(tInd))
     #cord = ['b','g','k','r','m','y']
 
     xKM = Fwd['x']
@@ -100,8 +100,6 @@ def goPlot(sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
         print('1-D plots of Phi and P taken at index {}  x={}'.format(Jxi,x1d))
     else:
         Jxi = None
-
-
 #%% eigenfunction
     if 'eig' in makeplot:
         ploteig(fitp['EKpcolor'],zKM,Tm,vlim['p'],sim,tInd,makeplot,'peig',progms,verbose)
@@ -174,14 +172,14 @@ def goPlot(sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
 #    else:
 #        fwdloctxt=''
 
-    bcomptxt = ('best')
+    bcomptxt = 'best'
                #'($x_0$,$E_0$)=(' +'{:0.2f}'.format(x0) + ',' + '{:0.0f}'.format(E0) + ') [km,eV]')
 #%% Forward model plots
     if not sim.realdata and ('fwd' in makeplot or 'optim' in makeplot):
         plotnoise(cam,tInd,253,makeplot,'bnoise',progms,verbose)
 
     if 'fwd' in makeplot:
-        plotfwd(sim,cam,drn,nCutPix,xKM,xp,zKM,zp,
+        plotfwd(sim,cam,drn,xKM,xp,zKM,zp,
                 ver,Phi0,fitp,Jxi,vlim,tInd,makeplot,spfid,progms,verbose)
 #%% gaussian fit of optim
     if 'gaussian' in makeplot and 'fwd' in makeplot:
@@ -191,7 +189,7 @@ def goPlot(sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
         gx0,gE0 = getx0E0(None,fitp['gaussian'],fitp['EK'],xKM,tInd,progms,makeplot,verbose)
 #'Neval = {:d}'.format(fitp.nfev)
         plotJ(sim,fitp['gaussian'], xKM,xp, fitp['EK'],fitp['EKpcolor'],
-              vlim['j'],vlim['p'][:2],tInd, makeplot,'jgaussian',
+              vlim['j'][:2],vlim['p'][:2],tInd, makeplot,'jgaussian',
               '$\hat{\phi}_{gaussian,optim}$ estimated diff. number flux',
               spfid,progms,verbose)
 
@@ -202,16 +200,17 @@ def goPlot(sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
               1810,spfid,progms,verbose)
 #%% optimize search plots
     if 'optim' in makeplot:
-        plotoptim(sim,cam,drn,dhat,nCutPix,bcomptxt,ver,Phi0,Jxi,
+        plotoptim(sim,cam,drn,dhat,bcomptxt,ver,Phi0,Jxi,
                   vfit,fitp,xKM,xp,zKM,zp,vlim,tInd,makeplot,spfid,progms,verbose)
 #%% maximum entropy
     if 'phimaxent' in makeplot:
-        plotJ(sim,fitp['maxent'],xKM,xp,fitp['EK'],fitp['EKpcolor'],vlim['j'],vlim['p'][:2],tInd,makeplot,'jme',
-                              '$\Phi_{maxent}$ estimated diff. number flux',
-                            spfid,progms,verbose)
+        plotJ(sim,fitp['maxent'],xKM,xp,fitp['EK'],fitp['EKpcolor'],
+              vlim['j'][:2],vlim['p'][:2],tInd,makeplot,'jme',
+                '$\Phi_{maxent}$ estimated diff. number flux',
+                spfid,progms,verbose)
 
     if 'phimaxent1d' in makeplot and Jxi is not None:
-        plotJ1D(sim,fitp['maxent'][:,Jxi],fitp['EK'],vlim['j'],tInd,makeplot,'jme_1D',
+        plotJ1D(sim,fitp['maxent'][:,Jxi],fitp['EK'],vlim['j'][2:4],tInd,makeplot,'jme_1D',
                 ('Differential Number flux at $B_\perp$={:0.2f} [km]'.format(xKM[Jxi])),
                 spfid,progms,verbose)
     if 'bmaxent' in makeplot:
@@ -245,9 +244,10 @@ def goPlot(sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
                 warn('could not plot vfwd vmaxent comparison.  {}'.format(e))
 #%% diff number flux from ART
     if 'jart' in makeplot:
-        plotJ(sim,fitp['art'],xKM,xp,fitp['EK'],fitp['EKpcolor'],vlim['j'],vlim['p'][:2],tInd,makeplot,'jart',
-                        '$\hat{\Phi}_{art}$ Estimated J from Kaczmarz ART on LT and b',
-                         spfid,progms,verbose)
+        plotJ(sim,fitp['art'],xKM,xp,fitp['EK'],fitp['EKpcolor'],
+              vlim['j'][:2],vlim['p'][:2],tInd,makeplot,'jart',
+                '$\hat{\Phi}_{art}$ Estimated J from Kaczmarz ART on LT and b',
+                 spfid,progms,verbose)
     if 'vart' in makeplot:
         assert isnan(vfit['art']).any() == False
         plotVER(sim,vfit['art'],xKM,xp,zKM,zp,vlim['p'],tInd,makeplot,'vart',
@@ -258,10 +258,10 @@ def goPlot(sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
                      'bart',spfid,vlim['b'],tInd, makeplot,progms,verbose)
 
 #%%
-def plotfwd(sim,cam,drn,nCutPix,xKM,xp,zKM,zp,
+def plotfwd(sim,cam,drn,xKM,xp,zKM,zp,
             ver,Phi0,fitp,Jxi,vlim,tInd,makeplot,spfid,progms,verbose):
 
-    plotB(drn,sim.realdata,cam,vlim['b'],tInd,1500,makeplot,'$br',progms,verbose)
+    plotB(drn,sim.realdata,cam,vlim['b'],tInd,1500,makeplot,'$B_{fwd',progms,verbose)
 
     if not sim.realdata:
         # Forward model VER
@@ -271,12 +271,12 @@ def plotfwd(sim,cam,drn,nCutPix,xKM,xp,zKM,zp,
 
 #       print('max |diff(phifwd)| = ' + str(np.abs(np.diff(phiInit, n=1, axis=0)).max()))
         plotJ(sim,Phi0,xKM,xp,fitp['EK'],fitp['EKpcolor'],
-              vlim['j'],vlim['p'][:2],tInd,makeplot,'phifwd',
+              vlim['j'][:2],vlim['p'][:2],tInd,makeplot,'phifwd',
               '$\Phi_{{top}}$ input diff. number flux',
               1900,spfid,progms,verbose)
 
         if not 'optim' in makeplot and Jxi is not None:
-            plotJ1D(sim,Phi0[:,Jxi],None,fitp['EK'],vlim['j'],tInd,makeplot,'phifwd1d',
+            plotJ1D(sim,Phi0[:,Jxi],None,fitp['EK'],vlim['j'][2:4],tInd,makeplot,'phifwd1d',
                  'Differential Number flux at $B_\perp$={:0.2f} [km]'.format(xKM[Jxi]),
                        spfid,progms,verbose)
 
@@ -286,56 +286,63 @@ def plotfwd(sim,cam,drn,nCutPix,xKM,xp,zKM,zp,
               '$P_{{fwd}}$ at $B_\perp$={:0.2f}  [km]'.format(xKM[Jxi]),
               spfid,progms,verbose)
 #%%
-def plotoptim(sim,cam,drn,dhat,nCutPix,bcomptxt,ver,Phi0,Jxi,
+def plotoptim(sim,cam,drn,dhat,bcomptxt,ver,Phi0,Jxi,
               vfit,fitp,xKM,xp,zKM,zp,vlim,tInd,makeplot,spfid,progms,verbose):
 
-    plotBcompare(sim,drn,dhat['optim'],cam,'best', spfid,vlim['b'],tInd,1501,makeplot,progms,verbose)
+    if isinstance(dhat,dict):
+        dhat = dhat['optim']
 
-    plotVER(sim,vfit['optim'],xKM,xp,zKM,zp,vlim['p'],tInd,makeplot,'pest',
+    if isinstance(vfit,dict):
+        vfit = vfit['optim']
+
+
+    plotBcompare(sim,drn,dhat,cam,'best', spfid,vlim['b'],tInd,1501,makeplot,progms,verbose)
+
+    plotVER(sim,vfit,xKM,xp,zKM,zp,vlim['p'],tInd,makeplot,'pest',
           '$\hat{P}$ estimated volume emission rate',
           1815,spfid,progms,verbose)
 #%% flux
-    plotJ(sim,fitp.x,xKM,xp,fitp['EK'],fitp['EKpcolor'],
-          vlim['j'],vlim['p'][:2],tInd,makeplot,'phiest',
+    plotJ(sim,fitp['x'],xKM,xp,fitp['EK'],fitp['EKpcolor'],
+          vlim['j'][:2],vlim['p'][:2],tInd,makeplot,'phiest',
           '$\hat{\phi}_{top}$ estimated diff. number flux',
           1901,spfid,progms,verbose)
           #'Neval = {:d}'.format(fitp.nfev)
 
     if Jxi is not None:
-        plotVER1D(sim,ver[:,Jxi],vfit['optim'][:,Jxi],zKM,
+        plotVER1D(sim,ver[:,Jxi],vfit[:,Jxi],zKM,
                   vlim['p'][2:],tInd,makeplot,'pest1d',
-                  '$\hat{P}$ estimated volume emission rate at $B_\perp$={:0.2f} [km]  {}'.format(xKM[Jxi]),
+                  '$\hat{{P}}$ estimated volume emission rate at $B_\perp$={:0.2f} [km]'.format(xKM[Jxi]),
                   spfid,progms,verbose)
 
-        plotJ1D(sim,Phi0[:,Jxi],fitp.x[:,Jxi],fitp['EK'],vlim['j'],tInd,makeplot,'phiest1d',
-        ('$\hat{\phi}_{top}$ estimated diff. number flux at $B_\perp$={:0.2f} [km]'.format(xKM[Jxi])),
+        plotJ1D(sim,Phi0[:,Jxi],fitp['x'][:,Jxi],fitp['EK'],vlim['j'][2:4],tInd,makeplot,'phiest1d',
+        ('$\hat{{\phi}}_{{top}}$ estimated diff. number flux at $B_\perp$={:0.2f} [km]'.format(xKM[Jxi])),
                            spfid,progms,verbose)
 #%% ############################################################################
 def plotnoise(cam,tInd,figh,makeplot,prefix,progms,verbose):
-  try:
-    figure(figh).clf()
-    fg = figure(figh)
-    ax = fg.add_subplot(211)
+   try:
+      figure(figh).clf()
+      fg = figure(figh)
+      ax = fg.add_subplot(211)
 
-    for c in cam:
-        ax.plot(cam[c].dnoise,label=cam[c].name)
-        ax.set_ylabel('amplitude')
-        ax.set_title('Noise that was injected into raw intensity data')
-        ax.grid(True)
-    ax.legend(loc='best')
+      for c in cam:
+         ax.plot(cam[c].dnoise,label=cam[c].name)
+         ax.set_ylabel('amplitude')
+         ax.set_title('Noise that was injected into raw intensity data')
+         ax.grid(True)
+      ax.legend(loc='best')
 
-    ax2 = fg.add_subplot(212)
-    for c in cam:
-        ax2.plot(cam[c].noisy,label=cam[c].name)
-        ax2.set_ylabel('amplitude')
-        ax2.set_xlabel('pixel number')
-        ax2.set_title('Noisy data')
-        ax2.grid(True)
-    ax2.legend(loc='best')
+      ax2 = fg.add_subplot(212)
+      for c in cam:
+         ax2.plot(cam[c].noisy,label=cam[c].name)
+         ax2.set_ylabel('amplitude')
+         ax2.set_xlabel('pixel number')
+         ax2.set_title('Noisy data')
+         ax2.grid(True)
+      ax2.legend(loc='best')
 
-    writeplots(fg,prefix,tInd,makeplot,progms,verbose)
-  except Exception as e:
-    warn('tind {}   {}'.format(tInd,e))
+      writeplots(fg,prefix,tInd,makeplot,progms,None,verbose)
+   except Exception as e:
+      warn('tind {}   {}'.format(tInd,e))
 
 def plottphi0(Tm,Phi0,Jxi,Ek,zKM,vlim,sim,tInd,makeplot,prefix,progms,verbose):
   try:
@@ -528,7 +535,7 @@ def plotJ1D(sim,PhiFwd,PhiInv,Ek,vlim,tInd,makeplot,prefix,titletxt,spfid,progms
 
     ax.grid(True)
     ax.autoscale(True,tight=False)
-    ax.set_ylim(100, phi1dmax)
+    ax.set_ylim(vlim)
     ax.set_xlim([Ek[0]*0.98, Ek[-1]*1.05])
 
     ax.set_xlabel('particle energy [eV]', fontsize=afs,labelpad=0)
@@ -539,7 +546,7 @@ def plotJ1D(sim,PhiFwd,PhiInv,Ek,vlim,tInd,makeplot,prefix,titletxt,spfid,progms
 
     if anno:    ax.legend(loc='lower left')
 
-    writeplots(fg,prefix,tInd,makeplot,progms,verbose)
+    writeplots(fg,prefix,tInd,makeplot,progms,None,verbose)
 
     if 'h5' in makeplot:
         dumph5(spfid,prefix,tInd,PhiFwd1d=PhiFwd,PhiInv1d=PhiInv,Ek=Ek)
@@ -582,8 +589,13 @@ def plotJ(sim,Jflux,x,xp,Ek,EKpcolor,vlim,xlim,tInd,makeplot,prefix,titletxt,fig
                        vmin=vmin, vmax=vmax) #vmin can't be 0 when using LogNorm!
                        #my recollection is that rasterized=True didn't really help savefig speed
             elif pstyle=='contour':
-                clvl = linspace(vmin,vmax,6)
-                if verbose>0: print('phi using contour levels {}'.format(clvl))
+#                if c:
+                clvl = logspace(log10(vmin),log10(vmax),6)
+#                else:
+#                    clvl = linspace(vmin,vmax,6)
+
+                if verbose>-1:
+                    print('phi using contour levels {}'.format(clvl))
 
                 hc = ax.contour(x,Ek,Jflux,levels=clvl,
                                 linewidths=2,norm=c,vmin=v,vmax=vmax,
@@ -625,7 +637,7 @@ def plotJ(sim,Jflux,x,xp,Ek,EKpcolor,vlim,xlim,tInd,makeplot,prefix,titletxt,fig
         doJlbl(ax3,titletxt)
 
     if 'h5' in makeplot:
-        dumph5(spfid,prefix,tInd,phi=Jflux,xp=xp,Ek=Ek)
+        dumph5(spfid,prefix,tInd,phi=Jflux,xp=xp,Ek=Ek,EKpcolor=EKpcolor)
   except Exception as e:
     warn('tind {}   {}'.format(tInd,e))
 
@@ -699,9 +711,9 @@ def plotVER1D(sim,pfwd,pinv,zKM,vlim,tInd,makeplot,prefix,titletxt,spfid,progms,
     ax.tick_params(axis='both', which='major', direction='in',labelsize=tkfs)
 
     ax.set_ylim(bottom=vlim[0],top=vlim[1])
-    ax.set_xlim(vlim[2:])
+    ax.set_xlim(vlim[4:6])
 
-    writeplots(fg,prefix,tInd,makeplot,progms,verbose)
+    writeplots(fg,prefix,tInd,makeplot,progms,None,verbose)
 
     if 'h5' in makeplot: #a separate stanza
         dumph5(spfid,prefix,tInd,pfwd1d=pfwd,pinv1d=pinv,z=zKM)
@@ -748,7 +760,9 @@ def plotVER(sim,ver,x,xp,z,zp,vlim,tInd,makeplot,prefix,titletxt,figh,spfid,prog
                 ax.autoscale(True,tight=True) #need this to fill axes (does not resize axes)
 
             elif pstyle=='contour':
-                hc = ax.contour(x,z,ver,levels=linspace(vmin,vmax,6),
+                clvl = logspace(log10(vmin),log10(vmax),6)
+
+                hc = ax.contour(x,z,ver,levels=clvl,
                                 linewidths=2,norm=c,vmin=vmin,vmax=vmax,
                                 )
                 #ax.clabel(hc,fontsize=6,inline=True)
