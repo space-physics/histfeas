@@ -9,7 +9,6 @@ from __future__ import division,absolute_import
 import h5py
 from os import makedirs
 from os.path import join,expanduser,splitext,isfile,dirname
-from tempfile import gettempdir
 from numpy import asarray,diff
 from warnings import warn
 from matplotlib.pyplot import show
@@ -19,18 +18,16 @@ sns.color_palette(sns.color_palette("cubehelix"))
 sns.set(context='poster', style='whitegrid',
         rc={'image.cmap': 'cubehelix_r'})
 #
+from histutils.findnearest import find_nearest
 from .analysehst import analyseres
 from .sanityCheck import getParams
-from .plotsnew import plotB, plotJ, plotVER,plotBcompare
+from .plotsnew import plotoptim,plotfwd
 from .observeVolume import definecamind
 
-
-vlim={'b':(None,None),'j':(None,None),'p':[None]*6}
-
-def readresults(h5list,xlsfn,overrides,makeplot,verbose=0):
+def readresults(h5list,xlsfn,vlim,x1d,overrides,makeplot,verbose=0):
     Phifwd =[]; Phidict =[]; dhat=[]; drn=[]; Pest=[]; Pfwd=[]
     tInd = [];
-
+#%%
     nt = len(h5list)
     if nt==0:
         warn('no HDF5 files found, ending.')
@@ -50,7 +47,8 @@ def readresults(h5list,xlsfn,overrides,makeplot,verbose=0):
 
             Phifwd.append(f['/phifwd/phi'].value)
             Phidict.append({'x':f['/phiest/phi'].value,
-                            'EK':f['/phiest/Ek'].value})
+                            'EK':f['/phiest/Ek'].value,
+                            'EKpcolor':f['/phiest/EKpcolor'].value})
 
             Pest.append(f['/pest/p'].value)
             Pfwd.append(f['/pfwd/p'].value)
@@ -87,31 +85,17 @@ def readresults(h5list,xlsfn,overrides,makeplot,verbose=0):
                    progms, verbose=verbose)
 
 #%%
+    Jxi = find_nearest(x,x1d)[0]
+
     for ti,t in enumerate(tInd):
         if 'fwd' in makeplot:
-            plotB(drn[ti],sim.realdata,cam,vlim['b'],t,2893,makeplot,'$b_{fwd',progms,verbose)
-
-            plotJ(sim,Phifwd[...,ti],x,xp,Phidict[ti]['EK'],None,
-                  vlim['j'],vlim['p'][:2],t,makeplot,'phifwd',
-                  '$\phi_{top}$ fwd diff. number flux',
-                  None,None,progms,verbose)
-
-            plotVER(sim,Pfwd[ti],x,xp,z,zp,vlim['p'],t,makeplot,'pfwd',
-                    '$P$ fwd volume emission rate',
-                    None,None,progms,verbose)
+            plotfwd(sim,cam,drn[ti],x,xp,z,zp,
+                    Pfwd[ti],Phifwd[...,ti],Phidict[ti],Jxi,vlim,t,makeplot,None,progms,verbose)
 
         if 'optim' in makeplot:
-           # plotB(dhat[ti],sim.realdata,cam,vlim['b'],t,2894,makeplot,'$b_{est',progms,verbose)
-            plotBcompare(sim,drn[ti],dhat[ti],cam,'best',None,vlim['b'],t,2894,makeplot,progms,verbose)
+            plotoptim(sim,cam,drn[ti],dhat[ti],'best',Pfwd[ti],Phifwd[...,ti],Jxi,
+                      Pest[ti],Phidict[ti],x,xp,z,zp,vlim,t,makeplot,None,progms,verbose)
 
-            plotJ(sim,Phidict[ti]['x'],x,xp,Phidict[ti]['EK'],None,
-                  vlim['j'],vlim['p'][:2],t,makeplot,'phiest',
-                  '$\hat{\phi}_{top}$ estimated diff. number flux',
-                  None,None,progms,verbose)
-
-            plotVER(sim,Pest[ti],x,xp,z,zp,vlim['p'],t,makeplot,'pest',
-                    '$\hat{P}$ estimated volume emission rate',
-                    None,None,progms,verbose)
 
 def findxlsh5(h5path):
     h5path = expanduser(h5path)
@@ -133,10 +117,12 @@ if __name__ == '__main__':
     p = ArgumentParser(description="load HiST output and plot/analyse")
     p.add_argument('h5path',help='path containing dump.h5 outputs (Hist output)')
     p.add_argument('-m','--makeplot',help='plots to make',default=[],nargs='+')
+    p.add_argument('-v','--verbose',help='verbosity',action='count',default=0)
     p = p.parse_args()
 
     h5list,xlsfn = findxlsh5(p.h5path)
 
-    readresults(h5list,xlsfn,None,p.makeplot)
+    readresults(h5list,xlsfn,vlim=None,Jxi=None,overrides=None,
+                makeplot=p.makeplot,verbose=p.verbose)
 
     show()
