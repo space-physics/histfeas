@@ -137,7 +137,7 @@ plot limit selection
 You may want to select fixed limits for your plots instead of the default autoscaling, particularly when
 comparing a time series of plots.
 
-``--vlim xmin xmax zmin zmax pmin pmax``      limits for VER plots and eigenprofile plots (including 1-D)
+``--vlim xmin xmax zmin zmax pmin pmax pmin1d pmax1d``      limits for VER plots and eigenprofile plots (including 1-D)
 
 ``--jlim min max min1d max1d``                x-axis limits for diff num flux plots (first two for 2-D, last two for 1-D)
 
