@@ -16,7 +16,7 @@ def hist_figure():
                   overrides = overrides, #{'minev': minev,'filter':filt, 'fwdguess':fwdguess,
 				                    #'fitm':fitm,'cam':cam,'camx':acx,'ell':ell,'Jfwd':influx},
                   progms = outdir,
-                  x1d=[None],
+                  x1d=x1d,
                   vlim = vlim,
                   animtime=None,
                   cmd = ' '.join(argv),
@@ -37,8 +37,8 @@ if __name__ == '__main__':
     regXLS='in/2cam_flame.xlsx'
     timeInds=[1,3]
     outdir='out/rev2_flame2'
-    x1d = 1.
-    vlim = {'p':[-1.5,4.5,90,300,5e7,5e8,5e7,2e9], 'j':[1e3,1.e5, 1e3,5e5], 'b':[0,3e3]}
+    x1d = [1,1,1]
+    vlim = {'p':[-1.5,4.5,90,300,5e7,8e8,5e7,2e9], 'j':[1e3,1.1e5, 1e3,8e5], 'b':[0,3e3]}
     overrides = {'ell':False}
 
     if not p.load:
