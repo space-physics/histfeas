@@ -4,19 +4,19 @@
 .. image:: https://travis-ci.org/scienceopen/histfeas.svg?branch=master
     :target: https://travis-ci.org/scienceopen/histfeas
 
-.. image:: https://coveralls.io/repos/scienceopen/hist-feasibility/badge.svg?branch=master&service=github 
-    :target: https://coveralls.io/github/scienceopen/hist-feasibility?branch=master 
+.. image:: https://coveralls.io/repos/scienceopen/hist-feasibility/badge.svg?branch=master&service=github
+    :target: https://coveralls.io/github/scienceopen/hist-feasibility?branch=master
 
 ================
 hist-feasibility
 ================
 Feasibility study for auroral tomography
 
-This program should be runnable on any Python 3.4 or 2.7 platform. 
+This program should be runnable on any Python 3.4 or 2.7 platform.
 
 Primarily tested on Linux, but should work on Mac or Cygwin (windows) as well.
 
-.. image:: doc/montout.png 
+.. image:: doc/montout.png
     :alt: montage of output
 
 Installation
@@ -56,7 +56,7 @@ simulate flaming aurora with two cameras::
 
  python main_hist.py in/2cam_flame.xlsx out/test_flame2/ -m fwd optim png show h5
 
-you can then look to the `Output Processing`_ section for how to load the HDF5 files 
+you can then look to the `Output Processing`_ section for how to load the HDF5 files
 you just produced in ``out/test_flame2``
 
 reading real data and displaying a live video::
@@ -74,15 +74,15 @@ below this line examples may be out of date (may not work at the moment)
 ------------
 
 draft 2015 SIMULATION commands were like::
-    
+
  python3 main_hist.py in/jgr2013_2cam_flame.xlsx /tmp --minev 150 -m fwd optim gfit eig eig1d ell eavg png --vlim -3.8 7.1 90 350 1e5 1e8 --jlim 0 7e4 --blim 0 2.5e9 -f 2 5 1 --ell
-    
+
 dump raw frames with time superimposed to disk without axes (for draft, -f 30 70 10)::
-    
+
  python3 main_hist.py in/jgr2013_realdata.xlsx /tmp -m singleraw rawpng -f 30 70 10
 
 plot eigenprofiles from 2013 JGR and current transcar sim::
-    
+
  python3 main_hist.py in/jgr2013_2cam.xlsx /tmp -m eig eig1d -p  -f 0 1 1
 
  python3 main_hist.py in/2cam_flame.xlsx /tmp -m eig eig1d -p --vlim 0 0 90 1000 1e-1 5e3 -f 0 1 1
@@ -96,7 +96,7 @@ type of program output
 
 **Simulation selection**
 
--m fwd      run foward model 
+-m fwd      run foward model
 -m optim    run optimization to estimate input quantities
 
 
@@ -121,9 +121,9 @@ Time selection
 --------------
 
 The simulation configuration in the in/\*.xlsx file may be very large. Maybe you want to pick
-only a few times to run. 
+only a few times to run.
 
-Example: to use only the first time step, use option ``-f 0 1 1`` which works like Python 
+Example: to use only the first time step, use option ``-f 0 1 1`` which works like Python
 ``range()`` in selecting times from the spreadsheet Arc* tab.
 
 **Note**
@@ -139,9 +139,9 @@ comparing a time series of plots.
 
 ``--vlim xmin xmax zmin zmax pmin pmax``      limits for VER plots and eigenprofile plots (including 1-D)
 
-``--jlim min max``                            flux limits for diff num flux plots
+``--jlim min max min1d max1d``                x-axis limits for diff num flux plots (first two for 2-D, last two for 1-D)
 
-``--blim min max``                            flux limits for brightness plots
+``--blim min max``                            instensity (y-axis) limits for brightness plots
 
 
 Plot explanation
@@ -149,7 +149,7 @@ Plot explanation
 The plots you see under your out/ direction (assuming you used ``-m png`` or ``-m eps`` or the like)
 follow this naming convention
 
-``phifwd`` this is your "known" input differntial number flux of the electron precipitation 
+``phifwd`` this is your "known" input differntial number flux of the electron precipitation
 to the simulation (for real data, we don't have this)
 
 ``phiest`` this is the unobservable "unknown" we estimate with this program (for real and simulated data)
@@ -169,10 +169,10 @@ Some of the 1-D variables are duplicated because we don't know a-priori simulati
 
 The naming of the variables follows `Plot explanation`_
 
-For Python, we have the hollow function ``loadAnalyze.py`` which loads the HDF5 data to call 
+For Python, we have the hollow function ``loadAnalyze.py`` which loads the HDF5 data to call
 the same ``analysehst.py`` that's used by the simulation online--good coding practice.
 
-**Example of offline output processing** 
+**Example of offline output processing**
 
 .. code:: bash
 
@@ -186,7 +186,7 @@ Calibration
 
 1. ``rawDMCreader.py``  accesses the raw camera data and averages the selected frames and writes the average as a FITS file
 2. The second line moves this FITS file to the user-selected calibration directory
-3. The third line uses my wrapper and post-processing based on Astrometry.net to make an HDF5 file of the mapping from each pixel to sky coordinates (ra/dec and az/el). 
+3. The third line uses my wrapper and post-processing based on Astrometry.net to make an HDF5 file of the mapping from each pixel to sky coordinates (ra/dec and az/el).
 
 **cam0**
 
@@ -208,5 +208,3 @@ Calibration
  mv ~/HSTdata/DataField/2013-04-14/HST1/2013-04-14T07-00-CamSer1387_frames_205111-1-208621_mean_frames.fits ~/HST/calibration/hst1cal.fits
 
  ./astrometry/fits2azel.py -i ~/HST/calibration/hst1cal.fits --h5 -c 65.12657 -147.496908333 -t 2013-04-14T08:54:00Z --png
-
-
