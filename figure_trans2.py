@@ -31,6 +31,7 @@ if __name__ == '__main__':
     p = ArgumentParser(description='translating figure plotter')
     p.add_argument('--load',help='load without recomputing',action='store_true')
     p.add_argument('-m','--makeplot',help='plots to make',default=[],nargs='+')
+    p.add_argument('--ell',help='compute projection matrix',action='store_true')
     p.add_argument('-v','--verbose',help='verbosity',action='count',default=0)
     p = p.parse_args()
 
@@ -39,7 +40,7 @@ if __name__ == '__main__':
     outdir='out/rev2_trans2'
     x1d = [1.55,3.75]
     vlim = {'p':[-1.5,4.5,90,300,5e7,8e8,5e7,2e9], 'j':[1e3,1.1e5, 1e3,8e5], 'b':[0,3e3]}
-    overrides = {'ell':False}
+    overrides = {'ell':p.ell}
 
     if not p.load:
         print('running Hist program -- will write png and h5 to ' + outdir)
