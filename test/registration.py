@@ -33,8 +33,8 @@ def readCheck(Phi0,Phifit):
     with h5py.File(regh5,'r',libver='latest') as f:
         assert_allclose(f['/phifwd/phi'],Phi0[...,0])
         # noise makes inversion result differ uniquely each run
-        assert isclose(f['/phifwd/E0'],Phifit[0]['gE0'],rtol=0.25)
-        assert isclose(f['/phifwd/x0'],Phifit[0]['gx0'],rtol=0.25)
+        assert isclose(f['/phifwd/E0'],Phifit[0]['gE0'],rtol=0.3)
+        assert isclose(f['/phifwd/x0'],Phifit[0]['gx0'],rtol=0.3)
 
         #the str() are needed instead of format() !
         print('E0 estimation error [eV] ' +str(f['/phifwd/E0']-Phifit[0]['gE0']))
