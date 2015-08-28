@@ -43,8 +43,12 @@ def analyseres(sim,cam,x,xp,Phifwd,Phifit,drn,dhat,vlim,x0true=None,E0true=None,
                                         jf['EK'],x,9999,progms,makeplot,verbose)
 
 
-        print('t={} gaussian 2-D fits for (x,E). Fwd: {:.2f} {:.0f}'
-              ' Optim: {:.2f} {:.0f}'.format(i, gx0[i,0],gE0[i,0],gx0[i,1],gE0[i,1]))
+        print('t={} gaussian 2-D fits (true  truefit  estfit) for (x,E).'
+              ' Fwdtrue: {:.2f} {:.0f}'
+              ' Fwdfit: {:.2f} {:.0f}'
+              ' Optim: {:.2f} {:.0f}'.format(i, x0true.iat[i], E0true.iat[i],
+                                                gx0[i,0],  gE0[i,0],
+                                                gx0[i,1],  gE0[i,1]))
 
         Eavgfwdx[i,:],Eavghatx[i,:] = avgcomp(Phifwd[...,i], jf['x'], jf['EK'],x,makeplot,progms,verbose)
 
@@ -132,9 +136,9 @@ def plotgauss(x0true,gx0,gE0,gx0err,gE0err,makeplot,progms):
     axE.set_ylim(-200,200)
     axE.set_xlim(-7,7) #[km]
 
-    print('B_\perp,0 Estimation-error =' + ' '.join(
+    print('B_\perp,0 gaussfit-Estimation-error (fit-true) =' + ' '.join(
                                           ['{:.2f}'.format(h) for h in gx0err]))
-    print('E_0 Estimation-error =' + ' '.join(
+    print('E_0 gaussfit-Estimation-error (fit-true) =' + ' '.join(
                                           ['{:.1f}'.format(j) for j in gE0err]))
 
     if 'h5' in makeplot and progms is not None:
