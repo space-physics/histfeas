@@ -1,3 +1,10 @@
+"""
+functions for loading HST real camera raw data
+ michael hirsch 2014, ported from Matlab code
+
+INPUT FILE FORMAT: intended for use with "DMCdata" raw format, 4-byte
+ "footer" containing frame index (must use typecast)
+"""
 from __future__ import print_function,division,absolute_import
 from time import time
 from numpy import arange, empty, asarray, uint16, rot90, fliplr, flipud
@@ -8,12 +15,6 @@ from scipy.interpolate import interp1d
 # local
 import histutils.rawDMCreader as rdr
 from .get1Dcut import get1Dcut
-
-#this contains function for loading HST data
-# michael hirsch 2014, ported from Matlab code
-
-#INPUT FILE FORMAT: intended for use with "DMCdata" raw format, 4-byte
-# "footer" containing frame index (must use typecast)
 
 def getSimulData(sim,cam,makeplot,progms,verbose=0):
 #%% synchronize
@@ -41,8 +42,8 @@ def HSTsync(sim,cam,dbglvl):
     mutualStop =  min( [cam[c].stopUT  for c in cam] )   # who ended first
 #%% make playback time steps
 # based on the "simulated" UTC times that do not correspond exactly with either camera, necessarily.
-#FIXME check for off-by-one
-#FIXME there is probably a list comprehension way to do this
+#TODO check for off-by-one
+#FIXME use UT1_unix time, will simplify this and following sections
     alltReq = [mutualStart] #makes a list so we can append
     while alltReq[-1] < (mutualStop - relativedelta(seconds=sim.kineticSec)):
         alltReq.append( alltReq[-1] + relativedelta(seconds=sim.kineticSec) )
