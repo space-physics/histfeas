@@ -2,7 +2,7 @@
 Michael Hirsch
 GPLv3+
 """
-from __future__ import print_function, division
+from __future__ import print_function, division,absolute_import
 from numpy import absolute,asfortranarray,diff,ones,inf,empty_like
 from scipy.optimize import minimize
 from scipy.interpolate import interp1d
@@ -10,12 +10,9 @@ from numpy.linalg import norm
 from time import time
 from warnings import warn
 #
-try:
-    from .transcararc import getColumnVER
-    from .plotsnew import getx0E0
-except:
-    from transcararc import getColumnVER
-    from plotsnew import getx0E0
+from .transcararc import getColumnVER
+from .plotsnew import getx0E0
+
 
 def FitVERopt(L,bn,Phi0,MpDict,sim,cam,Fwd,tInd,makeplot,verbose):
     vfit = {}; bfit = {}; Phifit = {'x':None} #in case optim not run
