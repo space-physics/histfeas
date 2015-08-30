@@ -1,7 +1,7 @@
 from __future__ import print_function, division,absolute_import
 from numpy import (in1d,s_,empty,empty_like,isnan,asfortranarray,linspace,outer,
                    sin,cos,pi,ones_like,array,nan,unravel_index,meshgrid,logspace,
-                   log10)
+                   log10,spacing)
 from matplotlib.pyplot import figure,subplots, clf,text,draw
 #from matplotlib.cm import get_cmap
 from matplotlib.colors import LogNorm
@@ -561,7 +561,7 @@ def plotJ(sim,Jflux,x,xp,Ek,EKpcolor,vlim,xlim,tInd,makeplot,prefix,titletxt,fig
 
 #%% 2-D
     pre = ('lin','log')
-    vlow = (0.,1.)
+    vlow = (spacing(1),1.)
     for c,s,v,p in zip(cnorm,sfmt,vlow,pre):
         #determine lowest level to plot
         vmin = getmin(v,vlim[0])
@@ -730,7 +730,7 @@ def plotVER(sim,ver,x,xp,z,zp,vlim,tInd,makeplot,prefix,titletxt,figh,spfid,prog
 
 
 
-    vlow=(0.,1.)
+    vlow=(spacing(1),1.)
     pre = ('lin','log')
 
     if ver is not None:
@@ -1112,7 +1112,7 @@ def dumph5(fn,prefix,tInd,**writevar): #used in other .py too
     if fn is None or prefix is None:
         return
 
-    print('dumping to '+ fn)
+    print('dumping {} to {}'.format(prefix, fn))
     with h5py.File(fn,'a',libver='latest') as f:
         for k,v in writevar.items():
             try:
