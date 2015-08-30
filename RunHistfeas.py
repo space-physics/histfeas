@@ -7,7 +7,7 @@ from signal import signal,SIGINT #for Ctrl C
 from os.path import expanduser
 from numpy import in1d,arange
 import matplotlib as mpl
-from mpl.pyplot import show
+from matplotlib.pyplot import show
 from sys import argv
 #
 from histfeas.main_hist import doSim
