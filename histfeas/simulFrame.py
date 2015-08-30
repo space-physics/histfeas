@@ -50,7 +50,7 @@ def HSTsync(sim,cam,verbose):
 
     nMutRawFrame = len(alltReq)  # NOT alltReq.size--it's a list as it should be!
 
-    print(nMutRawFrame, 'mutual frames available from',mutualStart,'to',mutualStop)
+    print('{} mutual frames available from {} to {}'.format(nMutRawFrame,mutualStart,mutualStop))
 
 #%% adjust start/stop to user request
     alltReqAdj = asarray([t for t in alltReq if t>reqStart and t<reqStop ]) #keep greater than start time

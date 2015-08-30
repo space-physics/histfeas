@@ -484,9 +484,9 @@ def plotRealImg(sim,cam,rawdata,t,makeplot,prefix,titletxt,figh,spfid,progms,ver
         ax.plot(cam[c].cutcol,cam[c].cutrow,
                  marker='.',linestyle='none',color='blue',markersize=1)
         #plot magnetic zenith
-        ax.plot(cam[c].cutcol[cam[c].angleMagzenind],
-                cam[c].cutrow[cam[c].angleMagzenind],
-                marker='o',linestyle='none',color='red',markersize=22)
+        ax.scatter(x=cam[c].cutcol[cam[c].angleMagzenind],
+                   y=cam[c].cutrow[cam[c].angleMagzenind],
+                   marker='o',facecolors='none',color='red',s=500)
     #%% plot cleanup
         ax.autoscale(True,tight=True) #fills existing axes
         ax.grid(False) #in case Seaborn is used
