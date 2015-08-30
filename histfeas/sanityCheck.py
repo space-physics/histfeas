@@ -6,6 +6,7 @@ GPL v3+
 REQUIRES *** PANDAS 0.16 *** or newer for read_excel to work properly!
 """
 from __future__ import division,absolute_import
+import logging
 from pandas import read_excel
 from warnings import warn
 from shutil import copy2
@@ -31,7 +32,7 @@ def getParams(XLSfn,overrides,makeplot,progms,verbose):
                 raise ValueError('for now, all Arcs must have same number of times (columns)')
             ntimeslice=ap[s].shape[1]-1
 
-    print('# of observer time steps in spreadsheet: {}'.format(ntimeslice))
+    logging.info('# of observer time steps in spreadsheet: {}'.format(ntimeslice))
 #%% ***** must be outside camclass ********
     nCutPix = cp.loc['nCutPix'].values
     if not (nCutPix == nCutPix[0]).all():
@@ -43,7 +44,7 @@ def getParams(XLSfn,overrides,makeplot,progms,verbose):
 #%% setup cameras
     cam,cp = setupCam(sim,cp,Fwd['z'][-1],verbose)
 
-    print('fwd model voxels:\n'
+    logging.info('fwd model voxels:\n'
           'B_perp: N={}   B_parallel: M={}'.format(Fwd['sx'],Fwd['sz']))
 #%% init variables
     return ap,sim,cam,Fwd

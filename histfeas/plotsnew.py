@@ -1,4 +1,5 @@
 from __future__ import print_function, division,absolute_import
+import logging
 from numpy import (in1d,s_,empty,empty_like,isnan,asfortranarray,linspace,outer,
                    sin,cos,pi,ones_like,array,nan,unravel_index,meshgrid,logspace,
                    log10,spacing)
@@ -97,7 +98,7 @@ def goPlot(sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
         except IndexError: #single value of xInd
             cx1d=x1d[0]
         Jxi = find_nearest(xKM,cx1d)[0]
-        print('1-D plots of Phi and P taken at index {}  x={}'.format(Jxi,x1d))
+        logging.info('1-D plots of Phi and P taken at index {}  x={}'.format(Jxi,x1d))
     else:
         Jxi = None
 #%% eigenfunction
@@ -114,7 +115,7 @@ def goPlot(sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
         plottphi0(Tm,Phi0,Jxi,fitp['EK'],zKM,vlim['p'],sim,tInd,makeplot,'tphi0',progms,verbose)
 
     if 'spectra' in makeplot:
-        print('run spectral plots from calcemissions.py')
+        logging.warning('run spectral plots from calcemissions.py')
 #%% optional show plots
     if 'realvid' in makeplot and sim.realdata:
         plotRealImg(sim,cam,rawdata,tInd,makeplot,'realdata','$I$',1830,
@@ -193,7 +194,7 @@ def goPlot(sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
               '$\hat{\phi}_{gaussian,optim}$ estimated diff. number flux',
               spfid,progms,verbose)
 
-        print('Estimated $x_{{gauss,0}},E_{{gauss,0}}$={:0.2f}, {:0.0f}'.format(gx0[:,1],gE0[:,1]))
+        logging.info('Estimated $x_{{gauss,0}},E_{{gauss,0}}$={:0.2f}, {:0.0f}'.format(gx0[:,1],gE0[:,1]))
 
         plotVER(sim,vfit['gaussian'],xKM,xp,zKM,zp,vlim['p'],tInd,makeplot,'vgaussian',
               '$\hat{P}_{gaussian,optim}$ volume emission rate',
@@ -239,7 +240,7 @@ def goPlot(sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
                 cax.grid(True)
                 cax.yaxis.set_major_locator(MultipleLocator(dymaj))
                 cax.yaxis.set_minor_locator(MultipleLocator(dymin))
-                print('max diff vmaxent-vfwd=' + str((vfit['maxent'][:,Jxi]-ver[:,Jxi]).max()))
+                logging.info('max diff vmaxent-vfwd=' + str((vfit['maxent'][:,Jxi]-ver[:,Jxi]).max()))
             except Exception as e:
                 warn('could not plot vfwd vmaxent comparison.  {}'.format(e))
 #%% diff number flux from ART
@@ -408,7 +409,6 @@ def ploteig1d(Ek,zKM,Tm,vlim,sim,tInd,makeplot,prefix,progms,verbose):
     firstbeamind=0
 
     beamsel = s_[firstbeamind:-firstbeamind-1]
-    #print(len(EK))
     fg = figure()
     ax = fg.gca()
 
@@ -498,7 +498,8 @@ def plotPicard(A,b,cvar=None,verbose=0):
     from picard import picard
     from scipy.sparse import issparse
     from numpy.linalg import svd
-    if verbose>0: print('computing SVD for Picard plot: {}  ...'.format(cvar))
+    if verbose>0:
+        logging.info('computing SVD for Picard plot: {}  ...'.format(cvar))
     if issparse(A):
         [U,s,V] = svd(A.todense(order='F'),full_matrices=False,compute_uv=1) #V is not used!
     else:
@@ -578,7 +579,6 @@ def plotJ(sim,Jflux,x,xp,Ek,EKpcolor,vlim,xlim,tInd,makeplot,prefix,titletxt,fig
             dfg = Figure(data=dpy,layout=dlay)
 
             py.plot(dfg, filename='{}_{}_{}'.format(progms,prefix,tInd),auto_open=False)
-            #print(plot_url)
         else:
             figure(figh).clf()
             fg = figure(figh)
