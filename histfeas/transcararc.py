@@ -11,13 +11,6 @@ from histutils.findnearest import find_nearest
 from .arcexcite import getTranscar
 
 
-#def getTranscarMp(sim,makeplot,dbglvl):
-# #%% get VER/flux
-#    Peigen, EKpcolor = getTranscar(sim, dbglvl)[:2]
-#
-#    #return Mp,zTranscar,Ek,EKpcolor
-#    return asfortranarray(Peigen.values), Peigen.index.values, Peigen.columns.values, EKpcolor
-
 def getColumnVER(zgrid,zTranscar,Peig,Phi0):
     assert Phi0.shape[0] == Peig.shape[1]
     assert zTranscar.shape[0] == Peig.shape[0]

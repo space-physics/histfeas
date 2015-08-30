@@ -2,6 +2,9 @@
 """
 Registration case for HiST program
 Michael Hirsch
+
+To generate registration.h5 (only when making a new type of sim or real) type
+python
 """
 from __future__ import division,absolute_import
 from numpy import isclose
@@ -48,8 +51,10 @@ def writeout(regh5):
         f['/phifwd/x0'] = 1.
 
 if __name__ == '__main__':
+#%% simulation only
     regh5='test/registration.h5'
     regXLS='test/registration.xlsx'
 
     Phi0,Phifit=hist_registration(regh5,regXLS)
     readCheck(Phi0,Phifit)
+#%% real data
