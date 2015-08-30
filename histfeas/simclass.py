@@ -45,22 +45,20 @@ class Sim:
 
 #%% manual override flux file
         try:
-            print('* overriding J0 flux with file: ' + overrides['Jfwd'])
             self.Jfwdh5 = overrides['Jfwd']
+            print('* overriding J0 flux with file: ' + overrides['Jfwd'])
         except:
             self.Jfwdh5 = None
 #%% manual override filter
         try:
-            print('* overriding filter choice with:',overrides['filter'])
-            #sp.loc['OpticalFilter','Transcar'] = overrides['filter']
             self.opticalfilter = overrides['filter'].lower()
+            print('* overriding filter choice with:',overrides['filter'])
         except:
             self.opticalfilter = sp.at['OpticalFilter','Transcar'].lower()
 #%% manual override minimum beam energy
         try:
-            print('* minimum beam energy set to:',overrides['minev'])
-            #sp.loc['minBeameV','Transcar']  = overrides['minev']
-            self.minbeamev = overrides['minev']
+            self.minbeamev = float(overrides['minev'])
+            print('* minimum beam energy set to: {}'.format(overrides['minev']))
         except:
             mbe = sp.at['minBeameV','Transcar']
             if isfinite(mbe):
@@ -68,12 +66,11 @@ class Sim:
             else:
                 self.minbeamev = 0.
 #%% fit method
-        try:
-            print('* setting fit method to', overrides['fitm'])
-            #sp.loc['OptimFluxMethod','Recon'] = overrides['fitm']
+        if overrides['fitm']:
             self.optimfitmeth = overrides['fitm']
-        except:
-            self.optimfitmeth = sp.at['OptimFluxMethod','Recon']
+            print('* setting fit method to {}'.format(overrides['fitm']))
+        else:
+            self.optimfitmeth = str(sp.at['OptimFluxMethod','Recon']) #must have str() for FITver .lower()
 
         self.optimmaxiter = sp.at['OptimMaxiter','Recon']
 #%% force compute ell
