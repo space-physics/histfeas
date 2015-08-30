@@ -12,6 +12,10 @@ hist-feasibility
 ================
 Feasibility study for auroral tomography
 
+:Author: Michael Hirsch
+:Version: 0.1
+:Date: June 2015
+
 This program should be runnable on any Python 3.4 or 2.7 platform.
 
 Primarily tested on Linux, but should work on Mac or Cygwin (windows) as well.
@@ -54,18 +58,18 @@ Examples
 
 simulate flaming aurora with two cameras::
 
- python main_hist.py in/2cam_flame.xlsx out/test_flame2/ -m fwd optim png show h5
+ python RunHistfeas.py in/2cam_flame.xlsx out/test_flame2/ -m fwd optim png show h5
 
 you can then look to the `Output Processing`_ section for how to load the HDF5 files
 you just produced in ``out/test_flame2``
 
 reading real data and displaying a live video::
 
- python main_hist.py in/apr14.xlsx out/apr14 -m realvid -a 0.1
+ python RunHistfeas.py in/apr14.xlsx out/apr14 -m realvid -a 0.1
 
 reading real data and saving the joint image frames to disk::
 
-  python main_hist.py in/apr14.xlsx out/apr14 -m realvid rawpng -a 0.1
+  python RunHistfeas.py in/apr14.xlsx out/apr14 -m realvid rawpng -a 0.1
 
 
 
@@ -75,17 +79,17 @@ below this line examples may be out of date (may not work at the moment)
 
 draft 2015 SIMULATION commands were like::
 
- python3 main_hist.py in/jgr2013_2cam_flame.xlsx /tmp --minev 150 -m fwd optim gfit eig eig1d ell eavg png --vlim -3.8 7.1 90 350 1e5 1e8 --jlim 0 7e4 --blim 0 2.5e9 -f 2 5 1 --ell
+ python RunHistfeas.py in/jgr2013_2cam_flame.xlsx /tmp --minev 150 -m fwd optim gfit eig eig1d ell eavg png --vlim -3.8 7.1 90 350 1e5 1e8 --jlim 0 7e4 --blim 0 2.5e9 -f 2 5 1 --ell
 
 dump raw frames with time superimposed to disk without axes (for draft, -f 30 70 10)::
 
- python3 main_hist.py in/jgr2013_realdata.xlsx /tmp -m singleraw rawpng -f 30 70 10
+ python RunHistfeas.py in/jgr2013_realdata.xlsx /tmp -m singleraw rawpng -f 30 70 10
 
 plot eigenprofiles from 2013 JGR and current transcar sim::
 
- python3 main_hist.py in/jgr2013_2cam.xlsx /tmp -m eig eig1d -p  -f 0 1 1
+ python RunHistfeas.py in/jgr2013_2cam.xlsx /tmp -m eig eig1d -p  -f 0 1 1
 
- python3 main_hist.py in/2cam_flame.xlsx /tmp -m eig eig1d -p --vlim 0 0 90 1000 1e-1 5e3 -f 0 1 1
+ python RunHistfeas.py in/2cam_flame.xlsx /tmp -m eig eig1d -p --vlim 0 0 90 1000 1e-1 5e3 -f 0 1 1
 
 Output selection (via -m command)
 ---------------------------------
@@ -137,12 +141,13 @@ plot limit selection
 You may want to select fixed limits for your plots instead of the default autoscaling, particularly when
 comparing a time series of plots.
 
-``--vlim xmin xmax zmin zmax pmin pmax pmin1d pmax1d``      limits for VER plots and eigenprofile plots (including 1-D)
-
-``--jlim min max min1d max1d``                x-axis limits for diff num flux plots (first two for 2-D, last two for 1-D)
-
-``--blim min max``                            instensity (y-axis) limits for brightness plots
-
+==============  ===========
+plot selection  description
+==============  ===========
+--vlim xmin xmax zmin zmax pmin pmax pmin1d pmax1d      limits for VER plots and eigenprofile plots (including 1-D)
+--jlim min max min1d max1d                x-axis limits for diff num flux plots (first two for 2-D, last two for 1-D)
+--blim min max                            instensity (y-axis) limits for brightness plots
+==============  ===========
 
 Plot explanation
 -----------------
