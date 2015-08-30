@@ -3,6 +3,7 @@ Michael Hirsch
 GPLv3+
 """
 from __future__ import division,absolute_import
+import logging
 from numpy import absolute,asfortranarray,diff,ones,inf,empty_like
 from scipy.optimize import minimize
 from scipy.interpolate import interp1d
@@ -94,13 +95,13 @@ def FitVERopt(L,bn,Phi0,MpDict,sim,cam,Fwd,tInd,makeplot,verbose):
                         options=optimopt,
                         )
         #
-        print('{:0.1f} seconds to fit.'.format(time()-tic))
+        logging.info('{:0.1f} seconds to fit.'.format(time()-tic))
 
-        print('Minimizer says: {}'.format(Phifit.message))
+        logging.info('Minimizer says: {}'.format(Phifit.message))
 
         Phifit.x = Phifit.x.reshape(nEnergy,sx,order='F')
 
-        print('residual={:.1e} after {} func evaluations.'.format(Phifit.fun,
+        logging.info('residual={:.1e} after {} func evaluations.'.format(Phifit.fun,
                                                                   Phifit.nfev))
 
         # we do this here so that we don't have to carry so many variables around
@@ -120,6 +121,8 @@ def FitVERopt(L,bn,Phi0,MpDict,sim,cam,Fwd,tInd,makeplot,verbose):
 #%% gaussian fit
         #print('max |diff(phi)| = ' + str(np.abs(np.diff(fitp.x, n=1, axis=0)).max()))
         gx0,gE0 = getx0E0(None,Phifit['x'],Phifit['EK'],Fwd['x'],tInd,None,[None],verbose)
+        print(gx0)
+        print(gE0)
         print('Estimated $B_{{\perp,0}},E_0$={:0.2f}, {:0.0f}'.format(gx0[1],gE0[1]))
         Phifit['gx0'] = gx0[1]
         Phifit['gE0'] = gE0[1]

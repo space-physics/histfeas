@@ -1,9 +1,9 @@
 from __future__ import print_function, division,absolute_import
+import logging
 from numpy import asarray,where,arange,isfinite,ceil,hypot,atleast_1d
 import numpy as np # needed for all
 from os.path import join,expanduser
 from dateutil.parser import parse
-from warnings import warn
 #
 from transcarread.readionoinit import getaltgrid
 
@@ -15,7 +15,7 @@ class Sim:
         try:
             usecamreq = asarray(overrides['cam'])
             if usecamreq[0]: #override spreadsheet
-                warn(' Overriding XLS parameters, using cameras: {}'.format(usecamreq))
+                logging.info(' Overriding XLS parameters, using cameras: {}'.format(usecamreq))
                 for ci,civ in enumerate(cp.loc['useCam']): # this might be a silly indexing method, but works
                     if (ci==usecamreq).any():
                         cp.at['useCam',ci] = 1 #do not use boolean, it screws up other rows
@@ -46,19 +46,19 @@ class Sim:
 #%% manual override flux file
         try:
             self.Jfwdh5 = overrides['Jfwd']
-            print('* overriding J0 flux with file: ' + overrides['Jfwd'])
+            logging.info('* overriding J0 flux with file: ' + overrides['Jfwd'])
         except:
             self.Jfwdh5 = None
 #%% manual override filter
         try:
             self.opticalfilter = overrides['filter'].lower()
-            print('* overriding filter choice with:',overrides['filter'])
+            logging.info('* overriding filter choice with:',overrides['filter'])
         except:
             self.opticalfilter = sp.at['OpticalFilter','Transcar'].lower()
 #%% manual override minimum beam energy
         try:
             self.minbeamev = float(overrides['minev'])
-            print('* minimum beam energy set to: {}'.format(overrides['minev']))
+            logging.info('* minimum beam energy set to: {}'.format(overrides['minev']))
         except:
             mbe = sp.at['minBeameV','Transcar']
             if isfinite(mbe):
@@ -66,9 +66,9 @@ class Sim:
             else:
                 self.minbeamev = 0.
 #%% fit method
-        if overrides['fitm']:
+        if overrides and overrides['fitm']: #need first check in case it's None
             self.optimfitmeth = overrides['fitm']
-            print('* setting fit method to {}'.format(overrides['fitm']))
+            logging.info('* setting fit method to {}'.format(overrides['fitm']))
         else:
             self.optimfitmeth = str(sp.at['OptimFluxMethod','Recon']) #must have str() for FITver .lower()
 
@@ -144,9 +144,9 @@ class Sim:
 
 
         if self.raymap == 'astrometry':
-            print('Using ASTROMETRY-based per-pixel 1D cut mapping to 2D model space')
+            logging.info('Using ASTROMETRY-based per-pixel 1D cut mapping to 2D model space')
         elif self.raymap == 'arbitrary':
-            print('Using arbitrary linear per-pixel 1D cut mapping to 2D model space')
+            logging.info('Using arbitrary linear per-pixel 1D cut mapping to 2D model space')
         else:
             raise ValueError('Unknown Ray Angle Mapping method: ' + str(self.raymap))
 
@@ -194,7 +194,7 @@ class Sim:
         Fwd['maxNell'] = ( 2*ceil( hypot( Fwd['sx'], Fwd['sz'] ) ) - 1 ).astype(int)
 
         if Fwd['sx'] * Fwd['sz'] > 10e6:
-            print('** sanityCheck: Fwd Grid size seems excessive at more than 10 million cells')
+            logging.warning('Fwd Grid size seems excessive at more than 10 million cells')
         return Fwd
 
     def maketind(self,timeInds):
