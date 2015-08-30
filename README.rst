@@ -16,6 +16,8 @@ Feasibility study for auroral tomography
 :Version: 0.1
 :Date: June 2015
 
+.. contents::
+
 This program should be runnable on any Python 3.4 or 2.7 platform.
 
 Primarily tested on Linux, but should work on Mac or Cygwin (windows) as well.
@@ -145,8 +147,8 @@ comparing a time series of plots.
 plot selection  description
 ====================================================  ===========
 --vlim xmin xmax zmin zmax pmin pmax pmin1d pmax1d      limits for VER plots and eigenprofile plots (including 1-D)
---jlim min max min1d max1d                x-axis limits for diff num flux plots (first two for 2-D, last two for 1-D)
---blim min max                            instensity (y-axis) limits for brightness plots
+--jlim min max min1d max1d                              x-axis limits for diff num flux plots (first two for 2-D, last two for 1-D)
+--blim min max                                          instensity (y-axis) limits for brightness plots
 ====================================================  ===========
 
 Plot explanation
