@@ -2,7 +2,7 @@
 Michael Hirsch
 GPLv3+
 """
-from __future__ import print_function, division,absolute_import
+from __future__ import division,absolute_import
 from numpy import absolute,asfortranarray,diff,ones,inf,empty_like
 from scipy.optimize import minimize
 from scipy.interpolate import interp1d
@@ -55,28 +55,28 @@ def FitVERopt(L,bn,Phi0,MpDict,sim,cam,Fwd,tInd,makeplot,verbose):
     '''
 
     if 'gaussian' in makeplot or 'optim' in makeplot:
-        optimmeth= sim.optimfitmeth
+        optimmeth= sim.optimfitmeth.lower()
         maxiter = sim.optimmaxiter #it's already int
         sx = Fwd['sx']
 
         cons = None
         optimbound = sim.minflux*ones((nEnergy*sx,2))
         optimbound[:,1] = inf  #None seems to give error
-        if optimmeth.lower()=='nelder-mead':
+        if optimmeth=='nelder-mead':
             optimopt = {'maxiter':maxiter,'disp':minverbose} #100
-        elif optimmeth.lower()=='bfgs':
+        elif optimmeth=='bfgs':
             optimopt = {'maxiter':maxiter,'disp':minverbose,'norm':2} #20
-        elif optimmeth.lower()=='tnc':
+        elif optimmeth=='tnc':
             optimopt = {'maxiter':maxiter,'disp':minverbose} #20
-        elif optimmeth.lower()=='l-bfgs-b':
+        elif optimmeth=='l-bfgs-b':
             # defaults: maxfun=5*nEnergy*sx, maxiter=10
             optimopt = {'maxfun':maxiter*nEnergy*sx,'maxiter':maxiter,
                         'disp':minverbose} #100 maxiter works well
-        elif optimmeth.lower()=='slsqp':
+        elif optimmeth=='slsqp':
             optimopt = {'maxiter':maxiter,'disp':minverbose} #2
             cons = {'type': 'ineq',
                     'fun': difffun}
-        elif optimmeth.lower()=='cobyla':
+        elif optimmeth=='cobyla':
             optimopt = {'maxiter':maxiter,'disp':minverbose,'rhobeg':1e1,'tol':1} #10
         else:
             raise TypeError('unknown minimization method: {}'.format(optimmeth))
@@ -88,7 +88,7 @@ def FitVERopt(L,bn,Phi0,MpDict,sim,cam,Fwd,tInd,makeplot,verbose):
                         args=(L.tocsr(),Tm,
                               bnu, #scaled version of bn (do once instead of in loop)
                               nEnergy,sx),
-                        method=optimmeth,
+                        method=sim.optimfitmeth,
                         bounds=optimbound, #non-negativity
                         constraints=cons,
                         options=optimopt,
