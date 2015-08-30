@@ -4,16 +4,13 @@ generates modeled aurora volume emission rate
 Michael Hirsch
 GPLv3+
 """
-from __future__ import print_function, division
+from __future__ import print_function, division,absolute_import
 from numpy import isnan,zeros
 from warnings import warn
 #
-try:
-    from .arcclass import getver
-    from .transcararc import getColumnVER
-except:
-    from arcclass import getver
-    from transcararc import getColumnVER
+from .arcclass import getver
+from .transcararc import getColumnVER
+
 
 def getSimVER(Phi0,Mp,Fwd,sim,ap,tInd,verbose):
     if not sim.realdata:
@@ -27,7 +24,7 @@ def getSimVER(Phi0,Mp,Fwd,sim,ap,tInd,verbose):
                 must be updated accordingly from original April 2014 try code
                 '''
                 #WARNING: The line below IS ****NOT**** += !
-                return getColumnVER(sim.useztranscar, Mp['ztc'], Mp['Mp'], Phi0) 
+                return getColumnVER(sim.useztranscar, Mp['ztc'], Mp['Mp'], Phi0)
             else:
                 warn('these cases not yet updated for upsampled time!')
                 Pfwd += getver(Fwd['x'], Fwd['z'], Mp, Phi0,

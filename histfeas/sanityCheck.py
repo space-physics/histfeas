@@ -5,17 +5,14 @@ GPL v3+
 
 REQUIRES *** PANDAS 0.16 *** or newer for read_excel to work properly!
 """
-from __future__ import absolute_import
+from __future__ import division,absolute_import
 from pandas import read_excel
 from warnings import warn
 from shutil import copy2
 #
-try: #package
-    from .camclass import Cam
-    from .simclass import Sim
-except: #local
-    from camclass import Cam
-    from simclass import Sim
+from .camclass import Cam
+from .simclass import Sim
+
 
 def getParams(XLSfn,overrides,makeplot,progms,verbose):
     if progms is not None:
