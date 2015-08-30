@@ -5,7 +5,7 @@ functions for loading HST real camera raw data
 INPUT FILE FORMAT: intended for use with "DMCdata" raw format, 4-byte
  "footer" containing frame index (must use typecast)
 """
-from __future__ import print_function,division,absolute_import
+from __future__ import division,absolute_import
 from time import time
 from numpy import arange, empty, asarray, uint16, rot90, fliplr, flipud
 from dateutil import parser
@@ -23,7 +23,7 @@ def getSimulData(sim,cam,makeplot,progms,verbose=0):
     cam,rawdata = HSTframeHandler(sim,cam,makeplot,progms,verbose)
     return cam,rawdata,sim
 
-def HSTsync(sim,cam,dbglvl):
+def HSTsync(sim,cam,verbose):
 
     try:
         reqStart = parser.parse(sim.startutc)
@@ -55,19 +55,18 @@ def HSTsync(sim,cam,dbglvl):
 #%% adjust start/stop to user request
     alltReqAdj = asarray([t for t in alltReq if t>reqStart and t<reqStop ]) #keep greater than start time
     nMutSim = alltReqAdj.size
-    if dbglvl > 0:
-        print(('Per user specification, analyzing ' +str(nMutSim) + ' frames from ' +
-          str(alltReqAdj[0]) + ' to ' + str(alltReqAdj[-1]) ))
+    if verbose > 0:
+        print('Per user specification, analyzing {} frames from {} to {}'.format(nMutSim,alltReqAdj[0],alltReqAdj[-1]) )
 #%% use *nearest neighbor* interpolation to find mutual frames to display.
 #   sometimes one camera will have frames repeated, while the other camera
 #   might skip some frames altogether
     alltReqUnix = asarray([calendar.timegm(t.utctimetuple()) + t.microsecond / 1e6 for t in alltReqAdj ])
 
-
     for c in cam:
-        ft = interp1d(cam[c].tCamUnix, arange(cam[c].nFrame,dtype=int), kind='nearest')
+        ft = interp1d(cam[c].tCamUnix,
+                      arange(cam[c].nFrame,dtype=int),
+                      kind='nearest')
         cam[c].pbInd = ft(alltReqUnix).astype(int) #these are the indices for each time (the slower camera will use some frames twice in a row)
-
 
     sim.alltReq = alltReqAdj
     sim.nTimeSlice = alltReqAdj.size
@@ -75,7 +74,6 @@ def HSTsync(sim,cam,dbglvl):
     return cam,sim
 
 def HSTframeHandler(sim,cam,makeplot,progms,verbose=0):
-
 #%% load 1D cut coord
     cam = get1Dcut(cam,makeplot,progms,verbose)
 
@@ -131,13 +129,3 @@ def HSTframeHandler(sim,cam,makeplot,progms,verbose=0):
 
     if verbose >0: print('DONE  in {:.2f} seconds.'.format(time() - tic))
     return cam,rawdata
-
-#def loadmatcut(matcutfn,useCamInd,cam):
-#    #THIS FUNCTION NO LONGER USED
-#    matData = scipy.io.loadmat(matcutfn) #one file for all cameras
-#    for i,ci in zip(useCamInd,useCamInd.astype(str)):
-#          #identify cut pixels for this camera
-#        cam[ci].cutRow = (matData['Pix' + str(i+1)][0][0][1][:,1] - 1).astype(int) # -1 makes zero-indexed
-#        cam[ci].cutCol = (matData['Pix' + str(i+1)][0][0][1][:,0] - 1).astype(int) # -1 makes zero-indexed
-#        cam[ci].angle_deg =  matData['Pix' + str(i+1)][0][0][1][:,2]
-#    return cam

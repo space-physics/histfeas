@@ -5,12 +5,8 @@ import h5py
 from warnings import warn
 from time import time
 #
-try:
-    from .nans import nans
-    from .EllLineLength import EllLineLength
-except:
-    from nans import nans
-    from EllLineLength import EllLineLength
+from .nans import nans
+from .EllLineLength import EllLineLength
     
 def getObs(sim,cam,L,tDataInd,ver,makePlots,dbglvl):
     """
