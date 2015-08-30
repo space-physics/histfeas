@@ -2,7 +2,7 @@
 
 from setuptools import setup
 
-with open('README.rst') as f:
+with open('README.rst','r') as f:
 	long_description = f.read()
 
 setup(name='histfeas',

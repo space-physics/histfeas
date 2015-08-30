@@ -1,4 +1,4 @@
-from __future__ import print_function, division,absolute_import
+from __future__ import division,absolute_import
 from numpy import (linspace, fliplr, flipud, rot90, arange,
                    polyfit,polyval,rint,empty, isfinite, isclose,
                    absolute, hypot, logical_or, unravel_index, delete, where,asarray)

@@ -6,7 +6,7 @@ from numpy import empty,ones,ravel_multi_index,hypot,zeros,in1d,array
 from scipy.sparse import dok_matrix,issparse
 from shutil import copy2
 # local
-from CVutils.lineClipping import cohensutherland
+from cvutils.lineClipping import cohensutherland
 
 '''
  Michael Hirsch
