@@ -119,10 +119,10 @@ def goPlot(sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
         logging.warning('run spectral plots from calcemissions.py')
 #%% optional show plots
     if 'realvid' in makeplot and sim.realdata:
-        plotRealImg(sim,cam,rawdata,tInd,makeplot,'realdata','$I$',1830,progms,verbose)
+        plotRealImg(sim,cam,rawdata,tInd,makeplot,1830,progms)
 
     if 'singleraw' in makeplot and sim.realdata:
-        plotPlainImg(sim,cam,rawdata,tInd,makeplot,'realdata','$I$',1831,progms,verbose)
+        plotPlainImg(sim,cam,rawdata,tInd,makeplot,1831,progms)
 
 #%% scatter plot of LOS
     if 'kml' in makeplot or 'kmlrays' in makeplot:
