@@ -152,8 +152,8 @@ class Sim:
 
         self.cal1dpath = sp.at['cal1Ddir','Cams']
 
-        self.startutc = sp.at['reqStartUT','Obs']
-        self.stoputc = sp.at['reqStopUT','Obs']
+        self.startutc = parse(sp.at['reqStartUT','Obs'])
+        self.stoputc = parse(sp.at['reqStopUT','Obs'])
         # make the simulation time step match that of the fastest camera
         self.kineticSec = 1. / (cp.ix['frameRateHz',self.useCamBool]).max()
         self.timestepsperexp = sp.at['timestepsPerExposure','Sim']

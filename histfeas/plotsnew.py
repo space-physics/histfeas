@@ -32,6 +32,7 @@ except Exception:
 from gaussfitter import gaussfit,twodgaussian
 #
 from histutils.findnearest import find_nearest
+from histutils.plotsimul import plotRealImg,plotPlainImg
 from gridaurora.opticalmod import plotOptMod
 
 #%% plot globals
@@ -118,12 +119,10 @@ def goPlot(sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
         logging.warning('run spectral plots from calcemissions.py')
 #%% optional show plots
     if 'realvid' in makeplot and sim.realdata:
-        plotRealImg(sim,cam,rawdata,tInd,makeplot,'realdata','$I$',1830,
-                               spfid,progms,verbose)
+        plotRealImg(sim,cam,rawdata,tInd,makeplot,'realdata','$I$',1830,progms,verbose)
 
     if 'singleraw' in makeplot and sim.realdata:
-        plotPlainImg(sim,cam,rawdata,tInd,makeplot,'realdata','$I$',1831,
-                               spfid,progms,verbose)
+        plotPlainImg(sim,cam,rawdata,tInd,makeplot,'realdata','$I$',1831,progms,verbose)
 
 #%% scatter plot of LOS
     if 'kml' in makeplot or 'kmlrays' in makeplot:
@@ -432,67 +431,6 @@ def ploteig1d(Ek,zKM,Tm,vlim,sim,tInd,makeplot,prefix,progms,verbose):
     writeplots(fg,prefix,tInd,makeplot,progms,verbose=verbose)
   except Exception as e:
     warn('tind {}   {}'.format(tInd,e))
-
-def plotPlainImg(sim,cam,rawdata,t,makeplot,prefix,titletxt,figh,spfid,progms,verbose):
-    """http://stackoverflow.com/questions/22408237/named-colors-in-matplotlib"""
-    for C in cam:
-        figure(figh).clf()
-        fg = figure(figh)
-        ax = fg.gca()
-        ax.set_axis_off()
-        ax.imshow(rawdata[C.name][t,:,:],
-                  origin='lower',
-                  vmin=C.plotminmax[0], vmax=C.plotminmax[1],
-                  cmap='gray')
-        ax.text(0.05, 0.075, C.tKeo[t].strftime('%Y-%m-%dT%H:%M:%S.%f')[:23],
-                     ha='left',
-                     va='top',
-                     transform=ax.transAxes,
-                     color='limegreen',
-                     #weight='bold',
-                     size=24
-                    )
-
-        draw() #Must have this here or plot doesn't update in animation multiplot mode!
-        if in1d(('rawpng','save'),makeplot).any():
-            writeplots(fg,'cam{}rawFrame'.format(C.name),t,'png',progms,verbose=verbose)
-
-#%%
-def plotRealImg(sim,cam,rawdata,t,makeplot,prefix,titletxt,figh,spfid,progms,verbose):
-    showcb = False
-    #alltReq = sim.alltReq
-    figure(figh).clf()
-
-    fg,axm = subplots(nrows=1,ncols=2,sharey='row',num=figh, dpi=plotdpi, figsize=(15,5))
-    for C,ax in zip(cam,axm):
-        #fixme this would need help if one of the cameras isn't plotted (this will probably never happen)
-
-        #plotting raw uint16 data
-        hi = ax.imshow(rawdata[C.name][t,:,:],
-                         origin='lower',
-                         vmin=C.plotminmax[0], vmax=C.plotminmax[1],
-                         cmap='gray')
-
-        if showcb: #showing the colorbar makes the plotting go 5-10x more slowly
-            hc = fg.colorbar(hi, ax=ax) #not cax!
-            hc.set_label(str(rawdata[C.name].dtype) + ' data numbers')
-        ax.set_title('Cam{}: {}'.format(C.name,C.tKeo[t]))
-        #ax.set_xlabel('x-pixel')
-        if C.name==0:
-            ax.set_ylabel('y-pixel')
-    #%% plotting 1D cut line
-        ax.plot(C.cutcol,C.cutrow,
-                 marker='.',linestyle='none',color='blue',markersize=1)
-        #plot magnetic zenith
-        ax.scatter(x=C.cutcol[C.angleMagzenind],
-                   y=C.cutrow[C.angleMagzenind],
-                   marker='o',facecolors='none',color='red',s=500)
-    #%% plot cleanup
-        ax.autoscale(True,tight=True) #fills existing axes
-        ax.grid(False) #in case Seaborn is used
-
-    draw() #Must have this here or plot doesn't update in animation multiplot mode!
-    writeplots(fg,'rawFrame',t,makeplot,progms,overridefmt='png',verbose=verbose)
 
 def plotPicard(A,b,cvar=None,verbose=0):
     from picard import picard
