@@ -51,18 +51,18 @@ def getParams(XLSfn,overrides,makeplot,progms,verbose):
 ###############################################
 
 def setupCam(sim,cp,zmax,dbglvl):
-    cam = {}
+    cam = []
 
     if sim.camxreq[0] is not None:
         warn('overriding camera x-loc with {}'.format(sim.camxreq))
         for i,(c,cx) in enumerate(zip(cp,sim.camxreq)):
             if sim.useCamBool[i]:
                 cp.iat['Xkm',c] = cx
-                cam[c] = Cam(sim,cp[c], c, zmax,dbglvl)
+                cam.append(Cam(sim,cp[c], c, zmax,dbglvl))
     else:
         for i,c in enumerate(cp):
             if sim.useCamBool[i]:
-                cam[c] = Cam(sim,cp[c], c, zmax,dbglvl)
+                cam.append(Cam(sim,cp[c], c, zmax,dbglvl))
 
     if len(cam)==0:
         raise ValueError('0 cams are configured, Nothing to do.')
