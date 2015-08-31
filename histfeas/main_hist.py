@@ -26,7 +26,8 @@ from matplotlib.pyplot import close,draw,pause,show
 #
 from gridaurora.eFluxGen import maxwellian
 from histutils.imageconv import png2multipage
-from .simulFrame import getSimulData
+from histutils.simulFrame import getSimulData
+from histutils.get1Dcut import get1Dcut #we need cam.angle_deg for plotting
 from .sanityCheck import getParams
 from .AuroraFwdModel import getSimVER
 from .transcararc import getMp,getPhi0,getpx #calls matplotlib
@@ -57,7 +58,6 @@ def doSim(ParamFN,makeplot,timeInds,overrides,progms,x1d,vlim,animtime, cmd,verb
     else: #simulation
         rawdata = None
         if sim.raymap == 'astrometry': #and any('b' in m[:2] for m in makeplot):
-            from get1Dcut import get1Dcut #we need cam.angle_deg for plotting
             cam = get1Dcut(cam,makeplot,progms,verbose)
     timeInds = sim.maketind(timeInds)
 #%% Step 1) get projection matrix
