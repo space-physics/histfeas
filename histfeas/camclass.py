@@ -21,7 +21,7 @@ from histutils.rawDMCreader import getDMCparam
 class Cam: #use this like an advanced version of Matlab struct
     def __init__(self,sim,cp,name,zmax,verbose):
         self.verbose = verbose
-        self.name = name
+        self.name = int(name)
 #%%
         self.lat = cp['latWGS84']
         self.lon = cp['lonWGS84']

@@ -6,7 +6,9 @@ INPUT FILE FORMAT: intended for use with "DMCdata" raw format, 4-byte
  "footer" containing frame index (must use typecast)
 """
 from __future__ import division,absolute_import
+from datetime import datetime
 from time import time
+from pytz import UTC
 from numpy import arange, empty, asarray, uint16, rot90, fliplr, flipud
 from dateutil import parser
 from dateutil.relativedelta import relativedelta
@@ -16,7 +18,9 @@ from scipy.interpolate import interp1d
 import histutils.rawDMCreader as rdr
 from .get1Dcut import get1Dcut
 
-def getSimulData(sim,cam,makeplot,progms,verbose=0):
+epoch = datetime(1970,1,1,tzinfo=UTC)
+
+def getSimulData(sim,cam,makeplot,progms=None,verbose=0):
 #%% synchronize
     cam,sim = HSTsync(sim,cam,verbose)
 #%% load 1-D cut slices into keogram array
@@ -24,14 +28,18 @@ def getSimulData(sim,cam,makeplot,progms,verbose=0):
     return cam,rawdata,sim
 
 def HSTsync(sim,cam,verbose):
-
+    """ this function now uses UT1 time -- seconds since 1970 Jan 1
+    """
     try:
-        reqStart = parser.parse(sim.startutc)
-        reqStop = parser.parse(sim.stoputc)
+        if isinstance(sim.startutc,datetime):
+            reqStart = (parser.parse(sim.startutc) - epoch).total_seconds()
+            reqStop  = (parser.parse(sim.stoputc)  - epoch).total_seconds()
+        else: #ut1_unix
+            reqStart = sim.startutc
+            reqStop  = sim.stoputc
     except AttributeError: #no specified time
-        reqStart = parser.parse("1970-01-01T00:00:00Z") #arbitrary time in the past
-        reqStop =  parser.parse("2100-01-01T00:00:00Z")#arbitrary time in the future
-
+        reqStart = 0. #arbitrary time in the past
+        reqStop =  3e9#arbitrary time in the future
 #%% get more parameters per used camera
     for c in cam:
         cam[c].ingestcamparam(sim)

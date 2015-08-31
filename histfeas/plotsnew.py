@@ -142,11 +142,11 @@ def goPlot(sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
         zFOVpixelEnds = empty_like(xFOVpixelEnds)
         xCam = empty(sim.nCamUsed,dtype=float)
         zCam = empty_like(xCam)
-        for i,c in enumerate(cam):
-            xFOVpixelEnds[:,i] = cam[c].xFOVpixelEnds
-            zFOVpixelEnds[:,i] = cam[c].zFOVpixelEnds
-            xCam[i] = cam[c].x_km
-            zCam[i] = cam[c].z_km
+        for i,C in enumerate(cam):
+            xFOVpixelEnds[:,i] = C.xFOVpixelEnds
+            zFOVpixelEnds[:,i] = C.zFOVpixelEnds
+            xCam[i] = C.x_km
+            zCam[i] = C.z_km
         #we kept plotEll in EllLineLength.py for plotEachRay case :(
         plotEll(sim.nCamUsed,xFOVpixelEnds,zFOVpixelEnds,xCam,zCam,nCutPix,
                 xp,zp,sz,sx, xzplot,sim.FwdLfn,plotEachRay, makeplot,vlim['p'])
@@ -325,16 +325,16 @@ def plotnoise(cam,tInd,figh,makeplot,prefix,progms,verbose):
       fg = figure(figh)
       ax = fg.add_subplot(211)
 
-      for c in cam:
-         ax.plot(cam[c].dnoise,label=cam[c].name)
+      for C in cam:
+         ax.plot(C.dnoise, label=C.name)
          ax.set_ylabel('amplitude')
          ax.set_title('Noise that was injected into raw intensity data')
          ax.grid(True)
       ax.legend(loc='best')
 
       ax2 = fg.add_subplot(212)
-      for c in cam:
-         ax2.plot(cam[c].noisy,label=cam[c].name)
+      for C in cam:
+         ax2.plot(C.noisy, label=C.name)
          ax2.set_ylabel('amplitude')
          ax2.set_xlabel('pixel number')
          ax2.set_title('Noisy data')
@@ -435,16 +435,16 @@ def ploteig1d(Ek,zKM,Tm,vlim,sim,tInd,makeplot,prefix,progms,verbose):
 
 def plotPlainImg(sim,cam,rawdata,t,makeplot,prefix,titletxt,figh,spfid,progms,verbose):
     """http://stackoverflow.com/questions/22408237/named-colors-in-matplotlib"""
-    for c in cam:
+    for C in cam:
         figure(figh).clf()
         fg = figure(figh)
         ax = fg.gca()
         ax.set_axis_off()
-        ax.imshow(rawdata[c][t,:,:],
+        ax.imshow(rawdata[C.name][t,:,:],
                   origin='lower',
-                  vmin=cam[c].plotminmax[0], vmax=cam[c].plotminmax[1],
+                  vmin=C.plotminmax[0], vmax=C.plotminmax[1],
                   cmap='gray')
-        ax.text(0.05, 0.075, cam[c].tKeo[t].strftime('%Y-%m-%dT%H:%M:%S.%f')[:23],
+        ax.text(0.05, 0.075, C.tKeo[t].strftime('%Y-%m-%dT%H:%M:%S.%f')[:23],
                      ha='left',
                      va='top',
                      transform=ax.transAxes,
@@ -453,9 +453,9 @@ def plotPlainImg(sim,cam,rawdata,t,makeplot,prefix,titletxt,figh,spfid,progms,ve
                      size=24
                     )
 
-    draw() #Must have this here or plot doesn't update in animation multiplot mode!
-    if in1d(('rawpng','save'),makeplot).any():
-        writeplots(fg,'cam{}rawFrame'.format(c),t,'png',progms,verbose=verbose)
+        draw() #Must have this here or plot doesn't update in animation multiplot mode!
+        if in1d(('rawpng','save'),makeplot).any():
+            writeplots(fg,'cam{}rawFrame'.format(C.name),t,'png',progms,verbose=verbose)
 
 #%%
 def plotRealImg(sim,cam,rawdata,t,makeplot,prefix,titletxt,figh,spfid,progms,verbose):
@@ -464,28 +464,28 @@ def plotRealImg(sim,cam,rawdata,t,makeplot,prefix,titletxt,figh,spfid,progms,ver
     figure(figh).clf()
 
     fg,axm = subplots(nrows=1,ncols=2,sharey='row',num=figh, dpi=plotdpi, figsize=(15,5))
-    for c,ax in zip(cam,axm):
+    for C,ax in zip(cam,axm):
         #fixme this would need help if one of the cameras isn't plotted (this will probably never happen)
 
         #plotting raw uint16 data
-        hi = ax.imshow(rawdata[c][t,:,:],
+        hi = ax.imshow(rawdata[C.name][t,:,:],
                          origin='lower',
-                         vmin=cam[c].plotminmax[0], vmax=cam[c].plotminmax[1],
+                         vmin=C.plotminmax[0], vmax=C.plotminmax[1],
                          cmap='gray')
 
         if showcb: #showing the colorbar makes the plotting go 5-10x more slowly
             hc = fg.colorbar(hi, ax=ax) #not cax!
-            hc.set_label(str(rawdata[c].dtype) + ' data numbers')
-        ax.set_title('Cam{}: {}'.format(c,cam[c].tKeo[t]))
+            hc.set_label(str(rawdata[C.name].dtype) + ' data numbers')
+        ax.set_title('Cam{}: {}'.format(C.name,C.tKeo[t]))
         #ax.set_xlabel('x-pixel')
-        if c==0:
+        if C.name==0:
             ax.set_ylabel('y-pixel')
     #%% plotting 1D cut line
-        ax.plot(cam[c].cutcol,cam[c].cutrow,
+        ax.plot(C.cutcol,C.cutrow,
                  marker='.',linestyle='none',color='blue',markersize=1)
         #plot magnetic zenith
-        ax.scatter(x=cam[c].cutcol[cam[c].angleMagzenind],
-                   y=cam[c].cutrow[cam[c].angleMagzenind],
+        ax.scatter(x=C.cutcol[C.angleMagzenind],
+                   y=C.cutrow[C.angleMagzenind],
                    marker='o',facecolors='none',color='red',s=500)
     #%% plot cleanup
         ax.autoscale(True,tight=True) #fills existing axes
@@ -820,10 +820,9 @@ def plotBcompare(sim,braw,bfit,cam,prefix, spfid,vlim,tInd,figh,makeplot,progms,
     ax1.yaxis.get_offset_text().set_size(afs)
     ax1.tick_params(axis='both', which='both', direction='out',labelsize=afs)
 
-    for c in cam:
-        cInd = cam[c].ind
-        ax1.plot(cam[c].angle_deg,braw[cInd],
-                 label=('$\mathbf{{B}}_{{camP{}}}$'.format(c)),)
+    for C in cam:
+        ax1.plot(C.angle_deg,braw[C.ind],
+                 label=('$\mathbf{{B}}_{{camP{}}}$'.format(C.name)),)
                  #color=cord[icm])#, marker='.')
 #%% plot fit
     # do we need twinax? Let's find out if they're within factor of 10
@@ -839,10 +838,9 @@ def plotBcompare(sim,braw,bfit,cam,prefix, spfid,vlim,tInd,figh,makeplot,progms,
         ax1.set_ylabel('$\mathbf{B}$ [photons sr$^{-1}$ s$^{-1}$]',labelpad=0,fontsize=afs)
         ax2.set_ylabel('$\mathbf{\widehat{B}}$ [photons sr$^{-1}$ s$^{-1}$]',labelpad=0,fontsize=afs)
 #%% now plot each camera
-    for c in cam:
-        cInd = cam[c].ind
-        ax2.plot(cam[c].angle_deg,bfit[cInd],
-                 label=('$\mathbf{{\widehat{{B}}}}_{{cam{}}}$'.format(c)),)
+    for C in cam:
+        ax2.plot(C.angle_deg,bfit[C.ind],
+                 label=('$\mathbf{{\widehat{{B}}}}_{{cam{}}}$'.format(C.name)),)
                  #color=cord[icm])#, marker='.')
 
     if singax:
@@ -867,10 +865,9 @@ def plotBcompare(sim,braw,bfit,cam,prefix, spfid,vlim,tInd,figh,makeplot,progms,
     if dosubtract:
         bias=[]
         ax3 =figure().gca()
-        for c in cam:
-            cInd = cam[c].ind
-            bias.append(bfit[cInd].max() - braw[cInd].max())
-            ax3.plot(cam[c].angle_deg,braw[cInd] - (bfit[cInd]))#-bias[iCam]))
+        for C in cam:
+            bias.append(bfit[C.ind].max() - braw[C.ind].max())
+            ax3.plot(C.angle_deg,braw[C.ind] - (bfit[C.ind]))#-bias[iCam]))
 
         ax3.set_title('error $\mathbf{{B}}_{{fwdf}} - B_{{est}}, bias={}'.format(bias),fontsize=12)
         #  $t_i=' + str(tInd) + '$'
@@ -881,7 +878,7 @@ def plotBcompare(sim,braw,bfit,cam,prefix, spfid,vlim,tInd,figh,makeplot,progms,
 
 
     if 'h5' in makeplot: #a separate stanza
-        dumph5(spfid,prefix,tInd,angle=[cam[c].angle_deg for c in cam],braw=braw,bfit=bfit)
+        dumph5(spfid,prefix,tInd,angle=[C.angle_deg for C in cam],braw=braw,bfit=bfit)
 
     writeplots(fg,prefix,tInd,makeplot,progms,None,verbose)
   except Exception as e:
@@ -912,12 +909,11 @@ def plotB(bpix,isrealdata,cam,vlim,tInd,figh,makeplot,labeltxt,progms,verbose):
 #        ax1.set_ylabel('$b_{raw}$ data numbers',labelpad=0,fontsize=afs)
 #        ax2.set_ylabel( fittxt + ' Data Numbers',labelpad=0,fontsize=afs)
 #%% make plot
-    for c in cam:
-        std.append('{:0.1e}'.format(cam[c].noiselam))
-        cInd = cam[c].ind
+    for C in cam:
+        std.append('{:0.1e}'.format(C.noiselam))
 
-        ax1.plot(cam[c].angle_deg,  bpix[cInd],
-                 label = labeltxt + ',' +str(c) + '}$'
+        ax1.plot(C.angle_deg,  bpix[C.ind],
+                 label = labeltxt + ',' +str(C.name) + '}$'
                  )
                  #marker='.',
                  #color=cord[c])
@@ -980,16 +976,16 @@ def planview3(cam,xKM,zKM,makeplot,figh,progms):
     decimaterayfactor = 16
     clr=['r','b','g','m']
 
-    for c in cam:
-        el =  cam[c].angle_deg[::decimaterayfactor] #yes double colon
+    for C in cam:
+        el =  C.angle_deg[::decimaterayfactor] #yes double colon
         Np = el.size
-        x0,y0,z0 = geodetic2ecef(cam[c].lat, cam[c].lon, cam[c].alt_m)
+        x0,y0,z0 = geodetic2ecef(C.lat, C.lon, C.alt_m)
         # get LLA of pixel rays at 100km altitude
         xray,yray,zray = aer2ecef(az,el,srange,
-                                  cam[c].lat, cam[c].lon, cam[c].alt_m)
+                                  C.lat, C.lon, C.alt_m)
         #camera rays
         for cri in range(Np):
-            ax.plot((x0,xray[cri]),(y0,yray[cri]),(z0,zray[cri]),color=clr[c])
+            ax.plot((x0,xray[cri]),(y0,yray[cri]),(z0,zray[cri]),color=clr[C.name])
 
     #plot sphere
     earthrad = 6371e3 #[m]
@@ -1039,25 +1035,22 @@ def planviewkml(cam,xKM,zKM,makeplot,figh,progms,verbose=0):
                        tilt=45)
 
     lla = []
-    for c in cam:
+    for C in cam:
         #az is the temporary scalar defined above FIXME
-        el = cam[c].angle_deg[::decimaterayfactor] #double colon
+        el = C.angle_deg[::decimaterayfactor] #double colon
         Np = el.size
-        lat0 = cam[c].lat
-        lon0 = cam[c].lon
-        alt0 = cam[c].alt_m #[meters]
-        lla.append((lon0,lat0))
+        lla.append((C.lon,C.lat))
         # get LLA of pixel rays at 100km altitude
-        latre,lonre,altre = aer2geodetic(az,el,srange,lat0,lon0,alt0)
+        latre,lonre,altre = aer2geodetic(az,el,srange,C.lat,C.lon,C.alt_m)
         # get ECEF of center ray at 90km (bottom of model space)
         #centazray = az #TODO
         #centelray = cam[ci].angle_deg[Np//2]
         #xrc,yrc,zrc = aer2ecef(centazray,centelray,zbottom,lat0,lon0,alt0)
 
         #camera location points
-        bpnt = kml1d.newpoint(name='HiST{}'.format(c),
-                              description='camera {} location'.format(c),
-                              coords=[(lon0,lat0)],
+        bpnt = kml1d.newpoint(name='HiST{}'.format(C.name),
+                              description='camera {} location'.format(C.name),
+                              coords=[(C.lon,C.lat)],
                               altitudemode=skml.AltitudeMode.clamptoground)
         bpnt.style.iconstyle.icon.href='http://maps.google.com/mapfiles/kml/shapes/arrow.png' # 'http://maps.google.com/mapfiles/kml/paddle/pink-blank.png'
         bpnt.style.iconstyle.scale = 2.0
@@ -1069,15 +1062,15 @@ def planviewkml(cam,xKM,zKM,makeplot,figh,progms,verbose=0):
         if 'kmlrays' in makeplot:
             for cri in range(Np):
                 linestr = kml1d.newlinestring(name='')
-                linestr.coords = [(lon0,       lat0,       alt0),
+                linestr.coords = [(C.lon,      C.lat,      C.alt_m),
                                   (lonre[cri], latre[cri], altre[cri])]
                 linestr.altitudemode = skml.AltitudeMode.relativetoground
-                linestr.style.linestyle.color = kclr[c]
+                linestr.style.linestyle.color = kclr[C.name]
 
 
         #plot
-        ax.plot(lonre,latre,'x',color=clr[c],markersize=6)
-        ax.plot(lon0,lat0,'o',color=clr[c],markersize=12,label='cam{}'.format(c))
+        ax.plot(lonre,latre,'x',color=clr[C.name],markersize=6)
+        ax.plot(C.lon,C.lat,'o',color=clr[C.name],markersize=12,label='cam{}'.format(C.name))
 
 
     ax.set_ylabel('WGS84 latitude [deg.]')
