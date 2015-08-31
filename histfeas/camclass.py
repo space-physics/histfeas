@@ -1,21 +1,21 @@
 from __future__ import division,absolute_import
+import logging
 from numpy import (linspace, fliplr, flipud, rot90, arange,
                    polyfit,polyval,rint,empty, isfinite, isclose,
                    absolute, hypot, logical_or, unravel_index, delete, where)
-from os.path import expanduser,join
+from os.path import expanduser,join, isfile
 from datetime import datetime
 from pytz import UTC
 from dateutil.parser import parse
 from scipy.signal import savgol_filter
 from six import string_types
 from numpy.random import poisson
+import h5py
 from warnings import warn
 #
 from pymap3d.azel2radec import azel2radec
 from pymap3d.haversine import angledist
 from pymap3d.coordconv3d import aer2ecef
-from histutils.getRawInd import getRawInd
-from histutils.rawDMCreader import getDMCparam
 
 epoch = datetime(1970,1,1,tzinfo=UTC)
 
@@ -35,10 +35,7 @@ class Cam: #use this like an advanced version of Matlab struct
 #        self.startTime = startTime
 #        self.stopTime = stopTime
         self.nCutPix = int(cp['nCutPix'])
-        self.xpix = cp['xPix']
-        self.ypix = cp['yPix']
-        self.xbin = cp['xBin']
-        self.ybin = cp['yBin']
+
         self.Bincl = cp['Bincl']
         self.Bdecl = cp['Bdecl']
         self.Bepoch = cp['Bepoch'] #it's OK, I want to feedthru nan if xls cell is empty!
@@ -118,46 +115,25 @@ class Cam: #use this like an advanced version of Matlab struct
 
 
     def ingestcamparam(self,sim):
+        """ expects an HDF5 .h5 file"""
 
         # data file name
         try:
-            self.fnStemCam = expanduser(join(sim.realdatapath, self.fn))
+            fullfn = expanduser(join(sim.realdatapath, self.fn))
         except AttributeError:
-            raise AttributeError('You must specify the filename to read. file: {}'.format(self.fn))
+            raise ValueError('You must specify the filename to read. file: {}'.format(self.fn))
 
-        # parameters for this camera
-        finf = getDMCparam(self.fnStemCam,(self.xpix, self.ypix),
-                                          (self.xbin, self.ybin), verbose=-1)
+        if not isfile(fullfn):
+            raise ValueError('does not exist: {}'.format(fullfn))
 
-
-        self.superx=finf['superx']
-        self.supery=finf['supery']
-        self.Nmetadata = finf['nmetadata']
-        self.BytesPerFrame= finf['bytesperframe']
-        self.PixelsPerImage = finf['pixelsperimage']
-        #FIXME is this silly? should be assigned in getDMCparam?
-        self.nHeadBytes = self.BytesPerFrame - self.PixelsPerImage * 16 // 8
-        self.BytesPerImage = self.BytesPerFrame - self.nHeadBytes
-        #get start/end raw frame indices
-        self.firstFrameNum,self.lastFrameNum = getRawInd(self.fnStemCam,
-                                                         self.BytesPerImage,
-                                                         self.nHeadBytes,
-                                                         self.Nmetadata)
-
-        fullFileStartUT = (parse(self.fullstart) - epoch).total_seconds()
-        #FIXME check for off-by-one error
-        basestart = fullFileStartUT + self.timeShiftSec  #in this order
-        #start/stop frame times of THIS camera data file
-        self.filestartutc = basestart + (self.firstFrameNum - 1) * self.kineticsec
-        self.filestoputc =  basestart + (self.lastFrameNum -  1) * self.kineticsec
-
-        if self.timeShiftSec != 0 and self.verbose >0:
-            print('cam{} Time Shifted by {} seconds'.format(self.name,self.timeShiftSec))
+        with h5py.File(fullfn,'r',libver='latest') as f:
+            self.filestartutc = f['/ut1_unix'][0]
+            self.filestoputc  = f['/ut1_unix'][-1]
+            self.ut1unix      = f['/ut1_unix'].value + self.timeShiftSec
+            self.supery,self.superx = f['/rawimg'].shape[1:]
 
 
-        #now we create a vector of time deltas using list comprehension
-        #Fixed: it's -1 because first frame number is 1 !
-        self.ut1unix = basestart + arange(self.firstFrameNum-1, self.lastFrameNum) * self.kineticsec
+        logging.info('cam{} timeshift: {} seconds'.format(self.name,self.timeShiftSec))
 
         if self.verbose >0:
             print('Camera {} start/stop UTC: {} / {}, {} frames.'.format(
