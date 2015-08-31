@@ -59,9 +59,9 @@ class Cam: #use this like an advanced version of Matlab struct
 
         self.timeShiftSec = cp['timeShiftSec'] if isfinite(cp['timeShiftSec']) else 0.
 
-        self.plotminmax = [None]*2
-        if isfinite(cp['plotMinVal']): self.plotminmax[0] =  cp['plotMinVal']
-        if isfinite(cp['plotMaxVal']): self.plotminmax[1] =  cp['plotMaxVal']
+        self.clim = [None]*2
+        if isfinite(cp['plotMinVal']): self.clim[0] =  cp['plotMinVal']
+        if isfinite(cp['plotMaxVal']): self.clim[1] =  cp['plotMaxVal']
 
         self.fullstart = cp['fullFileStartUTC']
 
