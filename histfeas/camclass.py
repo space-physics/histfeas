@@ -1,21 +1,23 @@
 from __future__ import division,absolute_import
 from numpy import (linspace, fliplr, flipud, rot90, arange,
                    polyfit,polyval,rint,empty, isfinite, isclose,
-                   absolute, hypot, logical_or, unravel_index, delete, where,asarray)
+                   absolute, hypot, logical_or, unravel_index, delete, where)
 from os.path import expanduser,join
+from datetime import datetime
+from pytz import UTC
 from dateutil.parser import parse
-from dateutil.relativedelta import relativedelta
 from scipy.signal import savgol_filter
 from six import string_types
 from numpy.random import poisson
 from warnings import warn
-from calendar import timegm
 #
 from pymap3d.azel2radec import azel2radec
 from pymap3d.haversine import angledist
 from pymap3d.coordconv3d import aer2ecef
 from histutils.getRawInd import getRawInd
 from histutils.rawDMCreader import getDMCparam
+
+epoch = datetime(1970,1,1,tzinfo=UTC)
 
 
 class Cam: #use this like an advanced version of Matlab struct
@@ -79,7 +81,7 @@ class Cam: #use this like an advanced version of Matlab struct
         self.boresightEl = cp['boresightElevDeg']
         self.arbfov = cp['FOVdeg']
 #%%
-        self.kineticSec = 1 / cp['frameRateHz']
+        self.kineticsec = 1 / cp['frameRateHz']
 #%% camera model
         """
         A model for sensor gain
@@ -90,8 +92,8 @@ class Cam: #use this like an advanced version of Matlab struct
         self.pedn = cp['pedn']
         self.ampgain = cp['ampgain']
 
-        if not sim.realdata and (isfinite(self.kineticSec) and isfinite(self.pixarea_sqcm) and isfinite(self.pedn)):
-            self.intens2dn = self.kineticSec * self.pixarea_sqcm * self.ampgain / self.pedn
+        if not sim.realdata and (isfinite(self.kineticsec) and isfinite(self.pixarea_sqcm) and isfinite(self.pedn)):
+            self.intens2dn = self.kineticsec * self.pixarea_sqcm * self.ampgain / self.pedn
         else:
             self.intens2dn = 1
 #%% sky mapping
@@ -128,8 +130,8 @@ class Cam: #use this like an advanced version of Matlab struct
                                           (self.xbin, self.ybin), verbose=-1)
 
 
-        self.SuperX=finf['superx']
-        self.SuperY=finf['supery']
+        self.superx=finf['superx']
+        self.supery=finf['supery']
         self.Nmetadata = finf['nmetadata']
         self.BytesPerFrame= finf['bytesperframe']
         self.PixelsPerImage = finf['pixelsperimage']
@@ -142,15 +144,12 @@ class Cam: #use this like an advanced version of Matlab struct
                                                          self.nHeadBytes,
                                                          self.Nmetadata)
 
-        #number of frames in file
-        self.nFrame = self.lastFrameNum - self.firstFrameNum + 1
-
-        fullFileStartUT = parse(self.fullstart)
+        fullFileStartUT = (parse(self.fullstart) - epoch).total_seconds()
         #FIXME check for off-by-one error
-        basestart = fullFileStartUT + relativedelta(seconds=self.timeShiftSec)  #in this order
+        basestart = fullFileStartUT + self.timeShiftSec  #in this order
         #start/stop frame times of THIS camera data file
-        self.startUT = basestart + relativedelta(seconds= (self.firstFrameNum - 1) * self.kineticSec )
-        self.stopUT =  basestart + relativedelta(seconds= (self.lastFrameNum -  1) * self.kineticSec )
+        self.filestartutc = basestart + (self.firstFrameNum - 1) * self.kineticsec
+        self.filestoputc =  basestart + (self.lastFrameNum -  1) * self.kineticsec
 
         if self.timeShiftSec != 0 and self.verbose >0:
             print('cam{} Time Shifted by {} seconds'.format(self.name,self.timeShiftSec))
@@ -158,16 +157,14 @@ class Cam: #use this like an advanced version of Matlab struct
 
         #now we create a vector of time deltas using list comprehension
         #Fixed: it's -1 because first frame number is 1 !
-        deltarange = arange(self.firstFrameNum-1, self.lastFrameNum) * self.kineticSec
-        self.tCam = asarray([basestart + relativedelta(seconds = vx) for vx in deltarange])
-        self.tCamUnix = asarray([timegm(t.utctimetuple()) + t.microsecond / 1e6 for t in self.tCam ])
+        self.ut1unix = basestart + arange(self.firstFrameNum-1, self.lastFrameNum) * self.kineticsec
 
         if self.verbose >0:
             print('Camera {} start/stop UTC: {} / {}, {} frames.'.format(
                                                       self.name,
-                                                      self.startUT,
-                                                      self.stopUT,
-                                                      self.nFrame))
+                                                      self.filestartutc,
+                                                      self.filestoputc,
+                                                      self.ut1unix.size))
 
 
     def arbanglemap(self):
@@ -191,6 +188,20 @@ class Cam: #use this like an advanced version of Matlab struct
     def toecef(self,ranges):
         self.x2mz, self.y2mz, self.z2mz = aer2ecef(self.Baz,self.Bel,ranges,
                                                    self.lat,self.lon,self.alt_m)
+
+    def doorientimage(self,frame):
+        if self.transpose:
+            frame = frame.T
+        # rotate -- note if you use origin='lower', rotCCW -> rotCW !
+        if self.rotCCW != 0:
+            frame = rot90(frame,k=self.rotCCW)
+        # flip
+        if self.flipLR:
+            frame = fliplr(frame)
+        if self.flipUD:
+            frame = flipud(frame)
+        return frame
+
     def doorient(self,az,el,ra,dec):
         if self.transpose:
             if self.verbose>0:
