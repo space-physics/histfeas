@@ -2,7 +2,7 @@ from __future__ import division,absolute_import
 import logging
 from numpy import (linspace, fliplr, flipud, rot90, arange,
                    polyfit,polyval,rint,empty, isfinite, isclose,
-                   absolute, hypot, logical_or, unravel_index, delete, where,swapaxes)
+                   absolute, hypot, logical_or, unravel_index, delete, where)
 from os.path import expanduser,join, isfile
 from datetime import datetime
 from pytz import UTC
@@ -62,11 +62,11 @@ class Cam: #use this like an advanced version of Matlab struct
         self.fovmaxlen = cp['FOVmaxLengthKM']
 
         if self.fovmaxlen > 10e3:
-            print('sanityCheck: Your FOV length seems excessive > 10000 km')
+            warn('sanityCheck: Your FOV length seems excessive > 10000 km')
         if self.nCutPix > 4096:
-            print('sanityCheck: Program execution time may be excessive due to large number of camera pixels')
+            warn('sanityCheck: Program execution time may be excessive due to large number of camera pixels')
         if self.fovmaxlen < (1.5*zmax):
-            print('sanityCheck: To avoid unexpected pixel/sky voxel intersection problems, make your candidate camera FOV at least 1.5 times longer than your maximum Z altitude.')
+            warn('sanityCheck: To avoid unexpected pixel/sky voxel intersection problems, make your candidate camera FOV at least 1.5 times longer than your maximum Z altitude.')
 
         self.boresightEl = cp['boresightElevDeg']
         self.arbfov = cp['FOVdeg']
@@ -131,12 +131,11 @@ class Cam: #use this like an advanced version of Matlab struct
 
         logging.info('cam{} timeshift: {} seconds'.format(self.name,self.timeShiftSec))
 
-        if self.verbose >0:
-            print('Camera {} start/stop UTC: {} / {}, {} frames.'.format(
-                                                      self.name,
-                                                      self.filestartutc,
-                                                      self.filestoputc,
-                                                      self.ut1unix.size))
+        logging.info('Camera {} start/stop UTC: {} / {}, {} frames.'.format(
+                                                              self.name,
+                                                              self.filestartutc,
+                                                              self.filestoputc,
+                                                              self.ut1unix.size))
 
 
     def arbanglemap(self):
@@ -163,7 +162,7 @@ class Cam: #use this like an advanced version of Matlab struct
 
     def doorientimage(self,frame):
         if self.transpose:
-            frame = frame.T
+            frame = frame.transpose(0,2,1)
         # rotate -- note if you use origin='lower', rotCCW -> rotCW !
         try: #rotate works with first two axes
             frame = rot90(frame.transpose(1,2,0),k=self.rotccw).transpose(2,0,1)
@@ -178,33 +177,29 @@ class Cam: #use this like an advanced version of Matlab struct
 
     def doorient(self,az,el,ra,dec):
         if self.transpose:
-            if self.verbose>0:
-                print('tranposing cam #{} az/el/ra/dec data. '.format(self.name))
+            logging.debug('tranposing cam #{} az/el/ra/dec data. '.format(self.name))
             az  = az.T
             el  = el.T
             ra  = ra.T
             dec = dec.T
-        if self.flipLR:
-            if self.verbose>0:
-                print('flipping horizontally cam #{} az/el/ra/dec data.'.format(self.name))
+        if self.fliplr:
+            logging.debug('flipping horizontally cam #{} az/el/ra/dec data.'.format(self.name))
             az  = fliplr(az)
             el  = fliplr(el)
             ra  = fliplr(ra)
             dec = fliplr(dec)
-        if self.flipUD:
-            if self.verbose>0:
-                print('flipping vertically cam #{} az/el/ra/dec data.'.format(self.name))
+        if self.flipud:
+            logging.debug('flipping vertically cam #{} az/el/ra/dec data.'.format(self.name))
             az  = flipud(az)
             el  = flipud(el)
             ra  = flipud(ra)
             dec = flipud(dec)
-        if self.rotCCW != 0:
-            if self.verbose>0:
-                print('rotating cam #{} az/el/ra/dec data.'.format(self.name))
-            az  = rot90(az, k = self.rotCCW)
-            el  = rot90(el, k = self.rotCCW)
-            ra  = rot90(ra, k = self.rotCCW)
-            dec = rot90(dec,k = self.rotCCW)
+        if self.rotccw != 0:
+            logging.debug('rotating cam #{} az/el/ra/dec data.'.format(self.name))
+            az  = rot90(az, k = self.rotccw)
+            el  = rot90(el, k = self.rotccw)
+            ra  = rot90(ra, k = self.rotccw)
+            dec = rot90(dec,k = self.rotccw)
         self.az = az
         self.el = el
         self.ra = ra
@@ -212,8 +207,7 @@ class Cam: #use this like an advanced version of Matlab struct
 
     def debias(self,data):
         if isfinite(self.debiasData):
-            if self.verbose>0:
-                print('Debiasing Data for Camera #{}'.format(self.name) )
+            logging.debug('Debiasing Data for Camera #{}'.format(self.name) )
             data -= self.debiasData
         return data
 
@@ -221,8 +215,7 @@ class Cam: #use this like an advanced version of Matlab struct
          noisy = data.copy()
 
          if isfinite(self.noiselam):
-             if self.verbose>0:
-                 print('adding Poisson noise with \lambda={:0.1f} to camera #{}'.format(self.noiselam,self.name))
+             logging.info('adding Poisson noise with \lambda={:0.1f} to camera #{}'.format(self.noiselam,self.name))
              dnoise = poisson(lam=self.noiselam,size=self.nCutPix)
              noisy += dnoise
          else:
@@ -230,8 +223,7 @@ class Cam: #use this like an advanced version of Matlab struct
 
 
          if isfinite(self.ccdbias):
-             if self.verbose>0:
-                 print('adding bias {:0.1e} to camera #{}'.format(self.ccdbias,self.name))
+             logging.info('adding bias {:0.1e} to camera #{}'.format(self.ccdbias,self.name))
              noisy += self.ccdbias
 
          # kept for diagnostic purposes
@@ -243,8 +235,7 @@ class Cam: #use this like an advanced version of Matlab struct
 
     def dosmooth(self,data):
         if self.smoothspan > 0 and self.savgolOrder>0:
-            if self.verbose>0:
-                print('Smoothing Data for Camera #{}'.format(self.name))
+            logging.debug('Smoothing Data for Camera #{}'.format(self.name))
             data= savgol_filter(data, self.smoothspan, self.savgolOrder)
         return data #LEAVE THIS AS SEPARATE LINE!
 
@@ -260,8 +251,7 @@ class Cam: #use this like an advanced version of Matlab struct
 
     def scaleintens(self,data):
         if isfinite(self.intensityScaleFactor) and self.intensityScaleFactor !=1 :
-            if self.verbose>0:
-                print('Scaling data to Cam #{} by factor of {}'.format(self.name,self.intensityScaleFactor))
+            logging.info('Scaling data to Cam #{} by factor of {}'.format(self.name,self.intensityScaleFactor))
             data *= self.intensityScaleFactor
             #assert isnan(data).any() == False
         return data
@@ -275,20 +265,20 @@ class Cam: #use this like an advanced version of Matlab struct
     def findLSQ(self,nearrow,nearcol):
         polycoeff = polyfit(nearcol,nearrow,deg=1,full=False)
         #columns (x)  to cut from picture
-        cutcol = arange(self.xpix,dtype=int) #not range
+        cutcol = arange(self.superx,dtype=int) #not range
         #rows (y) to cut from picture
         cutrow = rint(polyval(polycoeff,cutcol)).astype(int)
-        assert (cutrow>=0).all() and (cutrow<self.ypix).all()
+        assert (cutrow>=0).all() and (cutrow<self.supery).all()
 
         #angle from magnetic zenith corresponding to those pixels
         rapix =  self.ra[cutrow, cutcol]
         decpix = self.dec[cutrow, cutcol]
         raMagzen,decMagzen = azel2radec(self.Baz,self.Bel,self.lat,self.lon,self.Bepoch)
-        if self.verbose>0: print('mag. zen. ra/dec {} {}'.format(raMagzen,decMagzen))
+        logging.info('mag. zen. ra/dec {} {}'.format(raMagzen,decMagzen))
 
         angledist_deg = angledist(raMagzen,decMagzen,rapix,decpix)
         # put distances into a 90-degree fan beam
-        angle_deg = empty(self.xpix,dtype=float)
+        angle_deg = empty(self.superx,dtype=float)
         MagZenInd = angledist_deg.argmin() # whether slightly positive or slightly negative, this should be OK
 
         angle_deg[MagZenInd:] = 90. + angledist_deg[MagZenInd:]
@@ -333,16 +323,16 @@ class Cam: #use this like an advanced version of Matlab struct
     # ********************************************
     # THIS UNRAVEL_INDEX MUST BE ORDER = 'C'
             nearRow[ipt],nearCol[ipt] = unravel_index(errdist.argmin(),
-                                                      (self.ypix, self.xpix),order='C')
+                                                      (self.supery, self.superx),order='C')
     #************************************************
 
 
         if discardEdgepix:
-            edgeind = where(logical_or(logical_or(nearCol==0,nearCol == self.xpix-1),
-                                       logical_or(nearRow==0,nearRow == self.ypix-1)) )[0]
+            edgeind = where(logical_or(logical_or(nearCol==0,nearCol == self.superx-1),
+                                       logical_or(nearRow==0,nearRow == self.supery-1)) )[0]
             nearRow = delete(nearRow,edgeind)
             nearCol = delete(nearCol,edgeind)
-            if self.verbose>0: print('deleted',edgeind.size, 'edge pixels ')
+            logging.info('deleted',edgeind.size, 'edge pixels ')
 
         self.findLSQ(nearRow, nearCol)
 
