@@ -44,6 +44,10 @@ def getParams(XLSfn,overrides,makeplot,progms,verbose):
 #%% setup cameras
     cam,cp = setupCam(sim,cp,Fwd['z'][-1],verbose)
 
+    # make the simulation time step match that of the fastest camera
+    sim.kineticsec = min([C.kineticsec for C,u in zip(cam,sim.useCamBool) if u])
+
+
     logging.info('fwd model voxels:\n'
           'B_perp: N={}   B_parallel: M={}'.format(Fwd['sx'],Fwd['sz']))
 #%% init variables
