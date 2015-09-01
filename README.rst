@@ -29,23 +29,17 @@ Installation
 ------------
 go to the directory where you want to install this program under e.g. ~/code
 
-then, in Terminal (for Linux, Mac or Cygwin on Windows), copy and paste::
+then, in Terminal (for Linux, Mac or Cygwin on Windows), copy and paste
 
-    git clone --depth 1 https://github.com/scienceopen/hist-feasibility
+.. code:: bash
 
-    cd hist-feasibility
-
-    python setup.py develop
+    $ git clone --depth 1 https://github.com/scienceopen/histfeas
+    $ cd histfeas
+    $ python setup.py develop
 
 You can check that things are working OK by::
 
     python test/registration.py
-
-which should give several lines of text ending with::
-
-    registration.py done looping
-    registration.py program end
-
 
 Usage notes
 ------------

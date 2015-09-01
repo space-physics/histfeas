@@ -2,7 +2,7 @@ from __future__ import division,absolute_import
 import logging
 from numpy import (linspace, fliplr, flipud, rot90, arange,
                    polyfit,polyval,rint,empty, isfinite, isclose,
-                   absolute, hypot, logical_or, unravel_index, delete, where)
+                   absolute, hypot, logical_or, unravel_index, delete, where,swapaxes)
 from os.path import expanduser,join, isfile
 from datetime import datetime
 from pytz import UTC
@@ -31,9 +31,9 @@ class Cam: #use this like an advanced version of Matlab struct
         self.z_km = cp['Zkm']
         self.x_km = cp['Xkm']
 
-        if sim.realdata:  self.fn = expanduser(cp['fn'])
-#        self.startTime = startTime
-#        self.stopTime = stopTime
+        if sim.realdata:
+            fn = expanduser(cp['fn'])
+
         self.nCutPix = int(cp['nCutPix'])
 
         self.Bincl = cp['Bincl']
@@ -49,18 +49,11 @@ class Cam: #use this like an advanced version of Matlab struct
         else:
             self.Baz = None; self.Bel = None
 
-        self.rotCCW =    cp['rotCCW']
-        self.transpose = cp['transpose'] == 1
-        self.flipLR =    cp['flipLR'] == 1
-        self.flipUD =   cp['flipUD'] == 1
-
         self.timeShiftSec = cp['timeShiftSec'] if isfinite(cp['timeShiftSec']) else 0.
 
         self.clim = [None]*2
         if isfinite(cp['plotMinVal']): self.clim[0] =  cp['plotMinVal']
         if isfinite(cp['plotMaxVal']): self.clim[1] =  cp['plotMaxVal']
-
-        self.fullstart = cp['fullFileStartUTC']
 
         self.intensityScaleFactor = cp['intensityScaleFactor']
         self.lowerthres = cp['lowerthres']
@@ -77,8 +70,6 @@ class Cam: #use this like an advanced version of Matlab struct
 
         self.boresightEl = cp['boresightElevDeg']
         self.arbfov = cp['FOVdeg']
-#%%
-        self.kineticsec = 1 / cp['frameRateHz']
 #%% camera model
         """
         A model for sensor gain
@@ -113,24 +104,29 @@ class Cam: #use this like an advanced version of Matlab struct
         self.smoothspan = cp['smoothspan']
         self.savgolOrder = cp['savgolOrder']
 
-
-    def ingestcamparam(self,sim):
         """ expects an HDF5 .h5 file"""
 
         # data file name
         try:
-            fullfn = expanduser(join(sim.realdatapath, self.fn))
+            self.fn = expanduser(join(sim.realdatapath, fn))
         except AttributeError:
             raise ValueError('You must specify the filename to read. file: {}'.format(self.fn))
 
-        if not isfile(fullfn):
-            raise ValueError('does not exist: {}'.format(fullfn))
+        if not isfile(self.fn):
+            raise ValueError('does not exist: {}'.format(self.fn))
 
-        with h5py.File(fullfn,'r',libver='latest') as f:
+        with h5py.File(self.fn,'r',libver='latest') as f:
             self.filestartutc = f['/ut1_unix'][0]
             self.filestoputc  = f['/ut1_unix'][-1]
             self.ut1unix      = f['/ut1_unix'].value + self.timeShiftSec
             self.supery,self.superx = f['/rawimg'].shape[1:]
+
+            p = f['/params']
+            self.kineticsec   = p['kineticsec']
+            self.rotccw       = p['rotccw']
+            self.transpose    = p['transpose'] == 1
+            self.fliplr       = p['fliplr'] == 1
+            self.flipud       = p['flipud'] == 1
 
 
         logging.info('cam{} timeshift: {} seconds'.format(self.name,self.timeShiftSec))
@@ -169,12 +165,14 @@ class Cam: #use this like an advanced version of Matlab struct
         if self.transpose:
             frame = frame.T
         # rotate -- note if you use origin='lower', rotCCW -> rotCW !
-        if self.rotCCW != 0:
-            frame = rot90(frame,k=self.rotCCW)
+        try: #rotate works with first two axes
+            frame = rot90(frame.transpose(1,2,0),k=self.rotccw).transpose(2,0,1)
+        except:
+            pass
         # flip
-        if self.flipLR:
+        if self.fliplr:
             frame = fliplr(frame)
-        if self.flipUD:
+        if self.flipud:
             frame = flipud(frame)
         return frame
 
@@ -252,7 +250,7 @@ class Cam: #use this like an advanced version of Matlab struct
 
     def fixnegval(self,data):
         mask = data<0
-        if (self.verbose and mask.any()) or mask.sum()>0.2*self.nCutPix:
+        if mask.sum()>0.2*self.nCutPix:
             warn('Setting {} negative Data values to 0 for Camera #{}'.format(mask.sum(), self.name))
 
         data[mask] = 0
