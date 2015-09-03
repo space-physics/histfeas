@@ -1,5 +1,6 @@
 # creates optical emissions from excitation rates
-
+from __future__ import division,absolute_import
+import logging
 from pandas import  DataFrame, Panel
 from numpy import zeros,append,where, loadtxt
 import h5py
@@ -41,7 +42,7 @@ def getTranscar(sim,dbglvl=0):
             else:
                 tReq = tReq.astimezone(UTC)
         except (ValueError,AttributeError) as e:
-            warn('You must specify a tReq in the spreadsheet for when you want to use transcar data' + str(e))
+            logging.warning('You must specify a tReq in the spreadsheet for when you want to use transcar data' + str(e))
             tReq = None
 
         lowestBeamUsedInd = getbeamsused(zeroUnusedBeams,Ek,sim.minbeamev)
@@ -68,7 +69,7 @@ def getTranscar(sim,dbglvl=0):
 
             if iEn != lowestBeamUsedInd:
                  if all( Peigen[:,iEn] == Peigen[:,lowestBeamUsedInd]):
-                    warn('** Warning: all Peigen for beam ' + str(Ek[iEn]) + ' are equal to Peigen for beam ' + str(Ek[lowestBeamUsedInd]))
+                    logging.warning('** Warning: all Peigen for beam ' + str(Ek[iEn]) + ' are equal to Peigen for beam ' + str(Ek[lowestBeamUsedInd]))
 
         if PlambdaAccum is None: #no beams at all were read
             return None, None, None
@@ -88,7 +89,7 @@ def getbeamsused(zeroUnusedBeams,Ek,minbeamenergy):
         try:
             return where(Ek>=minbeamenergy)[0][0]
         except IndexError:
-            warn('** You have picked a minimum energy outside the simulation energy range, falling back to using all beams')
+            logging.warning('** You have picked a minimum energy outside the simulation energy range, falling back to using all beams')
 
     return 0
 
@@ -106,7 +107,7 @@ def loadver(verfn):
 
 def getBeamEnergies(beamEnergyCSV):
     beamCSV = expanduser(beamEnergyCSV)
-    print('Transcar sim. data dir: ' + str(beamCSV) )
+    logging.info('Transcar sim. data dir: ' + str(beamCSV) )
 
     try:
         beamEnergies= loadtxt(beamCSV,usecols=[0,1],delimiter=',')
