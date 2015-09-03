@@ -17,9 +17,8 @@ python3 main_hist.py in/2cam_trans.xlsx /dev/shm/rev_trans2/ -m fwd png --vlim -
 """
 from __future__ import division,print_function
 import logging
-logging.basicConfig(level=logging.INFO)
 from sys import argv
-from os.path import join
+from os.path import join,expanduser
 from os import makedirs
 from numpy import absolute,zeros,outer
 from numpy.random import normal
@@ -39,6 +38,8 @@ from .plotsnew import goPlot #calls matplotlib
 from .analysehst import analyseres
 
 def doSim(ParamFN,makeplot,timeInds,overrides,progms,x1d,vlim,animtime, cmd,verbose):
+    progms = expanduser(progms)
+    logging.basicConfig(level=30-verbose*10)
 
     #%% output directory
     try:
