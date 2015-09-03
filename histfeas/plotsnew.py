@@ -1,4 +1,4 @@
-from __future__ import print_function, division,absolute_import
+from __future__ import division,absolute_import
 import logging
 from numpy import (in1d,s_,empty,empty_like,isnan,asfortranarray,linspace,outer,
                    sin,cos,pi,ones_like,array,nan,unravel_index,meshgrid,logspace,
@@ -532,8 +532,7 @@ def plotJ(sim,Jflux,x,xp,Ek,EKpcolor,vlim,xlim,tInd,makeplot,prefix,titletxt,fig
 #                else:
 #                    clvl = linspace(vmin,vmax,6)
 
-                if verbose>-1:
-                    print('phi using contour levels {}'.format(clvl))
+                logging.debug('plotting flux Phi using contour levels {}'.format(clvl))
 
                 hc = ax.contour(x,Ek,Jflux,levels=clvl,
                                 linewidths=2,norm=c,vmin=v,vmax=vmax,
@@ -570,7 +569,7 @@ def plotJ(sim,Jflux,x,xp,Ek,EKpcolor,vlim,xlim,tInd,makeplot,prefix,titletxt,fig
         try:
             ax3 = plotJ3(x,EKpcolor,Jflux,plt3)
         except Exception as e:
-            warn('* falling back to matplotlib.  {}'.format(e))
+            logging.info('could not do 3-D, falling back to matplotlib.  {}'.format(e))
             ax3 = plotJ3(x,EKpcolor,Jflux,'mpl')
         doJlbl(ax3,titletxt)
 
@@ -1032,7 +1031,7 @@ def planviewkml(cam,xKM,zKM,makeplot,figh,progms,verbose=0):
     #if 'kml' in makeplot or 'kmlrays' in makeplot: #write KML
     try:
         kmlfn = join(progms,'cam'+'.kml')
-        if verbose>0: print('saving ' + kmlfn)
+        logging.debug('saving ' + kmlfn)
         kml1d.save(kmlfn)
     except TypeError:
         pass #disbled writing
@@ -1043,7 +1042,7 @@ def dumph5(fn,prefix,tInd,**writevar): #used in other .py too
     if fn is None or prefix is None:
         return
 
-    print('dumping {} to {}'.format(prefix, fn))
+    logging.debug('dumping {} to {}'.format(prefix, fn))
     with h5py.File(fn,'a',libver='latest') as f:
         for k,v in writevar.items():
             try:
@@ -1075,8 +1074,7 @@ def writeplots(fg,plotprefix,tInd,method,progms,overridefmt=None,verbose=0):
         else:
             fmt = array(tmpl)[used][0]; dpi=plotdpi
         cn = join(progms,(plotprefix + '_t{:03d}.{}'.format(tInd,fmt)))
-        if verbose>-1:
-            print('write {}'.format(cn))
+        logging.info('write {}'.format(cn))
         fg.savefig(cn,bbox_inches='tight',dpi=dpi,format=fmt)  # this is slow and async
 #%%
 def getx0E0(Phifwd,Phifit,E,x,tInd,progms,makeplot,verbose):
