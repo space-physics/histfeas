@@ -171,7 +171,7 @@ to the simulation (for real data, we don't have this)
 
 Our IEEE TGARS article (in review) details the math and algorithm.
 
-------------------
+
 Output Processing
 ------------------
 The .h5 HDF5 files output by the ``-h5`` command-line parameter can be loaded in nearly any analysis
@@ -191,7 +191,6 @@ the same ``analysehst.py`` that's used by the simulation online--good coding pra
 
 
 
--------------
 Calibration
 -------------
 
