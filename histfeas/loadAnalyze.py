@@ -91,17 +91,25 @@ def readresults(h5list,xlsfn,vlim,x1d,overrides,makeplot,verbose=0):
                    progms, verbose=verbose)
 
 #%%
-
-
     for ti,t in enumerate(tInd):
-        Jxi = find_nearest(x,x1d[ti])[0]
+        try:
+            Jxi = find_nearest(x,x1d[ti])[0]
+        except:
+            Jxi = None
+
+        try:
+            pf = Pfwd[ti]
+            phif = Phifwd[...,ti]
+        except:
+            pf = None
+            phif = None
 
         if 'fwd' in makeplot:
             plotfwd(sim,cam,drn[ti],x,xp,z,zp,
                     Pfwd[ti],Phifwd[...,ti],Phidict[ti],Jxi,vlim,t,makeplot,None,progms,verbose)
 
         if 'optim' in makeplot:
-            plotoptim(sim,cam,drn[ti],dhat[ti],'best',Pfwd[ti],Phifwd[...,ti],Jxi,
+            plotoptim(sim,cam,drn[ti],dhat[ti],'best',pf,phif,Jxi,
                       Pest[ti],Phidict[ti],x,xp,z,zp,vlim,t,makeplot,None,progms,verbose)
 
 

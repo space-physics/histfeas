@@ -93,14 +93,14 @@ def goPlot(sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
     nCutPix = sim.nCutPix #FIXME assumes all cams same # of pixels
 
 #%% get xind
-    if x1d[0] is not None:
+    try:
         try:
             cx1d=x1d[tInd]
         except IndexError: #single value of xInd
             cx1d=x1d[0]
         Jxi = find_nearest(xKM,cx1d)[0]
         logging.info('1-D plots of Phi and P taken at index {}  x={}'.format(Jxi,x1d))
-    else:
+    except:
         Jxi = None
 #%% eigenfunction
     if 'eig' in makeplot:
