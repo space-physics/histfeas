@@ -6,11 +6,11 @@ option
 """
 
 from __future__ import division,absolute_import
+import logging
 import h5py
 from os import makedirs
 from os.path import join,expanduser,splitext,isfile,dirname
 from numpy import asarray,diff
-from warnings import warn
 from matplotlib.pyplot import show
 from glob import glob
 import seaborn as sns
@@ -30,7 +30,7 @@ def readresults(h5list,xlsfn,vlim,x1d,overrides,makeplot,verbose=0):
 #%%
     nt = len(h5list)
     if nt==0:
-        warn('no HDF5 files found, ending.')
+        logging.warning('no HDF5 files found, ending.')
         return
 
     for h5 in h5list:
@@ -38,20 +38,23 @@ def readresults(h5list,xlsfn,vlim,x1d,overrides,makeplot,verbose=0):
 
         tInd.append(int(stem[-3:])) #NOTE assumes last 3 digits are time ind
 
-        if verbose>0:
-            print('tind {}  reading {}'.format(tInd[-1],h5))
+        logging.debug('tind {}  reading {}'.format(tInd[-1],h5))
 
         with h5py.File(h5,'r',libver='latest') as f:
-            x  = f['/pfwd/x'].value #same for all in directory
-            xp = f['/pfwd/xp'].value
+            try: #simulation
+                Phifwd.append(f['/phifwd/phi'].value)
+                Pfwd.append(f['/pfwd/p'].value)
+            except KeyError: #real data
+                pass
 
-            Phifwd.append(f['/phifwd/phi'].value)
             Phidict.append({'x':f['/phiest/phi'].value,
                             'EK':f['/phiest/Ek'].value,
                             'EKpcolor':f['/phiest/EKpcolor'].value})
 
             Pest.append(f['/pest/p'].value)
-            Pfwd.append(f['/pfwd/p'].value)
+
+            x  = f['/pest/x'].value #same for all in directory
+            xp = f['/pest/xp'].value
             z = f['/pest/z'].value
             zp = f['/pest/zp'].value
 
@@ -65,10 +68,13 @@ def readresults(h5list,xlsfn,vlim,x1d,overrides,makeplot,verbose=0):
     except:
         pass
 
-    Phifwd = asarray(Phifwd).transpose(1,2,0)
+    try:
+        Phifwd = asarray(Phifwd).transpose(1,2,0)
+    except ValueError: #realdata
+        pass
 
     if not xlsfn:
-        warn('No XLSX parameter file found')
+        logging.error('No XLSX parameter file found')
         return
 
     ap,sim,cam,Fwd = getParams(xlsfn,overrides,makeplot,progms,verbose=verbose)
@@ -104,13 +110,14 @@ def findxlsh5(h5path):
 
     if isfile(h5path):
         h5list = [h5path]
-        xlsfn = glob(join(dirname(h5path),'*.xlsx'))
+        xlsfn = glob(join(dirname(h5path),'*.xls*'))
     else:
         h5list = glob(join(h5path,'dump_*.h5'))
         h5list.sort()
-        xlsfn = glob(join(h5path,'*.xlsx'))
+        xlsfn = glob(join(h5path,'*.xls*'))
 
-    if xlsfn: xlsfn = xlsfn[0]
+    if xlsfn:
+        xlsfn = xlsfn[0]
 
     return h5list,xlsfn
 

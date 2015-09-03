@@ -2,7 +2,7 @@ from __future__ import division,absolute_import
 import logging
 from numpy import (linspace, fliplr, flipud, rot90, arange,
                    polyfit,polyval,rint,empty, isfinite, isclose,
-                   absolute, hypot, logical_or, unravel_index, delete, where)
+                   absolute, hypot, unravel_index, delete, where)
 from os.path import expanduser,join, isfile
 from datetime import datetime
 from pytz import UTC
@@ -76,13 +76,9 @@ class Cam: #use this like an advanced version of Matlab struct
         pedn is photoelectrons per data number
         This is used in fwd model and data inversion
         """
-        self.pixarea_sqcm = cp['pixarea_sqcm']
-        self.pedn = cp['pedn']
-        self.ampgain = cp['ampgain']
-
         if not sim.realdata and (isfinite(self.kineticsec) and isfinite(self.pixarea_sqcm) and isfinite(self.pedn)):
-            self.intens2dn = self.kineticsec * self.pixarea_sqcm * self.ampgain / self.pedn
-        else:
+            self.intens2dn = self.kineticsec * cp['pixarea_sqcm'] * cp['ampgain'] / cp['pedn']
+        else: #realdata, or sim without parameters specified
             self.intens2dn = 1
 #%% sky mapping
         cal1Ddir = sim.cal1dpath
