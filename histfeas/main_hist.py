@@ -16,6 +16,8 @@ example: (fwd model only)
 python3 main_hist.py in/2cam_trans.xlsx /dev/shm/rev_trans2/ -m fwd png --vlim -0.5 3.5 90 350 1e9 1e10 --jlim 1e5 5e5 --blim 0 1e4 -f 0 120 20
 """
 from __future__ import division,print_function
+import logging
+logging.basicConfig(level=logging.INFO)
 from sys import argv
 from os.path import join
 from os import makedirs
@@ -35,9 +37,6 @@ from .observeVolume import getEll,getObs #calls matplotlib
 from .FitVER import FitVERopt as FitVER #calls matplotlib
 from .plotsnew import goPlot #calls matplotlib
 from .analysehst import analyseres
-#import logging
-#logging.basicConfig(filename='hist.log',filemode='w',level=logging.DEBUG)
-
 
 def doSim(ParamFN,makeplot,timeInds,overrides,progms,x1d,vlim,animtime, cmd,verbose):
 
@@ -73,7 +72,7 @@ def doSim(ParamFN,makeplot,timeInds,overrides,progms,x1d,vlim,animtime, cmd,verb
     if verbose>0: print('timeInds: {}'.format(timeInds))
 #%%start looping for each time slice in keogram (just once if simulated)
     for ti in timeInds:
-        print('entering time {}'.format(ti))
+        logging.info('entering time {}'.format(ti))
         if sim.realdata:
             Phi0 = None; Pfwd = None
         else: #sim
@@ -137,7 +136,7 @@ def doSim(ParamFN,makeplot,timeInds,overrides,progms,x1d,vlim,animtime, cmd,verb
                   'xPixCorn':Fwd['xPixCorn'],'zPixCorn':Fwd['zPixCorn']}
             savemat(cMatFN,oned_as='column',mdict=vd )
         except Exception as e:
-            warn('failed to save to mat file.  {}'.format(e))
+            logging.warning('failed to save to mat file.  {}'.format(e))
 
     msg ='{} program end'.format(argv[0]); print(msg); #print(msg,file=stderr)
 

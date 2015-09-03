@@ -269,6 +269,7 @@ class Cam: #use this like an advanced version of Matlab struct
         #rows (y) to cut from picture
         cutrow = rint(polyval(polycoeff,cutcol)).astype(int)
         assert (cutrow>=0).all() and (cutrow<self.supery).all()
+        # DONT DO THIS: cutrow.clip(0,self.supery,cutrow)
 
         #angle from magnetic zenith corresponding to those pixels
         rapix =  self.ra[cutrow, cutcol]
@@ -328,11 +329,11 @@ class Cam: #use this like an advanced version of Matlab struct
 
 
         if discardEdgepix:
-            edgeind = where(logical_or(logical_or(nearCol==0,nearCol == self.superx-1),
-                                       logical_or(nearRow==0,nearRow == self.supery-1)) )[0]
+            edgeind = where( ((nearCol==0) | (nearCol == self.superx-1)) |
+                             ((nearRow==0) | (nearRow == self.supery-1)) )[0]
             nearRow = delete(nearRow,edgeind)
             nearCol = delete(nearCol,edgeind)
-            logging.info('deleted',edgeind.size, 'edge pixels ')
+            logging.info('deleted {} edge pixels'.format(edgeind.size))
 
         self.findLSQ(nearRow, nearCol)
 

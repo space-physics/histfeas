@@ -5,33 +5,16 @@ Michael Hirsch
 """
 from signal import signal,SIGINT #for Ctrl C
 from os.path import expanduser
-from numpy import in1d,arange
+from numpy import arange
 import matplotlib as mpl
 from matplotlib.pyplot import show
 from sys import argv
 #
 from histfeas.main_hist import doSim
 
-def matplotlib_import(makeplot):
-    """
-    currently UNUSED
-    """
-    # these matplotlib imports MUST GO IN THIS ORDER
-    #from mpl_toolkits.mplot3d import Axes3D #causes  TypeError: unhashable type: 'list'
-    if in1d(makeplot,('png','eps')).any():
-        print('using Agg backend: Visibly displayed plots are disabled!')
-        mpl.use('Agg') #for fast PNG writing, but does NOT display at all!
-    elif in1d(makeplot,'pdf').any():
-        print('using PDF backend: Visibly displayed plots are disabled!')
-        mpl.use('pdf') #for multipage PDF writing, but does NOT display at all!
-    else:
-        pass
-        #mpl.use('Qt4Agg') # NOT FOR ANACONDA3
-        #mpl.use('Tkagg') # possibly faster than qt4agg
-#%%
 def signal_handler(signal, frame):
     exit('\n *** Aborting program as per user pressed Ctrl+C ! \n')
-#%% -----------------------------------------------------------
+
 if __name__ == '__main__':
     from argparse import ArgumentParser
 
