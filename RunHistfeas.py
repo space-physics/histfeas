@@ -16,7 +16,7 @@ def matplotlib_import(makeplot):
     """
     currently UNUSED
     """
-        # these matplotlib imports MUST GO IN THIS ORDER
+    # these matplotlib imports MUST GO IN THIS ORDER
     #from mpl_toolkits.mplot3d import Axes3D #causes  TypeError: unhashable type: 'list'
     if in1d(makeplot,('png','eps')).any():
         print('using Agg backend: Visibly displayed plots are disabled!')
