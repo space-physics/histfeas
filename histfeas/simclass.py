@@ -66,10 +66,10 @@ class Sim:
             else:
                 self.minbeamev = 0.
 #%% fit method
-        if overrides and overrides['fitm']: #need first check in case it's None
+        try:
             self.optimfitmeth = overrides['fitm']
             logging.info('* setting fit method to {}'.format(overrides['fitm']))
-        else:
+        except KeyError:
             self.optimfitmeth = str(sp.at['OptimFluxMethod','Recon']) #must have str() for FITver .lower()
 
         self.optimmaxiter = sp.at['OptimMaxiter','Recon']
