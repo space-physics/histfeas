@@ -3,7 +3,7 @@ import logging
 from numpy import (linspace, fliplr, flipud, rot90, arange,
                    polyfit,polyval,rint,empty, isfinite, isclose,
                    absolute, hypot, unravel_index, delete, where)
-from os.path import expanduser,join, isfile
+from os.path import expanduser,join
 from datetime import datetime
 from pytz import UTC
 from dateutil.parser import parse
@@ -70,22 +70,7 @@ class Cam: #use this like an advanced version of Matlab struct
 
         self.boresightEl = cp['boresightElevDeg']
         self.arbfov = cp['FOVdeg']
-#%% camera model
-        """
-        A model for sensor gain
-        pedn is photoelectrons per data number
-        This is used in fwd model and data inversion
-        """
-        hasgainparam = isfinite(self.kineticsec) and isfinite(self.pixarea_sqcm) and isfinite(self.pedn)
 
-        if hasgainparam:
-            self.dn2intens = cp['pedn'] / self.kineticsec * cp['pixarea_sqcm'] * cp['ampgain']
-            if sim.realdata:
-                self.intens2dn = 1
-            else:
-                self.intens2dn = 1/self.dn2intens
-        else: #this will give tiny ver and flux
-            self.intens2dn = self.dn2intens = 1
 #%% sky mapping
         cal1Ddir = sim.cal1dpath
         cal1Dname = cp['cal1Dname']
@@ -111,29 +96,45 @@ class Cam: #use this like an advanced version of Matlab struct
         # data file name
         try:
             self.fn = expanduser(join(sim.realdatapath, fn))
+
+            with h5py.File(self.fn,'r',libver='latest') as f:
+                self.filestartutc = f['/ut1_unix'][0]
+                self.filestoputc  = f['/ut1_unix'][-1]
+                self.ut1unix      = f['/ut1_unix'].value + self.timeShiftSec
+                self.supery,self.superx = f['/rawimg'].shape[1:]
+
+                p = f['/params']
+                self.kineticsec   = p['kineticsec']
+                self.rotccw       = p['rotccw']
+                self.transpose    = p['transpose'] == 1
+                self.fliplr       = p['fliplr'] == 1
+                self.flipud       = p['flipud'] == 1
+
         except AttributeError:
-            raise ValueError('You must specify the filename to read. file: {}'.format(self.fn))
+            self.kineticsec = cp['kineticsec'] #simulation
 
-        if not isfile(self.fn):
-            raise ValueError('does not exist: {}'.format(self.fn))
+#%% camera model
+        """
+        A model for sensor gain
+        pedn is photoelectrons per data number
+        This is used in fwd model and data inversion
+        """
+        hasgainparam = isfinite(self.kineticsec) and isfinite(cp['pixarea_sqcm']) and isfinite(cp['pedn']) and isfinite(cp['ampgain'])
 
-        with h5py.File(self.fn,'r',libver='latest') as f:
-            self.filestartutc = f['/ut1_unix'][0]
-            self.filestoputc  = f['/ut1_unix'][-1]
-            self.ut1unix      = f['/ut1_unix'].value + self.timeShiftSec
-            self.supery,self.superx = f['/rawimg'].shape[1:]
+        if hasgainparam:
+            self.dn2intens = cp['pedn'] / self.kineticsec * cp['pixarea_sqcm'] * cp['ampgain']
+            if sim.realdata:
+                self.intens2dn = 1
+            else:
+                self.intens2dn = 1/self.dn2intens
+        else: #this will give tiny ver and flux
+            self.intens2dn = self.dn2intens = 1
 
-            p = f['/params']
-            self.kineticsec   = p['kineticsec']
-            self.rotccw       = p['rotccw']
-            self.transpose    = p['transpose'] == 1
-            self.fliplr       = p['fliplr'] == 1
-            self.flipud       = p['flipud'] == 1
+#%% summary
+        if sim.realdata:
+            logging.info('cam{} timeshift: {} seconds'.format(self.name,self.timeShiftSec))
 
-
-        logging.info('cam{} timeshift: {} seconds'.format(self.name,self.timeShiftSec))
-
-        logging.info('Camera {} start/stop UTC: {} / {}, {} frames.'.format(
+            logging.info('Camera {} start/stop UTC: {} / {}, {} frames.'.format(
                                                               self.name,
                                                               self.filestartutc,
                                                               self.filestoputc,

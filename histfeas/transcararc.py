@@ -102,16 +102,16 @@ def assemblePhi0(sim,ap,Ek,xKM,verbose):
 def upsampletime(ap,sim,verbose):
     #%% obtain observation time steps from spreadsheet (for now, equal to kinetic time)
     texp = ap.loc['tReqOffsetSec'].values.astype(float)
-    if abs(sim.kineticSec - diff(texp).mean()) > 1e-3:
+    if abs(sim.kineticsec - diff(texp).mean()) > 1e-3:
         warn('exposure time not matching spreadsheet arc time step')
     # make simulation time, also defined as seconds since Transcar tReq
-    dtsim =sim.kineticSec/sim.timestepsperexp
+    dtsim =sim.kineticsec/sim.timestepsperexp
     tsim = arange(texp[0],texp[-1],dtsim)
 
 # FUTURE
 #    #tsim is a finer time step than texp, the camera exposure
 #    tsim = empty(texp.size*sim.timestepsperexp,dtype=datetime)
-#    tsimstep = timedelta(seconds=sim.kineticSec/sim.timestepsperexp)
+#    tsimstep = timedelta(seconds=sim.kineticsec/sim.timestepsperexp)
 #    for i,t in enumerate(texp):
 #        #sim time steps (for future, in case spreadsheet steps != to exposure time (kinetic time))
 #        for j in range(i*sim.timestepsperexp, (i+1)*sim.timestepsperexp):
