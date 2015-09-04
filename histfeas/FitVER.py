@@ -20,15 +20,15 @@ def FitVERopt(L,bn,Phi0,MpDict,sim,cam,Fwd,tInd,makeplot,verbose):
     minverbose=bool(verbose)
 #%% scaling brightness
     """
-    We could repeatedly downscale brightness in loop, but that consumes a lot of CPU.
+    We could repeatedly downscale simulted brightness in loop, but that consumes a lot of CPU.
     It is equivalent to temporarily upscale observed brightness once before minimization
     Then downscale once after minimization
     """
-    bscale = [C.intens2dn for C in cam]
+    bscale = [C.dn2intens for C in cam]
     cInd   = [C.ind       for C in cam]
     bnu = empty_like(bn)
     for s,c in zip(bscale,cInd):
-        bnu[c] = bn[c] / s
+        bnu[c] = bn[c] * s #DONT use 1/intens2dn --that's wrong for real data case!
 #%%
     Mp,zTranscar,EK,EKpcolor = MpDict['Mp'],MpDict['ztc'],MpDict['Ek'],MpDict['EKpcolor']
 
