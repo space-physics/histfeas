@@ -110,7 +110,7 @@ def FitVERopt(L,bn,Phi0,MpDict,sim,cam,Fwd,tInd,makeplot,verbose):
         bfitu = L.dot( vfit['optim'].ravel(order='F') )
 
         for s,c in zip(bscale,cInd):
-            bfitu[c] *= s
+            bfitu[c] /= s
 
         bfit['optim'] = bfitu
 #%%
