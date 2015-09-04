@@ -771,7 +771,7 @@ def plotBcompare(sim,braw,bfit,cam,prefix, spfid,vlim,tInd,figh,makeplot,progms,
     else:
         singax = False
         ax2 = ax1.twinx()
-        ax2.get_yaxis().set_major_formatter(sfmt)
+        ax2.get_yaxis().set_major_formatter(sfmt[0]) #only need lin
         ax1.set_ylabel('$\mathbf{B}$ [photons sr$^{-1}$ s$^{-1}$]',labelpad=0,fontsize=afs)
         ax2.set_ylabel('$\mathbf{\widehat{B}}$ [photons sr$^{-1}$ s$^{-1}$]',labelpad=0,fontsize=afs)
 #%% now plot each camera
@@ -811,7 +811,7 @@ def plotBcompare(sim,braw,bfit,cam,prefix, spfid,vlim,tInd,figh,makeplot,progms,
         ax3.set_xlabel('local view angle [deg.]')
         ax3.xaxis.set_major_locator(MultipleLocator(1))
         ax3.set_ylabel('error',labelpad=0)
-        ax3.get_yaxis().set_major_formatter(sfmt)
+        ax3.get_yaxis().set_major_formatter(sfmt[0])
 
 
     if 'h5' in makeplot: #a separate stanza

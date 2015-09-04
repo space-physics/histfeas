@@ -69,7 +69,7 @@ class Sim:
         try:
             self.optimfitmeth = overrides['fitm']
             logging.info('* setting fit method to {}'.format(overrides['fitm']))
-        except KeyError:
+        except (TypeError,KeyError):
             self.optimfitmeth = str(sp.at['OptimFluxMethod','Recon']) #must have str() for FITver .lower()
 
         self.optimmaxiter = sp.at['OptimMaxiter','Recon']
@@ -141,8 +141,6 @@ class Sim:
         else:
             self.FwdLfn = join('precompute',self.getEllHash(sp,cp))
 
-
-
         if self.raymap == 'astrometry':
             logging.info('Using ASTROMETRY-based per-pixel 1D cut mapping to 2D model space')
         elif self.raymap == 'arbitrary':
@@ -152,8 +150,11 @@ class Sim:
 
         self.cal1dpath = sp.at['cal1Ddir','Cams']
 
-        self.startutc = parse(sp.at['reqStartUT','Obs'])
-        self.stoputc = parse(sp.at['reqStopUT','Obs'])
+        try: #for real data only for now
+            self.startutc = parse(sp.at['reqStartUT','Obs'])
+            self.stoputc = parse(sp.at['reqStopUT','Obs'])
+        except (KeyError,AttributeError):
+            pass
 
         self.timestepsperexp = sp.at['timestepsPerExposure','Sim']
         #%% recon
