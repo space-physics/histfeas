@@ -122,7 +122,7 @@ class Cam: #use this like an advanced version of Matlab struct
         hasgainparam = isfinite(self.kineticsec) and isfinite(cp['pixarea_sqcm']) and isfinite(cp['pedn']) and isfinite(cp['ampgain'])
 
         if hasgainparam:
-            self.dn2intens = cp['pedn'] / self.kineticsec * cp['pixarea_sqcm'] * cp['ampgain']
+            self.dn2intens = cp['pedn'] / (self.kineticsec * cp['pixarea_sqcm'] * cp['ampgain'])
             if sim.realdata:
                 self.intens2dn = 1
             else:
