@@ -76,10 +76,16 @@ class Cam: #use this like an advanced version of Matlab struct
         pedn is photoelectrons per data number
         This is used in fwd model and data inversion
         """
-        if not sim.realdata and (isfinite(self.kineticsec) and isfinite(self.pixarea_sqcm) and isfinite(self.pedn)):
-            self.intens2dn = self.kineticsec * cp['pixarea_sqcm'] * cp['ampgain'] / cp['pedn']
-        else: #realdata, or sim without parameters specified
-            self.intens2dn = 1
+        hasgainparam = isfinite(self.kineticsec) and isfinite(self.pixarea_sqcm) and isfinite(self.pedn)
+
+        if hasgainparam:
+            self.dn2intens = cp['pedn'] / self.kineticsec * cp['pixarea_sqcm'] * cp['ampgain']
+            if sim.realdata:
+                self.intens2dn = 1
+            else:
+                self.intens2dn = 1/self.dn2intens
+        else: #this will give tiny ver and flux
+            self.intens2dn = self.dn2intens = 1
 #%% sky mapping
         cal1Ddir = sim.cal1dpath
         cal1Dname = cp['cal1Dname']
