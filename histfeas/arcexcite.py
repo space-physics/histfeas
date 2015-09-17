@@ -52,7 +52,7 @@ def getTranscar(sim,dbglvl=0):
         for iEn in range(nEnergy):
 
             spec,tTC,tTCind = calcVERtc(sim.excratesfn, sim.transcarpath,
-                                    Ek[iEn], tReq, sim, dbglvl)
+                                    Ek[iEn], tReq, sim)
 
             Plambda = calcemissions(spec,tTCind,sim,Ek[iEn])[0]
             if Plambda is None: #couldn't read this beam
