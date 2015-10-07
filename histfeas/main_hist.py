@@ -64,7 +64,7 @@ def doSim(ParamFN,makeplot,timeInds,overrides,progms,x1d,vlim,animtime, cmd,verb
 #%% preallocation
     PhifitAll = []; drnAll = []; bfitAll=[]
 #%% load eigenprofiles from Transcar
-    Peig = getMp(sim,Fwd['z'],makeplot,verbose)
+    Peig = getMp(sim,Fwd['z'],makeplot)
 #%% synthetic diff. num flux
     if not sim.realdata:
         Phi0all = getPhi0(sim,ap,Fwd['x'],Peig['Ek'], makeplot,verbose)

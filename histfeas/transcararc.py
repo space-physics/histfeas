@@ -7,9 +7,8 @@ from warnings import warn
 from six import string_types
 #
 from gridaurora.eFluxGen import fluxgen
+from gridaurora.arcexcite import getTranscar
 from histutils.findnearest import find_nearest
-from .arcexcite import getTranscar
-
 
 def getColumnVER(zgrid,zTranscar,Peig,Phi0):
     assert Phi0.shape[0] == Peig.shape[1]
@@ -25,9 +24,9 @@ def getColumnVER(zgrid,zTranscar,Peig,Phi0):
 
     return Tm.dot(Phi0)
 
-def getMp(sim,zKM,makeplot,dbglvl):
+def getMp(sim,zKM,makeplot):
 #%% read from transcar sim
-    Peigen,EKpcolor = getTranscar(sim, dbglvl)[:2]
+    Peigen,EKpcolor = getTranscar(sim)[:2]
     try:
         Ek = Peigen.columns.values
         zTranscar = Peigen.index.values
