@@ -104,13 +104,13 @@ def goPlot(sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
         Jxi = None
 #%% eigenfunction
     if 'eig' in makeplot:
-        ploteig(fitp['EKpcolor'],zKM,Tm,vlim['p'],sim,tInd,makeplot,'peig',progms,verbose)
+        ploteig(fitp['EKpcolor'],zKM,Tm,vlim['p'],sim,tInd,makeplot,'peig',progms)
 
        #FIXME this is temporary hack until Peigen is passed to hist-feasibility as DataFrame
         Peigen = DataFrame(Peig['Mp'],index=zKM,columns=fitp['EK'])
         plotOptMod(None,Peigen)
 
-        ploteig1d(fitp['EK'],zKM,Tm,vlim['p'],sim,tInd,makeplot,'peig1d',progms,verbose)
+        ploteig1d(fitp['EK'],zKM,Tm,vlim['p'],sim,tInd,makeplot,'peig1d',progms)
 
     if 'tphi0' in makeplot:
         plottphi0(Tm,Phi0,Jxi,fitp['EK'],zKM,vlim['p'],sim,tInd,makeplot,'tphi0',progms,verbose)
@@ -340,7 +340,7 @@ def plotnoise(cam,tInd,figh,makeplot,prefix,progms,verbose):
          ax2.grid(True)
       ax2.legend(loc='best')
 
-      writeplots(fg,prefix,tInd,makeplot,progms,None,verbose)
+      writeplots(fg,prefix,tInd,makeplot,progms)
    except Exception as e:
       warn('tind {}   {}'.format(tInd,e))
 
@@ -368,11 +368,11 @@ def plottphi0(Tm,Phi0,Jxi,Ek,zKM,vlim,sim,tInd,makeplot,prefix,progms,verbose):
     ax.set_xlim(vlim[4:])
     ax.set_ylim(vlim[2:-2])
 
-    writeplots(fg,prefix,tInd,makeplot,progms,verbose=verbose)
+    writeplots(fg,prefix,tInd,makeplot,progms)
   except Exception as e:
     warn('tind {}   {}'.format(tInd,e))
 
-def ploteig(EKpcolor,zKM,Tm,vlim,sim,tInd,makeplot,prefix,progms,verbose):
+def ploteig(EKpcolor,zKM,Tm,vlim,sim,tInd=None,makeplot=None,prefix=None,progms=None):
   try:
     fg = figure(); ax = fg.gca()
     pcm = ax.pcolormesh(EKpcolor, zKM, Tm,
@@ -399,11 +399,11 @@ def ploteig(EKpcolor,zKM,Tm,vlim,sim,tInd,makeplot,prefix,progms,verbose):
 
     ax.tick_params(axis='both', which='both', direction='out', labelsize=tkfs)
     ax.set_ylim(vlim[2:4])
-    writeplots(fg,prefix,tInd,makeplot,progms,verbose=verbose)
+    writeplots(fg,prefix,tInd,makeplot,progms)
   except Exception as e:
     warn('tind {}   {}'.format(tInd,e))
 
-def ploteig1d(Ek,zKM,Tm,vlim,sim,tInd,makeplot,prefix,progms,verbose):
+def ploteig1d(Ek,zKM,Tm,vlim,sim,tInd=None,makeplot=None,prefix=None,progms=None):
   try:
     firstbeamind=0
 
@@ -428,7 +428,7 @@ def ploteig1d(Ek,zKM,Tm,vlim,sim,tInd,makeplot,prefix,progms,verbose):
     ax.legend(loc='upper left',framealpha=0.5)
     #ax.autoscale(True,tight=True)
     ax.grid(True)
-    writeplots(fg,prefix,tInd,makeplot,progms,verbose=verbose)
+    writeplots(fg,prefix,tInd,makeplot,progms)
   except Exception as e:
     warn('tind {}   {}'.format(tInd,e))
 
@@ -485,7 +485,7 @@ def plotJ1D(sim,PhiFwd,PhiInv,Ek,vlim,tInd,makeplot,prefix,titletxt,spfid,progms
 
     if anno:    ax.legend(loc='lower left')
 
-    writeplots(fg,prefix,tInd,makeplot,progms,None,verbose)
+    writeplots(fg,prefix,tInd,makeplot,progms,None)
 
     if 'h5' in makeplot:
         dumph5(spfid,prefix,tInd,PhiFwd1d=PhiFwd,PhiInv1d=PhiInv,Ek=Ek)
@@ -562,7 +562,7 @@ def plotJ(sim,Jflux,x,xp,Ek,EKpcolor,vlim,xlim,tInd,makeplot,prefix,titletxt,fig
             fg.subplots_adjust(top=0.85)
             doJlbl(ax,titletxt)
 
-            writeplots(fg,prefix+p,tInd,makeplot,progms,verbose=verbose)
+            writeplots(fg,prefix+p,tInd,makeplot,progms)
 
 #%% 3-D
     if '3d' in makeplot:
@@ -650,7 +650,7 @@ def plotVER1D(sim,pfwd,pinv,zKM,vlim,tInd,makeplot,prefix,titletxt,spfid,progms,
     ax.set_ylim(bottom=vlim[0],top=vlim[1])
     ax.set_xlim(vlim[4:6])
 
-    writeplots(fg,prefix,tInd,makeplot,progms,None,verbose)
+    writeplots(fg,prefix,tInd,makeplot,progms,None)
 
     if 'h5' in makeplot: #a separate stanza
         dumph5(spfid,prefix,tInd,pfwd1d=pfwd,pinv1d=pinv,z=zKM)
@@ -733,7 +733,7 @@ def plotVER(sim,ver,x,xp,z,zp,vlim,tInd,makeplot,prefix,titletxt,figh,spfid,prog
 
             ax.grid(True)
 
-            writeplots(fg,prefix+p,tInd,makeplot,progms,verbose=verbose)
+            writeplots(fg,prefix+p,tInd,makeplot,progms)
     else:
         text(0,0,'Using Actual Data (ver=None)')
 
@@ -817,7 +817,7 @@ def plotBcompare(sim,braw,bfit,cam,prefix, spfid,vlim,tInd,figh,makeplot,progms,
     if 'h5' in makeplot: #a separate stanza
         dumph5(spfid,prefix,tInd,angle=[C.angle_deg for C in cam],braw=braw,bfit=bfit)
 
-    writeplots(fg,prefix,tInd,makeplot,progms,None,verbose)
+    writeplots(fg,prefix,tInd,makeplot,progms,None)
   except Exception as e:
     warn('failed to plot brightness at tind {}   {}'.format(tInd,e))
 #%%
@@ -856,7 +856,7 @@ def plotB(bpix,isrealdata,cam,vlim,tInd,figh,makeplot,labeltxt,progms,verbose):
                  #color=cord[c])
     doBlbl(ax1,isrealdata,sfmt[0],vlim,labeltxt,std) #b is never log
 
-    writeplots(fgb,'b'+labeltxt[4:7],tInd,makeplot,progms,verbose=verbose)
+    writeplots(fgb,'b'+labeltxt[4:7],tInd,makeplot,progms)
   except Exception as e:
     warn('tind {}   {}'.format(tInd,e))
 
@@ -1059,7 +1059,7 @@ def dumph5(fn,prefix,tInd,**writevar): #used in other .py too
 #        print('saving ' + cn + '...')
 #        imsave(cn,img,vmin=minmax[0],vmax=minmax[1],format=fmt,cmap='gray')
 
-def writeplots(fg,plotprefix,tInd,method,progms,overridefmt=None,verbose=0):
+def writeplots(fg,plotprefix,tInd,method,progms,overridefmt=None):
     draw() #Must have this here or plot doesn't update in animation multiplot mode!
     #TIF was not faster and was 100 times the file size!
     #PGF is slow and big file,
@@ -1215,7 +1215,7 @@ def getx0E0(Phifwd,Phifit,E,x,tInd,progms,makeplot,verbose):
         except AttributeError:
             ca.text(0,0,'$\hat{\Phi} not used')
 
-        writeplots(fg,'gaussfitlin',tInd,makeplot,progms,verbose=verbose)
+        writeplots(fg,'gaussfitlin',tInd,makeplot,progms)
 
     #Ghrow,Ghcol = np.unravel_index(gfit.argmax(axis=None),gfit.shape, order='C')
 
