@@ -1,5 +1,6 @@
 from __future__ import division,absolute_import
 import logging
+from datetime import datetime
 from numpy import (in1d,s_,empty,empty_like,isnan,asfortranarray,linspace,outer,
                    sin,cos,pi,ones_like,array,nan,unravel_index,meshgrid,logspace,
                    log10,spacing)
@@ -18,8 +19,8 @@ from pandas import DataFrame
 if False:
     import seaborn as sns
     sns.color_palette(sns.color_palette("cubehelix"))
-    sns.set(context='paper', style='whitegrid',
-            rc={'image.cmap': 'cubehelix_r'}) #for contour
+    sns.set(context='paper', style='whitegrid')
+    sns.set(rc={'image.cmap': 'cubehelix_r'}) #for contour
 
 #sns.set_palette(sns.cubehelix_palette(6)) #all one color, hard to see
 #
@@ -385,17 +386,18 @@ def ploteig(EKpcolor,zKM,Tm,vlim,sim,tInd=None,makeplot=None,prefix=None,progms=
     ax.set_xscale('log')
     ax.yaxis.set_major_locator(MultipleLocator(dymaj))
     ax.yaxis.set_minor_locator(MultipleLocator(dymin))
-    mptitle = '$P_{eig}$, filter: ' + sim.opticalfilter
+    if isinstance(tInd,datetime):
+        mptitle = str(tInd)
+    else:
+        mptitle=''
+    mptitle += '$P_{{eig}}$, filter: {}'.format(sim.opticalfilter)
     mptitle += str(sim.reacreq)
-#    if sim.loadver:
-#        mptitle+= '\n' + sim.loadverfn
-#    else:
-#        mptitle += '\n' + sim.transcarpath
-    ax.set_title(mptitle,fontsize=tfs)
+
+    ax.set_title(mptitle)#,fontsize=tfs)
     cbar = fg.colorbar(pcm,ax=ax)
-    cbar.set_label('[photons cm$^{-3}$s$^{-1}$]',labelpad=0,fontsize=afs)
-    cbar.ax.tick_params(labelsize=afs)
-    cbar.ax.yaxis.get_offset_text().set_size(afs)
+    cbar.set_label('[photons cm$^{-3}$s$^{-1}$]',labelpad=0)#,fontsize=afs)
+   # cbar.ax.tick_params(labelsize=afs)
+    #cbar.ax.yaxis.get_offset_text().set_size(afs)
 
     ax.tick_params(axis='both', which='both', direction='out', labelsize=tkfs)
     ax.set_ylim(vlim[2:4])
