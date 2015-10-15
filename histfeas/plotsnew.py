@@ -30,7 +30,10 @@ try:
 except Exception:
     pass
 #
-from gaussfitter import gaussfit,twodgaussian
+try:
+    from gaussfitter import gaussfit,twodgaussian
+except Exception as e:
+    logging.warning('gaussfitter not installed')
 #
 from histutils.findnearest import find_nearest
 from histutils.plotsimul import plotRealImg,plotPlainImg
@@ -378,7 +381,7 @@ def ploteig(EKpcolor,zKM,Tm,vlim,sim,tInd=None,makeplot=None,prefix=None,progms=
     fg = figure(); ax = fg.gca()
     pcm = ax.pcolormesh(EKpcolor, zKM, Tm,
                         edgecolors='none',#cmap=pcmcmap,
-                        norm=LogNorm(),
+#                        norm=LogNorm(),
                         vmin=vlim[4], vmax=vlim[5])
     ax.set_xlabel('Energy [eV]',fontsize=afs)
     ax.set_ylabel('$B_\parallel$ [km]',fontsize=afs)
