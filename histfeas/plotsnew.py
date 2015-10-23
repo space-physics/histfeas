@@ -4,6 +4,7 @@ from datetime import datetime
 from numpy import (in1d,s_,empty,empty_like,isnan,asfortranarray,linspace,outer,
                    sin,cos,pi,ones_like,array,nan,unravel_index,meshgrid,logspace,
                    log10,spacing)
+from numpy.ma import masked_invalid #for pcolormesh, which doesn't like NaN
 from matplotlib.pyplot import figure,subplots, clf,text,draw
 #from matplotlib.cm import get_cmap
 from matplotlib.colors import LogNorm
@@ -379,9 +380,9 @@ def plottphi0(Tm,Phi0,Jxi,Ek,zKM,vlim,sim,tInd,makeplot,prefix,progms,verbose):
 def ploteig(EKpcolor,zKM,Tm,vlim,sim,tInd=None,makeplot=None,prefix=None,progms=None):
   try:
     fg = figure(); ax = fg.gca()
-    pcm = ax.pcolormesh(EKpcolor, zKM, Tm,
+    pcm = ax.pcolormesh(EKpcolor, zKM, masked_invalid(Tm),
                         edgecolors='none',#cmap=pcmcmap,
-#                        norm=LogNorm(),
+                        norm=LogNorm(),
                         vmin=vlim[4], vmax=vlim[5])
     ax.set_xlabel('Energy [eV]',fontsize=afs)
     ax.set_ylabel('$B_\parallel$ [km]',fontsize=afs)
@@ -389,7 +390,7 @@ def ploteig(EKpcolor,zKM,Tm,vlim,sim,tInd=None,makeplot=None,prefix=None,progms=
     ax.set_xscale('log')
     ax.yaxis.set_major_locator(MultipleLocator(dymaj))
     ax.yaxis.set_minor_locator(MultipleLocator(dymin))
-    if isinstance(tInd,datetime):
+    if tInd is not None:
         mptitle = str(tInd)
     else:
         mptitle=''
