@@ -1,6 +1,5 @@
 from __future__ import division,absolute_import
 import logging
-from datetime import datetime
 from numpy import (in1d,s_,empty,empty_like,isnan,asfortranarray,linspace,outer,
                    sin,cos,pi,ones_like,array,nan,unravel_index,meshgrid,logspace,
                    log10,spacing)
@@ -13,7 +12,6 @@ from matplotlib.ticker import LogFormatterMathtext, MultipleLocator, ScalarForma
 import h5py
 from os.path import join
 from scipy.interpolate import interp1d
-from warnings import warn
 from pandas import DataFrame
 #
 
@@ -109,7 +107,7 @@ def goPlot(sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
         Jxi = None
 #%% eigenfunction
     if 'eig' in makeplot:
-        ploteig(fitp['EKpcolor'],zKM,Tm,vlim['p'],sim,tInd,makeplot,'peig',progms)
+        ploteigver(fitp['EKpcolor'],zKM,Tm,vlim['p'],sim,tInd,makeplot,'peig',progms)
 
        #FIXME this is temporary hack until Peigen is passed to hist-feasibility as DataFrame
         Peigen = DataFrame(Peig['Mp'],index=zKM,columns=fitp['EK'])
@@ -246,7 +244,7 @@ def goPlot(sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
                 cax.yaxis.set_minor_locator(MultipleLocator(dymin))
                 logging.info('max diff vmaxent-vfwd=' + str((vfit['maxent'][:,Jxi]-ver[:,Jxi]).max()))
             except Exception as e:
-                warn('could not plot vfwd vmaxent comparison.  {}'.format(e))
+                logging.warning('could not plot vfwd vmaxent comparison.  {}'.format(e))
 #%% diff number flux from ART
     if 'jart' in makeplot:
         plotJ(sim,fitp['art'],xKM,xp,fitp['EK'],fitp['EKpcolor'],
@@ -347,7 +345,7 @@ def plotnoise(cam,tInd,figh,makeplot,prefix,progms,verbose):
 
       writeplots(fg,prefix,tInd,makeplot,progms)
    except Exception as e:
-      warn('tind {}   {}'.format(tInd,e))
+      logging.error('tind {}   {}'.format(tInd,e))
 
 def plottphi0(Tm,Phi0,Jxi,Ek,zKM,vlim,sim,tInd,makeplot,prefix,progms,verbose):
   try:
@@ -375,11 +373,12 @@ def plottphi0(Tm,Phi0,Jxi,Ek,zKM,vlim,sim,tInd,makeplot,prefix,progms,verbose):
 
     writeplots(fg,prefix,tInd,makeplot,progms)
   except Exception as e:
-    warn('tind {}   {}'.format(tInd,e))
+    logging.error('tind {}   {}'.format(tInd,e))
 
-def ploteig(EKpcolor,zKM,Tm,vlim,sim,tInd=None,makeplot=None,prefix=None,progms=None):
+def ploteigver(EKpcolor,zKM,Tm,vlim,sim,tInd=None,makeplot=None,prefix=None,progms=None):
   try:
     fg = figure(); ax = fg.gca()
+    #pcolormesh canNOT handle nan at all
     pcm = ax.pcolormesh(EKpcolor, zKM, masked_invalid(Tm),
                         edgecolors='none',#cmap=pcmcmap,
                         norm=LogNorm(),
@@ -407,7 +406,7 @@ def ploteig(EKpcolor,zKM,Tm,vlim,sim,tInd=None,makeplot=None,prefix=None,progms=
     ax.set_ylim(vlim[2:4])
     writeplots(fg,prefix,tInd,makeplot,progms)
   except Exception as e:
-    warn('tind {}   {}'.format(tInd,e))
+    logging.error('tind {}   {}'.format(tInd,e))
 
 def ploteig1d(Ek,zKM,Tm,vlim,sim,tInd=None,makeplot=None,prefix=None,progms=None):
   try:
@@ -436,7 +435,7 @@ def ploteig1d(Ek,zKM,Tm,vlim,sim,tInd=None,makeplot=None,prefix=None,progms=None
     ax.grid(True)
     writeplots(fg,prefix,tInd,makeplot,progms)
   except Exception as e:
-    warn('tind {}   {}'.format(tInd,e))
+    logging.error('tind {}   {}'.format(tInd,e))
 
 def plotPicard(A,b,cvar=None,verbose=0):
     from picard import picard
@@ -475,7 +474,7 @@ def plotJ1D(sim,PhiFwd,PhiInv,Ek,vlim,tInd,makeplot,prefix,titletxt,spfid,progms
                              ha='right', va='top',
                              arrowprops={'facecolor':'red', 'shrink':0.2, 'headwidth':8, 'width':2},)
             except ValueError as e:
-                warn('could not plot Jfwd1D due to non-positive value(s) in Jflux, t= {}   {}'
+                logging.error('could not plot Jfwd1D due to non-positive value(s) in Jflux, t= {}   {}'
                      '\n did you pick the correct --x1d ?   {}'.format(tInd,titletxt,e))
 
     ax.grid(True)
@@ -496,7 +495,7 @@ def plotJ1D(sim,PhiFwd,PhiInv,Ek,vlim,tInd,makeplot,prefix,titletxt,spfid,progms
     if 'h5' in makeplot:
         dumph5(spfid,prefix,tInd,PhiFwd1d=PhiFwd,PhiInv1d=PhiInv,Ek=Ek)
   except Exception as e:
-    warn('tind {}   {}'.format(tInd,e))
+    logging.error('tind {}   {}'.format(tInd,e))
 #%%
 def plotJ(sim,Jflux,x,xp,Ek,EKpcolor,vlim,xlim,tInd,makeplot,prefix,titletxt,figh,spfid,progms,verbose):
   try:
@@ -582,7 +581,7 @@ def plotJ(sim,Jflux,x,xp,Ek,EKpcolor,vlim,xlim,tInd,makeplot,prefix,titletxt,fig
     if 'h5' in makeplot:
         dumph5(spfid,prefix,tInd,phi=Jflux,xp=xp,Ek=Ek,EKpcolor=EKpcolor)
   except Exception as e:
-    warn('tind {}   {}'.format(tInd,e))
+    logging.error('tind {}   {}'.format(tInd,e))
 
 def doJlbl(ax,titletxt):
     ax.set_ylabel('Energy [eV]',fontsize=afs,labelpad=0)
@@ -622,7 +621,7 @@ def plotJ3(x,EKpcolor,Jflux,plt3):
         octave.Jmesh(x,e,Jflux)
     return ax3
   except Exception as e:
-    warn('{}'.format(e))
+    logging.error('{}'.format(e))
 
 def getmin(vs,vu):
     if vu is not None:
@@ -661,7 +660,7 @@ def plotVER1D(sim,pfwd,pinv,zKM,vlim,tInd,makeplot,prefix,titletxt,spfid,progms,
     if 'h5' in makeplot: #a separate stanza
         dumph5(spfid,prefix,tInd,pfwd1d=pfwd,pinv1d=pinv,z=zKM)
   except Exception as e:
-    warn('tind {}   {}'.format(tInd,e))
+    logging.error('tind {}   {}'.format(tInd,e))
 #%%
 def plotVER(sim,ver,x,xp,z,zp,vlim,tInd,makeplot,prefix,titletxt,figh,spfid,progms,verbose):
   try:
@@ -746,7 +745,7 @@ def plotVER(sim,ver,x,xp,z,zp,vlim,tInd,makeplot,prefix,titletxt,figh,spfid,prog
     if 'h5' in makeplot: #a separate stanza
         dumph5(spfid,prefix,tInd, p=ver,x=x,xp=xp,z=z,zp=zp)
   except Exception as e:
-    warn('tind {}   {}'.format(tInd,e))
+    logging.error('tind {}   {}'.format(tInd,e))
 #%%
 def plotBcompare(sim,braw,bfit,cam,prefix, spfid,vlim,tInd,figh,makeplot,progms,verbose):
   try:
@@ -825,7 +824,7 @@ def plotBcompare(sim,braw,bfit,cam,prefix, spfid,vlim,tInd,figh,makeplot,progms,
 
     writeplots(fg,prefix,tInd,makeplot,progms,None)
   except Exception as e:
-    warn('failed to plot brightness at tind {}   {}'.format(tInd,e))
+    logging.error('failed to plot brightness at tind {}   {}'.format(tInd,e))
 #%%
 def plotB(bpix,isrealdata,cam,vlim,tInd,figh,makeplot,labeltxt,progms,verbose):
   try:
@@ -864,7 +863,7 @@ def plotB(bpix,isrealdata,cam,vlim,tInd,figh,makeplot,labeltxt,progms,verbose):
 
     writeplots(fgb,'b'+labeltxt[4:7],tInd,makeplot,progms)
   except Exception as e:
-    warn('tind {}   {}'.format(tInd,e))
+    logging.error('tind {}   {}'.format(tInd,e))
 
 def doBlbl(axb,isrealdata,sfmt,vlim,labeltxt,noiselam):
     axb.legend(loc='upper left',fontsize=afs)
@@ -941,7 +940,7 @@ def planview3(cam,xKM,zKM,makeplot,figh,progms):
     z = earthrad * outer(ones_like(u), cos(v))
     ax.plot_surface(x, y, z,  rstride=4, cstride=4, color='g')
   except Exception as e:
-    warn('{}'.format(e))
+    logging.error('{}'.format(e))
 #%%
 def planviewkml(cam,xKM,zKM,makeplot,figh,progms,verbose=0):
   """
@@ -1042,7 +1041,7 @@ def planviewkml(cam,xKM,zKM,makeplot,figh,progms,verbose=0):
     except TypeError:
         pass #disbled writing
   except Exception as e:
-    warn('{}'.format(e))
+    logging.error('{}'.format(e))
 #%%
 def dumph5(fn,prefix,tInd,**writevar): #used in other .py too
     if fn is None or prefix is None:
@@ -1054,7 +1053,7 @@ def dumph5(fn,prefix,tInd,**writevar): #used in other .py too
             try:
                 f['/'+prefix+'/'+k]=v
             except Exception as e:
-                warn('failed to write {} /{}/{}.  {}'.format(fn,prefix,k,e))
+                logging.error('failed to write {} /{}/{}.  {}'.format(fn,prefix,k,e))
 
 #def writenoax(img,plotprefix,tInd,method,progms,minmax):
 #    tmpl = ('eps','jpg','png','pdf')
@@ -1125,7 +1124,7 @@ def getx0E0(Phifwd,Phifit,E,x,tInd,progms,makeplot,verbose):
         try:
             gparam = gaussfit(gpeak,returnfitimage=False)
         except ValueError:
-            warn('gaussian fit doesnt work when peak is against edge of model space.'
+            logging.error('gaussian fit doesnt work when peak is against edge of model space.'
                  'gpix shape {} row {} col {}'.format(gpeak.shape,pkrow,pkcol))
             return nan, nan,None,None
 
@@ -1140,7 +1139,7 @@ def getx0E0(Phifwd,Phifit,E,x,tInd,progms,makeplot,verbose):
         try:
             return x[Ghcol], Elin[Ghrow], gpix, gpeak
         except IndexError:
-            warn('gaussian fit was outside model space')
+            logging.error('gaussian fit was outside model space')
             return nan, nan, None, None
 
     gx0=empty(2); gE0=empty(2); gpix=[]; gpeak=[]
@@ -1227,5 +1226,5 @@ def getx0E0(Phifwd,Phifit,E,x,tInd,progms,makeplot,verbose):
 
     return gx0, gE0#, x[pkcol], Elin[pkrow]
   except Exception as e:
-      warn('gauss fit failure {}'.format(e))
+      logging.error('gauss fit failure {}'.format(e))
       return nan,nan
