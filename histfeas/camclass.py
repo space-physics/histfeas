@@ -169,13 +169,13 @@ class Cam: #use this like an advanced version of Matlab struct
             frame = frame.transpose(0,2,1)
         # rotate -- note if you use origin='lower', rotCCW -> rotCW !
          #rotate works with first two axes
-        if self.rotccw:
+        if self.rotccw: #NOT isinstance integer_types!
             frame = rot90(frame.transpose(1,2,0),k=self.rotccw).transpose(2,0,1)
         # flip
         if self.fliplr:
             frame = fliplr(frame)
         if self.flipud:
-            frame = flipud(frame)
+            frame = flipud(frame.transpose(1,2,0)).transpose(2,0,1)
         return frame
 
     def doorient(self,az,el,ra,dec):
