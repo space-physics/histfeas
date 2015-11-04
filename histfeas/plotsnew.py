@@ -1,10 +1,10 @@
 from __future__ import division,absolute_import
 import logging
-from numpy import (in1d,s_,empty,empty_like,isnan,asfortranarray,linspace,outer,
-                   sin,cos,pi,ones_like,array,nan,unravel_index,meshgrid,logspace,
+from numpy import (s_,empty,empty_like,isnan,asfortranarray,linspace,outer,
+                   sin,cos,pi,ones_like,nan,unravel_index,meshgrid,logspace,
                    log10,spacing)
 from numpy.ma import masked_invalid #for pcolormesh, which doesn't like NaN
-from matplotlib.pyplot import figure,subplots, clf,text,draw
+from matplotlib.pyplot import figure,subplots, clf,text
 #from matplotlib.cm import get_cmap
 from matplotlib.colors import LogNorm
 from matplotlib.ticker import LogFormatterMathtext, MultipleLocator, ScalarFormatter #for 1e4 -> 1 x 10^4, applied DIRECTLY in format=
@@ -37,6 +37,7 @@ except Exception as e:
 from histutils.findnearest import find_nearest
 from histutils.plotsimul import plotRealImg,plotPlainImg
 from gridaurora.opticalmod import plotOptMod
+from gridaurora.plots import ploteigver,writeplots
 
 #%% plot globals
 afs = None#20
@@ -47,8 +48,6 @@ longtitle=False
 #pcmcmap.set_under('white')
 dymaj=100
 dymin=20
-plotdpi=100
-epsdpi=300
 pstyle='contour'
 
 E0min=500 #eV
@@ -371,39 +370,6 @@ def plottphi0(Tm,Phi0,Jxi,Ek,zKM,vlim,sim,tInd,makeplot,prefix,progms,verbose):
     ax.set_xlim(vlim[4:])
     ax.set_ylim(vlim[2:-2])
 
-    writeplots(fg,prefix,tInd,makeplot,progms)
-  except Exception as e:
-    logging.error('tind {}   {}'.format(tInd,e))
-
-def ploteigver(EKpcolor,zKM,Tm,vlim,sim,tInd=None,makeplot=None,prefix=None,progms=None):
-  try:
-    fg = figure(); ax = fg.gca()
-    #pcolormesh canNOT handle nan at all
-    pcm = ax.pcolormesh(EKpcolor, zKM, masked_invalid(Tm),
-                        edgecolors='none',#cmap=pcmcmap,
-                        norm=LogNorm(),
-                        vmin=vlim[4], vmax=vlim[5])
-    ax.set_xlabel('Energy [eV]',fontsize=afs)
-    ax.set_ylabel('$B_\parallel$ [km]',fontsize=afs)
-    ax.autoscale(True,tight=True)
-    ax.set_xscale('log')
-    ax.yaxis.set_major_locator(MultipleLocator(dymaj))
-    ax.yaxis.set_minor_locator(MultipleLocator(dymin))
-    if tInd is not None:
-        mptitle = str(tInd)
-    else:
-        mptitle=''
-    mptitle += '$P_{{eig}}$, filter: {}'.format(sim.opticalfilter)
-    mptitle += str(sim.reacreq)
-
-    ax.set_title(mptitle)#,fontsize=tfs)
-    cbar = fg.colorbar(pcm,ax=ax)
-    cbar.set_label('[photons cm$^{-3}$s$^{-1}$]',labelpad=0)#,fontsize=afs)
-   # cbar.ax.tick_params(labelsize=afs)
-    #cbar.ax.yaxis.get_offset_text().set_size(afs)
-
-    ax.tick_params(axis='both', which='both', direction='out', labelsize=tkfs)
-    ax.set_ylim(vlim[2:4])
     writeplots(fg,prefix,tInd,makeplot,progms)
   except Exception as e:
     logging.error('tind {}   {}'.format(tInd,e))
@@ -1064,23 +1030,6 @@ def dumph5(fn,prefix,tInd,**writevar): #used in other .py too
 #        print('saving ' + cn + '...')
 #        imsave(cn,img,vmin=minmax[0],vmax=minmax[1],format=fmt,cmap='gray')
 
-def writeplots(fg,plotprefix,tInd,method,progms,overridefmt=None):
-    draw() #Must have this here or plot doesn't update in animation multiplot mode!
-    #TIF was not faster and was 100 times the file size!
-    #PGF is slow and big file,
-    #RAW crashes
-    #JPG no faster than PNG
-
-    tmpl = ('eps','jpg','png','pdf')
-    used = in1d(tmpl,method)
-    if progms and used.any():
-        if overridefmt is not None:
-            fmt = overridefmt; dpi = epsdpi
-        else:
-            fmt = array(tmpl)[used][0]; dpi=plotdpi
-        cn = join(progms,(plotprefix + '_t{:03d}.{}'.format(tInd,fmt)))
-        logging.info('write {}'.format(cn))
-        fg.savefig(cn,bbox_inches='tight',dpi=dpi,format=fmt)  # this is slow and async
 #%%
 def getx0E0(Phifwd,Phifit,E,x,tInd,progms,makeplot,verbose):
 
