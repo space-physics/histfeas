@@ -163,19 +163,19 @@ class Cam: #use this like an advanced version of Matlab struct
         self.x2mz, self.y2mz, self.z2mz = aer2ecef(self.Baz,self.Bel,ranges,
                                                    self.lat,self.lon,self.alt_m)
 
+    #TODO put doorientimage and doorient in one function for safety
     def doorientimage(self,frame):
         if self.transpose:
             frame = frame.transpose(0,2,1)
         # rotate -- note if you use origin='lower', rotCCW -> rotCW !
-        try: #rotate works with first two axes
+         #rotate works with first two axes
+        if self.rotccw: #NOT isinstance integer_types!
             frame = rot90(frame.transpose(1,2,0),k=self.rotccw).transpose(2,0,1)
-        except:
-            pass
         # flip
         if self.fliplr:
             frame = fliplr(frame)
         if self.flipud:
-            frame = flipud(frame)
+            frame = flipud(frame.transpose(1,2,0)).transpose(2,0,1)
         return frame
 
     def doorient(self,az,el,ra,dec):
