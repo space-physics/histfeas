@@ -45,7 +45,7 @@ def doSim(ParamFN,makeplot,timeInds,overrides,progms,x1d,vlim,animtime, cmd,verb
     makedirs(str(progms), exist_ok=True)
     (progms/'cmd.log').write_text(' '.join(argv)) #store command for future log
 #%% Step 0) load data
-    ap,sim,cam,Fwd = getParams(ParamFN, overrides,makeplot,progms,verbose)
+    ap,sim,cam,Fwd = getParams(ParamFN, overrides,makeplot,progms)
 #%% setup loop
     if sim.realdata:
         cam,rawdata,sim = getSimulData(sim,cam,makeplot,progms,verbose)
