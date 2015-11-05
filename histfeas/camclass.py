@@ -18,9 +18,11 @@ from pymap3d.coordconv3d import aer2ecef
 
 epoch = datetime(1970,1,1,tzinfo=UTC)
 
+verbose=0
+
 
 class Cam: #use this like an advanced version of Matlab struct
-    def __init__(self,sim,cp,name,zmax,verbose):
+    def __init__(self,sim,cp,name,zmax,verbose=0):
         self.verbose = verbose
         self.name = int(name)
 #%%
@@ -291,7 +293,7 @@ class Cam: #use this like an advanced version of Matlab struct
         self.cutrow = cutrow
         self.cutcol = cutcol
 
-        if self.verbose>0:
+        if verbose>0:
             from matplotlib.pyplot import figure
             clr = ['b','r','g','m']
             ax=figure().gca()
@@ -338,7 +340,7 @@ class Cam: #use this like an advanced version of Matlab struct
 
         self.findLSQ(nearRow, nearCol)
 
-        if self.verbose>0:
+        if verbose>0:
             from matplotlib.pyplot import figure
             clr = ['b','r','g','m']
             ax = figure().gca()

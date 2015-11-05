@@ -76,7 +76,7 @@ def readresults(h5list,xlsfn,vlim,x1d,overrides,makeplot,verbose=0):
     if not xlsfn:
         raise ValueError('No XLSX parameter file found')
 
-    ap,sim,cam,Fwd = getParams(xlsfn,overrides,makeplot,progms,verbose=verbose)
+    ap,sim,cam,Fwd = getParams(xlsfn,overrides,makeplot,progms)
     cam = definecamind(cam,sim.nCutPix)
 
     for a in ap:
@@ -86,8 +86,7 @@ def readresults(h5list,xlsfn,vlim,x1d,overrides,makeplot,verbose=0):
 
         analyseres(sim,cam,
                    x, xp, Phifwd, Phidict, drn, dhat,
-                   vlim, x0true,E0true,makeplot,
-                   progms, verbose=verbose)
+                   vlim, x0true,E0true,makeplot, progms)
 
 #%%
     for ti,t in enumerate(tInd):

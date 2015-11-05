@@ -10,7 +10,7 @@ from .nans import nans
 
 
 def analyseres(sim,cam,x,xp,Phifwd,Phifit,drn,dhat,vlim,x0true=None,E0true=None,
-               makeplot=[None], progms=None,verbose=0):
+               makeplot=[None], progms=None):
     #not Phifit tests for None and []
     if Phifwd is None or not Phifit or Phifit[0]['x'] is None or x0true is None or E0true is None:
         return
@@ -45,7 +45,7 @@ def analyseres(sim,cam,x,xp,Phifwd,Phifit,drn,dhat,vlim,x0true=None,E0true=None,
                                                 gx0[i,0],  gE0[i,0],
                                                 gx0[i,1],  gE0[i,1]))
 
-        Eavgfwdx[i,:],Eavghatx[i,:] = avgcomp(Phifwd[...,i], jf['x'], jf['EK'],x,makeplot,progms,verbose)
+        Eavgfwdx[i,:],Eavghatx[i,:] = avgcomp(Phifwd[...,i], jf['x'], jf['EK'],x,makeplot,progms)
 
 #%% overall error
     gx0err = gx0[:,1] - x0true #-gx0[:,0]
@@ -54,7 +54,7 @@ def analyseres(sim,cam,x,xp,Phifwd,Phifit,drn,dhat,vlim,x0true=None,E0true=None,
     #extplot(sim,cam,drn,dhat,vlim,makeplot,progms,verbose)
 
 
-    doplot(x,Phifit,gE0,Eavgfwdx,Eavghatx, makeplot,progms,verbose)
+    doplot(x,Phifit,gE0,Eavgfwdx,Eavghatx, makeplot,progms)
 
     plotgauss(x0true,gx0,gE0,gx0err,gE0err,makeplot,progms)
 
@@ -138,10 +138,12 @@ def plotgauss(x0true,gx0,gE0,gx0err,gE0err,makeplot,progms):
     if 'h5' in makeplot and progms is not None:
         fout = progms/'fit_results.h5'
         with h5py.File(str(fout),'w',libver='latest') as f:
-            f['/gx0/err']=gx0err
+            f['/tind'] = gx0err.index.values
+
+            f['/gx0/err']=gx0err.values.astype(float)
             f['/gx0/fwdfit']=gx0
 
-            f['/gE0/err']=gE0err
+            f['/gE0/err']=gE0err.values.astype(float)
             f['/gE0/fwdfit']=gE0
 
 def avgcomp(Phifwd,Phifit,Ek,x,makeplot,progms):
