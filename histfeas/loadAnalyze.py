@@ -30,11 +30,10 @@ def readresults(h5list,xlsfn,vlim,x1d,overrides,makeplot,verbose=0):
 #%%
     nt = len(h5list)
     if nt==0:
-        logging.warning('no HDF5 files found, ending.')
-        return
+        raise ValueError('no HDF5 files found')
 
     for h5 in h5list:
-        tInd.append(re.compile(r'(\d+)$').search(h5.stem).group(1)) #NOTE assumes trailing time integers
+        tInd.append(int(re.compile(r'(\d+)$').search(h5.stem).group(1))) #NOTE assumes trailing time integers
 
         logging.debug('tind {}  reading {}'.format(tInd[-1],h5))
 
@@ -66,7 +65,7 @@ def readresults(h5list,xlsfn,vlim,x1d,overrides,makeplot,verbose=0):
 
     progms = h5.parent / 'reader'
 
-    makedirs(progms,exist_ok=True)
+    makedirs(str(progms),exist_ok=True)
 
 
     try:
@@ -75,8 +74,7 @@ def readresults(h5list,xlsfn,vlim,x1d,overrides,makeplot,verbose=0):
         pass
 
     if not xlsfn:
-        logging.error('No XLSX parameter file found')
-        return
+        raise ValueError('No XLSX parameter file found')
 
     ap,sim,cam,Fwd = getParams(xlsfn,overrides,makeplot,progms,verbose=verbose)
     cam = definecamind(cam,sim.nCutPix)
@@ -107,11 +105,11 @@ def readresults(h5list,xlsfn,vlim,x1d,overrides,makeplot,verbose=0):
 
         if 'fwd' in makeplot:
             plotfwd(sim,cam,drn[ti],x,xp,z,zp,
-                    Pfwd[ti],Phifwd[...,ti],Phidict[ti],Jxi,vlim,t,makeplot,None,progms,verbose)
+                    Pfwd[ti],Phifwd[...,ti],Phidict[ti],Jxi,vlim,t,makeplot,None,progms)
 
         if 'optim' in makeplot:
             plotoptim(sim,cam,drn[ti],dhat[ti],'best',pf,phif,Jxi,
-                      Pest[ti],Phidict[ti],x,xp,z,zp,vlim,t,makeplot,None,progms,verbose)
+                      Pest[ti],Phidict[ti],x,xp,z,zp,vlim,t,makeplot,None,progms)
 
 
 def findxlsh5(h5path):
