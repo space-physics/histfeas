@@ -3,8 +3,9 @@ from numpy import (asfortranarray,atleast_3d, exp,sinc,pi,zeros, outer,
                    isnan,log,logspace,arange,allclose,diff,atleast_1d)
 import h5py
 from scipy.interpolate import interp1d
-from warnings import warn
+import logging
 from six import string_types
+from pandas import DataFrame
 #
 from gridaurora.eFluxGen import fluxgen
 from gridaurora.arcexcite import getTranscar
@@ -27,22 +28,19 @@ def getColumnVER(zgrid,zTranscar,Peig,Phi0):
 def getMp(sim,zKM,makeplot):
 #%% read from transcar sim
     Peigen,EKpcolor = getTranscar(sim)[:2]
-    try:
-        Ek = Peigen.columns.values
-        zTranscar = Peigen.index.values
-    except AttributeError as e:
-        warn('trouble earlier on with getTranscar, aborting. {}'.format(e))
-        return None
+    assert isinstance(Peigen,DataFrame),'trouble earlier on with getTranscar, aborting.'
+    Ek = Peigen.columns.values
+    zTranscar = Peigen.index.values
 #%% clip to Hist requested altitudes
     if not allclose(zKM,zTranscar):
-        warn('attempting to trim altitude grid, this may not be successful due to floating point error')
+        logging.warning('attempting to trim altitude grid, this may not be successful due to floating point error')
         goodAltInd = (zKM[0] < zTranscar) &  (zTranscar < zKM[-1])
         Peig = asfortranarray(Peigen.values[goodAltInd,:])
     else:
         Peig = asfortranarray(Peigen.values)
 #%% repack, with optional downsample
     if sim.downsampleEnergy:
-        warn('** downsampling in energy **')
+        logging.warning('** downsampling in energy **')
         Ek,EKpcolor,Peigen = downsampleEnergy(Ek,EKpcolor,Peig, sim.downsampleEnergy)
     #FIXME: just use a DataFrame!
     return {'Mp':Peig,'ztc':zTranscar,'Ek':Ek,'EKpcolor':EKpcolor}
@@ -62,7 +60,7 @@ def downsampleEnergy(Ek,EKpcolor,Mp,downsamp):
     fp = interp1d(log(Ek), log(Mp), kind='linear',axis=1)
     Mp2 = exp(fp(log(Ek2)))
     if isnan(Mp2).any():
-        warn('should these NaNs be set to zero?')
+        logging.warning('should these NaNs be set to zero?')
     return Ek2,EKpcolor2,Mp2
 
 def getPhi0(sim,ap,xKM,Ek,makeplots,verbose):
@@ -102,7 +100,7 @@ def upsampletime(ap,sim,verbose):
     #%% obtain observation time steps from spreadsheet (for now, equal to kinetic time)
     texp = ap.loc['tReqOffsetSec'].values.astype(float)
     if abs(sim.kineticsec - diff(texp).mean()) > 1e-3:
-        warn('exposure time not matching spreadsheet arc time step')
+        logging.error('exposure time not matching spreadsheet arc time step')
     # make simulation time, also defined as seconds since Transcar tReq
     dtsim =sim.kineticsec/sim.timestepsperexp
     tsim = arange(texp[0],texp[-1],dtsim)

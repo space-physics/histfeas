@@ -14,6 +14,8 @@ def getObs(sim,cam,L,tDataInd,ver,makePlots,dbglvl):
     real data: extract brightness vector from disk data
     simulation: create brightness from projection matrix and fwd model VER
     """
+    if not sim.realdata and ver is None:
+        return
 
     nCutPix = sim.nCutPix
 
@@ -41,14 +43,9 @@ def getObs(sim,cam,L,tDataInd,ver,makePlots,dbglvl):
         bn = nans(bp.shape) #nans as a flag to check if something screwed up
         for C in cam:
             bn[C.ind] = mogrifyData(bp[C.ind],C)
-
-    else: #skip VER processing
-      print('skipping VER generation and pixel projection due to None in VER')
-      bn = None
-
 #%% double check
    #assert np.any(np.isnan(drn)) == False # must be AFTER all drn are assigned, or you can get false positive errors!
-    if bn is not None and isnan(bn).any():
+    if isnan(bn).any():
         dumpFN = 'obsdump_t {}.h5'.format(tDataInd)
         warn('NaN detected at tInd = {}   dumping variables to {}'.format(tDataInd,dumpFN))
         with h5py.File(dumpFN,'w',libver='latest') as fid:
@@ -145,12 +142,12 @@ def loadEll(Fwd,cam,EllFN,verbose):
             except KeyError:
                 warn('could not load FOV ends, maybe this is an old Ell file')
 
-    except (IOError) as e: #python 2.7 doesn't have FileNotFoundError
-      raise IOError('{} not found.\nuse --ell command line option to save new Ell file. {}'.format(EllFN,e))
+    except FileNotFoundError as e:
+        raise FileNotFoundError('{} not found.\nuse --ell command line option to save new Ell file. {}'.format(EllFN,e))
     except AttributeError as e:
         raise AttributeError('grid mismatch detected. use --ell command line option to save new Ell file. {}'.format(e))
 
-    if verbose>0: print('loadEll: Loaded "L,Fwd,Obs" data from:', EllFN)
+    if verbose>0: print('loadEll: Loaded "L,Fwd,Obs" data from: {}'.format(EllFN))
 
     return L,Fwd,cam
 
