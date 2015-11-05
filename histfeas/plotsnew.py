@@ -10,7 +10,6 @@ from matplotlib.colors import LogNorm
 from matplotlib.ticker import LogFormatterMathtext, MultipleLocator, ScalarFormatter #for 1e4 -> 1 x 10^4, applied DIRECTLY in format=
 #from matplotlib.image import imsave
 import h5py
-from os.path import join
 from scipy.interpolate import interp1d
 from pandas import DataFrame
 #
@@ -82,7 +81,7 @@ def goPlot(sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
     if not progms:
         spfid = None
     else:
-        spfid = join(progms,'dump_t{:03d}.h5'.format(tInd))
+        spfid = progms / 'dump_t{:03d}.h5'.format(tInd)
     #cord = ['b','g','k','r','m','y']
 
     xKM = Fwd['x']
@@ -102,7 +101,7 @@ def goPlot(sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
             cx1d=x1d[0]
         Jxi = find_nearest(xKM,cx1d)[0]
         logging.info('1-D plots of Phi and P taken at index {}  x={}'.format(Jxi,x1d))
-    except:
+    except TypeError:
         Jxi = None
 #%% eigenfunction
     if 'eig' in makeplot:
@@ -859,7 +858,7 @@ def allLinePlot(simfilelist):
 #%% priming
     nsim = len(simfilelist)
     nt = len(simfilelist[0])
-    with h5py.File(simfilelist[0][0],'r',libver='latest') as fid:
+    with h5py.File(str(simfilelist[0][0]),'r',libver='latest') as fid:
         J0 = fid['/Jn/j0'].value
         nE = J0.shape[0]
         Ek = fid['/EK'].value
@@ -868,7 +867,7 @@ def allLinePlot(simfilelist):
 #%% working
     for ti in range(nt):
         for si,fnlist in enumerate(simfilelist):
-            with h5py.File(fnlist[ti],'r',libver='latest') as fid:
+            with h5py.File(str(fnlist[ti]),'r',libver='latest') as fid:
                 Jme[si,:,ti] = fid['/Jn/jme_1D'].value
 
         ax = figure(ti).gca()
@@ -1014,7 +1013,7 @@ def dumph5(fn,prefix,tInd,**writevar): #used in other .py too
         return
 
     logging.debug('dumping {} to {}'.format(prefix, fn))
-    with h5py.File(fn,'a',libver='latest') as f:
+    with h5py.File(str(fn),'a',libver='latest') as f:
         for k,v in writevar.items():
             try:
                 f['/'+prefix+'/'+k]=v

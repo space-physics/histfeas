@@ -10,8 +10,8 @@ from matplotlib.pyplot import show
 from histfeas.main_hist import doSim
 from histfeas.loadAnalyze import readresults,findxlsh5
 
-def hist_figure():
-    Phi0,Phifit =doSim(ParamFN=regXLS,
+def hist_figure(xlsreg):
+    Phi0,Phifit =doSim(ParamFN=xlsreg,
                   makeplot=['optim','png','h5'],
                   timeInds=timeInds,
                   overrides = overrides, #{'minev': minev,'filter':filt, 'fwdguess':fwdguess,
@@ -37,7 +37,7 @@ if __name__ == '__main__':
     p.add_argument('-f','--frames',help='time steps to use',type=int,default=None)
     p = p.parse_args()
 
-    regXLS='in/apr14.xlsx'
+    xlsreg='in/apr14.xlsx'
     timeInds=p.frames
     outdir='~/data/out/apr14'
     x1d = None
@@ -47,10 +47,12 @@ if __name__ == '__main__':
 
     if not p.load:
         print('running HiSTfeas program -- will write png and h5 to ' + outdir)
-        Phi0,Phifit=hist_figure()
+        Phi0,Phifit=hist_figure(xlsreg)
+        xlsdir = xlsreg
+    else:
+        xlsdir = xlsreg
 
-
-    h5list,xlsfn = findxlsh5(outdir)
+    h5list,xlsfn = findxlsh5(xlsdir)
     readresults(h5list,xlsfn,vlim,x1d,overrides,p.makeplot,p.verbose)
 
     if 'show' in p.makeplot:
