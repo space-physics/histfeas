@@ -6,13 +6,13 @@ option
 """
 
 from __future__ import division,absolute_import
+from pathlib2 import Path
 import logging
+import re
 import h5py
 from os import makedirs
-from os.path import join,expanduser,splitext,isfile,dirname
 from numpy import asarray,diff
 from matplotlib.pyplot import show
-from glob import glob
 import seaborn as sns
 sns.color_palette(sns.color_palette("cubehelix"))
 sns.set(context='poster', style='whitegrid',
@@ -34,13 +34,11 @@ def readresults(h5list,xlsfn,vlim,x1d,overrides,makeplot,verbose=0):
         return
 
     for h5 in h5list:
-        stem = splitext(h5)[0]
-
-        tInd.append(int(stem[-3:])) #NOTE assumes last 3 digits are time ind
+        tInd.append(re.compile(r'(\d+)$').search(h5.stem).group(1)) #NOTE assumes trailing time integers
 
         logging.debug('tind {}  reading {}'.format(tInd[-1],h5))
 
-        with h5py.File(h5,'r',libver='latest') as f:
+        with h5py.File(str(h5),'r',libver='latest') as f:
             try: #simulation
                 Phifwd.append(f['/phifwd/phi'].value)
                 Pfwd.append(f['/pfwd/p'].value)
@@ -61,12 +59,10 @@ def readresults(h5list,xlsfn,vlim,x1d,overrides,makeplot,verbose=0):
             dhat.append(f['/best/bfit'].value)
             drn.append(f['/best/braw'].value)
 #%%
-    stem,ext = splitext(h5)  #all in same directory, left here for clarity
-    progms = join(dirname(h5),'reader')
-    try:
-        makedirs(progms)
-    except:
-        pass
+    progms = h5.parent / 'reader'
+
+    makedirs(progms,exist_ok=True)
+
 
     try:
         Phifwd = asarray(Phifwd).transpose(1,2,0)
@@ -114,15 +110,14 @@ def readresults(h5list,xlsfn,vlim,x1d,overrides,makeplot,verbose=0):
 
 
 def findxlsh5(h5path):
-    h5path = expanduser(h5path)
+    h5path = Path(h5path).expanduser()
 
-    if isfile(h5path):
+    if h5path.is_file():
         h5list = [h5path]
-        xlsfn = glob(join(dirname(h5path),'*.xls*'))
+        xlsfn = sorted(h5path.parent.glob('*.xls*'))
     else:
-        h5list = glob(join(h5path,'dump_*.h5'))
-        h5list.sort()
-        xlsfn = glob(join(h5path,'*.xls*'))
+        h5list = sorted(h5path.glob('dump_*.h5'))
+        xlsfn =  sorted(h5path.glob('*.xls*'))
 
     if xlsfn:
         xlsfn = xlsfn[0]

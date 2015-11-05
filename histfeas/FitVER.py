@@ -16,6 +16,10 @@ from .plotsnew import getx0E0
 
 
 def FitVERopt(L,bn,Phi0,MpDict,sim,cam,Fwd,tInd,makeplot,verbose):
+    assert L.ndim==2
+    assert bn.ndim==1   and bn.flags['F_CONTIGUOUS']==True
+    assert Phi0.ndim==1 and Phi0.flags['F_CONTIGUOUS']==True
+
     vfit = {}; bfit = {}; Phifit = {'x':None} #in case optim not run
     minverbose=bool(verbose)
 #%% scaling brightness

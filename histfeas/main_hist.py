@@ -16,9 +16,9 @@ example: (fwd model only)
 python3 main_hist.py in/2cam_trans.xlsx /dev/shm/rev_trans2/ -m fwd png --vlim -0.5 3.5 90 350 1e9 1e10 --jlim 1e5 5e5 --blim 0 1e4 -f 0 120 20
 """
 from __future__ import division,print_function
+from pathlib2 import Path
 import logging
 from sys import argv
-from os.path import join,expanduser
 from os import makedirs
 from numpy import absolute,zeros,outer
 from numpy.random import normal
@@ -38,17 +38,12 @@ from .plotsnew import goPlot #calls matplotlib
 from .analysehst import analyseres
 
 def doSim(ParamFN,makeplot,timeInds,overrides,progms,x1d,vlim,animtime, cmd,verbose):
-    progms = expanduser(progms)
+    progms = Path(progms).expanduser()
     logging.basicConfig(level=30-verbose*10)
 
     #%% output directory
-    try:
-        makedirs(progms)#, exist_ok=True) #python 2.7 doesn't have exist_ok
-    except (OSError,TypeError) as e:
-        pass
-
-    with open(join(progms,'cmd.log'),'w') as f:
-        f.write(' '.join(argv))
+    makedirs(str(progms), exist_ok=True)
+    (progms/'cmd.log').write_text(' '.join(argv)) #store command for future log
 #%% Step 0) load data
     ap,sim,cam,Fwd = getParams(ParamFN, overrides,makeplot,progms,verbose)
 #%% setup loop
@@ -130,7 +125,7 @@ def doSim(ParamFN,makeplot,timeInds,overrides,progms,x1d,vlim,animtime, cmd,verb
 #%% debug: save variables to MAT file
     if 'mat' in makeplot and progms is not None:
         from scipy.io import savemat
-        cMatFN = join(progms,'comparePy.mat')
+        cMatFN = str(progms/'comparePy.mat')
         try:
             print('saving to:',cMatFN)
             vd = {'drnP':bn,'LP':Lfwd,'vP':Pfwd,'vfitP':Pfit,#'vhatP':Phat['vART'],

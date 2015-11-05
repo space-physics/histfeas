@@ -1,9 +1,9 @@
 from __future__ import division,absolute_import
+from pathlib2 import Path
 import logging
 from numpy import (linspace, fliplr, flipud, rot90, arange,
                    polyfit,polyval,rint,empty, isfinite, isclose,
                    absolute, hypot, unravel_index, delete, where)
-from os.path import expanduser,join
 from datetime import datetime
 from pytz import UTC
 from dateutil.parser import parse
@@ -11,7 +11,6 @@ from scipy.signal import savgol_filter
 from six import string_types
 from numpy.random import poisson
 import h5py
-from warnings import warn
 #
 from pymap3d.azel2radec import azel2radec
 from pymap3d.haversine import angledist
@@ -32,7 +31,7 @@ class Cam: #use this like an advanced version of Matlab struct
         self.x_km = cp['Xkm']
 
         if sim.realdata:
-            fn = expanduser(cp['fn'])
+            fn = Path(cp['fn']).expanduser()
 
         self.nCutPix = int(cp['nCutPix'])
 
@@ -62,11 +61,11 @@ class Cam: #use this like an advanced version of Matlab struct
         self.fovmaxlen = cp['FOVmaxLengthKM']
 
         if self.fovmaxlen > 10e3:
-            warn('sanityCheck: Your FOV length seems excessive > 10000 km')
+            logging.warning('sanityCheck: Your FOV length seems excessive > 10000 km')
         if self.nCutPix > 4096:
-            warn('sanityCheck: Program execution time may be excessive due to large number of camera pixels')
+            logging.warning('sanityCheck: Program execution time may be excessive due to large number of camera pixels')
         if self.fovmaxlen < (1.5*zmax):
-            warn('sanityCheck: To avoid unexpected pixel/sky voxel intersection problems, make your candidate camera FOV at least 1.5 times longer than your maximum Z altitude.')
+            logging.warning('sanityCheck: To avoid unexpected pixel/sky voxel intersection problems, make your candidate camera FOV at least 1.5 times longer than your maximum Z altitude.')
 
         self.boresightEl = cp['boresightElevDeg']
         self.arbfov = cp['FOVdeg']
@@ -75,7 +74,7 @@ class Cam: #use this like an advanced version of Matlab struct
         cal1Ddir = sim.cal1dpath
         cal1Dname = cp['cal1Dname']
         if isinstance(cal1Ddir,string_types) and isinstance(cal1Dname,string_types):
-            self.cal1Dfn = expanduser(cal1Ddir + cal1Dname)
+            self.cal1Dfn = (Path(cal1Ddir) / cal1Dname).expanduser()
 
         self.raymap = sim.raymap
         if self.raymap == 'arbitrary':
@@ -95,9 +94,9 @@ class Cam: #use this like an advanced version of Matlab struct
 
         # data file name
         try:
-            self.fn = expanduser(join(sim.realdatapath, fn))
+            self.fn = (sim.realdatapath / fn).expanduser()
 
-            with h5py.File(self.fn,'r',libver='latest') as f:
+            with h5py.File(str(self.fn),'r',libver='latest') as f:
                 self.filestartutc = f['/ut1_unix'][0]
                 self.filestoputc  = f['/ut1_unix'][-1]
                 self.ut1unix      = f['/ut1_unix'].value + self.timeShiftSec
@@ -245,7 +244,7 @@ class Cam: #use this like an advanced version of Matlab struct
     def fixnegval(self,data):
         mask = data<0
         if mask.sum()>0.2*self.nCutPix:
-            warn('Setting {} negative Data values to 0 for Camera #{}'.format(mask.sum(), self.name))
+            logging.info('Setting {} negative Data values to 0 for Camera #{}'.format(mask.sum(), self.name))
 
         data[mask] = 0
 
