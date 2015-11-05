@@ -7,7 +7,7 @@ To generate registration.h5 (only when making a new type of sim or real) type
 python
 """
 from __future__ import division,absolute_import
-from numpy import isclose
+from pathlib2 import Path
 from numpy.testing import assert_allclose
 from sys import argv
 import h5py
@@ -34,15 +34,21 @@ def hist_registration(regh5,regXLS):
     return Phi0,Phifit
 
 def readCheck(Phi0,Phifit):
-    with h5py.File(regh5,'r',libver='latest') as f:
+    with h5py.File(str(regh5),'r',libver='latest') as f:
         assert_allclose(f['/phifwd/phi'],Phi0[...,0])
         # noise makes inversion result differ uniquely each run
-        assert isclose(f['/phifwd/E0'],Phifit[0]['gE0'],rtol=0.3)
-        assert isclose(f['/phifwd/x0'],Phifit[0]['gx0'],rtol=0.3)
+        xerrpct=(f['/phifwd/x0'] - Phifit[0]['gx0']) / f['/phifwd/x0'] * 100
+        xmsg = 'x0 estimation error [km] {:.1f} %'.format(xerrpct[0])
+        assert_allclose(f['/phifwd/x0'],Phifit[0]['gx0'],rtol=0.35,err_msg=xmsg)
+
+        Eerrpct = (f['/phifwd/E0'] - Phifit[0]['gE0']) / f['/phifwd/E0'] * 100
+        Emsg = 'E0 estimation error [eV] {:.1f} %'.format(Eerrpct[0])
+        assert_allclose(f['/phifwd/E0'],Phifit[0]['gE0'],rtol=0.35,err_msg=Emsg)
 
         #the str() are needed instead of format() !
-        print('E0 estimation error [eV] ' +str(f['/phifwd/E0']-Phifit[0]['gE0']))
-        print('x0 estimation error [km] ' +str(f['/phifwd/x0']-Phifit[0]['gx0']))
+        print(xmsg)
+        print(Emsg)
+
 
 
 def writeout(regh5):
@@ -52,9 +58,11 @@ def writeout(regh5):
 
 if __name__ == '__main__':
 #%% simulation only
-    regh5='test/registration.h5'
-    regXLS='test/registration.xlsx'
+    tdir  = Path(__file__).parent
+    regh5 = tdir / 'registration.h5'
+    regXLS= tdir / 'registration.xlsx'
 
     Phi0,Phifit=hist_registration(regh5,regXLS)
     readCheck(Phi0,Phifit)
+    print('OK:  simultation registration case')
 #%% real data

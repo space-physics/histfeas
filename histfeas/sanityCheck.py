@@ -17,10 +17,10 @@ from .simclass import Sim
 
 def getParams(XLSfn,overrides,makeplot,progms,verbose):
     if progms is not None:
-        copy2(XLSfn,progms)
+        copy2(str(XLSfn),progms)
 #%% read spreadsheet
     #paramSheets = ('Sim','Cameras','Arc')
-    xl = read_excel(XLSfn,sheetname=None,index_col=0,header=0)
+    xl = read_excel(str(XLSfn),sheetname=None,index_col=0,header=0)
     sp = xl['Sim']
     cp = xl['Cameras']
 #%% read arcs (if any)
