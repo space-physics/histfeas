@@ -120,7 +120,7 @@ def makeCamFOVpixelEnds(Fwd,sim,cam,makePlots,dbglvl):
 #%%
 def loadEll(Fwd,cam,EllFN,verbose):
     try:
-      with h5py.File(EllFN,'r',libver='latest') as fid:
+      with h5py.File(str(EllFN),'r',libver='latest') as fid:
         L = csc_matrix(fid['/L'])
 
         if Fwd is not None: #we're in main program
