@@ -76,7 +76,7 @@ def placetxt(x,y,txt,ax):
             bbox=dict(boxstyle="round,pad=0.0",fc='black', alpha=0.25))
 
 def goPlot(sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
-                            fitp,rawdata,tInd,makeplot,progms,x1d,vlim,verbose):
+                            fitp,rawdata,tInd,makeplot,progms,x1d,vlim):
 
     if not progms:
         spfid = None
@@ -114,7 +114,7 @@ def goPlot(sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
         ploteig1d(fitp['EK'],zKM,Tm,vlim['p'],sim,tInd,makeplot,'peig1d',progms)
 
     if 'tphi0' in makeplot:
-        plottphi0(Tm,Phi0,Jxi,fitp['EK'],zKM,vlim['p'],sim,tInd,makeplot,'tphi0',progms,verbose)
+        plottphi0(Tm,Phi0,Jxi,fitp['EK'],zKM,vlim['p'],sim,tInd,makeplot,'tphi0',progms)
 
     if 'spectra' in makeplot:
         logging.warning('run spectral plots from calcemissions.py')
@@ -162,12 +162,12 @@ def goPlot(sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
 
     if 'bartrecon' in makeplot:
         plotBcompare(sim,drn,dhat['artrecon'],cam,sim.nCamUsed,
-                     'bART',spfid,vlim['b'],tInd,makeplot,progms,verbose)
+                     'bART',spfid,vlim['b'],tInd,makeplot,progms)
 #%% error plots
     if 'berror' in makeplot:
-        plotB(drn - dhat['art'],sim.realdata,cam,vlim['b'],tInd,makeplot,'$\Delta{b}$',progms,verbose)
+        plotB(drn - dhat['art'],sim.realdata,cam,vlim['b'],tInd,makeplot,'$\Delta{b}$',progms)
 #%% characteristic energy determination for title labels
-#    gx0,gE0 = getx0E0(Phi0,None,fitp['EK'],xKM,tInd,progms,makeplot,verbose)
+#    gx0,gE0 = getx0E0(Phi0,None,fitp['EK'],xKM,tInd,progms,makeplot)
 #    if longtitle:
 #        fwdloctxt = ('\n$x_{{cam}}=${} $(x_0,E_0)=({:0.2f},{:0.0f})$ [km,eV]'.format(sim.allCamXkm,x0,E0))
 #    else:
@@ -177,55 +177,50 @@ def goPlot(sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
                #'($x_0$,$E_0$)=(' +'{:0.2f}'.format(x0) + ',' + '{:0.0f}'.format(E0) + ') [km,eV]')
 #%% Forward model plots
     if not sim.realdata and ('fwd' in makeplot or 'optim' in makeplot):
-        plotnoise(cam,tInd,253,makeplot,'bnoise',progms,verbose)
+        plotnoise(cam,tInd,253,makeplot,'bnoise',progms)
 
     if 'fwd' in makeplot:
         plotfwd(sim,cam,drn,xKM,xp,zKM,zp,
-                ver,Phi0,fitp,Jxi,vlim,tInd,makeplot,spfid,progms,verbose)
+                ver,Phi0,fitp,Jxi,vlim,tInd,makeplot,spfid,progms)
 #%% gaussian fit of optim
     if 'gaussian' in makeplot and 'fwd' in makeplot:
         plotBcompare(sim,drn,dhat['gaussian'],cam,sim.nCamUsed,
-                     'bgaussfit',spfid, vlim['b'],tInd, makeplot,progms,verbose)
+                     'bgaussfit',spfid, vlim['b'],tInd, makeplot,progms)
 
-        gx0,gE0 = getx0E0(None,fitp['gaussian'],fitp['EK'],xKM,tInd,progms,makeplot,verbose)
+        gx0,gE0 = getx0E0(None,fitp['gaussian'],fitp['EK'],xKM,tInd,progms,makeplot)
 #'Neval = {:d}'.format(fitp.nfev)
         plotJ(sim,fitp['gaussian'], xKM,xp, fitp['EK'],fitp['EKpcolor'],
               vlim['j'][:2],vlim['p'][:2],tInd, makeplot,'jgaussian',
-              '$\hat{\phi}_{gaussian,optim}$ estimated diff. number flux',
-              spfid,progms,verbose)
+              '$\hat{\phi}_{gaussian,optim}$ estimated diff. number flux', spfid,progms)
 
         logging.info('Estimated $x_{{gauss,0}},E_{{gauss,0}}$={:0.2f}, {:0.0f}'.format(gx0[:,1],gE0[:,1]))
 
         plotVER(sim,vfit['gaussian'],xKM,xp,zKM,zp,vlim['p'],tInd,makeplot,'vgaussian',
-              '$\hat{P}_{gaussian,optim}$ volume emission rate',
-              1810,spfid,progms,verbose)
+              '$\hat{P}_{gaussian,optim}$ volume emission rate', 1810,spfid,progms)
 #%% optimize search plots
     if 'optim' in makeplot:
         plotoptim(sim,cam,drn,dhat,bcomptxt,ver,Phi0,Jxi,
-                  vfit,fitp,xKM,xp,zKM,zp,vlim,tInd,makeplot,spfid,progms,verbose)
+                  vfit,fitp,xKM,xp,zKM,zp,vlim,tInd,makeplot,spfid,progms)
 #%% maximum entropy
     if 'phimaxent' in makeplot:
         plotJ(sim,fitp['maxent'],xKM,xp,fitp['EK'],fitp['EKpcolor'],
               vlim['j'][:2],vlim['p'][:2],tInd,makeplot,'jme',
                 '$\Phi_{maxent}$ estimated diff. number flux',
-                spfid,progms,verbose)
+                spfid,progms)
 
     if 'phimaxent1d' in makeplot and Jxi is not None:
         plotJ1D(sim,fitp['maxent'][:,Jxi],fitp['EK'],vlim['j'][2:4],tInd,makeplot,'jme_1D',
                 ('Differential Number flux at $B_\perp$={:0.2f} [km]'.format(xKM[Jxi])),
-                spfid,progms,verbose)
+                spfid,progms)
     if 'bmaxent' in makeplot:
         plotBcompare(sim,drn,dhat['fit_maxent'],cam,sim.nCamUsed,
-                     'bmaxent',spfid,vlim['b'],tInd,makeplot,progms,verbose)
+                     'bmaxent',spfid,vlim['b'],tInd,makeplot,progms)
     if 'pmaxent' in makeplot:
         plotVER(sim,vfit['maxent'],xKM,xp,zKM,zp,vlim['p'],tInd,makeplot,'maxent',
-              '$\hat{v}_{maxent}$ from maximum entropy regularization',
-              1811,spfid,progms,verbose)
+              '$\hat{v}_{maxent}$ from maximum entropy regularization',  1811,spfid,progms)
     if 'pmaxent1d' in makeplot and Jxi is not None:
         plotVER1D(sim,vfit['maxent'][:,Jxi],zKM,vlim['p'][2:],tInd,makeplot,
-                  'vermaxent_1D',
-                  '$p_{optim,maxent}$  $B_\perp$={:0.2f} [km]'.format(xKM[Jxi]),
-                  spfid,progms,verbose)
+                  'vermaxent_1D', '$p_{optim,maxent}$  $B_\perp$={:0.2f} [km]'.format(xKM[Jxi]), spfid,progms)
         if 'pfwd1d' in makeplot:
             try:
                 cax = figure().gca()
@@ -247,48 +242,42 @@ def goPlot(sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
     if 'jart' in makeplot:
         plotJ(sim,fitp['art'],xKM,xp,fitp['EK'],fitp['EKpcolor'],
               vlim['j'][:2],vlim['p'][:2],tInd,makeplot,'jart',
-                '$\hat{\Phi}_{art}$ Estimated J from Kaczmarz ART on LT and b',
-                 spfid,progms,verbose)
+                '$\hat{\Phi}_{art}$ Estimated J from Kaczmarz ART on LT and b', spfid,progms)
     if 'vart' in makeplot:
         assert isnan(vfit['art']).any() == False
         plotVER(sim,vfit['art'],xKM,xp,zKM,zp,vlim['p'],tInd,makeplot,'vart',
-              '$\hat{P}_{art}$ from ART estimation of $J$',
-              1812,spfid,progms,verbose)
+              '$\hat{P}_{art}$ from ART estimation of $J$', 1812,spfid,progms)
     if 'bart' in makeplot:
         plotBcompare(sim,drn,dhat['fit_art'],cam,sim.nCamUsed,
-                     'bart',spfid,vlim['b'],tInd, makeplot,progms,verbose)
+                     'bart',spfid,vlim['b'],tInd, makeplot,progms)
 
 #%%
-def plotfwd(sim,cam,drn,xKM,xp,zKM,zp,
-            ver,Phi0,fitp,Jxi,vlim,tInd,makeplot,spfid,progms,verbose):
+def plotfwd(sim,cam,drn,xKM,xp,zKM,zp, ver,Phi0,fitp,Jxi,vlim,tInd,makeplot,spfid,progms):
 
-    plotB(drn,sim.realdata,cam,vlim['b'],tInd,1500,makeplot,'$B_{fwd',progms,verbose)
+    plotB(drn,sim.realdata,cam,vlim['b'],tInd,1500,makeplot,'$B_{fwd',progms)
 
     if not sim.realdata:
         # Forward model VER
         plotVER(sim,ver,xKM,xp,zKM,zp,vlim['p'],tInd,makeplot,'pfwd',
-            '$P_{{fwd}}$ volume emission rate',
-            1813,spfid,progms,verbose)
+            '$P_{{fwd}}$ volume emission rate',   1813,spfid,progms)
 
 #       print('max |diff(phifwd)| = ' + str(np.abs(np.diff(phiInit, n=1, axis=0)).max()))
         plotJ(sim,Phi0,xKM,xp,fitp['EK'],fitp['EKpcolor'],
               vlim['j'][:2],vlim['p'][:2],tInd,makeplot,'phifwd',
-              '$\Phi_{{top}}$ input diff. number flux',
-              1900,spfid,progms,verbose)
+              '$\Phi_{{top}}$ input diff. number flux',  1900,spfid,progms)
 
         if not 'optim' in makeplot and Jxi is not None:
             plotJ1D(sim,Phi0[:,Jxi],None,fitp['EK'],vlim['j'][2:4],tInd,makeplot,'phifwd1d',
                  'Differential Number flux at $B_\perp$={:0.2f} [km]'.format(xKM[Jxi]),
-                       spfid,progms,verbose)
+                       spfid,progms)
 
 
         if not 'optim' in makeplot and Jxi is not None:
             plotVER1D(sim,ver[:,Jxi],None,zKM,vlim['p'][2:],tInd,makeplot,'pfwd1d',
-              '$P_{{fwd}}$ at $B_\perp$={:0.2f}  [km]'.format(xKM[Jxi]),
-              spfid,progms,verbose)
+              '$P_{{fwd}}$ at $B_\perp$={:0.2f}  [km]'.format(xKM[Jxi]), spfid,progms)
 #%%
 def plotoptim(sim,cam,drn,dhat,bcomptxt,ver,Phi0,Jxi,
-              vfit,fitp,xKM,xp,zKM,zp,vlim,tInd,makeplot,spfid,progms,verbose):
+              vfit,fitp,xKM,xp,zKM,zp,vlim,tInd,makeplot,spfid,progms):
 
     if isinstance(dhat,dict):
         dhat = dhat['optim']
@@ -297,29 +286,29 @@ def plotoptim(sim,cam,drn,dhat,bcomptxt,ver,Phi0,Jxi,
         vfit = vfit['optim']
 
 
-    plotBcompare(sim,drn,dhat,cam,'best', spfid,vlim['b'],tInd,1501,makeplot,progms,verbose)
+    plotBcompare(sim,drn,dhat,cam,'best', spfid,vlim['b'],tInd,1501,makeplot,progms)
 
     plotVER(sim,vfit,xKM,xp,zKM,zp,vlim['p'],tInd,makeplot,'pest',
           '$\hat{P}$ estimated volume emission rate',
-          1815,spfid,progms,verbose)
+          1815,spfid,progms)
 #%% flux
     plotJ(sim,fitp['x'],xKM,xp,fitp['EK'],fitp['EKpcolor'],
           vlim['j'][:2],vlim['p'][:2],tInd,makeplot,'phiest',
           '$\hat{\phi}_{top}$ estimated diff. number flux',
-          1901,spfid,progms,verbose)
+          1901,spfid,progms)
           #'Neval = {:d}'.format(fitp.nfev)
 
     if Jxi is not None:
         plotVER1D(sim,ver[:,Jxi],vfit[:,Jxi],zKM,
                   vlim['p'][2:],tInd,makeplot,'pest1d',
                   '$\hat{{P}}$ estimated volume emission rate at $B_\perp$={:0.2f} [km]'.format(xKM[Jxi]),
-                  spfid,progms,verbose)
+                  spfid,progms)
 
         plotJ1D(sim,Phi0[:,Jxi],fitp['x'][:,Jxi],fitp['EK'],vlim['j'][2:4],tInd,makeplot,'phiest1d',
         ('$\hat{{\phi}}_{{top}}$ estimated diff. number flux at $B_\perp$={:0.2f} [km]'.format(xKM[Jxi])),
-                           spfid,progms,verbose)
+                           spfid,progms)
 #%% ############################################################################
-def plotnoise(cam,tInd,figh,makeplot,prefix,progms,verbose):
+def plotnoise(cam,tInd,figh,makeplot,prefix,progms):
    try:
       figure(figh).clf()
       fg = figure(figh)
@@ -345,7 +334,7 @@ def plotnoise(cam,tInd,figh,makeplot,prefix,progms,verbose):
    except Exception as e:
       logging.error('tind {}   {}'.format(tInd,e))
 
-def plottphi0(Tm,Phi0,Jxi,Ek,zKM,vlim,sim,tInd,makeplot,prefix,progms,verbose):
+def plottphi0(Tm,Phi0,Jxi,Ek,zKM,vlim,sim,tInd,makeplot,prefix,progms):
   try:
     fg = figure()
     ax = fg.gca()
@@ -402,19 +391,19 @@ def ploteig1d(Ek,zKM,Tm,vlim,sim,tInd=None,makeplot=None,prefix=None,progms=None
   except Exception as e:
     logging.error('tind {}   {}'.format(tInd,e))
 
-def plotPicard(A,b,cvar=None,verbose=0):
-    from picard import picard
+def plotPicard(A,b,cvar=None):
+    from pyAIRtools.picard import picard
     from scipy.sparse import issparse
     from numpy.linalg import svd
-    if verbose>0:
-        logging.info('computing SVD for Picard plot: {}  ...'.format(cvar))
+
+    logging.info('computing SVD for Picard plot: {}  ...'.format(cvar))
     if issparse(A):
         [U,s,V] = svd(A.todense(order='F'),full_matrices=False,compute_uv=1) #V is not used!
     else:
         [U,s,V] = svd(A,full_matrices=False,compute_uv=1) #V is not used!
     picard(asfortranarray(U), s, b)
 
-def plotJ1D(sim,PhiFwd,PhiInv,Ek,vlim,tInd,makeplot,prefix,titletxt,spfid,progms,verbose):
+def plotJ1D(sim,PhiFwd,PhiInv,Ek,vlim,tInd,makeplot,prefix,titletxt,spfid,progms):
   try:
     anno = False
     #fontsizes
@@ -462,7 +451,7 @@ def plotJ1D(sim,PhiFwd,PhiInv,Ek,vlim,tInd,makeplot,prefix,titletxt,spfid,progms
   except Exception as e:
     logging.error('tind {}   {}'.format(tInd,e))
 #%%
-def plotJ(sim,Jflux,x,xp,Ek,EKpcolor,vlim,xlim,tInd,makeplot,prefix,titletxt,figh,spfid,progms,verbose):
+def plotJ(sim,Jflux,x,xp,Ek,EKpcolor,vlim,xlim,tInd,makeplot,prefix,titletxt,figh,spfid,progms):
   try:
     cnorm,sfmt = logfmt(makeplot)
     plt3 = 'octave'         #'octave' #'mpl'#'mayavi'
@@ -594,7 +583,7 @@ def getmin(vs,vu):
     else:
         return vs
 
-def plotVER1D(sim,pfwd,pinv,zKM,vlim,tInd,makeplot,prefix,titletxt,spfid,progms,verbose):
+def plotVER1D(sim,pfwd,pinv,zKM,vlim,tInd,makeplot,prefix,titletxt,spfid,progms):
   try:
     fg = figure()
     ax = fg.gca()
@@ -627,7 +616,7 @@ def plotVER1D(sim,pfwd,pinv,zKM,vlim,tInd,makeplot,prefix,titletxt,spfid,progms,
   except Exception as e:
     logging.error('tind {}   {}'.format(tInd,e))
 #%%
-def plotVER(sim,ver,x,xp,z,zp,vlim,tInd,makeplot,prefix,titletxt,figh,spfid,progms,verbose):
+def plotVER(sim,ver,x,xp,z,zp,vlim,tInd,makeplot,prefix,titletxt,figh,spfid,progms):
   try:
     cnorm,sfmt = logfmt(makeplot)
     '''
@@ -712,7 +701,7 @@ def plotVER(sim,ver,x,xp,z,zp,vlim,tInd,makeplot,prefix,titletxt,figh,spfid,prog
   except Exception as e:
     logging.error('tind {}   {}'.format(tInd,e))
 #%%
-def plotBcompare(sim,braw,bfit,cam,prefix, spfid,vlim,tInd,figh,makeplot,progms,verbose):
+def plotBcompare(sim,braw,bfit,cam,prefix, spfid,vlim,tInd,figh,makeplot,progms):
   try:
     dosubtract = False
 
@@ -791,7 +780,7 @@ def plotBcompare(sim,braw,bfit,cam,prefix, spfid,vlim,tInd,figh,makeplot,progms,
   except Exception as e:
     logging.error('failed to plot brightness at tind {}   {}'.format(tInd,e))
 #%%
-def plotB(bpix,isrealdata,cam,vlim,tInd,figh,makeplot,labeltxt,progms,verbose):
+def plotB(bpix,isrealdata,cam,vlim,tInd,figh,makeplot,labeltxt,progms):
   try:
     cnorm,sfmt = logfmt(makeplot)
 
@@ -907,7 +896,7 @@ def planview3(cam,xKM,zKM,makeplot,figh,progms):
   except Exception as e:
     logging.error('{}'.format(e))
 #%%
-def planviewkml(cam,xKM,zKM,makeplot,figh,progms,verbose=0):
+def planviewkml(cam,xKM,zKM,makeplot,figh,progms):
   """
   https://developers.google.com/kml/documentation/cameras
   """
@@ -1000,7 +989,7 @@ def planviewkml(cam,xKM,zKM,makeplot,figh,progms,verbose=0):
 
     #if 'kml' in makeplot or 'kmlrays' in makeplot: #write KML
     try:
-        kmlfn = join(progms,'cam'+'.kml')
+        kmlfn = str(progms/'cam.kml')
         logging.debug('saving ' + kmlfn)
         kml1d.save(kmlfn)
     except TypeError:
@@ -1030,7 +1019,7 @@ def dumph5(fn,prefix,tInd,**writevar): #used in other .py too
 #        imsave(cn,img,vmin=minmax[0],vmax=minmax[1],format=fmt,cmap='gray')
 
 #%%
-def getx0E0(Phifwd,Phifit,E,x,tInd,progms,makeplot,verbose):
+def getx0E0(Phifwd,Phifit,E,x,tInd,progms,makeplot):
 
   Npts = 200
   Nptsfits = (Npts//40, Npts//20)  #(nEnergyToUse+-, nXtouse+-)

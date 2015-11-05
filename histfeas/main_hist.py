@@ -62,7 +62,7 @@ def doSim(ParamFN,makeplot,timeInds,overrides,progms,x1d,vlim,animtime, cmd,verb
     Peig = getMp(sim,Fwd['z'],makeplot)
 #%% synthetic diff. num flux
     if not sim.realdata:
-        Phi0all = getPhi0(sim,ap,Fwd['x'],Peig['Ek'], makeplot,verbose)
+        Phi0all = getPhi0(sim,ap,Fwd['x'],Peig['Ek'], makeplot)
     else:
         Phi0all = None
     logging.debug('timeInds: {}'.format(timeInds))
@@ -78,7 +78,7 @@ def doSim(ParamFN,makeplot,timeInds,overrides,progms,x1d,vlim,animtime, cmd,verb
             """
             Phi0 = Phi0all[...,ti]
 #%% Step 1) Forward model
-        Pfwd = getSimVER(Phi0, Peig, Fwd, sim, ap, ti, verbose)
+        Pfwd = getSimVER(Phi0, Peig, Fwd, sim, ap, ti)
 #%% Step 2) Observe Forward Model (create vector of observations)
         bn = getObs(sim,cam,Lfwd,ti,Pfwd,makeplot,verbose)
         drnAll.append(bn)
@@ -104,7 +104,7 @@ def doSim(ParamFN,makeplot,timeInds,overrides,progms,x1d,vlim,animtime, cmd,verb
         PhifitAll.append(jfit); bfitAll.append(bfit)
 #%% plot results
         goPlot(sim,Fwd,cam,Lfwd,Tm,bn,bfit,Pfwd,Pfit,Peig,Phi0,
-                     jfit,rawdata,ti,makeplot,progms,x1d,vlim,verbose)
+                     jfit,rawdata,ti,makeplot,progms,x1d,vlim)
         if animtime is not None:
             draw()
             pause(animtime)
@@ -116,7 +116,7 @@ def doSim(ParamFN,makeplot,timeInds,overrides,progms,x1d,vlim,animtime, cmd,verb
 #%% wrapup
     msg='{} done looping'.format(argv[0]); print(msg); #print(msg,file=stderr)
 
-    png2multipage(progms,'.eps','.tif',descr=cmd,delete=False,verbose=verbose) #gif writing is not working yet
+    png2multipage(progms,'.eps','.tif',descr=cmd,delete=False) #gif writing is not working yet
 
     analyseres(sim,cam,Fwd['x'],Fwd['xPixCorn'],
                    Phi0all,PhifitAll,drnAll,bfitAll,vlim,
