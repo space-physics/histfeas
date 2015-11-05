@@ -63,7 +63,7 @@ def downsampleEnergy(Ek,EKpcolor,Mp,downsamp):
         logging.warning('should these NaNs be set to zero?')
     return Ek2,EKpcolor2,Mp2
 
-def getPhi0(sim,ap,xKM,Ek,makeplots,verbose):
+def getPhi0(sim,ap,xKM,Ek,makeplots):
     #%% get flux
     if not sim.realdata:
         if sim.Jfwdh5 is not None:
@@ -71,20 +71,20 @@ def getPhi0(sim,ap,xKM,Ek,makeplots,verbose):
             with h5py.File(sim.Jfwdh5,'r',libver='latest') as f:
                 Phi0 = asfortranarray(atleast_3d(f['/phiInit']))
         else:
-            Phi0 = assemblePhi0(sim,ap,Ek,xKM,verbose)
+            Phi0 = assemblePhi0(sim,ap,Ek,xKM)
         assert xKM.size == Phi0.shape[1]
     else:
         Phi0 = None
     return Phi0
 
-def assemblePhi0(sim,ap,Ek,xKM,verbose):
+def assemblePhi0(sim,ap,Ek,xKM):
     Phi0 = zeros((Ek.size,xKM.size,sim.nTimeSlice),order='F') #NOT empty, since we sum to build it!
 
     for a in ap: #iterate over arcs, using superposition
 #%% upsample to sim time steps
-        E0,Q0,Wbc,bl,bm,bh,Bm,Bhf, Wkm,X0,Xshape = upsampletime(ap[a],sim,verbose)
+        E0,Q0,Wbc,bl,bm,bh,Bm,Bhf, Wkm,X0,Xshape = upsampletime(ap[a],sim)
 
-        pz = fluxgen(Ek, E0,Q0,Wbc,bl,bm,bh,Bm,Bhf, verbose)[0]
+        pz = fluxgen(Ek, E0,Q0,Wbc,bl,bm,bh,Bm,Bhf)[0]
 #%% horizontal modulation
         px = getpx(xKM,Wkm,X0,Xshape)
         for i in range(sim.nTimeSlice):
@@ -96,7 +96,7 @@ def assemblePhi0(sim,ap,Ek,xKM,verbose):
             Phi0[...,i] += phi0sim
     return Phi0
 
-def upsampletime(ap,sim,verbose):
+def upsampletime(ap,sim):
     #%% obtain observation time steps from spreadsheet (for now, equal to kinetic time)
     texp = ap.loc['tReqOffsetSec'].values.astype(float)
     if abs(sim.kineticsec - diff(texp).mean()) > 1e-3:
@@ -127,8 +127,7 @@ def upsampletime(ap,sim,verbose):
     f = interp1d(texp,ap.loc['Wkm'].values.astype(float));    Wkm = f(tsim)
     f = interp1d(texp,ap.loc['X0km'].values.astype(float));   X0  = f(tsim)
 
-    if verbose>0:
-        print('new E0 upsamp [eV]: {}'.format(E0))
+    logging.info('new E0 upsamp [eV]: {}'.format(E0))
 
     if ap.loc['Xshape'].eq(ap.at['Xshape',0]).all():
         Xshape = ap.at['Xshape',0]

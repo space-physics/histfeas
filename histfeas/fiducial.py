@@ -3,6 +3,8 @@
 generates circular markings of az/el on videos
  montage anno_flame10061*.png -trim -tile 4x1 -geometry +1+0  out.png
 """
+from __future__ import division,absolute_import
+from pathlib2 import Path
 from matplotlib.patches import Ellipse
 from matplotlib.pyplot import figure,show, Axes
 import matplotlib
@@ -11,7 +13,7 @@ matplotlib.rcParams.update({'font.family':'sans-serif',
                            'text.usetex':True})
 from scipy.misc import imread
 from numpy import array,cos,sin,radians
-from os.path import expanduser, join
+
 
 #half-width, half-height of the first oval
 # that is, 5 degreees elevation = wh0[1]
@@ -36,7 +38,7 @@ def main(imgfn,xcrop,ycrop,outfn,rings,rays,pstr):
     for i in range(2,5):
         xyr.append(i*xyr[0]+1) #multiple of radius
     #%% load image
-    img = imread(imgfn)
+    img = imread(str(imgfn))
     fg = figure()
     ax = Axes(fg, [0., 0., 1., 1.])
     ax. set_axis_off()
@@ -86,7 +88,7 @@ def main(imgfn,xcrop,ycrop,outfn,rings,rays,pstr):
     #ax.set_ylim((500,1000))
     if outfn is not None:
         print('writing',outfn)
-        fg.savefig(outfn,bbox_inches='tight',dpi=150)
+        fg.savefig(str(outfn),bbox_inches='tight',dpi=150)
 
 
 def angtxt(radput,oxy,txt,ax):
@@ -113,17 +115,17 @@ if __name__ == '__main__':
     rings=(True,False,False,False)
     rays=(False,False,False,False) # set first True, and oxyfull to geographic zenith to plot ray pointing to magnetic zentih
 
-    path = expanduser(a.path)
+    path = Path(a.path).expanduser()
 
     if a.file is not None: #user specified a single file
-        imgfn = join(path,a.file);
-        outfn = join(path,'anno_' + a.file)
+        imgfn = path/a.file
+        outfn = path/'anno_' + a.file
         main(imgfn, a.xycrop[0], a.xycrop[1], outfn, rings[0], rays[0], pstr[0])
     else: #use default list
 
         for f,ring,ray,p in zip(flist,rings,rays,pstr):
-            imgfn = join(path,f);
-            outfn = join(path,'anno_' + f)
+            imgfn = path/f
+            outfn = path/'anno_' + f
             main(imgfn, a.xycrop[0], a.xycrop[1], outfn, ring, ray, p)
 
     show()

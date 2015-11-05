@@ -1,10 +1,9 @@
 from __future__ import print_function, division,absolute_import
+import logging
 from matplotlib.pyplot import figure,close,subplots
 from matplotlib.ticker import MaxNLocator#,ScalarFormatter# ,LogFormatterMathtext, #for 1e4 -> 1 x 10^4, applied DIRECTLY in format=
 from numpy import diff, empty,nan
 import h5py
-from os.path import join
-from warnings import warn
 #
 from .plotsnew import writeplots,getx0E0,plotB
 from .nans import nans
@@ -36,8 +35,7 @@ def analyseres(sim,cam,x,xp,Phifwd,Phifit,drn,dhat,vlim,x0true=None,E0true=None,
 #%% back to work
     for i,jf in enumerate(Phifit):
         #note even if array is F_CONTIGUOUS, argmax is C-order!!
-        gx0[i,:],gE0[i,:] = getx0E0(Phifwd[...,i], jf['x'],
-                                        jf['EK'],x,9999,progms,makeplot,verbose)
+        gx0[i,:],gE0[i,:] = getx0E0(Phifwd[...,i], jf['x'], jf['EK'],x,9999,progms,makeplot)
 
 
         print('t={} gaussian 2-D fits (true  truefit  estfit) for (x,E).'
@@ -61,7 +59,7 @@ def analyseres(sim,cam,x,xp,Phifwd,Phifit,drn,dhat,vlim,x0true=None,E0true=None,
     plotgauss(x0true,gx0,gE0,gx0err,gE0err,makeplot,progms)
 
 
-def doplot(x,Phifit,gE0,Eavgfwdx,Eavghatx, makeplot,progms,verbose):
+def doplot(x,Phifit,gE0,Eavgfwdx,Eavghatx, makeplot,progms):
 #    with open('cord.csv','r') as e:
 #        reader = csv.reader(e, delimiter=',', quoting = csv.QUOTE_NONE);
 #        cord = [[r.strip() for r in row] for row in reader][0]
@@ -101,21 +99,20 @@ def doplot(x,Phifit,gE0,Eavgfwdx,Eavghatx, makeplot,progms,verbose):
             ax.legend(['{:.0f} eV'.format(g) for g in gE0[:,0]],loc='best',fontsize=9)
             writeplots(fgo,'Eavg_optim',9999,makeplot,progms)
     except Exception as e:
-        if verbose>0:
-            print('skipping average energy plotting.   {}'.format(e))
+        logging.info('skipping average energy plotting.   {}'.format(e))
 
-def extplot(sim,cam,drn,dhat,vlim,makeplot,progms,verbose):
+def extplot(sim,cam,drn,dhat,vlim,makeplot,progms):
 #%% brightness plot -- plotting ALL at once to show evolution of dispersive event!
     try:
         if 'fwd' in makeplot and drn:
             for i,b in enumerate(drn):
-                plotB(b,sim.realdata,cam,vlim['b'],9999,19999,makeplot,'$bfwdall',progms,verbose)
+                plotB(b,sim.realdata,cam,vlim['b'],9999,19999,makeplot,'$bfwdall',progms)
     # reconstructed brightness plot
         if 'optim' in makeplot and dhat is not None and len(dhat[0])>0:
             for i,b in enumerate(dhat):
-                plotB(b,sim.realdata,cam,vlim['b'],9999,29999,makeplot,'$bestall', progms,verbose)
+                plotB(b,sim.realdata,cam,vlim['b'],9999,29999,makeplot,'$bestall', progms)
     except Exception as e:
-        warn('skipping plotting overall analysis plots of intensity.  {}'.format(e))
+        logging.info('skipping plotting overall analysis plots of intensity.  {}'.format(e))
 
 def plotgauss(x0true,gx0,gE0,gx0err,gE0err,makeplot,progms):
     fg,(axx,axE) = subplots(1,2,sharey=False)
@@ -139,15 +136,15 @@ def plotgauss(x0true,gx0,gE0,gx0err,gE0err,makeplot,progms):
                                           ['{:.1f}'.format(j) for j in gE0err]))
 
     if 'h5' in makeplot and progms is not None:
-        fout = join(progms,'fit_results.h5')
-        with h5py.File(fout,'w',libver='latest') as f:
+        fout = progms/'fit_results.h5'
+        with h5py.File(str(fout),'w',libver='latest') as f:
             f['/gx0/err']=gx0err
             f['/gx0/fwdfit']=gx0
 
             f['/gE0/err']=gE0err
             f['/gE0/fwdfit']=gE0
 
-def avgcomp(Phifwd,Phifit,Ek,x,makeplot,progms,verbose):
+def avgcomp(Phifwd,Phifit,Ek,x,makeplot,progms):
     nEnergy = Phifwd.shape[0]
 
     dE = empty(nEnergy)
@@ -165,8 +162,7 @@ def avgcomp(Phifwd,Phifit,Ek,x,makeplot,progms,verbose):
     #assert_allclose(Eavgfwd1d,Eavgfwd[xi])
 
     #print('E_avg: {:0.1f}'.format(Eavgfwd1d))
-    if verbose:
-        print('E_avg: ',Eavgfwd[0]) #TODO how to pick
+    logging.info('E_avg: ',Eavgfwd[0]) #TODO how to pick
     if 'eavg' in makeplot:
         fg = figure()
         ax = fg.gca()
