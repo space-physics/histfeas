@@ -38,6 +38,7 @@ def readresults(h5list,xlsfn,vlim,x1d,overrides,makeplot,verbose=0):
 
         logging.debug('tind {}  reading {}'.format(tInd[-1],h5))
 
+        assert h5.is_file()
         with h5py.File(str(h5),'r',libver='latest') as f:
             try: #simulation
                 Phifwd.append(f['/phifwd/phi'].value)
@@ -45,20 +46,24 @@ def readresults(h5list,xlsfn,vlim,x1d,overrides,makeplot,verbose=0):
             except KeyError: #real data
                 pass
 
-            Phidict.append({'x':f['/phiest/phi'].value,
-                            'EK':f['/phiest/Ek'].value,
-                            'EKpcolor':f['/phiest/EKpcolor'].value})
+            try:
+                Phidict.append({'x':f['/phiest/phi'].value,
+                                'EK':f['/phiest/Ek'].value,
+                                'EKpcolor':f['/phiest/EKpcolor'].value})
 
-            Pest.append(f['/pest/p'].value)
+                Pest.append(f['/pest/p'].value)
 
-            x  = f['/pest/x'].value #same for all in directory
-            xp = f['/pest/xp'].value
-            z = f['/pest/z'].value
-            zp = f['/pest/zp'].value
+                x  = f['/pest/x'].value #same for all in directory
+                xp = f['/pest/xp'].value
+                z = f['/pest/z'].value
+                zp = f['/pest/zp'].value
 
-            dhat.append(f['/best/bfit'].value)
-            drn.append(f['/best/braw'].value)
+                dhat.append(f['/best/bfit'].value)
+                drn.append(f['/best/braw'].value)
+            except KeyError as e:
+                raise KeyError('It seems that data inversion did not complete? Or at least it was not written  {}'.format(e))
 #%%
+
     progms = h5.parent / 'reader'
 
     makedirs(progms,exist_ok=True)

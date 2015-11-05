@@ -39,7 +39,7 @@ if __name__ == '__main__':
 
     xlsreg='in/apr14.xlsx'
     timeInds=p.frames
-    outdir='~/data/out/apr14'
+    outdir='~/data/out/apr14_trace'
     x1d = None
     vlim = {'p':[-1.5,4.5,90,300,5e5,5e6,5e5,5e6], 'j':[1e1,5e2, 1e1,5e2],
             'b':[0,2e3]}
@@ -50,7 +50,7 @@ if __name__ == '__main__':
         Phi0,Phifit=hist_figure(xlsreg)
         xlsdir = xlsreg
     else:
-        xlsdir = xlsreg
+        xlsdir = outdir
 
     h5list,xlsfn = findxlsh5(xlsdir)
     readresults(h5list,xlsfn,vlim,x1d,overrides,p.makeplot,p.verbose)

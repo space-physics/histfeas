@@ -124,7 +124,7 @@ def FitVERopt(L,bn,Phi0,MpDict,sim,cam,Fwd,tInd,makeplot,verbose):
         # don't remove the two lines above (ek,ekpcolor)
 #%% gaussian fit
         #print('max |diff(phi)| = ' + str(np.abs(np.diff(fitp.x, n=1, axis=0)).max()))
-        gx0,gE0 = getx0E0(None,Phifit['x'],Phifit['EK'],Fwd['x'],tInd,None,[None],verbose)
+        gx0,gE0 = getx0E0(None,Phifit['x'],Phifit['EK'],Fwd['x'],tInd,None,[None])
         print(gx0)
         print(gE0)
         print('Estimated $B_{{\perp,0}},E_0$={:0.2f}, {:0.0f}'.format(gx0[1],gE0[1]))

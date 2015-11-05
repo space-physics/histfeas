@@ -12,7 +12,7 @@ from .arcclass import getver
 from .transcararc import getColumnVER
 
 
-def getSimVER(Phi0,Mp,Fwd,sim,ap,tInd,verbose):
+def getSimVER(Phi0,Mp,Fwd,sim,ap,tInd):
     if sim.realdata:
         return
 
