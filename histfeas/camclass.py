@@ -93,7 +93,7 @@ class Cam: #use this like an advanced version of Matlab struct
         """ expects an HDF5 .h5 file"""
 
         # data file name
-        try:
+        if sim.realdata:
             self.fn = (sim.realdatapath / fn).expanduser()
 
             with h5py.File(str(self.fn),'r',libver='latest') as f:
@@ -108,8 +108,7 @@ class Cam: #use this like an advanced version of Matlab struct
                 self.transpose    = p['transpose'] == 1
                 self.fliplr       = p['fliplr'] == 1
                 self.flipud       = p['flipud'] == 1
-
-        except AttributeError:
+        else: #sim
             self.kineticsec = cp['kineticsec'] #simulation
 
 #%% camera model
