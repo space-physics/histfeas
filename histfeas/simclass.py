@@ -9,8 +9,7 @@ from transcarread.readionoinit import getaltgrid
 
 class Sim:
 
-    def __init__(self,sp,cp,ap,ntimeslice,overrides,makeplot,progms,dbglvl):
-        self.dbglvl=dbglvl
+    def __init__(self,sp,cp,ap,ntimeslice,overrides,makeplot,progms):
         #%% how many cameras in use, and which ones?
         try:
             usecamreq = asarray(overrides['cam'])
