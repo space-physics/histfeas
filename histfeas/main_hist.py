@@ -37,7 +37,7 @@ from .FitVER import FitVERopt as FitVER #calls matplotlib
 from .plotsnew import goPlot #calls matplotlib
 from .analysehst import analyseres
 
-def doSim(ParamFN,makeplot,timeInds,overrides,progms,x1d,vlim,animtime, cmd,verbose):
+def doSim(ParamFN,makeplot,timeInds,overrides,progms,x1d,vlim,animtime, cmd,verbose=0):
     progms = Path(progms).expanduser()
     logging.basicConfig(level=30-verbose*10)
 
@@ -121,16 +121,16 @@ def doSim(ParamFN,makeplot,timeInds,overrides,progms,x1d,vlim,animtime, cmd,verb
     analyseres(sim,cam,Fwd['x'],Fwd['xPixCorn'],
                    Phi0all,PhifitAll,drnAll,bfitAll,vlim,
                    x0true=None,E0true=None,
-                   makeplot=makeplot,progms=progms,verbose=verbose)
+                   makeplot=makeplot,progms=progms)
 #%% debug: save variables to MAT file
     if 'mat' in makeplot and progms is not None:
         from scipy.io import savemat
-        cMatFN = str(progms/'comparePy.mat')
+        cMatFN = progms/'comparePy.mat'
         try:
             print('saving to:',cMatFN)
             vd = {'drnP':bn,'LP':Lfwd,'vP':Pfwd,'vfitP':Pfit,#'vhatP':Phat['vART'],
                   'xPixCorn':Fwd['xPixCorn'],'zPixCorn':Fwd['zPixCorn']}
-            savemat(cMatFN,oned_as='column',mdict=vd )
+            savemat(str(cMatFN),oned_as='column',mdict=vd )
         except Exception as e:
             logging.warning('failed to save to mat file.  {}'.format(e))
 
