@@ -11,7 +11,7 @@ setup(name='histfeas',
 	  long_description=long_description,
 	  author='Michael Hirsch',
 	  url='https://github.com/scienceopen/histfeas',
-	  install_requires=['histutils','lowtran','pymap3d','astrometry_azel','cvutils','gridaurora','transcarread',
+	  install_requires=['histutils','lowtran','pymap3d','astrometry_azel','cvutils','gridaurora','transcarread','pyimagevideo',
                         'gaussfitter',
                         'tifffile',
                         'pathlib2>=2.1.0'],
@@ -22,7 +22,8 @@ setup(name='histfeas',
                           'https://github.com/scienceopen/CVutils/tarball/master#egg=CVutils',
                           'https://github.com/scienceopen/gridaurora/tarball/master#egg=gridaurora',
                           'https://github.com/scienceopen/transcarread/tarball/master#egg=transcarread',
-                          'https://github.com/scienceopen/gaussfitter/tarball/master#egg=gaussfitter'
+                          'https://github.com/scienceopen/gaussfitter/tarball/master#egg=gaussfitter',
+                          'https://github.com/scienceopen/pyimagevideo/tarball/master#egg=pyimagevideo'
                           ],
       packages=['histfeas'],
 	  )
