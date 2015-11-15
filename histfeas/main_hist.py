@@ -26,7 +26,7 @@ from warnings import warn
 from matplotlib.pyplot import close,draw,pause,show
 #
 from gridaurora.eFluxGen import maxwellian
-from pyimagevideo.imageconv import png2multipage
+from pyimagevideo.imagemultipage import png2multipage
 from histutils.simulFrame import getSimulData
 from histutils.get1Dcut import get1Dcut #we need cam.angle_deg for plotting
 from .sanityCheck import getParams
