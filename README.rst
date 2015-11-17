@@ -1,8 +1,6 @@
 .. image:: https://codeclimate.com/github/scienceopen/hist-feasibility/badges/gpa.svg
    :target: https://codeclimate.com/github/scienceopen/hist-feasibility
 
-.. image:: https://travis-ci.org/scienceopen/histfeas.svg?branch=master
-    :target: https://travis-ci.org/scienceopen/histfeas
 
 .. image:: https://coveralls.io/repos/scienceopen/hist-feasibility/badge.svg?branch=master&service=github
     :target: https://coveralls.io/github/scienceopen/hist-feasibility?branch=master
@@ -18,7 +16,7 @@ Feasibility study for auroral tomography
 
 .. contents::
 
-This program should be runnable on any Python 3.4 or 2.7 platform.
+Tested on Python 3.5
 
 Primarily tested on Linux, but should work on Mac or Cygwin (windows) as well.
 
