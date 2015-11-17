@@ -11,9 +11,10 @@ from scipy.signal import savgol_filter
 from six import string_types
 from numpy.random import poisson
 import h5py
+from astropy.coordinates.angle_utilities import angular_separation
+from astropy import units as u
 #
 from pymap3d.azel2radec import azel2radec
-from pymap3d.haversine import angledist
 from pymap3d.coordconv3d import aer2ecef
 
 epoch = datetime(1970,1,1,tzinfo=UTC)
@@ -280,13 +281,14 @@ class Cam: #use this like an advanced version of Matlab struct
         raMagzen,decMagzen = azel2radec(self.Baz,self.Bel,self.lat,self.lon,self.Bepoch)
         logging.info('mag. zen. ra/dec {} {}'.format(raMagzen,decMagzen))
 
-        angledist_deg = angledist(raMagzen,decMagzen,rapix,decpix)
+        angledist = angular_separation(raMagzen*u.deg,decMagzen*u.deg,rapix*u.deg,decpix*u.deg)
+        angledist = angledist.to(u.deg)
         # put distances into a 90-degree fan beam
         angle_deg = empty(self.superx,dtype=float)
-        MagZenInd = angledist_deg.argmin() # whether slightly positive or slightly negative, this should be OK
+        MagZenInd = angledist.argmin() # whether slightly positive or slightly negative, this should be OK
 
-        angle_deg[MagZenInd:] = 90. + angledist_deg[MagZenInd:]
-        angle_deg[:MagZenInd] = 90. - angledist_deg[:MagZenInd]
+        angle_deg[MagZenInd:] = 90. + angledist[MagZenInd:]
+        angle_deg[:MagZenInd] = 90. - angledist[:MagZenInd]
 
         self.angle_deg = angle_deg
         self.angleMagzenind = MagZenInd
