@@ -145,7 +145,7 @@ class Sim:
         elif self.raymap == 'arbitrary':
             logging.info('Using arbitrary linear per-pixel 1D cut mapping to 2D model space')
         else:
-            raise ValueError('Unknown Ray Angle Mapping method: ' + str(self.raymap))
+            raise ValueError('Unknown Ray Angle Mapping method: {}'.format(self.raymap))
 
         self.cal1dpath = sp.at['cal1Ddir','Cams']
 

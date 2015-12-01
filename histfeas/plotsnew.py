@@ -5,28 +5,14 @@ from numpy import (s_,empty,empty_like,isnan,asfortranarray,linspace,outer,
                    log10,spacing)
 from numpy.ma import masked_invalid #for pcolormesh, which doesn't like NaN
 from matplotlib.pyplot import figure,subplots, clf,text
-#from matplotlib.cm import get_cmap
 from matplotlib.colors import LogNorm
 from matplotlib.ticker import LogFormatterMathtext, MultipleLocator, ScalarFormatter #for 1e4 -> 1 x 10^4, applied DIRECTLY in format=
-#from matplotlib.image import imsave
 import h5py
 from scipy.interpolate import interp1d
 from pandas import DataFrame
 #
-
-if False:
-    import seaborn as sns
-    sns.color_palette(sns.color_palette("cubehelix"))
-    sns.set(context='paper', style='whitegrid')
-    sns.set(rc={'image.cmap': 'cubehelix_r'}) #for contour
-
-#sns.set_palette(sns.cubehelix_palette(6)) #all one color, hard to see
-#
-try:
-    import plotly.plotly as py
-    from plotly.graph_objs import Data,Figure,XAxis,YAxis,Contour, Layout
-except Exception:
-    pass
+#import plotly.plotly as py
+#from plotly.graph_objs import Data,Figure,XAxis,YAxis,Contour, Layout
 #
 try:
     from gaussfitter import gaussfit,twodgaussian
@@ -623,9 +609,6 @@ def plotVER(sim,ver,x,xp,z,zp,vlim,tInd,makeplot,prefix,titletxt,figh,spfid,prog
     # http://stackoverflow.com/questions/13943217/how-to-add-colorbars-to-scatterplots-created-like-this
     # http://stackoverflow.com/questions/18856069/how-to-shrink-a-subplot-colorbar
     '''
-
-
-
     vlow=(spacing(1),1.)
     pre = ('lin','log')
 
@@ -681,7 +664,7 @@ def plotVER(sim,ver,x,xp,z,zp,vlim,tInd,makeplot,prefix,titletxt,figh,spfid,prog
             ax.yaxis.set_minor_locator(MultipleLocator(dymin))
             ax.xaxis.set_major_locator(MultipleLocator(1))
             ax.xaxis.set_minor_locator(MultipleLocator(0.1))
-            ax.tick_params(axis='both', which='both', direction='out', labelsize=tfs) #not needed with seaborn
+            ax.tick_params(axis='both', which='both', direction='out', labelsize=tfs)
 
             ax.set_xlabel('$B_\perp$ [km]',fontsize=afs)
             ax.set_ylabel('$B_\parallel$ [km]',fontsize=afs)
@@ -776,7 +759,7 @@ def plotBcompare(sim,braw,bfit,cam,prefix, spfid,vlim,tInd,figh,makeplot,progms)
     if 'h5' in makeplot: #a separate stanza
         dumph5(spfid,prefix,tInd,angle=[C.angle_deg for C in cam],braw=braw,bfit=bfit)
 
-    writeplots(fg,prefix,tInd,makeplot,progms,None)
+    writeplots(fg,prefix,tInd,makeplot,progms)
   except Exception as e:
     logging.error('failed to plot brightness at tind {}   {}'.format(tInd,e))
 #%%
