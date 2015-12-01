@@ -3,7 +3,7 @@ import logging
 from numpy import (s_,empty,empty_like,isnan,asfortranarray,linspace,outer,
                    sin,cos,pi,ones_like,nan,unravel_index,meshgrid,logspace,
                    log10,spacing)
-from numpy.ma import masked_invalid #for pcolormesh, which doesn't like NaN
+#from numpy.ma import masked_invalid #for pcolormesh, which doesn't like NaN
 from matplotlib.pyplot import figure,subplots, clf,text
 from matplotlib.colors import LogNorm
 from matplotlib.ticker import LogFormatterMathtext, MultipleLocator, ScalarFormatter #for 1e4 -> 1 x 10^4, applied DIRECTLY in format=
@@ -11,8 +11,8 @@ import h5py
 from scipy.interpolate import interp1d
 from pandas import DataFrame
 #
-#import plotly.plotly as py
-#from plotly.graph_objs import Data,Figure,XAxis,YAxis,Contour, Layout
+import plotly.plotly as py
+from plotly.graph_objs import Data,Figure,XAxis,YAxis,Contour, Layout
 #
 try:
     from gaussfitter import gaussfit,twodgaussian
@@ -25,9 +25,6 @@ from gridaurora.opticalmod import plotOptMod
 from gridaurora.plots import ploteigver,writeplots
 
 #%% plot globals
-afs = None#20
-tfs = None#22
-tkfs = None#16
 longtitle=False
 #pcmcmap = get_cmap('jet')
 #pcmcmap.set_under('white')
@@ -215,8 +212,8 @@ def goPlot(sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
                 cax.plot(ver[:,Jxi],zKM,
                          label='pfwd', color='blue',linestyle='--')
                 cax.legend(loc='best')
-                cax.set_xlabel('VER',labelpad=0)
-                cax.set_ylabel('z [km]',labelpad=0)
+                cax.set_xlabel('VER')
+                cax.set_ylabel('z [km]')
                 cax.set_title('VER forward model vs. VER maximum entropy reconstruction')
                 cax.grid(True)
                 cax.yaxis.set_major_locator(MultipleLocator(dymaj))
@@ -331,16 +328,16 @@ def plottphi0(Tm,Phi0,Jxi,Ek,zKM,vlim,sim,tInd,makeplot,prefix,progms):
         #except ValueError:
         #    print('skipped plotting {:0.0f} eV due to zero diff. num flux at that energy'.format(e))
     ax.set_xscale('log')
-    ax.set_title('individual eigenprofile contributions to $P_{fwd}$',fontsize=tfs)
-    ax.set_xlabel('volume emission rate [photons cm$^{-3}$ s$^{-1}$]',fontsize=afs)
-    ax.set_ylabel('$B_\parallel$ [km]',fontsize=afs)
+    ax.set_title('individual eigenprofile contributions to $P_{fwd}$')
+    ax.set_xlabel('volume emission rate [photons cm$^{-3}$ s$^{-1}$]')
+    ax.set_ylabel('$B_\parallel$ [km]')
     ax.grid(True)
 
     ax.legend(loc='upper left',framealpha=0.5)
 
     ax.yaxis.set_major_locator(MultipleLocator(dymaj))
     ax.yaxis.set_minor_locator(MultipleLocator(dymin))
-    ax.tick_params(axis='both', which='both', direction='in', labelsize=tkfs)
+    ax.tick_params(axis='both', which='both', direction='in')
     ax.set_xlim(vlim[4:])
     ax.set_ylim(vlim[2:-2])
 
@@ -360,16 +357,16 @@ def ploteig1d(Ek,zKM,Tm,vlim,sim,tInd=None,makeplot=None,prefix=None,progms=None
         ax.semilogx(Tm[:,i], zKM,label='{:0.0f}'.format(e)+'eV')#,marker='.')
     ax.yaxis.set_major_locator(MultipleLocator(dymaj))
     ax.yaxis.set_minor_locator(MultipleLocator(dymin))
-    ax.set_ylabel('$B_\parallel$ [km]',fontsize=afs)
-    ax.set_xlabel('volume emission rate [photons cm$^{-3}$s$^{-1}$]',fontsize=afs)
-    ax.tick_params(axis='both', which='both', direction='in', labelsize=tkfs)
+    ax.set_ylabel('$B_\parallel$ [km]')
+    ax.set_xlabel('volume emission rate [photons cm$^{-3}$s$^{-1}$]')
+    ax.tick_params(axis='both', which='both', direction='in')
     ax.set_xlim(vlim[4:])
     ax.set_ylim(vlim[2:4])
     titletxt = '$P_{eig}$ '
     titletxt += str(sim.reacreq)
 
     titletxt += ' Opt. Filter: ' + sim.opticalfilter
-    ax.set_title(titletxt, fontsize=tfs)
+    ax.set_title(titletxt)
     ax.legend(loc='upper left',framealpha=0.5)
     #ax.autoscale(True,tight=True)
     ax.grid(True)
@@ -392,7 +389,6 @@ def plotPicard(A,b,cvar=None):
 def plotJ1D(sim,PhiFwd,PhiInv,Ek,vlim,tInd,makeplot,prefix,titletxt,spfid,progms):
   try:
     anno = False
-    #fontsizes
 
     fg = figure()
     ax = fg.gca()
@@ -422,11 +418,11 @@ def plotJ1D(sim,PhiFwd,PhiInv,Ek,vlim,tInd,makeplot,prefix,titletxt,spfid,progms
     ax.set_ylim(vlim)
     ax.set_xlim([Ek[0]*0.98, Ek[-1]*1.05])
 
-    ax.set_xlabel('particle energy [eV]', fontsize=afs,labelpad=0)
-    ax.set_ylabel('Differential Number Flux  [cm$^{-2}$s$^{-1}$eV$^{-1}$]',fontsize=afs,labelpad=0)
-    ax.set_title(titletxt,fontsize=tfs)
+    ax.set_xlabel('particle energy [eV]')
+    ax.set_ylabel('Differential Number Flux  [cm$^{-2}$s$^{-1}$eV$^{-1}$]')
+    ax.set_title(titletxt)
 
-    ax.tick_params(axis='both', which='both',labelsize=tkfs)
+    ax.tick_params(axis='both', which='both')
 
     if anno:    ax.legend(loc='lower left')
 
@@ -441,8 +437,6 @@ def plotJ(sim,Jflux,x,xp,Ek,EKpcolor,vlim,xlim,tInd,makeplot,prefix,titletxt,fig
   try:
     cnorm,sfmt = logfmt(makeplot)
     plt3 = 'octave'         #'octave' #'mpl'#'mayavi'
-    #fontsizes
-
 #%% 2-D
     pre = ('lin','log')
     vlow = (spacing(1),1.)
@@ -490,10 +484,9 @@ def plotJ(sim,Jflux,x,xp,Ek,EKpcolor,vlim,xlim,tInd,makeplot,prefix,titletxt,fig
             """
 
             cbar = fg.colorbar(hc,ax=ax,format=s,)
-            cbar.set_label('[cm$^{-2}$s$^{-1}$eV$^{-1}$]', labelpad=0, fontsize=afs)
-            cbar.ax.tick_params(labelsize=afs)
+            cbar.set_label('[cm$^{-2}$s$^{-1}$eV$^{-1}$]')
             #now let's fix the exponent label on the colorbar
-            cbar.ax.yaxis.get_offset_text().set_size(afs)
+ #           cbar.ax.yaxis.get_offset_text().set_size(afs)
             cbar.ax.yaxis.get_offset_text().set_position((-1, 1))
             if pstyle=='contour':
                 cbar.add_lines(hc)
@@ -524,14 +517,14 @@ def plotJ(sim,Jflux,x,xp,Ek,EKpcolor,vlim,xlim,tInd,makeplot,prefix,titletxt,fig
     logging.error('tind {}   {}'.format(tInd,e))
 
 def doJlbl(ax,titletxt):
-    ax.set_ylabel('Energy [eV]',fontsize=afs,labelpad=0)
-    ax.set_xlabel('$B_\perp$ [km]',fontsize=afs,labelpad=0)
-    ax.set_title(titletxt, fontsize=tfs, y = 1.02) # + '  $t_i=' + str(tInd) + '$'
+    ax.set_ylabel('Energy [eV]')
+    ax.set_xlabel('$B_\perp$ [km]')
+    ax.set_title(titletxt)
 
     ax.xaxis.set_major_locator(MultipleLocator(1))
     ax.xaxis.set_minor_locator(MultipleLocator(0.2))
 
-    ax.tick_params(axis='both', which='both', direction='out',labelsize=afs)
+    ax.tick_params(axis='both', which='both', direction='out')
 #%%
 def plotJ3(x,EKpcolor,Jflux,plt3):
   try:
@@ -580,17 +573,17 @@ def plotVER1D(sim,pfwd,pinv,zKM,vlim,tInd,makeplot,prefix,titletxt,spfid,progms)
 
     ax.legend(loc='upper right')
     ax.grid(True)
-    ax.set_xlabel('Volume emission rate [photons cm$^{-3}$s$^{-1}$]',fontsize=afs,labelpad=0)
-    ax.set_ylabel('$B_\parallel$ [km]',fontsize=afs,labelpad=-1)
+    ax.set_xlabel('Volume emission rate [photons cm$^{-3}$s$^{-1}$]')
+    ax.set_ylabel('$B_\parallel$ [km]')
 
     if not sim.loadver:
         titletxt += '\nReactions: {}'.format(sim.reacreq)
 
-    ax.set_title(titletxt, fontsize=tfs, y=1.02)
+    ax.set_title(titletxt)
 
     ax.yaxis.set_major_locator(MultipleLocator(dymaj))
     ax.yaxis.set_minor_locator(MultipleLocator(dymin))
-    ax.tick_params(axis='both', which='major', direction='in',labelsize=tkfs)
+    ax.tick_params(axis='both', which='major', direction='in')
 
     ax.set_ylim(bottom=vlim[0],top=vlim[1])
     ax.set_xlim(vlim[4:6])
@@ -653,9 +646,8 @@ def plotVER(sim,ver,x,xp,z,zp,vlim,tInd,makeplot,prefix,titletxt,figh,spfid,prog
             http://stackoverflow.com/questions/16695275/set-limits-on-a-matplotlib-colorbar-without-changing-the-actual-plot
             """
             cbar = fg.colorbar(hc,ax=ax,format=s,)
-            cbar.set_label('[photons cm$^{-3}$s$^{-1}$]',labelpad=0,fontsize=afs)
-            cbar.ax.tick_params(labelsize=afs)
-            cbar.ax.yaxis.get_offset_text().set_size(afs)
+            cbar.set_label('[photons cm$^{-3}$s$^{-1}$]')
+#            cbar.ax.yaxis.get_offset_text().set_size(afs)
             cbar.ax.yaxis.get_offset_text().set_position((-1, 0))
             if pstyle=='contour':
                 cbar.add_lines(hc)
@@ -664,14 +656,14 @@ def plotVER(sim,ver,x,xp,z,zp,vlim,tInd,makeplot,prefix,titletxt,figh,spfid,prog
             ax.yaxis.set_minor_locator(MultipleLocator(dymin))
             ax.xaxis.set_major_locator(MultipleLocator(1))
             ax.xaxis.set_minor_locator(MultipleLocator(0.1))
-            ax.tick_params(axis='both', which='both', direction='out', labelsize=tfs)
+            ax.tick_params(axis='both', which='both', direction='out')
 
-            ax.set_xlabel('$B_\perp$ [km]',fontsize=afs)
-            ax.set_ylabel('$B_\parallel$ [km]',fontsize=afs)
+            ax.set_xlabel('$B_\perp$ [km]')
+            ax.set_ylabel('$B_\parallel$ [km]')
 
             ax.set_xlim(vlim[:2])
             ax.set_ylim(vlim[2:4])
-            ax.set_title(titletxt,fontsize=tfs)
+            ax.set_title(titletxt)
 
             ax.grid(True)
 
@@ -696,8 +688,8 @@ def plotBcompare(sim,braw,bfit,cam,prefix, spfid,vlim,tInd,figh,makeplot,progms)
     cnorm,sfmt = logfmt(makeplot,(-3,3))
     ax1.get_yaxis().set_major_formatter(sfmt[0]) #only need lin
 
-    ax1.yaxis.get_offset_text().set_size(afs)
-    ax1.tick_params(axis='both', which='both', direction='out',labelsize=afs)
+#    ax1.yaxis.get_offset_text().set_size(afs)
+    ax1.tick_params(axis='both', which='both', direction='out')
 
     for C in cam:
         ax1.plot(C.angle_deg,braw[C.ind],
@@ -709,13 +701,13 @@ def plotBcompare(sim,braw,bfit,cam,prefix, spfid,vlim,tInd,figh,makeplot,progms)
     if 10*maxraw > maxfit > 0.1*maxraw:
         singax = True
         ax2 = ax1
-        ax1.set_ylabel('$\mathbf{B}$ [photons sr$^{-1}$ s$^{-1}$]',labelpad=0,fontsize=afs)
+        ax1.set_ylabel('$\mathbf{B}$ [photons sr$^{-1}$ s$^{-1}$]')
     else:
         singax = False
         ax2 = ax1.twinx()
         ax2.get_yaxis().set_major_formatter(sfmt[0]) #only need lin
-        ax1.set_ylabel('$\mathbf{B}$ [photons sr$^{-1}$ s$^{-1}$]',labelpad=0,fontsize=afs)
-        ax2.set_ylabel('$\mathbf{\widehat{B}}$ [photons sr$^{-1}$ s$^{-1}$]',labelpad=0,fontsize=afs)
+        ax1.set_ylabel('$\mathbf{B}$ [photons sr$^{-1}$ s$^{-1}$]')
+        ax2.set_ylabel('$\mathbf{\widehat{B}}$ [photons sr$^{-1}$ s$^{-1}$]')
 #%% now plot each camera
     for C in cam:
         ax2.plot(C.angle_deg,bfit[C.ind],
@@ -723,7 +715,7 @@ def plotBcompare(sim,braw,bfit,cam,prefix, spfid,vlim,tInd,figh,makeplot,progms)
                  #color=cord[icm])#, marker='.')
 
     if singax:
-        ax1.legend(loc='upper left', fontsize=afs)
+        ax1.legend(loc='upper left')
     else:
         '''
         legend for twinx http://stackoverflow.com/questions/5484922/secondary-axis-with-twinx-how-to-add-to-legend
@@ -732,9 +724,9 @@ def plotBcompare(sim,braw,bfit,cam,prefix, spfid,vlim,tInd,figh,makeplot,progms)
         h2, l2 = ax2.get_legend_handles_labels()
         ax1.legend(h1+h2, l1+l2, loc='upper right')
 
-    ax1.set_title('$\mathbf{B}$ ground-observed intensity', fontsize=tfs,y=1.04)
+    ax1.set_title('$\mathbf{B}$ ground-observed intensity')
 
-    ax1.set_xlabel('local view angle [deg.]',fontsize=afs)
+    ax1.set_xlabel('local view angle [deg.]')
     ax1.xaxis.set_major_locator(MultipleLocator(1))
 
     ax1.grid(True)
@@ -748,11 +740,11 @@ def plotBcompare(sim,braw,bfit,cam,prefix, spfid,vlim,tInd,figh,makeplot,progms)
             bias.append(bfit[C.ind].max() - braw[C.ind].max())
             ax3.plot(C.angle_deg,braw[C.ind] - (bfit[C.ind]))#-bias[iCam]))
 
-        ax3.set_title('error $\mathbf{{B}}_{{fwdf}} - B_{{est}}, bias={}'.format(bias),fontsize=12)
+        ax3.set_title('error $\mathbf{{B}}_{{fwdf}} - B_{{est}}, bias={}'.format(bias))
         #  $t_i=' + str(tInd) + '$'
         ax3.set_xlabel('local view angle [deg.]')
         ax3.xaxis.set_major_locator(MultipleLocator(1))
-        ax3.set_ylabel('error',labelpad=0)
+        ax3.set_ylabel('error')
         ax3.get_yaxis().set_major_formatter(sfmt[0])
 
 
@@ -780,13 +772,13 @@ def plotB(bpix,isrealdata,cam,vlim,tInd,figh,makeplot,labeltxt,progms):
 #    if 10*maxraw > minmaxraw > 0.1*maxraw:
 #        singax = True
 #        ax2 = ax1
-#        ax1.set_ylabel('$b$ Data Numbers',labelpad=0,fontsize=afs)
+#        ax1.set_ylabel('$b$ Data Numbers')
 #    else:
 #        singax = False
 #        ax2 = ax1.twinx()
 #        ax2.get_yaxis().set_major_formatter(sfmt)
-#        ax1.set_ylabel('$b_{raw}$ data numbers',labelpad=0,fontsize=afs)
-#        ax2.set_ylabel( fittxt + ' Data Numbers',labelpad=0,fontsize=afs)
+#        ax1.set_ylabel('$b_{raw}$ data numbers')
+#        ax2.set_ylabel( fittxt + ' Data Numbers')
 #%% make plot
     for C in cam:
         std.append('{:0.1e}'.format(C.noiselam))
@@ -803,24 +795,24 @@ def plotB(bpix,isrealdata,cam,vlim,tInd,figh,makeplot,labeltxt,progms):
     logging.error('tind {}   {}'.format(tInd,e))
 
 def doBlbl(axb,isrealdata,sfmt,vlim,labeltxt,noiselam):
-    axb.legend(loc='upper left',fontsize=afs)
-    axb.set_title('Observer Intensity',fontsize=tfs)
+    axb.legend(loc='upper left')
+    axb.set_title('Observer Intensity')
 
-    axb.yaxis.get_offset_text().set_size(afs)
+#    axb.yaxis.get_offset_text().set_size(afs)
 
 #    if not isrealdata and noiseStd:
-#        ax.text(0.05,0.95,'noise std. dev.=' +noiseStd,fontsize=afs,
+#        ax.text(0.05,0.95,'noise std. dev.=' +noiseStd,
 #                transform=ax.transAxes,va='top',ha='left')
-    axb.set_xlabel('local view angle [deg.]',fontsize=afs)
+    axb.set_xlabel('local view angle [deg.]')
 
     axb.xaxis.set_major_locator(MultipleLocator(1))
     axb.xaxis.set_minor_locator(MultipleLocator(0.2))
-    axb.tick_params(axis='both', which='both', direction='out',labelsize=afs)
+    axb.tick_params(axis='both', which='both', direction='out')
 
     #sfmt.set_powerlimits((-6, 6))
     axb.yaxis.set_major_formatter(sfmt)
 
-    axb.set_ylabel(labeltxt + '}$ [photons sr$^{-1}$ s$^{-1}$]',labelpad=-1,fontsize=afs) # yes the }$ is appropriate
+    axb.set_ylabel(labeltxt + '}$ [photons sr$^{-1}$ s$^{-1}$]') # yes the }$ is appropriate
 
     axb.grid(True,which='major')
     axb.autoscale(True,tight=True)
@@ -955,7 +947,7 @@ def planviewkml(cam,xKM,zKM,makeplot,figh,progms):
     ax.set_ylabel('WGS84 latitude [deg.]')
     ax.set_xlabel('WGS84 longitude [deg.]')
     ax.set_title('pixel locations at 100km altitude')
-    ax.legend(fontsize=afs)
+    ax.legend()
 
         #setup line on ground connecting sites
     """
