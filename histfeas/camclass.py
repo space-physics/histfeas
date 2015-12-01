@@ -320,7 +320,7 @@ class Cam: #use this like an advanced version of Matlab struct
         npts = self.az2pts.size  #numel
         nearRow = empty(npts,dtype=int)
         nearCol = empty(npts,dtype=int)
-        #FIXME consider scipy.spatial.distance.cdist()
+        # can be FAR FAR faster than scipy.spatial.distance.cdist()
         for ipt in range(npts):
             #we do this point by point because we need to know the closest pixel for each point
             errdist = absolute( hypot(self.az - self.az2pts[ipt],
