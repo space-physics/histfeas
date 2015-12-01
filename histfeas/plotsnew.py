@@ -29,7 +29,9 @@ longtitle=False
 #pcmcmap = get_cmap('jet')
 #pcmcmap.set_under('white')
 dymaj=100
-dymin=20
+dymin=25
+dxmax=1.
+dxmin=0.25
 pstyle='contour'
 
 E0min=500 #eV
@@ -174,7 +176,7 @@ def goPlot(sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
 #'Neval = {:d}'.format(fitp.nfev)
         plotJ(sim,fitp['gaussian'], xKM,xp, fitp['EK'],fitp['EKpcolor'],
               vlim['j'][:2],vlim['p'][:2],tInd, makeplot,'jgaussian',
-              '$\hat{\phi}_{gaussian,optim}$ estimated diff. number flux', spfid,progms)
+              '$\hat{\phi}_{gaussian,optim}$ diff. number flux', spfid,progms)
 
         logging.info('Estimated $x_{{gauss,0}},E_{{gauss,0}}$={:0.2f}, {:0.0f}'.format(gx0[:,1],gE0[:,1]))
 
@@ -188,7 +190,7 @@ def goPlot(sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
     if 'phimaxent' in makeplot:
         plotJ(sim,fitp['maxent'],xKM,xp,fitp['EK'],fitp['EKpcolor'],
               vlim['j'][:2],vlim['p'][:2],tInd,makeplot,'jme',
-                '$\Phi_{maxent}$ estimated diff. number flux',
+                '$\Phi_{maxent}$ diff. number flux',
                 spfid,progms)
 
     if 'phimaxent1d' in makeplot and Jxi is not None:
@@ -225,7 +227,7 @@ def goPlot(sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
     if 'jart' in makeplot:
         plotJ(sim,fitp['art'],xKM,xp,fitp['EK'],fitp['EKpcolor'],
               vlim['j'][:2],vlim['p'][:2],tInd,makeplot,'jart',
-                '$\hat{\Phi}_{art}$ Estimated J from Kaczmarz ART on LT and b', spfid,progms)
+                '$\hat{\Phi}_{art}$ J from Kaczmarz ART on LT and b', spfid,progms)
     if 'vart' in makeplot:
         assert isnan(vfit['art']).any() == False
         plotVER(sim,vfit['art'],xKM,xp,zKM,zp,vlim['p'],tInd,makeplot,'vart',
@@ -247,7 +249,7 @@ def plotfwd(sim,cam,drn,xKM,xp,zKM,zp, ver,Phi0,fitp,Jxi,vlim,tInd,makeplot,spfi
 #       print('max |diff(phifwd)| = ' + str(np.abs(np.diff(phiInit, n=1, axis=0)).max()))
         plotJ(sim,Phi0,xKM,xp,fitp['EK'],fitp['EKpcolor'],
               vlim['j'][:2],vlim['p'][:2],tInd,makeplot,'phifwd',
-              '$\Phi_{{top}}$ input diff. number flux',  1900,spfid,progms)
+              '$\Phi_{{top}}$ diff. number flux',  1900,spfid,progms)
 
         if not 'optim' in makeplot and Jxi is not None:
             plotJ1D(sim,Phi0[:,Jxi],None,fitp['EK'],vlim['j'][2:4],tInd,makeplot,'phifwd1d',
@@ -272,23 +274,23 @@ def plotoptim(sim,cam,drn,dhat,bcomptxt,ver,Phi0,Jxi,
     plotBcompare(sim,drn,dhat,cam,'best', spfid,vlim['b'],tInd,1501,makeplot,progms)
 
     plotVER(sim,vfit,xKM,xp,zKM,zp,vlim['p'],tInd,makeplot,'pest',
-          '$\hat{P}$ estimated volume emission rate',
+          '$\hat{P}$ volume emission rate',
           1815,spfid,progms)
 #%% flux
     plotJ(sim,fitp['x'],xKM,xp,fitp['EK'],fitp['EKpcolor'],
           vlim['j'][:2],vlim['p'][:2],tInd,makeplot,'phiest',
-          '$\hat{\phi}_{top}$ estimated diff. number flux',
+          '$\hat{\phi}_{top}$ diff. number flux',
           1901,spfid,progms)
           #'Neval = {:d}'.format(fitp.nfev)
 
     if Jxi is not None:
         plotVER1D(sim,ver[:,Jxi],vfit[:,Jxi],zKM,
                   vlim['p'][2:],tInd,makeplot,'pest1d',
-                  '$\hat{{P}}$ estimated volume emission rate at $B_\perp$={:0.2f} [km]'.format(xKM[Jxi]),
+                  '$\hat{{P}}$ volume emission rate at $B_\perp$={:0.2f} [km]'.format(xKM[Jxi]),
                   spfid,progms)
 
         plotJ1D(sim,Phi0[:,Jxi],fitp['x'][:,Jxi],fitp['EK'],vlim['j'][2:4],tInd,makeplot,'phiest1d',
-        ('$\hat{{\phi}}_{{top}}$ estimated diff. number flux at $B_\perp$={:0.2f} [km]'.format(xKM[Jxi])),
+        ('$\hat{{\phi}}_{{top}}$ diff. number flux at $B_\perp$={:0.2f} [km]'.format(xKM[Jxi])),
                            spfid,progms)
 #%% ############################################################################
 def plotnoise(cam,tInd,figh,makeplot,prefix,progms):
@@ -487,7 +489,7 @@ def plotJ(sim,Jflux,x,xp,Ek,EKpcolor,vlim,xlim,tInd,makeplot,prefix,titletxt,fig
             cbar.set_label('[cm$^{-2}$s$^{-1}$eV$^{-1}$]')
             #now let's fix the exponent label on the colorbar
  #           cbar.ax.yaxis.get_offset_text().set_size(afs)
-            cbar.ax.yaxis.get_offset_text().set_position((-1, 1))
+            cbar.ax.yaxis.get_offset_text().set_position((2, 10))
             if pstyle=='contour':
                 cbar.add_lines(hc)
 
@@ -495,7 +497,7 @@ def plotJ(sim,Jflux,x,xp,Ek,EKpcolor,vlim,xlim,tInd,makeplot,prefix,titletxt,fig
             #print('phi xlim {}'.format(xlim))
             ax.set_xlim(xlim)
 
-            ax.grid(True)
+            ax.grid(True,which='both')
 
             fg.subplots_adjust(top=0.85)
             doJlbl(ax,titletxt)
@@ -521,8 +523,8 @@ def doJlbl(ax,titletxt):
     ax.set_xlabel('$B_\perp$ [km]')
     ax.set_title(titletxt)
 
-    ax.xaxis.set_major_locator(MultipleLocator(1))
-    ax.xaxis.set_minor_locator(MultipleLocator(0.2))
+    ax.xaxis.set_major_locator(MultipleLocator(dxmax))
+    ax.xaxis.set_minor_locator(MultipleLocator(dxmin))
 
     ax.tick_params(axis='both', which='both', direction='out')
 #%%
@@ -648,15 +650,16 @@ def plotVER(sim,ver,x,xp,z,zp,vlim,tInd,makeplot,prefix,titletxt,figh,spfid,prog
             cbar = fg.colorbar(hc,ax=ax,format=s,)
             cbar.set_label('[photons cm$^{-3}$s$^{-1}$]')
 #            cbar.ax.yaxis.get_offset_text().set_size(afs)
-            cbar.ax.yaxis.get_offset_text().set_position((-1, 0))
+            cbar.ax.yaxis.get_offset_text().set_position((2, 10))
             if pstyle=='contour':
                 cbar.add_lines(hc)
 
             ax.yaxis.set_major_locator(MultipleLocator(dymaj))
             ax.yaxis.set_minor_locator(MultipleLocator(dymin))
-            ax.xaxis.set_major_locator(MultipleLocator(1))
-            ax.xaxis.set_minor_locator(MultipleLocator(0.1))
+            ax.xaxis.set_major_locator(MultipleLocator(dxmax))
+            ax.xaxis.set_minor_locator(MultipleLocator(dxmin))
             ax.tick_params(axis='both', which='both', direction='out')
+            ax.grid(True,which='both') #need both for seaborn
 
             ax.set_xlabel('$B_\perp$ [km]')
             ax.set_ylabel('$B_\parallel$ [km]')
@@ -665,7 +668,7 @@ def plotVER(sim,ver,x,xp,z,zp,vlim,tInd,makeplot,prefix,titletxt,figh,spfid,prog
             ax.set_ylim(vlim[2:4])
             ax.set_title(titletxt)
 
-            ax.grid(True)
+
 
             writeplots(fg,prefix+p,tInd,makeplot,progms)
     else:
@@ -805,8 +808,8 @@ def doBlbl(axb,isrealdata,sfmt,vlim,labeltxt,noiselam):
 #                transform=ax.transAxes,va='top',ha='left')
     axb.set_xlabel('local view angle [deg.]')
 
-    axb.xaxis.set_major_locator(MultipleLocator(1))
-    axb.xaxis.set_minor_locator(MultipleLocator(0.2))
+    axb.xaxis.set_major_locator(MultipleLocator(dxmax))
+    axb.xaxis.set_minor_locator(MultipleLocator(dxmin))
     axb.tick_params(axis='both', which='both', direction='out')
 
     #sfmt.set_powerlimits((-6, 6))
@@ -1100,7 +1103,7 @@ def getx0E0(Phifwd,Phifit,E,x,tInd,progms,makeplot):
         try:
             hb = ca.pcolormesh(x,Elin,cPhifit)
             fg.colorbar(hb, ax=ca)
-            ca.set_title('$\hat{\Phi}$ estimated precip. intensity')
+            ca.set_title('$\hat{\Phi}$ est. precip. intensity')
             ca.set_xlabel('$B_\perp$ [km]')
             ca.set_ylabel('Beam Energy [eV]')
             ca.set_yscale('log')
@@ -1124,7 +1127,7 @@ def getx0E0(Phifwd,Phifit,E,x,tInd,progms,makeplot):
         try:
             hp = ca.pcolormesh(x,Elin,gpix[1])
             fg.colorbar(hp, ax=ca)
-            ca.set_title('$\hat{{\Phi}}$ estimate via gaussian fit:'
+            ca.set_title('$\hat{{\Phi}}$ est. via gaussian fit:'
                    ' $\hat{{B}}_{{\perp,0}}, \hat{{E}}_0$={:.2f},{:.0f})'.format(gx0[1],gE0[1]))
             ca.set_xlabel('$B_\perp$ [km]')
             ca.set_yscale('log')
