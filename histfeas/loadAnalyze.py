@@ -13,10 +13,6 @@ import h5py
 from os import makedirs
 from numpy import asarray,diff
 from matplotlib.pyplot import show
-import seaborn as sns
-sns.color_palette(sns.color_palette("cubehelix"))
-sns.set(context='poster', style='whitegrid',
-        rc={'image.cmap': 'cubehelix_r'})
 #
 from histutils.findnearest import find_nearest
 from .analysehst import analyseres
@@ -121,7 +117,7 @@ def findxlsh5(h5path):
         h5list = sorted(h5path.glob('dump_*.h5'))
         xlsfn =  sorted(h5path.glob('*.xls*'))
 
-    if xlsfn:
+    if isinstance(xlsfn,list):
         xlsfn = xlsfn[0]
 
     return h5list,xlsfn
