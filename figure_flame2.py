@@ -7,6 +7,11 @@ from __future__ import division,absolute_import
 from sys import argv
 from matplotlib.pyplot import show
 #
+import seaborn as sns
+sns.color_palette("cubehelix")
+sns.set(context='paper', style='whitegrid',font_scale=2.5,
+        rc={'image.cmap': 'cubehelix_r'})
+#
 from histfeas.main_hist import doSim
 from histfeas.loadAnalyze import readresults,findxlsh5
 
