@@ -9,7 +9,7 @@ from matplotlib.pyplot import show
 #
 import seaborn as sns
 sns.color_palette("cubehelix")
-sns.set(context='paper', style='whitegrid',font_scale=2.5,
+sns.set(context='paper', style='whitegrid',font_scale=2,
         rc={'image.cmap': 'cubehelix_r'})
 #
 from histfeas.main_hist import doSim
