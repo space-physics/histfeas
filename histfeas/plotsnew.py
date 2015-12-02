@@ -244,7 +244,7 @@ def plotfwd(sim,cam,drn,xKM,xp,zKM,zp, ver,Phi0,fitp,Jxi,vlim,tInd,makeplot,spfi
     if not sim.realdata:
         # Forward model VER
         plotVER(sim,ver,xKM,xp,zKM,zp,vlim['p'],tInd,makeplot,'pfwd',
-            '$P_{{fwd}}$ volume emission rate',   1813,spfid,progms)
+            '$\mathbf{P}$ volume emission rate',   1813,spfid,progms)
 
 #       print('max |diff(phifwd)| = ' + str(np.abs(np.diff(phiInit, n=1, axis=0)).max()))
         plotJ(sim,Phi0,xKM,xp,fitp['EK'],fitp['EKpcolor'],
@@ -259,7 +259,7 @@ def plotfwd(sim,cam,drn,xKM,xp,zKM,zp, ver,Phi0,fitp,Jxi,vlim,tInd,makeplot,spfi
 
         if not 'optim' in makeplot and Jxi is not None:
             plotVER1D(sim,ver[:,Jxi],None,zKM,vlim['p'][2:],tInd,makeplot,'pfwd1d',
-              '$P_{{fwd}}$ at $B_\perp$={:0.2f}  [km]'.format(xKM[Jxi]), spfid,progms)
+              '$\mathbf{{P}}$ at $B_\perp$={:0.2f}  [km]'.format(xKM[Jxi]), spfid,progms)
 #%%
 def plotoptim(sim,cam,drn,dhat,bcomptxt,ver,Phi0,Jxi,
               vfit,fitp,xKM,xp,zKM,zp,vlim,tInd,makeplot,spfid,progms):
@@ -274,19 +274,19 @@ def plotoptim(sim,cam,drn,dhat,bcomptxt,ver,Phi0,Jxi,
     plotBcompare(sim,drn,dhat,cam,'best', spfid,vlim['b'],tInd,1501,makeplot,progms)
 
     plotVER(sim,vfit,xKM,xp,zKM,zp,vlim['p'],tInd,makeplot,'pest',
-          '$\hat{P}$ volume emission rate',
+          '$\hat{\mathbf{P}}$ volume emission rate',
           1815,spfid,progms)
 #%% flux
     plotJ(sim,fitp['x'],xKM,xp,fitp['EK'],fitp['EKpcolor'],
           vlim['j'][:2],vlim['p'][:2],tInd,makeplot,'phiest',
-          '$\hat{\phi}_{top}$ diff. number flux',
+          '$\hat{\mathbf{\phi}}_{top}$ diff. number flux',
           1901,spfid,progms)
           #'Neval = {:d}'.format(fitp.nfev)
 
     if Jxi is not None:
         plotVER1D(sim,ver[:,Jxi],vfit[:,Jxi],zKM,
                   vlim['p'][2:],tInd,makeplot,'pest1d',
-                  '$\hat{{P}}$ volume emission rate at $B_\perp$={:0.2f} [km]'.format(xKM[Jxi]),
+                  '$\hat{{\mathbf{{P}}}}$ volume emission rate at $B_\perp$={:0.2f} [km]'.format(xKM[Jxi]),
                   spfid,progms)
 
         plotJ1D(sim,Phi0[:,Jxi],fitp['x'][:,Jxi],fitp['EK'],vlim['j'][2:4],tInd,makeplot,'phiest1d',
@@ -395,7 +395,7 @@ def plotJ1D(sim,PhiFwd,PhiInv,Ek,vlim,tInd,makeplot,prefix,titletxt,spfid,progms
     fg = figure()
     ax = fg.gca()
 
-    for Phi,l in zip((PhiFwd,PhiInv),('$\Phi$','$\widehat{{\Phi}}$')):
+    for Phi,l in zip((PhiFwd,PhiInv),('$\Phi$','$\hat{{\Phi}}$')):
         if Phi is not None:
             Phitmp = Phi.copy(); Phitmp[Ek<E0min]=0
             iE0est = Phitmp.argmax()
@@ -415,7 +415,7 @@ def plotJ1D(sim,PhiFwd,PhiInv,Ek,vlim,tInd,makeplot,prefix,titletxt,spfid,progms
                 logging.error('could not plot Jfwd1D due to non-positive value(s) in Jflux, t= {}   {}'
                      '\n did you pick the correct --x1d ?   {}'.format(tInd,titletxt,e))
 
-    ax.grid(True)
+    ax.grid(True,'both')
     ax.autoscale(True,tight=False)
     ax.set_ylim(vlim)
     ax.set_xlim([Ek[0]*0.98, Ek[-1]*1.05])
@@ -574,18 +574,18 @@ def plotVER1D(sim,pfwd,pinv,zKM,vlim,tInd,makeplot,prefix,titletxt,spfid,progms)
             ax.semilogx(p,zKM,label=l)
 
     ax.legend(loc='upper right')
-    ax.grid(True)
     ax.set_xlabel('Volume emission rate [photons cm$^{-3}$s$^{-1}$]')
     ax.set_ylabel('$B_\parallel$ [km]')
 
-    if not sim.loadver:
-        titletxt += '\nReactions: {}'.format(sim.reacreq)
+#    if not sim.loadver:
+#        titletxt += '\nReactions: {}'.format(sim.reacreq)
 
     ax.set_title(titletxt)
 
     ax.yaxis.set_major_locator(MultipleLocator(dymaj))
     ax.yaxis.set_minor_locator(MultipleLocator(dymin))
     ax.tick_params(axis='both', which='major', direction='in')
+    ax.grid(True,'both')
 
     ax.set_ylim(bottom=vlim[0],top=vlim[1])
     ax.set_xlim(vlim[4:6])
@@ -659,7 +659,7 @@ def plotVER(sim,ver,x,xp,z,zp,vlim,tInd,makeplot,prefix,titletxt,figh,spfid,prog
             ax.xaxis.set_major_locator(MultipleLocator(dxmax))
             ax.xaxis.set_minor_locator(MultipleLocator(dxmin))
             ax.tick_params(axis='both', which='both', direction='out')
-            ax.grid(True,which='both') #need both for seaborn
+            ax.grid(True,'both') #need both for seaborn
 
             ax.set_xlabel('$B_\perp$ [km]')
             ax.set_ylabel('$B_\parallel$ [km]')
@@ -696,8 +696,8 @@ def plotBcompare(sim,braw,bfit,cam,prefix, spfid,vlim,tInd,figh,makeplot,progms)
 
     for C in cam:
         ax1.plot(C.angle_deg,braw[C.ind],
-                 label=('$\mathbf{{B}}_{{camP{}}}$'.format(C.name)),)
-                 #color=cord[icm])#, marker='.')
+                 label=('$\mathbf{{B}}_{}$'.format(C.name)),)
+                 #color=cord[icm])#)
 #%% plot fit
     # do we need twinax? Let's find out if they're within factor of 10
     maxfit = bfit.max(); maxraw = braw.max()
@@ -710,12 +710,12 @@ def plotBcompare(sim,braw,bfit,cam,prefix, spfid,vlim,tInd,figh,makeplot,progms)
         ax2 = ax1.twinx()
         ax2.get_yaxis().set_major_formatter(sfmt[0]) #only need lin
         ax1.set_ylabel('$\mathbf{B}$ [photons sr$^{-1}$ s$^{-1}$]')
-        ax2.set_ylabel('$\mathbf{\widehat{B}}$ [photons sr$^{-1}$ s$^{-1}$]')
+        ax2.set_ylabel('$\mathbf{\hat{B}}$ [photons sr$^{-1}$ s$^{-1}$]')
 #%% now plot each camera
     for C in cam:
         ax2.plot(C.angle_deg,bfit[C.ind],
-                 label=('$\mathbf{{\widehat{{B}}}}_{{cam{}}}$'.format(C.name)),)
-                 #color=cord[icm])#, marker='.')
+                 label='$\hat{{\mathbf{{B}}}}_{}$'.format(C.name))
+                 #color=cord[icm]))
 
     if singax:
         ax1.legend(loc='upper left')
@@ -743,7 +743,7 @@ def plotBcompare(sim,braw,bfit,cam,prefix, spfid,vlim,tInd,figh,makeplot,progms)
             bias.append(bfit[C.ind].max() - braw[C.ind].max())
             ax3.plot(C.angle_deg,braw[C.ind] - (bfit[C.ind]))#-bias[iCam]))
 
-        ax3.set_title('error $\mathbf{{B}}_{{fwdf}} - B_{{est}}, bias={}'.format(bias))
+        ax3.set_title('error $\mathbf{{B}}_{{fwd}} - B_{{est}}, bias={}'.format(bias))
         #  $t_i=' + str(tInd) + '$'
         ax3.set_xlabel('local view angle [deg.]')
         ax3.xaxis.set_major_locator(MultipleLocator(1))
