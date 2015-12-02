@@ -7,6 +7,11 @@ from __future__ import division,absolute_import
 from sys import argv
 from matplotlib.pyplot import show
 #
+import seaborn as sns
+sns.color_palette("cubehelix")
+sns.set(context='paper', style='whitegrid',font_scale=2,
+        rc={'image.cmap': 'cubehelix_r'})
+#
 from histfeas.main_hist import doSim
 from histfeas.loadAnalyze import readresults,findxlsh5
 
@@ -39,7 +44,7 @@ if __name__ == '__main__':
 
     regXLS='in/2cam_trans.xlsx'
     timeInds=p.frames
-    outdir='~/data/out/rev2_trans2'
+    outdir='out/rev2_trans2'
     x1d = [1.55,3.75]
     vlim = {'p':[-1.5,4.5,90,300,5e7,8e8,5e7,2e9], 'j':[1e3,1.1e5, 1e3,8e5],
             'b':[0,3e3]}

@@ -37,8 +37,8 @@ if __name__ == '__main__':
     p = ArgumentParser(description='flaming figure plotter')
     p.add_argument('--load',help='load without recomputing',action='store_true')
     p.add_argument('-m','--makeplot',help='plots to make',default=[],nargs='+')
-    p.add_argument('-v','--verbose',help='verbosity',action='count',default=0)
     p.add_argument('--ell',help='compute projection matrix',action='store_true')
+    p.add_argument('-v','--verbose',help='verbosity',action='count',default=0)
     p.add_argument('-f','--frames',help='time steps to use',type=int,default=(1,3))
     p = p.parse_args()
 
