@@ -403,7 +403,7 @@ def plotJ1D(sim,PhiFwd,PhiInv,Ek,vlim,tInd,makeplot,prefix,titletxt,spfid,progms
 
             try:
                 ax.loglog(Ek,Phi,marker='.',
-                          label= l+ ', {:0.0f} eV'.format(E0est))
+                          label= l)#+ ', {:0.0f} eV'.format(E0est))
                 if anno:
                     ax.axvline(E0est,linestyle='--',color='red')
                     ax.annotate(('$\hatE_0$={:0.0f}'.format(E0est) + ' eV'),
@@ -423,6 +423,7 @@ def plotJ1D(sim,PhiFwd,PhiInv,Ek,vlim,tInd,makeplot,prefix,titletxt,spfid,progms
     ax.set_xlabel('particle energy [eV]')
     ax.set_ylabel('Differential Number Flux  [cm$^{-2}$s$^{-1}$eV$^{-1}$]')
     ax.set_title(titletxt)
+    ax.legend(loc='upper right')
 
     ax.tick_params(axis='both', which='both')
 
@@ -569,7 +570,7 @@ def plotVER1D(sim,pfwd,pinv,zKM,vlim,tInd,makeplot,prefix,titletxt,spfid,progms)
     fg = figure()
     ax = fg.gca()
 
-    for p,l in zip((pfwd,pinv),('fwd','est')):
+    for p,l in zip((pfwd,pinv),('$\mathbf{P}$','$\hat{\mathbf{P}}$')):
         if p is not None:
             ax.semilogx(p,zKM,label=l)
 
@@ -718,7 +719,7 @@ def plotBcompare(sim,braw,bfit,cam,prefix, spfid,vlim,tInd,figh,makeplot,progms)
                  #color=cord[icm]))
 
     if singax:
-        ax1.legend(loc='upper left')
+        ax1.legend(loc='lower left')
     else:
         '''
         legend for twinx http://stackoverflow.com/questions/5484922/secondary-axis-with-twinx-how-to-add-to-legend
