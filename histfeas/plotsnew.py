@@ -11,8 +11,11 @@ import h5py
 from scipy.interpolate import interp1d
 from pandas import DataFrame
 #
-import plotly.plotly as py
-from plotly.graph_objs import Data,Figure,XAxis,YAxis,Contour, Layout
+try:
+    import plotly.plotly as py
+    from plotly.graph_objs import Data,Figure,XAxis,YAxis,Contour, Layout
+except:
+    pass
 #
 try:
     from gaussfitter import gaussfit,twodgaussian
