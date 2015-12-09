@@ -8,12 +8,17 @@ from pathlib2 import Path
 from sys import argv
 from matplotlib.pyplot import show
 #
+import seaborn as sns
+sns.color_palette("cubehelix")
+sns.set(context='paper', style='whitegrid',font_scale=2,
+        rc={'image.cmap': 'cubehelix_r'})
+#
 from histfeas.main_hist import doSim
 from histfeas.loadAnalyze import readresults,findxlsh5
 
 def hist_figure(xlsreg):
     Phi0,Phifit =doSim(ParamFN=xlsreg,
-                  makeplot=['optim','png','h5'],
+                  makeplot=['fwd','png','h5'], #'optim',
                   timeInds=timeInds,
                   overrides = overrides, #{'minev': minev,'filter':filt, 'fwdguess':fwdguess,
 				                    #'fitm':fitm,'cam':cam,'camx':acx,'ell':ell,'Jfwd':influx},
@@ -33,10 +38,10 @@ if __name__ == '__main__':
     p = ArgumentParser(description='flaming figure plotter')
     p.add_argument('--load',help='load without recomputing',action='store_true')
     p.add_argument('-m','--makeplot',help='plots to make',default=[],nargs='+')
-    p.add_argument('-v','--verbose',help='verbosity',action='count',default=0)
     p.add_argument('--ell',help='compute projection matrix',action='store_true')
-    p.add_argument('-f','--frames',help='time steps to use',type=int,default=None)
-    p.add_argument('-o','--outdir',help='output directory',required=True)
+    p.add_argument('-v','--verbose',help='verbosity',action='count',default=0)
+    p.add_argument('-f','--frames',help='time steps to use',type=int,default=(50,51))
+    p.add_argument('-o','--outdir',help='output directory',default='realtry')
     p = p.parse_args()
 
     xlsreg='in/apr14.xlsx'
@@ -50,11 +55,8 @@ if __name__ == '__main__':
     if not p.load:
         print('running HiSTfeas program -- will write png and h5 to {}'.format(outdir))
         Phi0,Phifit=hist_figure(xlsreg)
-        xlsdir = xlsreg
-    else:
-        xlsdir = outdir
 
-    h5list,xlsfn = findxlsh5(xlsdir)
+    h5list,xlsfn = findxlsh5(outdir)
     readresults(h5list,xlsfn,vlim,x1d,overrides,p.makeplot,p.verbose)
 
     if 'show' in p.makeplot:
