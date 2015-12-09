@@ -272,7 +272,7 @@ class Cam: #use this like an advanced version of Matlab struct
         cutcol = arange(self.superx,dtype=int) #not range
         #rows (y) to cut from picture
         cutrow = rint(polyval(polycoeff,cutcol)).astype(int)
-        assert (cutrow>=0).all() and (cutrow<self.supery).all()
+        assert (cutrow>=0).all() and (cutrow<self.supery).all(),'impossible least squares fit for 1-D cut\n is your video orientation correct? check the params of video hdf5 file'
         # DONT DO THIS: cutrow.clip(0,self.supery,cutrow)
 
         #angle from magnetic zenith corresponding to those pixels
@@ -282,7 +282,7 @@ class Cam: #use this like an advanced version of Matlab struct
         logging.info('mag. zen. ra/dec {} {}'.format(raMagzen,decMagzen))
 
         angledist = angular_separation(raMagzen*u.deg,decMagzen*u.deg,rapix*u.deg,decpix*u.deg)
-        angledist = angledist.to(u.deg)
+        angledist = angledist.to(u.deg).value
         # put distances into a 90-degree fan beam
         angle_deg = empty(self.superx,dtype=float)
         MagZenInd = angledist.argmin() # whether slightly positive or slightly negative, this should be OK
