@@ -145,7 +145,7 @@ def doSaveEll(L,Fwd,sim,xFOVpixelEnds,zFOVpixelEnds,writeRays):
     print('writing {}'.format(sim.FwdLfn))
     if issparse(L):
         L = L.todense()
-    with h5py.File(sim.FwdLfn,'w',libver='latest') as fid:
+    with h5py.File(str(sim.FwdLfn),'w',libver='latest') as fid:
         h5L = fid.create_dataset("/L",data=L,compression="gzip");  h5L.attrs['Units'] = 'kilometers'
         h5Fwdx = fid.create_dataset("/Fwd/x",data=Fwd['x']); h5Fwdx.attrs['Units'] = 'kilometers'
         h5Fwdz = fid.create_dataset("/Fwd/z",data=Fwd['z']); h5Fwdz.attrs['Units'] = 'kilometers'

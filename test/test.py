@@ -52,7 +52,7 @@ def readCheck(Phi0,Phifit):
 
 
 def writeout(regh5):
-    with h5py.File(regh5,'a',libver='latest') as f:
+    with h5py.File(str(regh5),'a',libver='latest') as f:
         f['/phifwd/E0'] = 7500.
         f['/phifwd/x0'] = 1.
 
