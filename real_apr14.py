@@ -18,7 +18,7 @@ from histfeas.loadAnalyze import readresults,findxlsh5
 
 def hist_figure(xlsreg):
     Phi0,Phifit =doSim(ParamFN=xlsreg,
-                  makeplot=['fwd','png','h5'], #'optim',
+                  makeplot=['fwd','optim','png','h5'],
                   timeInds=timeInds,
                   overrides = overrides, #{'minev': minev,'filter':filt, 'fwdguess':fwdguess,
 				                    #'fitm':fitm,'cam':cam,'camx':acx,'ell':ell,'Jfwd':influx},
@@ -40,7 +40,7 @@ if __name__ == '__main__':
     p.add_argument('-m','--makeplot',help='plots to make',default=[],nargs='+')
     p.add_argument('--ell',help='compute projection matrix',action='store_true')
     p.add_argument('-v','--verbose',help='verbosity',action='count',default=0)
-    p.add_argument('-f','--frames',help='time steps to use',type=int,default=(50,51))
+    p.add_argument('-f','--frames',help='time steps to use',type=int,default=(0,1))
     p.add_argument('-o','--outdir',help='output directory',default='/tmp/realtry')
     p = p.parse_args()
 

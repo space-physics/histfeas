@@ -24,8 +24,7 @@ def readresults(h5list,xlsfn,vlim,x1d,overrides,makeplot,verbose=0):
     Phifwd =[]; Phidict =[]; dhat=[]; drn=[]; Pest=[]; Pfwd=[]
     tInd = [];
 #%%
-    nt = len(h5list)
-    if nt==0:
+    if not h5list:
         raise ValueError('no HDF5 files found')
 
     for h5 in h5list:
