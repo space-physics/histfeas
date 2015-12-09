@@ -48,7 +48,7 @@ def getObs(sim,cam,L,tDataInd,ver,makePlots,dbglvl):
     if isnan(bn).any():
         dumpFN = 'obsdump_t {}.h5'.format(tDataInd)
         warn('NaN detected at tInd = {}   dumping variables to {}'.format(tDataInd,dumpFN))
-        with h5py.File(dumpFN,'w',libver='latest') as fid:
+        with h5py.File(str(dumpFN),'w',libver='latest') as fid:
             fid.create_dataset("/bn",data=bn)
             fid.create_dataset("/v",data=ver)
             fid.create_dataset("/L",data=L.todense(order='F'),compression='gzip')
