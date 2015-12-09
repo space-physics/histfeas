@@ -68,7 +68,7 @@ def getPhi0(sim,ap,xKM,Ek,makeplots):
     if not sim.realdata:
         if sim.Jfwdh5 is not None:
             print('Loading sim. input diff. number flux from {}'.format(sim.Jfwdh5))
-            with h5py.File(sim.Jfwdh5,'r',libver='latest') as f:
+            with h5py.File(str(sim.Jfwdh5),'r',libver='latest') as f:
                 Phi0 = asfortranarray(atleast_3d(f['/phiInit']))
         else:
             Phi0 = assemblePhi0(sim,ap,Ek,xKM)
