@@ -54,6 +54,8 @@ def readresults(h5list,xlsfn,vlim,x1d,overrides,makeplot,verbose=0):
 
                 dhat.append(f['/best/bfit'].value)
                 drn.append(f['/best/braw'].value)
+                
+                angle_deg = f['/best/angle'].value #NOTE: by definition, same angles for all time steps-the camera is not moving!
             except KeyError as e:
                 raise KeyError('It seems that data inversion did not complete? Or at least it was not written  {}'.format(e))
 #%%
@@ -73,7 +75,10 @@ def readresults(h5list,xlsfn,vlim,x1d,overrides,makeplot,verbose=0):
 
     ap,sim,cam,Fwd = getParams(xlsfn,overrides,makeplot,progms)
     cam = definecamind(cam,sim.nCutPix)
-
+#%% load original angles of camera
+    for i,C in enumerate(cam):
+        C.angle_deg = angle_deg[i,:]
+#%% load args if they exist
     for a in ap:
         #TODO assumes all are same distance apart
         x0true = (ap[a].loc['X0km',:][:-1] + 0.5*diff(ap[a].loc['X0km',:]))[tInd]
@@ -83,7 +88,7 @@ def readresults(h5list,xlsfn,vlim,x1d,overrides,makeplot,verbose=0):
                    x, xp, Phifwd, Phidict, drn, dhat,
                    vlim, x0true,E0true,makeplot, progms)
 
-#%%
+#%% plots
     for ti,t in enumerate(tInd):
         try:
             Jxi = find_nearest(x,x1d[ti])[0]
