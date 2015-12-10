@@ -25,9 +25,9 @@ def getColumnVER(zgrid,zTranscar,Peig,Phi0):
 
     return Tm.dot(Phi0)
 
-def getMp(sim,zKM,makeplot):
+def getMp(sim,cam,zKM,makeplot):
 #%% read from transcar sim
-    Peigen,EKpcolor = getTranscar(sim)[:2]
+    Peigen,EKpcolor = getTranscar(sim,cam[0].alt_m/1000.,90-cam[0].Bincl)[:2]
     assert isinstance(Peigen,DataFrame),'trouble earlier on with getTranscar, aborting.'
     Ek = Peigen.columns.values
     zTranscar = Peigen.index.values

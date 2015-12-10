@@ -32,16 +32,9 @@ class Sim:
 #%%
         self.useCamBool = cp.loc['useCam'].values.astype(bool)
 
-
-        self.nCamUsed = self.useCamBool.sum() #it is an int
+        self.nCamUsed = self.useCamBool.sum() #result is an int
 
         self.nCutPix = cp.at['nCutPix',0] #FIXME someday allow different # of pixels..
-        self.allCamXkm = cp.loc['Xkm'].values.astype(float)
-        self.allCamZkm = cp.loc['Zkm'].values.astype(float)
-
-        self.obsalt_km = cp.loc['Zkm'].values.mean() #FIXME assuming cameras are at a very similar altitudes
-        self.zenang = 90-cp.loc['Bincl'].values.mean() #FIXME assuming all in same plane and that difference in boresight path length are 'small'
-
 #%% manual override flux file
         try:
             self.Jfwdh5 = overrides['Jfwd']
@@ -135,11 +128,6 @@ class Sim:
         else:
             self.downsampleEnergy = False
 
-        if progms and overrides and overrides['ell']:
-            self.FwdLfn = Path(progms) / self.getEllHash(sp,cp)
-        else:
-            self.FwdLfn = Path('precompute') / self.getEllHash(sp,cp)
-
         if self.raymap == 'astrometry':
             logging.info('Using ASTROMETRY-based per-pixel 1D cut mapping to 2D model space')
         elif self.raymap == 'arbitrary':
@@ -207,10 +195,10 @@ class Sim:
 
         return timeInds[timeInds<self.nTimeSlice] #(it's <, not <=) slice off commond line requests beyond number of frames
 
-    def getEllHash(self,sp,cp):
+    def getEllHash(self,sp,cp,x,z):
         from hashlib import md5
 
-        EllCritParams =  [cp.loc['Xkm'].values, cp.loc['Zkm'].values,
+        EllCritParams =  [x, z,
                           cp.loc['nCutPix'].values, cp.loc['FOVmaxLengthKM'].values,
                           str(sp.at['RayAngleMapping','Cams']).lower(),
                           sp.at['XcellKM','Fwdf'],

@@ -134,7 +134,7 @@ def goPlot(sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
             xFOVpixelEnds[:,i] = C.xFOVpixelEnds
             zFOVpixelEnds[:,i] = C.zFOVpixelEnds
             xCam[i] = C.x_km
-            zCam[i] = C.z_km
+            zCam[i] = C.alt_m / 1000.
         #we kept plotEll in EllLineLength.py for plotEachRay case :(
         plotEll(sim.nCamUsed,xFOVpixelEnds,zFOVpixelEnds,xCam,zCam,nCutPix,
                 xp,zp,sz,sx, xzplot,sim.FwdLfn,plotEachRay, makeplot,vlim['p'])
