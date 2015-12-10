@@ -15,12 +15,12 @@ from .camclass import Cam
 from .simclass import Sim
 
 
-def getParams(XLSfn,overrides,makeplot,progms,verbose):
+def getParams(XLSfn,overrides,makeplot,progms):
     if progms is not None:
-        copy2(XLSfn,progms)
+        copy2(str(XLSfn),str(progms))
 #%% read spreadsheet
     #paramSheets = ('Sim','Cameras','Arc')
-    xl = read_excel(XLSfn,sheetname=None,index_col=0,header=0)
+    xl = read_excel(str(XLSfn),sheetname=None,index_col=0,header=0)
     sp = xl['Sim']
     cp = xl['Cameras']
 #%% read arcs (if any)
@@ -38,11 +38,15 @@ def getParams(XLSfn,overrides,makeplot,progms,verbose):
     if not (nCutPix == nCutPix[0]).all():
         raise ValueError('sanityCheck: all cameras must have same 1D cut length')
 #%% class with parameters and function
-    sim = Sim(sp,cp,ap,ntimeslice,overrides,makeplot,progms,verbose)
+    sim = Sim(sp,cp,ap,ntimeslice,overrides,makeplot,progms)
 #%% grid setup
     Fwd = sim.setupFwdXZ(sp)
 #%% setup cameras
-    cam,cp = setupCam(sim,cp,Fwd['z'][-1],verbose)
+    cam,cp = setupCam(sim,cp,Fwd['z'][-1])
+
+    # make the simulation time step match that of the fastest camera
+    sim.kineticsec = min([C.kineticsec for C,u in zip(cam,sim.useCamBool) if u])
+
 
     logging.info('fwd model voxels:\n'
           'B_perp: N={}   B_parallel: M={}'.format(Fwd['sx'],Fwd['sz']))
@@ -50,19 +54,19 @@ def getParams(XLSfn,overrides,makeplot,progms,verbose):
     return ap,sim,cam,Fwd
 ###############################################
 
-def setupCam(sim,cp,zmax,dbglvl):
-    cam = {}
+def setupCam(sim,cp,zmax):
+    cam = []
 
     if sim.camxreq[0] is not None:
         warn('overriding camera x-loc with {}'.format(sim.camxreq))
         for i,(c,cx) in enumerate(zip(cp,sim.camxreq)):
             if sim.useCamBool[i]:
                 cp.iat['Xkm',c] = cx
-                cam[c] = Cam(sim,cp[c], c, zmax,dbglvl)
+                cam.append(Cam(sim,cp[c], c, zmax))
     else:
         for i,c in enumerate(cp):
             if sim.useCamBool[i]:
-                cam[c] = Cam(sim,cp[c], c, zmax,dbglvl)
+                cam.append(Cam(sim,cp[c], c, zmax))
 
     if len(cam)==0:
         raise ValueError('0 cams are configured, Nothing to do.')

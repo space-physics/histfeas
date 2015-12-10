@@ -16,19 +16,23 @@ from .plotsnew import getx0E0
 
 
 def FitVERopt(L,bn,Phi0,MpDict,sim,cam,Fwd,tInd,makeplot,verbose):
+    assert L.ndim==2
+    assert bn.ndim==1   and bn.flags['F_CONTIGUOUS']==True
+    assert Phi0.ndim==1 and Phi0.flags['F_CONTIGUOUS']==True
+
     vfit = {}; bfit = {}; Phifit = {'x':None} #in case optim not run
     minverbose=bool(verbose)
 #%% scaling brightness
     """
-    We could repeatedly downscale brightness in loop, but that consumes a lot of CPU.
+    We could repeatedly downscale simulted brightness in loop, but that consumes a lot of CPU.
     It is equivalent to temporarily upscale observed brightness once before minimization
     Then downscale once after minimization
     """
-    bscale = [cam[c].intens2dn for c in cam]
-    cInd = [cam[c].ind for c in cam]
+    bscale = [C.dn2intens for C in cam]
+    cInd   = [C.ind       for C in cam]
     bnu = empty_like(bn)
     for s,c in zip(bscale,cInd):
-        bnu[c] = bn[c] / s
+        bnu[c] = bn[c] * s #DONT use 1/intens2dn --that's wrong for real data case!
 #%%
     Mp,zTranscar,EK,EKpcolor = MpDict['Mp'],MpDict['ztc'],MpDict['Ek'],MpDict['EKpcolor']
 
@@ -110,7 +114,7 @@ def FitVERopt(L,bn,Phi0,MpDict,sim,cam,Fwd,tInd,makeplot,verbose):
         bfitu = L.dot( vfit['optim'].ravel(order='F') )
 
         for s,c in zip(bscale,cInd):
-            bfitu[c] *= s
+            bfitu[c] /= s
 
         bfit['optim'] = bfitu
 #%%
@@ -120,7 +124,7 @@ def FitVERopt(L,bn,Phi0,MpDict,sim,cam,Fwd,tInd,makeplot,verbose):
         # don't remove the two lines above (ek,ekpcolor)
 #%% gaussian fit
         #print('max |diff(phi)| = ' + str(np.abs(np.diff(fitp.x, n=1, axis=0)).max()))
-        gx0,gE0 = getx0E0(None,Phifit['x'],Phifit['EK'],Fwd['x'],tInd,None,[None],verbose)
+        gx0,gE0 = getx0E0(None,Phifit['x'],Phifit['EK'],Fwd['x'],tInd,None,[None])
         print(gx0)
         print(gE0)
         print('Estimated $B_{{\perp,0}},E_0$={:0.2f}, {:0.0f}'.format(gx0[1],gE0[1]))
