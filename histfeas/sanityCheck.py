@@ -45,10 +45,11 @@ def getParams(XLSfn,overrides,makeplot,progms):
 #%% setup cameras
     cam,cp = setupCam(sim,cp,Fwd['z'][-1])
     
-    #find the x-coordinate (along B-perp) of each camera (can't do this inside camclass.py)
-    cam[0].x_km = 0 # NOTE arbitrarily picks the first camera x=0km
-    for C in cam[1:]:
-        C.x_km = vincenty((cam[0].lat,cam[0].lon),(C.lat,C.lon)).kilometers
+    if sim.realdata:
+        #find the x-coordinate (along B-perp) of each camera (can't do this inside camclass.py)
+        cam[0].x_km = 0 # NOTE arbitrarily picks the first camera x=0km
+        for C in cam[1:]:
+            C.x_km = vincenty((cam[0].lat,cam[0].lon),(C.lat,C.lon)).kilometers
         
     #store x,z in sim
     if progms and overrides and overrides['ell']:

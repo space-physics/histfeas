@@ -1,10 +1,10 @@
 from __future__ import division,absolute_import
 import logging
-from numpy import (s_,empty,empty_like,isnan,asfortranarray,linspace,outer,
+from numpy import (s_,array,empty,empty_like,isnan,asfortranarray,linspace,outer,
                    sin,cos,pi,ones_like,nan,unravel_index,meshgrid,logspace,
-                   log10,spacing)
+                   log10,spacing,atleast_2d)
 #from numpy.ma import masked_invalid #for pcolormesh, which doesn't like NaN
-from matplotlib.pyplot import figure,subplots, clf,text
+from matplotlib.pyplot import figure,subplots, clf,text,colorbar
 from matplotlib.colors import LogNorm
 from matplotlib.ticker import LogFormatterMathtext, MultipleLocator, ScalarFormatter #for 1e4 -> 1 x 10^4, applied DIRECTLY in format=
 import h5py
@@ -240,61 +240,101 @@ def goPlot(sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
                      'bart',spfid,vlim['b'],tInd, makeplot,progms)
 
 #%%
-def plotfwd(sim,cam,drn,xKM,xp,zKM,zp, ver,Phi0,fitp,Jxi,vlim,tInd,makeplot,spfid,progms):
+def plotfwd(sim,cam,drn,xKM,xp,zKM,zp, ver,Phi0,fitp,Jxi,vlim,tInd,makeplot,spfid,odir,
+            doSubplots=True):
 
-    plotB(drn,sim.realdata,cam,vlim['b'],tInd,1500,makeplot,'$B_{fwd',progms)
+    if Jxi is None or 'optim' in makeplot:
+        nrow = 1 
+        vsizeinch = 10
+    else:
+        nrow = 2
+        vsizeinch = 15
+        
+    if doSubplots:
+        fg,axs = subplots(nrow,3,figsize=(21,vsizeinch))
+        axs = atleast_2d(axs)
+    else:
+        fg=None
+        axs = array([(None,)*3,(None,)*3])
+
+    plotB(drn,sim.realdata,cam,vlim['b'],tInd,1500,makeplot,'$B_{fwd',odir,fg,axs[0,0])
 
     if not sim.realdata:
         # Forward model VER
         plotVER(sim,ver,xKM,xp,zKM,zp,vlim['p'],tInd,makeplot,'pfwd',
-            '$\mathbf{P}$ volume emission rate',   1813,spfid,progms)
+            '$\mathbf{P}$ volume emission rate',   1813,spfid,odir,fg,axs[0,1])
 
 #       print('max |diff(phifwd)| = ' + str(np.abs(np.diff(phiInit, n=1, axis=0)).max()))
         plotJ(sim,Phi0,xKM,xp,fitp['EK'],fitp['EKpcolor'],
               vlim['j'][:2],vlim['p'][:2],tInd,makeplot,'phifwd',
-              '$\Phi_{{top}}$ diff. number flux',  1900,spfid,progms)
+              '$\Phi_{{top}}$ diff. number flux',  1900,spfid,odir,fg,axs[0,2])
+              
+       
+        if not 'optim' in makeplot and Jxi is not None:
+            plotVER1D(sim,ver[:,Jxi],None,zKM,vlim['p'][2:],tInd,makeplot,'pfwd1d',
+              '$\mathbf{{P}}$ at $B_\perp$={:0.2f}  [km]'.format(xKM[Jxi]), spfid,odir,
+                fg,axs[1,0])
 
         if not 'optim' in makeplot and Jxi is not None:
             plotJ1D(sim,Phi0[:,Jxi],None,fitp['EK'],vlim['j'][2:4],tInd,makeplot,'phifwd1d',
                  'Differential Number flux at $B_\perp$={:0.2f} [km]'.format(xKM[Jxi]),
-                       spfid,progms)
-
-
-        if not 'optim' in makeplot and Jxi is not None:
-            plotVER1D(sim,ver[:,Jxi],None,zKM,vlim['p'][2:],tInd,makeplot,'pfwd1d',
-              '$\mathbf{{P}}$ at $B_\perp$={:0.2f}  [km]'.format(xKM[Jxi]), spfid,progms)
+                       spfid,odir,fg,axs[1,1])
+                       
+        if doSubplots:
+            writeplots(fg,'fwd',tInd,makeplot,odir)
 #%%
 def plotoptim(sim,cam,drn,dhat,bcomptxt,ver,Phi0,Jxi,
-              vfit,fitp,xKM,xp,zKM,zp,vlim,tInd,makeplot,spfid,progms):
-
+              vfit,fitp,xKM,xp,zKM,zp,vlim,tInd,makeplot,spfid,odir,doSubplots=True):
+    
+    if Jxi is None:
+        nrow = 1 
+        vsizeinch = 10
+    else:
+        nrow = 2
+        vsizeinch = 15
+    """
+    makes subplot of commonly used plots
+    """    
     if isinstance(dhat,dict):
         dhat = dhat['optim']
 
     if isinstance(vfit,dict):
         vfit = vfit['optim']
+        
+    if doSubplots:
+        fg,axs = subplots(nrow,3,figsize=(21,vsizeinch))
+        axs = atleast_2d(axs)
+    else:
+        fg=None
+        axs = array([(None,)*3,(None,)*3])
 
 
-    plotBcompare(sim,drn,dhat,cam,'best', spfid,vlim['b'],tInd,1501,makeplot,progms)
+    plotBcompare(sim,drn,dhat,cam,'best', spfid,vlim['b'],tInd,1501,makeplot,
+                 odir,fg,axs[0,0])
 
     plotVER(sim,vfit,xKM,xp,zKM,zp,vlim['p'],tInd,makeplot,'pest',
-          '$\hat{\mathbf{P}}$ volume emission rate',
-          1815,spfid,progms)
+            '$\hat{\mathbf{P}}$ volume emission rate',
+              1815,spfid,odir,fg,axs[0,1])
 #%% flux
     plotJ(sim,fitp['x'],xKM,xp,fitp['EK'],fitp['EKpcolor'],
           vlim['j'][:2],vlim['p'][:2],tInd,makeplot,'phiest',
           '$\hat{\mathbf{\phi}}_{top}$ diff. number flux',
-          1901,spfid,progms)
+          1901,spfid,odir,fg,axs[0,2])
           #'Neval = {:d}'.format(fitp.nfev)
 
     if Jxi is not None:
         plotVER1D(sim,ver[:,Jxi],vfit[:,Jxi],zKM,
                   vlim['p'][2:],tInd,makeplot,'pest1d',
                   '$\hat{{\mathbf{{P}}}}$ volume emission rate at $B_\perp$={:0.2f} [km]'.format(xKM[Jxi]),
-                  spfid,progms)
+                  spfid,odir,fg,axs[1,0])
 
         plotJ1D(sim,Phi0[:,Jxi],fitp['x'][:,Jxi],fitp['EK'],vlim['j'][2:4],tInd,makeplot,'phiest1d',
         ('$\hat{{\phi}}_{{top}}$ diff. number flux at $B_\perp$={:0.2f} [km]'.format(xKM[Jxi])),
-                           spfid,progms)
+                           spfid,odir,fg,axs[1,1])
+    
+    if doSubplots:
+        writeplots(fg,'est',tInd,makeplot,odir)
+    
 #%% ############################################################################
 def plotnoise(cam,tInd,figh,makeplot,prefix,progms):
    try:
@@ -391,12 +431,19 @@ def plotPicard(A,b,cvar=None):
         [U,s,V] = svd(A,full_matrices=False,compute_uv=1) #V is not used!
     picard(asfortranarray(U), s, b)
 
-def plotJ1D(sim,PhiFwd,PhiInv,Ek,vlim,tInd,makeplot,prefix,titletxt,spfid,progms):
+def plotJ1D(sim,PhiFwd,PhiInv,Ek,vlim,tInd,makeplot,prefix,titletxt,spfid,progms,
+            fg=None,ax=None):
   try:
     anno = False
 
-    fg = figure()
-    ax = fg.gca()
+    if fg is None and ax is None:
+        fg = figure()
+        ax = fg.gca()
+    else: #subfig, disable writing plots here
+        if 'h5' in makeplot:
+            makeplot=['h5']
+        else:
+            makeplot=[]
 
     for Phi,l in zip((PhiFwd,PhiInv),('$\Phi$','$\hat{{\Phi}}$')):
         if Phi is not None:
@@ -432,14 +479,15 @@ def plotJ1D(sim,PhiFwd,PhiInv,Ek,vlim,tInd,makeplot,prefix,titletxt,spfid,progms
 
     if anno:    ax.legend(loc='lower left')
 
-    writeplots(fg,prefix,tInd,makeplot,progms,None)
+    writeplots(fg,prefix,tInd,makeplot,progms)
 
     if 'h5' in makeplot:
         dumph5(spfid,prefix,tInd,PhiFwd1d=PhiFwd,PhiInv1d=PhiInv,Ek=Ek)
   except Exception as e:
     logging.error('tind {}   {}'.format(tInd,e))
 #%%
-def plotJ(sim,Jflux,x,xp,Ek,EKpcolor,vlim,xlim,tInd,makeplot,prefix,titletxt,figh,spfid,progms):
+def plotJ(sim,Jflux,x,xp,Ek,EKpcolor,vlim,xlim,tInd,makeplot,prefix,titletxt,figh,
+          spfid,progms,fg=None,ax=None):
   try:
     cnorm,sfmt = logfmt(makeplot)
     plt3 = 'octave'         #'octave' #'mpl'#'mayavi'
@@ -463,9 +511,17 @@ def plotJ(sim,Jflux,x,xp,Ek,EKpcolor,vlim,xlim,tInd,makeplot,prefix,titletxt,fig
 
             py.plot(dfg, filename='{}_{}_{}'.format(progms,prefix,tInd),auto_open=False)
         else:
-            figure(figh).clf()
-            fg = figure(figh)
-            ax = fg.gca()
+            
+            if fg is None and ax is None:
+                figure(figh).clf()
+                fg = figure(figh)
+                ax = fg.gca()
+            else: #subfig, disable writing plots here
+                if 'h5' in makeplot:
+                    makeplot=['h5']
+                else:
+                    makeplot=[]
+                
             if pstyle == 'pcolor':
                 hc = ax.pcolormesh(xp,EKpcolor,Jflux,edgecolors='none',
                        norm=c, rasterized=False, #cmap=pcmcmap,
@@ -488,8 +544,7 @@ def plotJ(sim,Jflux,x,xp,Ek,EKpcolor,vlim,xlim,tInd,makeplot,prefix,titletxt,fig
             colorbar ticks are set inside colorbar with colorbar(...,ticks=[...])
             http://stackoverflow.com/questions/16695275/set-limits-on-a-matplotlib-colorbar-without-changing-the-actual-plot
             """
-
-            cbar = fg.colorbar(hc,ax=ax,format=s,)
+            cbar = colorbar(hc,ax=ax,format=s)
             cbar.set_label('[cm$^{-2}$s$^{-1}$eV$^{-1}$]')
             #now let's fix the exponent label on the colorbar
  #           cbar.ax.yaxis.get_offset_text().set_size(afs)
@@ -568,10 +623,17 @@ def getmin(vs,vu):
     else:
         return vs
 
-def plotVER1D(sim,pfwd,pinv,zKM,vlim,tInd,makeplot,prefix,titletxt,spfid,progms):
+def plotVER1D(sim,pfwd,pinv,zKM,vlim,tInd,makeplot,prefix,titletxt,spfid,progms,
+              fg=None,ax=None):
   try:
-    fg = figure()
-    ax = fg.gca()
+    if fg is None and ax is None:
+        fg = figure()
+        ax = fg.gca()
+    else: #subfig, disable writing plots here
+        if 'h5' in makeplot:
+            makeplot=['h5']
+        else:
+            makeplot=[]
 
     for p,l in zip((pfwd,pinv),('$\mathbf{P}$','$\hat{\mathbf{P}}$')):
         if p is not None:
@@ -601,7 +663,8 @@ def plotVER1D(sim,pfwd,pinv,zKM,vlim,tInd,makeplot,prefix,titletxt,spfid,progms)
   except Exception as e:
     logging.error('tind {}   {}'.format(tInd,e))
 #%%
-def plotVER(sim,ver,x,xp,z,zp,vlim,tInd,makeplot,prefix,titletxt,figh,spfid,progms):
+def plotVER(sim,ver,x,xp,z,zp,vlim,tInd,makeplot,prefix,titletxt,figh,spfid,
+            progms,fg=None,ax=None):
   try:
     cnorm,sfmt = logfmt(makeplot)
     '''
@@ -627,9 +690,17 @@ def plotVER(sim,ver,x,xp,z,zp,vlim,tInd,makeplot,prefix,titletxt,figh,spfid,prog
             py.plot(dfg, filename='{}_{}_{}'.format(progms,prefix,tInd), auto_open=False)
             #print(plot_url)
           else:
-            figure(figh).clf()
-            fg = figure(figh)
-            ax = fg.gca()
+              
+            if fg is None and ax is None:
+                figure(figh).clf()
+                fg = figure(figh)
+                ax = fg.gca()
+            else: #subfig, disable writing plots here
+                if 'h5' in makeplot:
+                    makeplot=['h5']
+                else:
+                    makeplot=[]
+                
             if pstyle=='pcolor':
                 hc = ax.pcolormesh(xp,zp,ver,edgecolors='none',
                                     norm=c, #cmap=pcmcmap,n
@@ -651,7 +722,7 @@ def plotVER(sim,ver,x,xp,z,zp,vlim,tInd,makeplot,prefix,titletxt,figh,spfid,prog
             colorbar ticks are set inside colorbar with colorbar(...,ticks=[...])
             http://stackoverflow.com/questions/16695275/set-limits-on-a-matplotlib-colorbar-without-changing-the-actual-plot
             """
-            cbar = fg.colorbar(hc,ax=ax,format=s,)
+            cbar = colorbar(hc,ax=ax,format=s)
             cbar.set_label('[photons cm$^{-3}$s$^{-1}$]')
 #            cbar.ax.yaxis.get_offset_text().set_size(afs)
             cbar.ax.yaxis.get_offset_text().set_position((2, 10))
@@ -683,14 +754,20 @@ def plotVER(sim,ver,x,xp,z,zp,vlim,tInd,makeplot,prefix,titletxt,figh,spfid,prog
   except Exception as e:
     logging.error('tind {}   {}'.format(tInd,e))
 #%%
-def plotBcompare(sim,braw,bfit,cam,prefix, spfid,vlim,tInd,figh,makeplot,progms):
+def plotBcompare(sim,braw,bfit,cam,prefix, spfid,vlim,tInd,figh,makeplot,odir,
+                 fg=None,ax1=None):
   try:
     dosubtract = False
 
-    figure(figh),clf()
-    fg = figure(figh)
-    ax1 = fg.gca()
-
+    if fg is None and ax1 is None:
+        figure(figh).clf()
+        fg = figure(figh)
+        ax1 = fg.gca()
+    else: #subfig, disable writing plots here
+        if 'h5' in makeplot:
+            makeplot=['h5']
+        else:
+            makeplot=[]
 #%% plot raw
     cnorm,sfmt = logfmt(makeplot,(-3,3))
     ax1.get_yaxis().set_major_formatter(sfmt[0]) #only need lin
@@ -758,17 +835,23 @@ def plotBcompare(sim,braw,bfit,cam,prefix, spfid,vlim,tInd,figh,makeplot,progms)
     if 'h5' in makeplot: #a separate stanza
         dumph5(spfid,prefix,tInd,angle=[C.angle_deg for C in cam],braw=braw,bfit=bfit)
 
-    writeplots(fg,prefix,tInd,makeplot,progms)
+    writeplots(fg,prefix,tInd,makeplot,odir)
   except Exception as e:
     logging.error('failed to plot brightness at tind {}   {}'.format(tInd,e))
 #%%
-def plotB(bpix,isrealdata,cam,vlim,tInd,figh,makeplot,labeltxt,progms):
+def plotB(bpix,isrealdata,cam,vlim,tInd,figh,makeplot,labeltxt,odir,fg=None,ax1=None):
   try:
     cnorm,sfmt = logfmt(makeplot)
 
-    figure(figh).clf()
-    fgb = figure(figh)
-    ax1 = fgb.gca()
+    if fg is None and ax1 is None:
+        figure(figh).clf()
+        fg = figure(figh)
+        ax1 = fg.gca()
+    else:
+        if 'h5' in makeplot:
+            makeplot=['h5']
+        else:
+            makeplot=[]  
 
     std = []
 #%% do we need twinax? Let's find out if they're within factor of 10
@@ -797,7 +880,7 @@ def plotB(bpix,isrealdata,cam,vlim,tInd,figh,makeplot,labeltxt,progms):
                  #color=cord[c])
     doBlbl(ax1,isrealdata,sfmt[0],vlim,labeltxt,std) #b is never log
 
-    writeplots(fgb,'b'+labeltxt[4:7],tInd,makeplot,progms)
+    writeplots(fg,'b'+labeltxt[4:7],tInd,makeplot,odir)
   except Exception as e:
     logging.error('tind {}   {}'.format(tInd,e))
 
