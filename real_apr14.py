@@ -18,7 +18,7 @@ from histfeas.loadAnalyze import readresults,findxlsh5
 
 def hist_figure(xlsreg):
     Phi0,Phifit =doSim(ParamFN=xlsreg,
-                  makeplot=['fwd','optim','png','h5'],
+                  makeplot=['fwd','optim','png','h5','realvid'],
                   timeInds=timeInds,
                   overrides = overrides, #{'minev': minev,'filter':filt, 'fwdguess':fwdguess,
 				                    #'fitm':fitm,'cam':cam,'camx':acx,'ell':ell,'Jfwd':influx},
@@ -48,8 +48,8 @@ if __name__ == '__main__':
     outdir = Path(p.outdir)
     timeInds=p.frames
     x1d = None
-    vlim = {'p':[-3,3,90,400,5e5,5e6,5e5,5e6], 'j':[1e1,5e2, 1e1,5e2],
-            'b':[0,2e3]}
+    vlim = {'p':[-3,3,90,400,5e4,5e5,5e4,5e5], 'j':[10,200, 10,200],
+            'b':[0,500]}
     overrides = {'ell':p.ell}
 
     if not p.load:

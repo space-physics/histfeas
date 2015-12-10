@@ -51,6 +51,15 @@ def readresults(h5list,xlsfn,vlim,x1d,overrides,makeplot,verbose=0):
                 xp = f['/pest/xp'].value
                 z = f['/pest/z'].value
                 zp = f['/pest/zp'].value
+                
+#                d = f['/best/bfit'].value
+#                #TODO temp hack
+#                d[512:] = d[512:][::-1]
+#                dhat.append(d)
+#                
+#                d = f['/best/braw'].value
+#                d[512:] = d[512:][::-1]
+#                drn.append(d)
 
                 dhat.append(f['/best/bfit'].value)
                 drn.append(f['/best/braw'].value)
@@ -58,8 +67,9 @@ def readresults(h5list,xlsfn,vlim,x1d,overrides,makeplot,verbose=0):
                 angle_deg = f['/best/angle'].value #NOTE: by definition, same angles for all time steps-the camera is not moving!
             except KeyError as e:
                 raise KeyError('It seems that data inversion did not complete? Or at least it was not written  {}'.format(e))
+                
 #%%
-
+            
     progms = h5.parent / 'reader'
 
     makedirs(str(progms),exist_ok=True)
