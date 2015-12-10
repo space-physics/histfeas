@@ -111,7 +111,7 @@ def goPlot(sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
         logging.warning('run spectral plots from calcemissions.py')
 #%% optional show plots
     if 'realvid' in makeplot and sim.realdata:
-        plotRealImg(sim,cam,rawdata,tInd,makeplot,1830,progms)
+        plotRealImg(sim,cam,rawdata,tInd,makeplot,odir=progms)
 
     if 'singleraw' in makeplot and sim.realdata:
         plotPlainImg(sim,cam,rawdata,tInd,makeplot,1831,progms)
@@ -283,9 +283,11 @@ def plotfwd(sim,cam,drn,xKM,xp,zKM,zp, ver,Phi0,fitp,Jxi,vlim,tInd,makeplot,spfi
             plotJ1D(sim,Phi0[:,Jxi],None,fitp['EK'],vlim['j'][2:4],tInd,makeplot,'phifwd1d',
                  'Differential Number flux at $B_\perp$={:0.2f} [km]'.format(xKM[Jxi]),
                        spfid,odir,fg,axs[1,1])
+#    else: #realdata
+#        plotRealImg(sim,cam,rawdata,tInd,makeplot,odir=progms)
 
-        if doSubplots:
-            writeplots(fg,'fwd',tInd,makeplot,odir)
+    if doSubplots:
+        writeplots(fg,'fwd',tInd,makeplot,odir)
 #%%
 def plotoptim(sim,cam,drn,dhat,bcomptxt,ver,Phi0,Jxi,
               vfit,fitp,xKM,xp,zKM,zp,vlim,tInd,makeplot,spfid,odir,doSubplots=True):
