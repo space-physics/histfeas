@@ -3,7 +3,7 @@ from pathlib2 import Path
 import logging
 from numpy import (linspace, fliplr, flipud, rot90, arange,
                    polyfit,polyval,rint,empty, isfinite, isclose,
-                   absolute, hypot, unravel_index, delete, where)
+                   absolute, hypot, unravel_index,logical_not)
 from datetime import datetime
 from pytz import UTC
 from dateutil.parser import parse
@@ -80,7 +80,7 @@ class Cam: #use this like an advanced version of Matlab struct
             self.cal1Dfn = (Path(cal1Ddir) / cal1Dname).expanduser()
 
         self.raymap = sim.raymap
-        if self.raymap == 'arbitrary':
+        if not sim.realdata and self.raymap == 'arbitrary': #don't use realdata with arbitrary, doesn't make sense and causes flipped brightness data when loading--you've been warned!
             self.angle_deg = self.arbanglemap()
 #        elif self.raymap == 'astrometry': #not OOPable at this time
 #            self.angle_deg = self.astrometrymap()
@@ -321,26 +321,24 @@ class Cam: #use this like an advanced version of Matlab struct
         nearRow = empty(npts,dtype=int)
         nearCol = empty(npts,dtype=int)
         # can be FAR FAR faster than scipy.spatial.distance.cdist()
-        for ipt in range(npts):
+        for i in range(npts):
             #we do this point by point because we need to know the closest pixel for each point
-            errdist = absolute( hypot(self.az - self.az2pts[ipt],
-                                      self.el - self.el2pts[ipt]) )
+            errdist = absolute( hypot(self.az - self.az2pts[i],
+                                      self.el - self.el2pts[i]) )
 
     # ********************************************
     # THIS UNRAVEL_INDEX MUST BE ORDER = 'C'
-            nearRow[ipt],nearCol[ipt] = unravel_index(errdist.argmin(),
-                                                      (self.supery, self.superx),order='C')
+            nearRow[i],nearCol[i] = unravel_index(errdist.argmin(), self.az.shape, order='C')
     #************************************************
 
 
         if discardEdgepix:
-            edgeind = where( ((nearCol==0) | (nearCol == self.superx-1)) |
-                             ((nearRow==0) | (nearRow == self.supery-1)) )[0]
-            nearRow = delete(nearRow,edgeind)
-            nearCol = delete(nearCol,edgeind)
-            logging.info('deleted {} edge pixels'.format(edgeind.size))
-
-        self.findLSQ(nearRow, nearCol)
+            mask = logical_not(((nearCol==0) | (nearCol == self.az.shape[1]-1)) |
+                               ((nearRow==0) | (nearRow == self.az.shape[0]-1)))
+            nearRow = nearRow[mask]
+            nearCol = nearCol[mask]
+    
+            self.findLSQ(nearRow, nearCol)
 
         if verbose>0:
             from matplotlib.pyplot import figure
