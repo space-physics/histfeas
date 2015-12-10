@@ -3,35 +3,20 @@
 Example command line interfacer for HIST feasibility
 Michael Hirsch
 """
+from __future__ import division,absolute_import
+import logging
 from signal import signal,SIGINT #for Ctrl C
 from os.path import expanduser
-from numpy import in1d,arange
+from numpy import arange
 import matplotlib as mpl
 from matplotlib.pyplot import show
 from sys import argv
 #
 from histfeas.main_hist import doSim
 
-def matplotlib_import(makeplot):
-    """
-    currently UNUSED
-    """
-        # these matplotlib imports MUST GO IN THIS ORDER
-    #from mpl_toolkits.mplot3d import Axes3D #causes  TypeError: unhashable type: 'list'
-    if in1d(makeplot,('png','eps')).any():
-        print('using Agg backend: Visibly displayed plots are disabled!')
-        mpl.use('Agg') #for fast PNG writing, but does NOT display at all!
-    elif in1d(makeplot,'pdf').any():
-        print('using PDF backend: Visibly displayed plots are disabled!')
-        mpl.use('pdf') #for multipage PDF writing, but does NOT display at all!
-    else:
-        pass
-        #mpl.use('Qt4Agg') # NOT FOR ANACONDA3
-        #mpl.use('Tkagg') # possibly faster than qt4agg
-#%%
 def signal_handler(signal, frame):
     exit('\n *** Aborting program as per user pressed Ctrl+C ! \n')
-#%% -----------------------------------------------------------
+
 if __name__ == '__main__':
     from argparse import ArgumentParser
 
@@ -58,21 +43,21 @@ if __name__ == '__main__':
     p.add_argument('--jlim',help='MIN MAX flux limits for diff num flux plots',type=float,nargs=2,default=(None,)*2)
     p.add_argument('--blim',help='MIN MAX flux limits for brightness plots',type=float,nargs=2,default=(None,)*2)
     p.add_argument('-L','--ell',help='force recomputation of sparse matrix L',action='store_true')
-    ar = p.parse_args()
+    p = p.parse_args()
 
-    ParamFN = expanduser(ar.infile)
+    ParamFN = expanduser(p.infile)
 #%% plot setup
-    makeplot = ar.makeplot
+    makeplot = p.makeplot
     print(('matplotlib backend / version: ' + mpl.get_backend() +'  ' + mpl.__version__  ))
 #%%
-    vlim = {'p':ar.vlim,'j':ar.jlim,'b':ar.blim}
+    vlim = {'p':p.vlim,'j':p.jlim,'b':p.blim}
 #%%
-    timeInds = ar.frames
-    doProfile = ar.profile
+    timeInds = p.frames
+    doProfile = p.profile
 #%% overrides
-    overrides = {'minev': ar.minev,'filter':ar.filter,
-                 'fwdguess':ar.fwdguess, 'fitm':ar.fitm,'cam':ar.cam,
-                 'camx':ar.cx,'ell':ar.ell,'Jfwd':ar.influx}
+    overrides = {'minev': p.minev,'filter':p.filter,
+                 'fwdguess':p.fwdguess, 'fitm':p.fitm,'cam':p.cam,
+                 'camx':p.cx,'ell':p.ell,'Jfwd':p.influx}
 
     if timeInds is not None:
         timeInds = arange(timeInds[0],timeInds[1],timeInds[2]) #NOT range!!
@@ -83,17 +68,18 @@ if __name__ == '__main__':
         proffn = 'hstprofstats.pstats'
         print('saving profile results to ' + proffn)
         cProfile.run('doSim(ParamFN,makeplot,timeInds,'
-                 'overrides,ar.outdir,ar.x1d,vlim,ar.anim,' '.join(argv),ar.verbose)',proffn)
+                 'overrides,p.outdir,p.x1d,vlim,p.anim,' '.join(argv),p.verbose)',proffn)
         pstats.Stats(proffn).sort_stats('time','cumulative').print_stats(50)
         #binpath = expanduser('~/profile/')
         #sysCall = [binpath + 'gprof2dot.py','-f','pstats',profFN,'|','dot','-Tpng','-o','output.png']
         #print(sysCall)
         #po = Popen(sysCall, stdout=PIPE, cwd=binpath, shell=False)
-        #so,serr = po.communicate(timeout=1) #timeout is incompatible with Python 2.
+        #so,serr = po.communicate() #timeout is incompatible with Python 2.
         #print(so.decode('utf8'))
 
     else: #normal
-        doSim(ParamFN,makeplot,timeInds,overrides,ar.outdir,ar.x1d, vlim,ar.anim,' '.join(argv), ar.verbose)
+        doSim(ParamFN,makeplot,timeInds,
+              overrides,p.outdir,p.x1d, vlim,p.anim,' '.join(argv), p.verbose)
 
     if 'show' in makeplot:
         show()

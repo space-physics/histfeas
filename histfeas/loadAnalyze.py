@@ -6,17 +6,13 @@ option
 """
 
 from __future__ import division,absolute_import
+from pathlib2 import Path
+import logging
+import re
 import h5py
 from os import makedirs
-from os.path import join,expanduser,splitext,isfile,dirname
 from numpy import asarray,diff
-from warnings import warn
 from matplotlib.pyplot import show
-from glob import glob
-import seaborn as sns
-sns.color_palette(sns.color_palette("cubehelix"))
-sns.set(context='poster', style='whitegrid',
-        rc={'image.cmap': 'cubehelix_r'})
 #
 from histutils.findnearest import find_nearest
 from .analysehst import analyseres
@@ -28,52 +24,61 @@ def readresults(h5list,xlsfn,vlim,x1d,overrides,makeplot,verbose=0):
     Phifwd =[]; Phidict =[]; dhat=[]; drn=[]; Pest=[]; Pfwd=[]
     tInd = [];
 #%%
-    nt = len(h5list)
-    if nt==0:
-        warn('no HDF5 files found, ending.')
-        return
+    if not h5list:
+        raise ValueError('no HDF5 files found')
 
     for h5 in h5list:
-        stem = splitext(h5)[0]
+        tInd.append(int(re.compile(r'(\d+)$').search(h5.stem).group(1))) #NOTE assumes trailing time integers
 
-        tInd.append(int(stem[-3:])) #NOTE assumes last 3 digits are time ind
+        logging.debug('tind {}  reading {}'.format(tInd[-1],h5))
 
-        if verbose>0:
-            print('tind {}  reading {}'.format(tInd[-1],h5))
+        assert h5.is_file()
+        with h5py.File(str(h5),'r',libver='latest') as f:
+            try: #simulation
+                Phifwd.append(f['/phifwd/phi'].value)
+                Pfwd.append(f['/pfwd/p'].value)
+            except KeyError: #real data
+                pass
 
-        with h5py.File(h5,'r',libver='latest') as f:
-            x  = f['/pfwd/x'].value #same for all in directory
-            xp = f['/pfwd/xp'].value
+            try:
+                Phidict.append({'x':f['/phiest/phi'].value,
+                                'EK':f['/phiest/Ek'].value,
+                                'EKpcolor':f['/phiest/EKpcolor'].value})
 
-            Phifwd.append(f['/phifwd/phi'].value)
-            Phidict.append({'x':f['/phiest/phi'].value,
-                            'EK':f['/phiest/Ek'].value,
-                            'EKpcolor':f['/phiest/EKpcolor'].value})
+                Pest.append(f['/pest/p'].value)
 
-            Pest.append(f['/pest/p'].value)
-            Pfwd.append(f['/pfwd/p'].value)
-            z = f['/pest/z'].value
-            zp = f['/pest/zp'].value
+                x  = f['/pest/x'].value #same for all in directory
+                xp = f['/pest/xp'].value
+                z = f['/pest/z'].value
+                zp = f['/pest/zp'].value
 
-            dhat.append(f['/best/bfit'].value)
-            drn.append(f['/best/braw'].value)
+                dhat.append(f['/best/bfit'].value)
+                drn.append(f['/best/braw'].value)
+                
+                angle_deg = f['/best/angle'].value #NOTE: by definition, same angles for all time steps-the camera is not moving!
+            except KeyError as e:
+                raise KeyError('It seems that data inversion did not complete? Or at least it was not written  {}'.format(e))
 #%%
-    stem,ext = splitext(h5)  #all in same directory, left here for clarity
-    progms = join(dirname(h5),'reader')
+
+    progms = h5.parent / 'reader'
+
+    makedirs(str(progms),exist_ok=True)
+
+
     try:
-        makedirs(progms)
-    except:
+        Phifwd = asarray(Phifwd).transpose(1,2,0)
+    except ValueError: #realdata
         pass
 
-    Phifwd = asarray(Phifwd).transpose(1,2,0)
-
     if not xlsfn:
-        warn('No XLSX parameter file found')
-        return
+        raise ValueError('No XLSX parameter file found')
 
-    ap,sim,cam,Fwd = getParams(xlsfn,overrides,makeplot,progms,verbose=verbose)
+    ap,sim,cam,Fwd = getParams(xlsfn,overrides,makeplot,progms)
     cam = definecamind(cam,sim.nCutPix)
-
+#%% load original angles of camera
+    for i,C in enumerate(cam):
+        C.angle_deg = angle_deg[i,:]
+#%% load args if they exist
     for a in ap:
         #TODO assumes all are same distance apart
         x0true = (ap[a].loc['X0km',:][:-1] + 0.5*diff(ap[a].loc['X0km',:]))[tInd]
@@ -81,36 +86,43 @@ def readresults(h5list,xlsfn,vlim,x1d,overrides,makeplot,verbose=0):
 
         analyseres(sim,cam,
                    x, xp, Phifwd, Phidict, drn, dhat,
-                   vlim, x0true,E0true,makeplot,
-                   progms, verbose=verbose)
+                   vlim, x0true,E0true,makeplot, progms)
 
-#%%
-
-
+#%% plots
     for ti,t in enumerate(tInd):
-        Jxi = find_nearest(x,x1d[ti])[0]
+        try:
+            Jxi = find_nearest(x,x1d[ti])[0]
+        except:
+            Jxi = None
+
+        try:
+            pf = Pfwd[ti]
+            phif = Phifwd[...,ti]
+        except:
+            pf = None
+            phif = None
 
         if 'fwd' in makeplot:
             plotfwd(sim,cam,drn[ti],x,xp,z,zp,
-                    Pfwd[ti],Phifwd[...,ti],Phidict[ti],Jxi,vlim,t,makeplot,None,progms,verbose)
+                    Pfwd[ti],Phifwd[...,ti],Phidict[ti],Jxi,vlim,t,makeplot,None,progms)
 
         if 'optim' in makeplot:
-            plotoptim(sim,cam,drn[ti],dhat[ti],'best',Pfwd[ti],Phifwd[...,ti],Jxi,
-                      Pest[ti],Phidict[ti],x,xp,z,zp,vlim,t,makeplot,None,progms,verbose)
+            plotoptim(sim,cam,drn[ti],dhat[ti],'best',pf,phif,Jxi,
+                      Pest[ti],Phidict[ti],x,xp,z,zp,vlim,t,makeplot,None,progms)
 
 
 def findxlsh5(h5path):
-    h5path = expanduser(h5path)
+    h5path = Path(h5path).expanduser()
 
-    if isfile(h5path):
+    if h5path.is_file():
         h5list = [h5path]
-        xlsfn = glob(join(dirname(h5path),'*.xlsx'))
+        xlsfn = sorted(h5path.parent.glob('*.xls*'))
     else:
-        h5list = glob(join(h5path,'dump_*.h5'))
-        h5list.sort()
-        xlsfn = glob(join(h5path,'*.xlsx'))
+        h5list = sorted(h5path.glob('dump_*.h5'))
+        xlsfn =  sorted(h5path.glob('*.xls*'))
 
-    if xlsfn: xlsfn = xlsfn[0]
+    if isinstance(xlsfn,list):
+        xlsfn = xlsfn[0]
 
     return h5list,xlsfn
 

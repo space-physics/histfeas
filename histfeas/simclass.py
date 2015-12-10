@@ -1,16 +1,15 @@
 from __future__ import print_function, division,absolute_import
+from pathlib2 import Path
 import logging
 from numpy import asarray,where,arange,isfinite,ceil,hypot,atleast_1d
 import numpy as np # needed for all
-from os.path import join,expanduser
 from dateutil.parser import parse
 #
 from transcarread.readionoinit import getaltgrid
 
 class Sim:
 
-    def __init__(self,sp,cp,ap,ntimeslice,overrides,makeplot,progms,dbglvl):
-        self.dbglvl=dbglvl
+    def __init__(self,sp,cp,ap,ntimeslice,overrides,makeplot,progms):
         #%% how many cameras in use, and which ones?
         try:
             usecamreq = asarray(overrides['cam'])
@@ -66,10 +65,10 @@ class Sim:
             else:
                 self.minbeamev = 0.
 #%% fit method
-        if overrides and overrides['fitm']: #need first check in case it's None
+        try:
             self.optimfitmeth = overrides['fitm']
             logging.info('* setting fit method to {}'.format(overrides['fitm']))
-        else:
+        except (TypeError,KeyError):
             self.optimfitmeth = str(sp.at['OptimFluxMethod','Recon']) #must have str() for FITver .lower()
 
         self.optimmaxiter = sp.at['OptimMaxiter','Recon']
@@ -127,9 +126,9 @@ class Sim:
 
         self.realdata = sp.at['useActualData','Sim'] == 1
         if self.realdata:
-            self.realdatapath = expanduser(sp.at['ActualDataDir','Cams'])
+            self.realdatapath = Path(sp.at['ActualDataDir','Cams']).expanduser()
 
-        self.raymap = str(sp.at['RayAngleMapping','Obs']).lower()
+        self.raymap = str(sp.at['RayAngleMapping','Cams']).lower()
 
         if sp.loc['downsampleEnergy','Transcar'] >1:
             self.downsampleEnergy = sp.at['downsampleEnergy','Transcar']
@@ -137,35 +136,35 @@ class Sim:
             self.downsampleEnergy = False
 
         if progms and overrides and overrides['ell']:
-            self.FwdLfn = join(progms,self.getEllHash(sp,cp))
+            self.FwdLfn = Path(progms) / self.getEllHash(sp,cp)
         else:
-            self.FwdLfn = join('precompute',self.getEllHash(sp,cp))
-
-
+            self.FwdLfn = Path('precompute') / self.getEllHash(sp,cp)
 
         if self.raymap == 'astrometry':
             logging.info('Using ASTROMETRY-based per-pixel 1D cut mapping to 2D model space')
         elif self.raymap == 'arbitrary':
             logging.info('Using arbitrary linear per-pixel 1D cut mapping to 2D model space')
         else:
-            raise ValueError('Unknown Ray Angle Mapping method: ' + str(self.raymap))
+            raise ValueError('Unknown Ray Angle Mapping method: {}'.format(self.raymap))
 
         self.cal1dpath = sp.at['cal1Ddir','Cams']
 
-        self.startutc = sp.at['reqStartUT','Obs']
-        self.stoputc = sp.at['reqStopUT','Obs']
-        # make the simulation time step match that of the fastest camera
-        self.kineticSec = 1. / (cp.ix['frameRateHz',self.useCamBool]).max()
+        try: #for real data only for now
+            self.startutc = parse(sp.at['reqStartUT','Cams'])
+            self.stoputc = parse(sp.at['reqStopUT','Cams'])
+        except (KeyError,AttributeError):
+            pass
+
         self.timestepsperexp = sp.at['timestepsPerExposure','Sim']
         #%% recon
-        self.artinit = str(sp.at['initVector','ART']).lower()
+        self.artinit = str(sp.at['initVector','Recon']).lower()
         try:
-            self.artmaxiter = int(sp.at['maxIter','ART'])
+            self.artmaxiter = int(sp.at['maxIter','Recon'])
         except ValueError: #this is normal,just means we're not using ART
             self.artmaxiter = 0
-        self.artlambda = sp.at['lambda','ART']
-        self.artstop = sp.at['stoprule','ART']
-        self.arttau = sp.at['MDPtauDelta','ART']
+        self.artlambda = sp.at['lambda','Recon']
+        self.artstop = sp.at['stoprule','Recon']
+        self.arttau = sp.at['MDPtauDelta','Recon']
 
     def setupFwdXZ(self,sp):
         Fwd = {}
@@ -213,7 +212,7 @@ class Sim:
 
         EllCritParams =  [cp.loc['Xkm'].values, cp.loc['Zkm'].values,
                           cp.loc['nCutPix'].values, cp.loc['FOVmaxLengthKM'].values,
-                          sp.at['RayAngleMapping','Obs'].lower(),
+                          str(sp.at['RayAngleMapping','Cams']).lower(),
                           sp.at['XcellKM','Fwdf'],
                           sp.at['XminKM','Fwdf'], sp.at['XmaxKM','Fwdf'],
                           sp.at['EllIs','Sim'].lower(),

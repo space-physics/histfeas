@@ -14,24 +14,25 @@ def getObs(sim,cam,L,tDataInd,ver,makePlots,dbglvl):
     real data: extract brightness vector from disk data
     simulation: create brightness from projection matrix and fwd model VER
     """
+    if not sim.realdata and ver is None:
+        return
 
     nCutPix = sim.nCutPix
 
     if sim.realdata:
         bn = empty(nCutPix * sim.nCamUsed,dtype=float,order='F') #FIXME assumes all cuts same length AND that cam 0 is used
-        for c in cam:
-            cInd = cam[c].ind
+        for C in cam:
             """
              remember that we put "d" in lexigraphical form,
              "d" is a column-major vector, such that if our 1D cut is N pixels,
              HST0 occupies d(0:N-1), HST1 occupies d(N:2N-1), ...
             """
-            thisCamPix  = cam[c].keo[:,tDataInd]
+            thisCamPix  = C.keo[:,tDataInd]
 
-            thisCamPix = mogrifyData(thisCamPix, cam[c]) #for clarity
+            thisCamPix = mogrifyData(thisCamPix, C) #for clarity
 
             ''' here's where we assemble vector of observations'''
-            bn[cInd] = thisCamPix
+            bn[C.ind] = thisCamPix
 
 
     elif ver is not None: #or not np.any(np.isnan(v)): # no NaN in v # using synthetic data
@@ -40,20 +41,14 @@ def getObs(sim,cam,L,tDataInd,ver,makePlots,dbglvl):
         assert bp.size == nCutPix * sim.nCamUsed
 
         bn = nans(bp.shape) #nans as a flag to check if something screwed up
-        for c in cam:
-            cInd = cam[c].ind
-            bn[cInd] = mogrifyData(bp[cInd],cam[c])
-
-    else: #skip VER processing
-      print('skipping VER generation and pixel projection due to None in VER')
-      bn = None
-
+        for C in cam:
+            bn[C.ind] = mogrifyData(bp[C.ind],C)
 #%% double check
    #assert np.any(np.isnan(drn)) == False # must be AFTER all drn are assigned, or you can get false positive errors!
-    if bn is not None and isnan(bn).any():
+    if isnan(bn).any():
         dumpFN = 'obsdump_t {}.h5'.format(tDataInd)
         warn('NaN detected at tInd = {}   dumping variables to {}'.format(tDataInd,dumpFN))
-        with h5py.File(dumpFN,'w',libver='latest') as fid:
+        with h5py.File(str(dumpFN),'w',libver='latest') as fid:
             fid.create_dataset("/bn",data=bn)
             fid.create_dataset("/v",data=ver)
             fid.create_dataset("/L",data=L.todense(order='F'),compression='gzip')
@@ -69,17 +64,16 @@ def makeCamFOVpixelEnds(Fwd,sim,cam,makePlots,dbglvl):
     xFOVpixelEnds = empty((nCutPix, sim.nCamUsed),dtype=float)
     zFOVpixelEnds = empty_like(xFOVpixelEnds)
 #%% (1) define the three x,y points defining each 2D pixel cone
-    for c in cam:#.keys():
+    for C in cam:
         '''LINE LENGTH
          here we have 2 vertices per angle instead of 3 (line instead of polygon)
          the minus sign on x makes the angle origin at local east
         '''
-        ci=int(c)
-        xFOVpixelEnds[:,ci] = -(cam[c].fovmaxlen * cos(radians(cam[c].angle_deg))) + cam[c].x_km
-        zFOVpixelEnds[:,ci] =  (cam[c].fovmaxlen * sin(radians(cam[c].angle_deg))) + cam[c].z_km
+        xFOVpixelEnds[:,C.name] = -(C.fovmaxlen * cos(radians(C.angle_deg))) + C.x_km
+        zFOVpixelEnds[:,C.name] =  (C.fovmaxlen * sin(radians(C.angle_deg))) + C.z_km
 
-        cam[c].xFOVpixelEnds = xFOVpixelEnds[:,ci] #for plots.py
-        cam[c].zFOVpixelEnds = zFOVpixelEnds[:,ci]
+        C.xFOVpixelEnds = xFOVpixelEnds[:,C.name] #for plots.py
+        C.zFOVpixelEnds = zFOVpixelEnds[:,C.name]
 
 #%% (2) observational model auroral pixels
 # now we make a matrix with the corner x,y coordinates of the auroral fwd
@@ -123,7 +117,7 @@ def makeCamFOVpixelEnds(Fwd,sim,cam,makePlots,dbglvl):
 #%%
 def loadEll(Fwd,cam,EllFN,verbose):
     try:
-      with h5py.File(EllFN,'r',libver='latest') as fid:
+      with h5py.File(str(EllFN),'r',libver='latest') as fid:
         L = csc_matrix(fid['/L'])
 
         if Fwd is not None: #we're in main program
@@ -141,19 +135,19 @@ def loadEll(Fwd,cam,EllFN,verbose):
 
         if cam is not None:
             try:
-                for i,c in enumerate(cam):
+                for i,C in enumerate(cam):
                     #cam[ci].angle_deg =  fid['/Obs/pixAngle'][:,i]
-                    cam[c].xFOVpixelEnds = fid['/Obs/xFOVpixelEnds'][:,i]
-                    cam[c].zFOVpixelEnds = fid['/Obs/zFOVpixelEnds'][:,i]
+                    C.xFOVpixelEnds = fid['/Obs/xFOVpixelEnds'][:,i]
+                    C.zFOVpixelEnds = fid['/Obs/zFOVpixelEnds'][:,i]
             except KeyError:
                 warn('could not load FOV ends, maybe this is an old Ell file')
 
-    except (IOError) as e: #python 2.7 doesn't have FileNotFoundError
-      raise IOError('{} not found.\nuse --ell command line option to save new Ell file. {}'.format(EllFN,e))
+    except FileNotFoundError as e:
+        raise FileNotFoundError('{} not found.\nuse --ell command line option to save new Ell file. {}'.format(EllFN,e))
     except AttributeError as e:
         raise AttributeError('grid mismatch detected. use --ell command line option to save new Ell file. {}'.format(e))
 
-    if verbose>0: print('loadEll: Loaded "L,Fwd,Obs" data from:', EllFN)
+    if verbose>0: print('loadEll: Loaded "L,Fwd,Obs" data from: {}'.format(EllFN))
 
     return L,Fwd,cam
 
@@ -195,6 +189,6 @@ def removeUnusedCamera(L,useCamBool,nCutPix):
 
 def definecamind(cam,nCutPix):
     ''' store indices of b vector corresponding to each camera (in case some cameras not used) '''
-    for i,c in enumerate(cam):
-        cam[c].ind = s_[ i*nCutPix : (i+1)*nCutPix ]
+    for i,C in enumerate(cam):
+        C.ind = s_[ i*nCutPix : (i+1)*nCutPix ]
     return cam
