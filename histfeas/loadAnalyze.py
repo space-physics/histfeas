@@ -70,9 +70,9 @@ def readresults(h5list,xlsfn,vlim,x1d,overrides,makeplot,verbose=0):
                 
 #%%
             
-    progms = h5.parent / 'reader'
+    odir = h5.parent / 'reader'
 
-    makedirs(str(progms),exist_ok=True)
+    makedirs(str(odir),exist_ok=True)
 
 
     try:
@@ -83,7 +83,7 @@ def readresults(h5list,xlsfn,vlim,x1d,overrides,makeplot,verbose=0):
     if not xlsfn:
         raise ValueError('No XLSX parameter file found')
 
-    ap,sim,cam,Fwd = getParams(xlsfn,overrides,makeplot,progms)
+    ap,sim,cam,Fwd = getParams(xlsfn,overrides,makeplot,odir)
     cam = definecamind(cam,sim.nCutPix)
 #%% load original angles of camera
     for i,C in enumerate(cam):
@@ -96,7 +96,7 @@ def readresults(h5list,xlsfn,vlim,x1d,overrides,makeplot,verbose=0):
 
         analyseres(sim,cam,
                    x, xp, Phifwd, Phidict, drn, dhat,
-                   vlim, x0true,E0true,makeplot, progms)
+                   vlim, x0true,E0true,makeplot, odir)
 
 #%% plots
     for ti,t in enumerate(tInd):
@@ -114,11 +114,13 @@ def readresults(h5list,xlsfn,vlim,x1d,overrides,makeplot,verbose=0):
 
         if 'fwd' in makeplot:
             plotfwd(sim,cam,drn[ti],x,xp,z,zp,
-                    Pfwd[ti],Phifwd[...,ti],Phidict[ti],Jxi,vlim,t,makeplot,None,progms)
+                    Pfwd[ti],Phifwd[...,ti],Phidict[ti],Jxi,vlim,t,makeplot,None,odir,
+                    doSubplots=True)
 
         if 'optim' in makeplot:
             plotoptim(sim,cam,drn[ti],dhat[ti],'best',pf,phif,Jxi,
-                      Pest[ti],Phidict[ti],x,xp,z,zp,vlim,t,makeplot,None,progms)
+                      Pest[ti],Phidict[ti],x,xp,z,zp,vlim,t,makeplot,None,odir,
+                      doSubplots=True)
 
 
 def findxlsh5(h5path):
