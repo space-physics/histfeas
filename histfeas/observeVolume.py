@@ -70,7 +70,7 @@ def makeCamFOVpixelEnds(Fwd,sim,cam,makePlots,dbglvl):
          the minus sign on x makes the angle origin at local east
         '''
         xFOVpixelEnds[:,C.name] = -(C.fovmaxlen * cos(radians(C.angle_deg))) + C.x_km
-        zFOVpixelEnds[:,C.name] =  (C.fovmaxlen * sin(radians(C.angle_deg))) + C.z_km
+        zFOVpixelEnds[:,C.name] =  (C.fovmaxlen * sin(radians(C.angle_deg))) + C.alt_m/1000.
 
         C.xFOVpixelEnds = xFOVpixelEnds[:,C.name] #for plots.py
         C.zFOVpixelEnds = zFOVpixelEnds[:,C.name]
@@ -111,7 +111,8 @@ def makeCamFOVpixelEnds(Fwd,sim,cam,makePlots,dbglvl):
 # we say (for now) that ell=area of polygon intersection between FOV pixel and sky voxel
     tic = time()
     #used .values for future use of Numba
-    L = EllLineLength(Fwd,xFOVpixelEnds,zFOVpixelEnds,nCutPix,sim,makePlots,dbglvl)
+    L = EllLineLength(Fwd,xFOVpixelEnds,zFOVpixelEnds,[c.x_km for c in cam],[c.alt_m/1000. for c in cam],
+                      nCutPix,sim,makePlots,dbglvl)
     print('computed L in {:0.1f}'.format(time()-tic) + ' seconds.')
     return L,Fwd,cam
 #%%

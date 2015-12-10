@@ -38,7 +38,7 @@ from cvutils.lineClipping import cohensutherland
  line length "ell" for each element of L. This is how we implement the line integral.
 '''
 
-def EllLineLength(Fwd,xFOVpixelEnds,zFOVpixelEnds,Np,sim,makePlots,dbglvl):
+def EllLineLength(Fwd,xFOVpixelEnds,zFOVpixelEnds,allCamXkm,allCamZkm,Np,sim,makePlots,dbglvl):
     plotEachRay=False
     writeRays = False #write pixel rays to hdf5 for viewing
 
@@ -62,14 +62,14 @@ def EllLineLength(Fwd,xFOVpixelEnds,zFOVpixelEnds,Np,sim,makePlots,dbglvl):
 
     xzplot =None
     L = goCalcEll(maxNell,nCam,Np,sz,sx,xpc,zpc,xFOVpixelEnds,zFOVpixelEnds,
-                          sim.allCamXkm,sim.allCamZkm,plotEachRay,dbglvl)
+                          allCamXkm,allCamZkm,plotEachRay,dbglvl)
 
     #%% write results to HDF5 file
     if sim.savefwdL:
         doSaveEll(L,Fwd,sim,xFOVpixelEnds,zFOVpixelEnds,writeRays)
 
     if 'ell' in makePlots and plotEachRay and xzplot:
-        plotEll(nCam,xFOVpixelEnds,zFOVpixelEnds,sim.xCam,sim.zCam,Np,xpc,zpc,
+        plotEll(nCam,xFOVpixelEnds,zFOVpixelEnds,allCamXkm,allCamZkm,Np,xpc,zpc,
                 sz,sx,xzplot,sim.FwdLfn,plotEachRay,makePlots,
                 (None,None,None,None,None,None))
     if issparse(L):
@@ -152,11 +152,11 @@ def doSaveEll(L,Fwd,sim,xFOVpixelEnds,zFOVpixelEnds,writeRays):
         h5FwdxPC = fid.create_dataset("/Fwd/xPixCorn",data=Fwd['xPixCorn']); h5FwdxPC.attrs['Units'] = 'kilometers'
         h5FwdzPC = fid.create_dataset("/Fwd/zPixCorn",data=Fwd['zPixCorn']); h5FwdzPC.attrs['Units'] = 'kilometers'
 
-        #h5ObsPA =  fid.create_dataset("/Obs/pixAngle",data=pixAngleDeg);  h5ObsPA.attrs['Units'] = 'Degrees'
+#       h5ObsPA =  fid.create_dataset("/Obs/pixAngle",data=pixAngleDeg);  h5ObsPA.attrs['Units'] = 'Degrees'
         h5ObsxFPE = fid.create_dataset("/Obs/xFOVpixelEnds",data=xFOVpixelEnds); h5ObsxFPE.attrs['Units'] = 'kilometers'
         h5ObszFPE = fid.create_dataset("/Obs/zFOVpixelEnds",data=zFOVpixelEnds); h5ObszFPE.attrs['Units'] = 'kilometers'
-        h5xCam = fid.create_dataset('/Obs/xCam',data=sim.allCamXkm); h5xCam.attrs['Units'] = 'kilometers'
-        h5zCam = fid.create_dataset('/Obs/zCam',data=sim.allCamZkm); h5zCam.attrs['Units'] = 'kilometers'
+#        h5xCam = fid.create_dataset('/Obs/xCam',data=sim.allCamXkm); h5xCam.attrs['Units'] = 'kilometers'
+#        h5zCam = fid.create_dataset('/Obs/zCam',data=sim.allCamZkm); h5zCam.attrs['Units'] = 'kilometers'
     copy2(str(sim.FwdLfn), sim.cal1dpath)
 
 
