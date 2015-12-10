@@ -49,7 +49,7 @@ if __name__ == '__main__':
     timeInds=p.frames
     x1d = None
     vlim = {'p':[-3,3,90,400,5e4,5e5,5e4,5e5], 'j':[10,200, 10,200],
-            'b':[0,500]}
+            'b':[0,750]}
     overrides = {'ell':p.ell}
 
     if not p.load:

@@ -3,6 +3,7 @@ import logging
 from numpy import (s_,array,empty,empty_like,isnan,asfortranarray,linspace,outer,
                    sin,cos,pi,ones_like,nan,unravel_index,meshgrid,logspace,
                    log10,spacing,atleast_2d)
+from datetime import datetime
 #from numpy.ma import masked_invalid #for pcolormesh, which doesn't like NaN
 from matplotlib.pyplot import figure,subplots, clf,text,colorbar
 from matplotlib.colors import LogNorm
@@ -10,6 +11,8 @@ from matplotlib.ticker import LogFormatterMathtext, MultipleLocator, ScalarForma
 import h5py
 from scipy.interpolate import interp1d
 from pandas import DataFrame
+#
+from .nans import nans
 #
 try:
     import plotly.plotly as py
@@ -244,15 +247,16 @@ def plotfwd(sim,cam,drn,xKM,xp,zKM,zp, ver,Phi0,fitp,Jxi,vlim,tInd,makeplot,spfi
             doSubplots=True):
 
     if Jxi is None or 'optim' in makeplot:
-        nrow = 1 
+        nrow = 1
         vsizeinch = 10
     else:
         nrow = 2
         vsizeinch = 15
-        
+
     if doSubplots:
         fg,axs = subplots(nrow,3,figsize=(21,vsizeinch))
         axs = atleast_2d(axs)
+        fg.suptitle(datetime.utcfromtimestamp(cam[0].tKeo[tInd])) #FIXME here we just use the fastest camera, cam 0 apriori
     else:
         fg=None
         axs = array([(None,)*3,(None,)*3])
@@ -268,8 +272,8 @@ def plotfwd(sim,cam,drn,xKM,xp,zKM,zp, ver,Phi0,fitp,Jxi,vlim,tInd,makeplot,spfi
         plotJ(sim,Phi0,xKM,xp,fitp['EK'],fitp['EKpcolor'],
               vlim['j'][:2],vlim['p'][:2],tInd,makeplot,'phifwd',
               '$\Phi_{{top}}$ diff. number flux',  1900,spfid,odir,fg,axs[0,2])
-              
-       
+
+
         if not 'optim' in makeplot and Jxi is not None:
             plotVER1D(sim,ver[:,Jxi],None,zKM,vlim['p'][2:],tInd,makeplot,'pfwd1d',
               '$\mathbf{{P}}$ at $B_\perp$={:0.2f}  [km]'.format(xKM[Jxi]), spfid,odir,
@@ -279,31 +283,37 @@ def plotfwd(sim,cam,drn,xKM,xp,zKM,zp, ver,Phi0,fitp,Jxi,vlim,tInd,makeplot,spfi
             plotJ1D(sim,Phi0[:,Jxi],None,fitp['EK'],vlim['j'][2:4],tInd,makeplot,'phifwd1d',
                  'Differential Number flux at $B_\perp$={:0.2f} [km]'.format(xKM[Jxi]),
                        spfid,odir,fg,axs[1,1])
-                       
+
         if doSubplots:
             writeplots(fg,'fwd',tInd,makeplot,odir)
 #%%
 def plotoptim(sim,cam,drn,dhat,bcomptxt,ver,Phi0,Jxi,
               vfit,fitp,xKM,xp,zKM,zp,vlim,tInd,makeplot,spfid,odir,doSubplots=True):
-    
+
     if Jxi is None:
-        nrow = 1 
+        nrow = 1
         vsizeinch = 10
     else:
         nrow = 2
         vsizeinch = 15
     """
     makes subplot of commonly used plots
-    """    
+    """
     if isinstance(dhat,dict):
         dhat = dhat['optim']
 
     if isinstance(vfit,dict):
         vfit = vfit['optim']
-        
+
     if doSubplots:
         fg,axs = subplots(nrow,3,figsize=(21,vsizeinch))
         axs = atleast_2d(axs)
+        try: #first run
+            dt = str(datetime.utcfromtimestamp(cam[0].tKeo[tInd]))
+        except IndexError: #loading data
+            dt = str(datetime.utcfromtimestamp(cam[0].tKeo))
+        fg.suptitle(dt,fontsize='xx-large') #FIXME here we just use the fastest camera, cam 0 apriori
+        fg.subplots_adjust(top=0.95) # FIXME http://matplotlib.org/faq/howto_faq.html
     else:
         fg=None
         axs = array([(None,)*3,(None,)*3])
@@ -331,10 +341,10 @@ def plotoptim(sim,cam,drn,dhat,bcomptxt,ver,Phi0,Jxi,
         plotJ1D(sim,Phi0[:,Jxi],fitp['x'][:,Jxi],fitp['EK'],vlim['j'][2:4],tInd,makeplot,'phiest1d',
         ('$\hat{{\phi}}_{{top}}$ diff. number flux at $B_\perp$={:0.2f} [km]'.format(xKM[Jxi])),
                            spfid,odir,fg,axs[1,1])
-    
+
     if doSubplots:
         writeplots(fg,'est',tInd,makeplot,odir)
-    
+
 #%% ############################################################################
 def plotnoise(cam,tInd,figh,makeplot,prefix,progms):
    try:
@@ -511,7 +521,7 @@ def plotJ(sim,Jflux,x,xp,Ek,EKpcolor,vlim,xlim,tInd,makeplot,prefix,titletxt,fig
 
             py.plot(dfg, filename='{}_{}_{}'.format(progms,prefix,tInd),auto_open=False)
         else:
-            
+
             if fg is None and ax is None:
                 figure(figh).clf()
                 fg = figure(figh)
@@ -521,7 +531,7 @@ def plotJ(sim,Jflux,x,xp,Ek,EKpcolor,vlim,xlim,tInd,makeplot,prefix,titletxt,fig
                     makeplot=['h5']
                 else:
                     makeplot=[]
-                
+
             if pstyle == 'pcolor':
                 hc = ax.pcolormesh(xp,EKpcolor,Jflux,edgecolors='none',
                        norm=c, rasterized=False, #cmap=pcmcmap,
@@ -559,7 +569,7 @@ def plotJ(sim,Jflux,x,xp,Ek,EKpcolor,vlim,xlim,tInd,makeplot,prefix,titletxt,fig
             ax.grid(True,which='both')
 
             fg.subplots_adjust(top=0.85)
-            doJlbl(ax,titletxt)
+            _doJlbl(ax,titletxt)
 
             writeplots(fg,prefix+p,tInd,makeplot,progms)
 
@@ -570,14 +580,14 @@ def plotJ(sim,Jflux,x,xp,Ek,EKpcolor,vlim,xlim,tInd,makeplot,prefix,titletxt,fig
         except Exception as e:
             logging.info('could not do 3-D, falling back to matplotlib.  {}'.format(e))
             ax3 = plotJ3(x,EKpcolor,Jflux,'mpl')
-        doJlbl(ax3,titletxt)
+        _doJlbl(ax3,titletxt)
 
     if 'h5' in makeplot:
         dumph5(spfid,prefix,tInd,phi=Jflux,xp=xp,Ek=Ek,EKpcolor=EKpcolor)
   except Exception as e:
     logging.error('tind {}   {}'.format(tInd,e))
 
-def doJlbl(ax,titletxt):
+def _doJlbl(ax,titletxt):
     ax.set_ylabel('Energy [eV]')
     ax.set_xlabel('$B_\perp$ [km]')
     ax.set_title(titletxt)
@@ -690,7 +700,7 @@ def plotVER(sim,ver,x,xp,z,zp,vlim,tInd,makeplot,prefix,titletxt,figh,spfid,
             py.plot(dfg, filename='{}_{}_{}'.format(progms,prefix,tInd), auto_open=False)
             #print(plot_url)
           else:
-              
+
             if fg is None and ax is None:
                 figure(figh).clf()
                 fg = figure(figh)
@@ -700,7 +710,7 @@ def plotVER(sim,ver,x,xp,z,zp,vlim,tInd,makeplot,prefix,titletxt,figh,spfid,
                     makeplot=['h5']
                 else:
                     makeplot=[]
-                
+
             if pstyle=='pcolor':
                 hc = ax.pcolormesh(xp,zp,ver,edgecolors='none',
                                     norm=c, #cmap=pcmcmap,n
@@ -831,9 +841,18 @@ def plotBcompare(sim,braw,bfit,cam,prefix, spfid,vlim,tInd,figh,makeplot,odir,
         ax3.set_ylabel('error')
         ax3.get_yaxis().set_major_formatter(sfmt[0])
 
+    if sim.realdata:
+        try:
+            ut1_unix=[c.tKeo[tInd] for c in cam]
+        except IndexError:
+            ut1_unix=[c.tKeo for c in cam]
+    else:
+        ut1_unix=nans(len(cam))
+
 
     if 'h5' in makeplot: #a separate stanza
-        dumph5(spfid,prefix,tInd,angle=[C.angle_deg for C in cam],braw=braw,bfit=bfit)
+        dumph5(spfid,prefix,tInd,angle=[C.angle_deg for C in cam],braw=braw,bfit=bfit,
+               ut1_unix=ut1_unix)
 
     writeplots(fg,prefix,tInd,makeplot,odir)
   except Exception as e:
@@ -851,7 +870,7 @@ def plotB(bpix,isrealdata,cam,vlim,tInd,figh,makeplot,labeltxt,odir,fg=None,ax1=
         if 'h5' in makeplot:
             makeplot=['h5']
         else:
-            makeplot=[]  
+            makeplot=[]
 
     std = []
 #%% do we need twinax? Let's find out if they're within factor of 10
