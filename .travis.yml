@@ -1,39 +1,40 @@
-sudo: true
+language: python
+
+python:
+    - 3.4
+    - 3.5
+
+sudo: false
+
+notifications:
+  email: false
+
 git:
   depth: 1
-language: python
-python:
-  - "3.4"
-  - "2.7"
+
+addons:
+  apt:
+    packages:
+      - gfortran
 
 before_install:
-  - if [[ $(python --version 2>&1) == "Python 3."* ]]; then
-     pyv=3;
-    fi
-  - url=http://repo.continuum.io/miniconda/Miniconda"$pyv"-latest-Linux-x86_64.sh
-  - wget $url -O miniconda.sh
-  - bash miniconda.sh -b -p $HOME/miniconda
-  - export PATH=$HOME/miniconda/bin:$PATH
-  - conda update --yes conda
-  - python --version #just checking
-  - sudo apt-get update && sudo apt-get install gfortran
+    - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
+    - chmod +x miniconda.sh
+    - bash miniconda.sh -b -p $HOME/miniconda
+    - export PATH=$HOME/miniconda/bin:$PATH
+    - hash -r
+    - conda update --quiet --yes conda
 
 install:
- - if [[ -z $pyv ]]; then
-   pip -q install coveralls;
-  fi
- - conda install --yes --file requirements.txt
- - python setup.py develop
+    - conda create --yes -n test python=$TRAVIS_PYTHON_VERSION
+    - source activate test
+    - pip -q install coveralls
+    - conda install --quiet --yes --file requirements.txt
+    - python setup.py develop
 
 script:
-   - if [[ -z $pyv ]]; then
-         echo "running coverage";
-        coverage run test/registration.py;
-     else
-        python test/registration.py;
-    fi
+    - coverage run test/test.py
+    - nosetests -v test/test.py
 
 after_success:
-  - if [[ -z $pyv ]]; then
-     coveralls;
-    fi
+    - coveralls

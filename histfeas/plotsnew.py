@@ -1,50 +1,40 @@
-from __future__ import print_function, division,absolute_import
+from __future__ import division,absolute_import
 import logging
-from numpy import (in1d,s_,empty,empty_like,isnan,asfortranarray,linspace,outer,
-                   sin,cos,pi,ones_like,array,nan,unravel_index,meshgrid,logspace,
+from numpy import (s_,empty,empty_like,isnan,asfortranarray,linspace,outer,
+                   sin,cos,pi,ones_like,nan,unravel_index,meshgrid,logspace,
                    log10,spacing)
-from matplotlib.pyplot import figure,subplots, clf,text,draw
-#from matplotlib.cm import get_cmap
+#from numpy.ma import masked_invalid #for pcolormesh, which doesn't like NaN
+from matplotlib.pyplot import figure,subplots, clf,text
 from matplotlib.colors import LogNorm
 from matplotlib.ticker import LogFormatterMathtext, MultipleLocator, ScalarFormatter #for 1e4 -> 1 x 10^4, applied DIRECTLY in format=
-#from matplotlib.image import imsave
 import h5py
-from os.path import join
 from scipy.interpolate import interp1d
-from warnings import warn
 from pandas import DataFrame
-#
-
-if False:
-    import seaborn as sns
-    sns.color_palette(sns.color_palette("cubehelix"))
-    sns.set(context='paper', style='whitegrid',
-            rc={'image.cmap': 'cubehelix_r'}) #for contour
-
-#sns.set_palette(sns.cubehelix_palette(6)) #all one color, hard to see
 #
 try:
     import plotly.plotly as py
     from plotly.graph_objs import Data,Figure,XAxis,YAxis,Contour, Layout
-except Exception:
+except:
     pass
 #
-from gaussfitter import gaussfit,twodgaussian
+try:
+    from gaussfitter import gaussfit,twodgaussian
+except Exception as e:
+    logging.warning('gaussfitter not installed')
 #
 from histutils.findnearest import find_nearest
+from histutils.plotsimul import plotRealImg,plotPlainImg
 from gridaurora.opticalmod import plotOptMod
+from gridaurora.plots import ploteigver,writeplots
 
 #%% plot globals
-afs = None#20
-tfs = None#22
-tkfs = None#16
 longtitle=False
 #pcmcmap = get_cmap('jet')
 #pcmcmap.set_under('white')
 dymaj=100
-dymin=20
-plotdpi=100
-epsdpi=300
+dymin=25
+dxmax=1.
+dxmin=0.25
 pstyle='contour'
 
 E0min=500 #eV
@@ -74,12 +64,12 @@ def placetxt(x,y,txt,ax):
             bbox=dict(boxstyle="round,pad=0.0",fc='black', alpha=0.25))
 
 def goPlot(sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
-                            fitp,rawdata,tInd,makeplot,progms,x1d,vlim,verbose):
+                            fitp,rawdata,tInd,makeplot,progms,x1d,vlim):
 
     if not progms:
         spfid = None
     else:
-        spfid = join(progms,'dump_t{:03d}.h5'.format(tInd))
+        spfid = progms / 'dump_t{:03d}.h5'.format(tInd)
     #cord = ['b','g','k','r','m','y']
 
     xKM = Fwd['x']
@@ -92,38 +82,36 @@ def goPlot(sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
     nCutPix = sim.nCutPix #FIXME assumes all cams same # of pixels
 
 #%% get xind
-    if x1d[0] is not None:
+    try:
         try:
             cx1d=x1d[tInd]
         except IndexError: #single value of xInd
             cx1d=x1d[0]
         Jxi = find_nearest(xKM,cx1d)[0]
         logging.info('1-D plots of Phi and P taken at index {}  x={}'.format(Jxi,x1d))
-    else:
+    except TypeError:
         Jxi = None
 #%% eigenfunction
     if 'eig' in makeplot:
-        ploteig(fitp['EKpcolor'],zKM,Tm,vlim['p'],sim,tInd,makeplot,'peig',progms,verbose)
+        ploteigver(fitp['EKpcolor'],zKM,Tm,vlim['p'],sim,tInd,makeplot,'peig',progms)
 
        #FIXME this is temporary hack until Peigen is passed to hist-feasibility as DataFrame
         Peigen = DataFrame(Peig['Mp'],index=zKM,columns=fitp['EK'])
         plotOptMod(None,Peigen)
 
-        ploteig1d(fitp['EK'],zKM,Tm,vlim['p'],sim,tInd,makeplot,'peig1d',progms,verbose)
+        ploteig1d(fitp['EK'],zKM,Tm,vlim['p'],sim,tInd,makeplot,'peig1d',progms)
 
     if 'tphi0' in makeplot:
-        plottphi0(Tm,Phi0,Jxi,fitp['EK'],zKM,vlim['p'],sim,tInd,makeplot,'tphi0',progms,verbose)
+        plottphi0(Tm,Phi0,Jxi,fitp['EK'],zKM,vlim['p'],sim,tInd,makeplot,'tphi0',progms)
 
     if 'spectra' in makeplot:
         logging.warning('run spectral plots from calcemissions.py')
 #%% optional show plots
     if 'realvid' in makeplot and sim.realdata:
-        plotRealImg(sim,cam,rawdata,tInd,makeplot,'realdata','$I$',1830,
-                               spfid,progms,verbose)
+        plotRealImg(sim,cam,rawdata,tInd,makeplot,1830,progms)
 
     if 'singleraw' in makeplot and sim.realdata:
-        plotPlainImg(sim,cam,rawdata,tInd,makeplot,'realdata','$I$',1831,
-                               spfid,progms,verbose)
+        plotPlainImg(sim,cam,rawdata,tInd,makeplot,1831,progms)
 
 #%% scatter plot of LOS
     if 'kml' in makeplot or 'kmlrays' in makeplot:
@@ -142,11 +130,11 @@ def goPlot(sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
         zFOVpixelEnds = empty_like(xFOVpixelEnds)
         xCam = empty(sim.nCamUsed,dtype=float)
         zCam = empty_like(xCam)
-        for i,c in enumerate(cam):
-            xFOVpixelEnds[:,i] = cam[c].xFOVpixelEnds
-            zFOVpixelEnds[:,i] = cam[c].zFOVpixelEnds
-            xCam[i] = cam[c].x_km
-            zCam[i] = cam[c].z_km
+        for i,C in enumerate(cam):
+            xFOVpixelEnds[:,i] = C.xFOVpixelEnds
+            zFOVpixelEnds[:,i] = C.zFOVpixelEnds
+            xCam[i] = C.x_km
+            zCam[i] = C.z_km
         #we kept plotEll in EllLineLength.py for plotEachRay case :(
         plotEll(sim.nCamUsed,xFOVpixelEnds,zFOVpixelEnds,xCam,zCam,nCutPix,
                 xp,zp,sz,sx, xzplot,sim.FwdLfn,plotEachRay, makeplot,vlim['p'])
@@ -162,12 +150,12 @@ def goPlot(sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
 
     if 'bartrecon' in makeplot:
         plotBcompare(sim,drn,dhat['artrecon'],cam,sim.nCamUsed,
-                     'bART',spfid,vlim['b'],tInd,makeplot,progms,verbose)
+                     'bART',spfid,vlim['b'],tInd,makeplot,progms)
 #%% error plots
     if 'berror' in makeplot:
-        plotB(drn - dhat['art'],sim.realdata,cam,vlim['b'],tInd,makeplot,'$\Delta{b}$',progms,verbose)
+        plotB(drn - dhat['art'],sim.realdata,cam,vlim['b'],tInd,makeplot,'$\Delta{b}$',progms)
 #%% characteristic energy determination for title labels
-#    gx0,gE0 = getx0E0(Phi0,None,fitp['EK'],xKM,tInd,progms,makeplot,verbose)
+#    gx0,gE0 = getx0E0(Phi0,None,fitp['EK'],xKM,tInd,progms,makeplot)
 #    if longtitle:
 #        fwdloctxt = ('\n$x_{{cam}}=${} $(x_0,E_0)=({:0.2f},{:0.0f})$ [km,eV]'.format(sim.allCamXkm,x0,E0))
 #    else:
@@ -177,55 +165,50 @@ def goPlot(sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
                #'($x_0$,$E_0$)=(' +'{:0.2f}'.format(x0) + ',' + '{:0.0f}'.format(E0) + ') [km,eV]')
 #%% Forward model plots
     if not sim.realdata and ('fwd' in makeplot or 'optim' in makeplot):
-        plotnoise(cam,tInd,253,makeplot,'bnoise',progms,verbose)
+        plotnoise(cam,tInd,253,makeplot,'bnoise',progms)
 
     if 'fwd' in makeplot:
         plotfwd(sim,cam,drn,xKM,xp,zKM,zp,
-                ver,Phi0,fitp,Jxi,vlim,tInd,makeplot,spfid,progms,verbose)
+                ver,Phi0,fitp,Jxi,vlim,tInd,makeplot,spfid,progms)
 #%% gaussian fit of optim
     if 'gaussian' in makeplot and 'fwd' in makeplot:
         plotBcompare(sim,drn,dhat['gaussian'],cam,sim.nCamUsed,
-                     'bgaussfit',spfid, vlim['b'],tInd, makeplot,progms,verbose)
+                     'bgaussfit',spfid, vlim['b'],tInd, makeplot,progms)
 
-        gx0,gE0 = getx0E0(None,fitp['gaussian'],fitp['EK'],xKM,tInd,progms,makeplot,verbose)
+        gx0,gE0 = getx0E0(None,fitp['gaussian'],fitp['EK'],xKM,tInd,progms,makeplot)
 #'Neval = {:d}'.format(fitp.nfev)
         plotJ(sim,fitp['gaussian'], xKM,xp, fitp['EK'],fitp['EKpcolor'],
               vlim['j'][:2],vlim['p'][:2],tInd, makeplot,'jgaussian',
-              '$\hat{\phi}_{gaussian,optim}$ estimated diff. number flux',
-              spfid,progms,verbose)
+              '$\hat{\phi}_{gaussian,optim}$ diff. number flux', spfid,progms)
 
         logging.info('Estimated $x_{{gauss,0}},E_{{gauss,0}}$={:0.2f}, {:0.0f}'.format(gx0[:,1],gE0[:,1]))
 
         plotVER(sim,vfit['gaussian'],xKM,xp,zKM,zp,vlim['p'],tInd,makeplot,'vgaussian',
-              '$\hat{P}_{gaussian,optim}$ volume emission rate',
-              1810,spfid,progms,verbose)
+              '$\hat{P}_{gaussian,optim}$ volume emission rate', 1810,spfid,progms)
 #%% optimize search plots
     if 'optim' in makeplot:
         plotoptim(sim,cam,drn,dhat,bcomptxt,ver,Phi0,Jxi,
-                  vfit,fitp,xKM,xp,zKM,zp,vlim,tInd,makeplot,spfid,progms,verbose)
+                  vfit,fitp,xKM,xp,zKM,zp,vlim,tInd,makeplot,spfid,progms)
 #%% maximum entropy
     if 'phimaxent' in makeplot:
         plotJ(sim,fitp['maxent'],xKM,xp,fitp['EK'],fitp['EKpcolor'],
               vlim['j'][:2],vlim['p'][:2],tInd,makeplot,'jme',
-                '$\Phi_{maxent}$ estimated diff. number flux',
-                spfid,progms,verbose)
+                '$\Phi_{maxent}$ diff. number flux',
+                spfid,progms)
 
     if 'phimaxent1d' in makeplot and Jxi is not None:
         plotJ1D(sim,fitp['maxent'][:,Jxi],fitp['EK'],vlim['j'][2:4],tInd,makeplot,'jme_1D',
                 ('Differential Number flux at $B_\perp$={:0.2f} [km]'.format(xKM[Jxi])),
-                spfid,progms,verbose)
+                spfid,progms)
     if 'bmaxent' in makeplot:
         plotBcompare(sim,drn,dhat['fit_maxent'],cam,sim.nCamUsed,
-                     'bmaxent',spfid,vlim['b'],tInd,makeplot,progms,verbose)
+                     'bmaxent',spfid,vlim['b'],tInd,makeplot,progms)
     if 'pmaxent' in makeplot:
         plotVER(sim,vfit['maxent'],xKM,xp,zKM,zp,vlim['p'],tInd,makeplot,'maxent',
-              '$\hat{v}_{maxent}$ from maximum entropy regularization',
-              1811,spfid,progms,verbose)
+              '$\hat{v}_{maxent}$ from maximum entropy regularization',  1811,spfid,progms)
     if 'pmaxent1d' in makeplot and Jxi is not None:
         plotVER1D(sim,vfit['maxent'][:,Jxi],zKM,vlim['p'][2:],tInd,makeplot,
-                  'vermaxent_1D',
-                  '$p_{optim,maxent}$  $B_\perp$={:0.2f} [km]'.format(xKM[Jxi]),
-                  spfid,progms,verbose)
+                  'vermaxent_1D', '$p_{optim,maxent}$  $B_\perp$={:0.2f} [km]'.format(xKM[Jxi]), spfid,progms)
         if 'pfwd1d' in makeplot:
             try:
                 cax = figure().gca()
@@ -234,61 +217,55 @@ def goPlot(sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
                 cax.plot(ver[:,Jxi],zKM,
                          label='pfwd', color='blue',linestyle='--')
                 cax.legend(loc='best')
-                cax.set_xlabel('VER',labelpad=0)
-                cax.set_ylabel('z [km]',labelpad=0)
+                cax.set_xlabel('VER')
+                cax.set_ylabel('z [km]')
                 cax.set_title('VER forward model vs. VER maximum entropy reconstruction')
                 cax.grid(True)
                 cax.yaxis.set_major_locator(MultipleLocator(dymaj))
                 cax.yaxis.set_minor_locator(MultipleLocator(dymin))
                 logging.info('max diff vmaxent-vfwd=' + str((vfit['maxent'][:,Jxi]-ver[:,Jxi]).max()))
             except Exception as e:
-                warn('could not plot vfwd vmaxent comparison.  {}'.format(e))
+                logging.warning('could not plot vfwd vmaxent comparison.  {}'.format(e))
 #%% diff number flux from ART
     if 'jart' in makeplot:
         plotJ(sim,fitp['art'],xKM,xp,fitp['EK'],fitp['EKpcolor'],
               vlim['j'][:2],vlim['p'][:2],tInd,makeplot,'jart',
-                '$\hat{\Phi}_{art}$ Estimated J from Kaczmarz ART on LT and b',
-                 spfid,progms,verbose)
+                '$\hat{\Phi}_{art}$ J from Kaczmarz ART on LT and b', spfid,progms)
     if 'vart' in makeplot:
         assert isnan(vfit['art']).any() == False
         plotVER(sim,vfit['art'],xKM,xp,zKM,zp,vlim['p'],tInd,makeplot,'vart',
-              '$\hat{P}_{art}$ from ART estimation of $J$',
-              1812,spfid,progms,verbose)
+              '$\hat{P}_{art}$ from ART estimation of $J$', 1812,spfid,progms)
     if 'bart' in makeplot:
         plotBcompare(sim,drn,dhat['fit_art'],cam,sim.nCamUsed,
-                     'bart',spfid,vlim['b'],tInd, makeplot,progms,verbose)
+                     'bart',spfid,vlim['b'],tInd, makeplot,progms)
 
 #%%
-def plotfwd(sim,cam,drn,xKM,xp,zKM,zp,
-            ver,Phi0,fitp,Jxi,vlim,tInd,makeplot,spfid,progms,verbose):
+def plotfwd(sim,cam,drn,xKM,xp,zKM,zp, ver,Phi0,fitp,Jxi,vlim,tInd,makeplot,spfid,progms):
 
-    plotB(drn,sim.realdata,cam,vlim['b'],tInd,1500,makeplot,'$B_{fwd',progms,verbose)
+    plotB(drn,sim.realdata,cam,vlim['b'],tInd,1500,makeplot,'$B_{fwd',progms)
 
     if not sim.realdata:
         # Forward model VER
         plotVER(sim,ver,xKM,xp,zKM,zp,vlim['p'],tInd,makeplot,'pfwd',
-            '$P_{{fwd}}$ volume emission rate',
-            1813,spfid,progms,verbose)
+            '$\mathbf{P}$ volume emission rate',   1813,spfid,progms)
 
 #       print('max |diff(phifwd)| = ' + str(np.abs(np.diff(phiInit, n=1, axis=0)).max()))
         plotJ(sim,Phi0,xKM,xp,fitp['EK'],fitp['EKpcolor'],
               vlim['j'][:2],vlim['p'][:2],tInd,makeplot,'phifwd',
-              '$\Phi_{{top}}$ input diff. number flux',
-              1900,spfid,progms,verbose)
+              '$\Phi_{{top}}$ diff. number flux',  1900,spfid,progms)
 
         if not 'optim' in makeplot and Jxi is not None:
             plotJ1D(sim,Phi0[:,Jxi],None,fitp['EK'],vlim['j'][2:4],tInd,makeplot,'phifwd1d',
                  'Differential Number flux at $B_\perp$={:0.2f} [km]'.format(xKM[Jxi]),
-                       spfid,progms,verbose)
+                       spfid,progms)
 
 
         if not 'optim' in makeplot and Jxi is not None:
             plotVER1D(sim,ver[:,Jxi],None,zKM,vlim['p'][2:],tInd,makeplot,'pfwd1d',
-              '$P_{{fwd}}$ at $B_\perp$={:0.2f}  [km]'.format(xKM[Jxi]),
-              spfid,progms,verbose)
+              '$\mathbf{{P}}$ at $B_\perp$={:0.2f}  [km]'.format(xKM[Jxi]), spfid,progms)
 #%%
 def plotoptim(sim,cam,drn,dhat,bcomptxt,ver,Phi0,Jxi,
-              vfit,fitp,xKM,xp,zKM,zp,vlim,tInd,makeplot,spfid,progms,verbose):
+              vfit,fitp,xKM,xp,zKM,zp,vlim,tInd,makeplot,spfid,progms):
 
     if isinstance(dhat,dict):
         dhat = dhat['optim']
@@ -297,55 +274,55 @@ def plotoptim(sim,cam,drn,dhat,bcomptxt,ver,Phi0,Jxi,
         vfit = vfit['optim']
 
 
-    plotBcompare(sim,drn,dhat,cam,'best', spfid,vlim['b'],tInd,1501,makeplot,progms,verbose)
+    plotBcompare(sim,drn,dhat,cam,'best', spfid,vlim['b'],tInd,1501,makeplot,progms)
 
     plotVER(sim,vfit,xKM,xp,zKM,zp,vlim['p'],tInd,makeplot,'pest',
-          '$\hat{P}$ estimated volume emission rate',
-          1815,spfid,progms,verbose)
+          '$\hat{\mathbf{P}}$ volume emission rate',
+          1815,spfid,progms)
 #%% flux
     plotJ(sim,fitp['x'],xKM,xp,fitp['EK'],fitp['EKpcolor'],
           vlim['j'][:2],vlim['p'][:2],tInd,makeplot,'phiest',
-          '$\hat{\phi}_{top}$ estimated diff. number flux',
-          1901,spfid,progms,verbose)
+          '$\hat{\mathbf{\phi}}_{top}$ diff. number flux',
+          1901,spfid,progms)
           #'Neval = {:d}'.format(fitp.nfev)
 
     if Jxi is not None:
         plotVER1D(sim,ver[:,Jxi],vfit[:,Jxi],zKM,
                   vlim['p'][2:],tInd,makeplot,'pest1d',
-                  '$\hat{{P}}$ estimated volume emission rate at $B_\perp$={:0.2f} [km]'.format(xKM[Jxi]),
-                  spfid,progms,verbose)
+                  '$\hat{{\mathbf{{P}}}}$ volume emission rate at $B_\perp$={:0.2f} [km]'.format(xKM[Jxi]),
+                  spfid,progms)
 
         plotJ1D(sim,Phi0[:,Jxi],fitp['x'][:,Jxi],fitp['EK'],vlim['j'][2:4],tInd,makeplot,'phiest1d',
-        ('$\hat{{\phi}}_{{top}}$ estimated diff. number flux at $B_\perp$={:0.2f} [km]'.format(xKM[Jxi])),
-                           spfid,progms,verbose)
+        ('$\hat{{\phi}}_{{top}}$ diff. number flux at $B_\perp$={:0.2f} [km]'.format(xKM[Jxi])),
+                           spfid,progms)
 #%% ############################################################################
-def plotnoise(cam,tInd,figh,makeplot,prefix,progms,verbose):
+def plotnoise(cam,tInd,figh,makeplot,prefix,progms):
    try:
       figure(figh).clf()
       fg = figure(figh)
       ax = fg.add_subplot(211)
 
-      for c in cam:
-         ax.plot(cam[c].dnoise,label=cam[c].name)
+      for C in cam:
+         ax.plot(C.dnoise, label=C.name)
          ax.set_ylabel('amplitude')
          ax.set_title('Noise that was injected into raw intensity data')
          ax.grid(True)
       ax.legend(loc='best')
 
       ax2 = fg.add_subplot(212)
-      for c in cam:
-         ax2.plot(cam[c].noisy,label=cam[c].name)
+      for C in cam:
+         ax2.plot(C.noisy, label=C.name)
          ax2.set_ylabel('amplitude')
          ax2.set_xlabel('pixel number')
          ax2.set_title('Noisy data')
          ax2.grid(True)
       ax2.legend(loc='best')
 
-      writeplots(fg,prefix,tInd,makeplot,progms,None,verbose)
+      writeplots(fg,prefix,tInd,makeplot,progms)
    except Exception as e:
-      warn('tind {}   {}'.format(tInd,e))
+      logging.error('tind {}   {}'.format(tInd,e))
 
-def plottphi0(Tm,Phi0,Jxi,Ek,zKM,vlim,sim,tInd,makeplot,prefix,progms,verbose):
+def plottphi0(Tm,Phi0,Jxi,Ek,zKM,vlim,sim,tInd,makeplot,prefix,progms):
   try:
     fg = figure()
     ax = fg.gca()
@@ -356,55 +333,24 @@ def plottphi0(Tm,Phi0,Jxi,Ek,zKM,vlim,sim,tInd,makeplot,prefix,progms,verbose):
         #except ValueError:
         #    print('skipped plotting {:0.0f} eV due to zero diff. num flux at that energy'.format(e))
     ax.set_xscale('log')
-    ax.set_title('individual eigenprofile contributions to $P_{fwd}$',fontsize=tfs)
-    ax.set_xlabel('volume emission rate [photons cm$^{-3}$ s$^{-1}$]',fontsize=afs)
-    ax.set_ylabel('$B_\parallel$ [km]',fontsize=afs)
+    ax.set_title('individual eigenprofile contributions to $P_{fwd}$')
+    ax.set_xlabel('volume emission rate [photons cm$^{-3}$ s$^{-1}$]')
+    ax.set_ylabel('$B_\parallel$ [km]')
     ax.grid(True)
 
     ax.legend(loc='upper left',framealpha=0.5)
 
     ax.yaxis.set_major_locator(MultipleLocator(dymaj))
     ax.yaxis.set_minor_locator(MultipleLocator(dymin))
-    ax.tick_params(axis='both', which='both', direction='in', labelsize=tkfs)
+    ax.tick_params(axis='both', which='both', direction='in')
     ax.set_xlim(vlim[4:])
     ax.set_ylim(vlim[2:-2])
 
-    writeplots(fg,prefix,tInd,makeplot,progms,verbose=verbose)
+    writeplots(fg,prefix,tInd,makeplot,progms)
   except Exception as e:
-    warn('tind {}   {}'.format(tInd,e))
+    logging.error('tind {}   {}'.format(tInd,e))
 
-def ploteig(EKpcolor,zKM,Tm,vlim,sim,tInd,makeplot,prefix,progms,verbose):
-  try:
-    fg = figure(); ax = fg.gca()
-    pcm = ax.pcolormesh(EKpcolor, zKM, Tm,
-                        edgecolors='none',#cmap=pcmcmap,
-                        norm=LogNorm(),
-                        vmin=vlim[4], vmax=vlim[5])
-    ax.set_xlabel('Energy [eV]',fontsize=afs)
-    ax.set_ylabel('$B_\parallel$ [km]',fontsize=afs)
-    ax.autoscale(True,tight=True)
-    ax.set_xscale('log')
-    ax.yaxis.set_major_locator(MultipleLocator(dymaj))
-    ax.yaxis.set_minor_locator(MultipleLocator(dymin))
-    mptitle = '$P_{eig}$, filter: ' + sim.opticalfilter
-    mptitle += str(sim.reacreq)
-#    if sim.loadver:
-#        mptitle+= '\n' + sim.loadverfn
-#    else:
-#        mptitle += '\n' + sim.transcarpath
-    ax.set_title(mptitle,fontsize=tfs)
-    cbar = fg.colorbar(pcm,ax=ax)
-    cbar.set_label('[photons cm$^{-3}$s$^{-1}$]',labelpad=0,fontsize=afs)
-    cbar.ax.tick_params(labelsize=afs)
-    cbar.ax.yaxis.get_offset_text().set_size(afs)
-
-    ax.tick_params(axis='both', which='both', direction='out', labelsize=tkfs)
-    ax.set_ylim(vlim[2:4])
-    writeplots(fg,prefix,tInd,makeplot,progms,verbose=verbose)
-  except Exception as e:
-    warn('tind {}   {}'.format(tInd,e))
-
-def ploteig1d(Ek,zKM,Tm,vlim,sim,tInd,makeplot,prefix,progms,verbose):
+def ploteig1d(Ek,zKM,Tm,vlim,sim,tInd=None,makeplot=None,prefix=None,progms=None):
   try:
     firstbeamind=0
 
@@ -416,105 +362,43 @@ def ploteig1d(Ek,zKM,Tm,vlim,sim,tInd,makeplot,prefix,progms,verbose):
         ax.semilogx(Tm[:,i], zKM,label='{:0.0f}'.format(e)+'eV')#,marker='.')
     ax.yaxis.set_major_locator(MultipleLocator(dymaj))
     ax.yaxis.set_minor_locator(MultipleLocator(dymin))
-    ax.set_ylabel('$B_\parallel$ [km]',fontsize=afs)
-    ax.set_xlabel('volume emission rate [photons cm$^{-3}$s$^{-1}$]',fontsize=afs)
-    ax.tick_params(axis='both', which='both', direction='in', labelsize=tkfs)
+    ax.set_ylabel('$B_\parallel$ [km]')
+    ax.set_xlabel('volume emission rate [photons cm$^{-3}$s$^{-1}$]')
+    ax.tick_params(axis='both', which='both', direction='in')
     ax.set_xlim(vlim[4:])
     ax.set_ylim(vlim[2:4])
     titletxt = '$P_{eig}$ '
     titletxt += str(sim.reacreq)
 
     titletxt += ' Opt. Filter: ' + sim.opticalfilter
-    ax.set_title(titletxt, fontsize=tfs)
+    ax.set_title(titletxt)
     ax.legend(loc='upper left',framealpha=0.5)
     #ax.autoscale(True,tight=True)
     ax.grid(True)
-    writeplots(fg,prefix,tInd,makeplot,progms,verbose=verbose)
+    writeplots(fg,prefix,tInd,makeplot,progms)
   except Exception as e:
-    warn('tind {}   {}'.format(tInd,e))
+    logging.error('tind {}   {}'.format(tInd,e))
 
-def plotPlainImg(sim,cam,rawdata,t,makeplot,prefix,titletxt,figh,spfid,progms,verbose):
-    """http://stackoverflow.com/questions/22408237/named-colors-in-matplotlib"""
-    for c in cam:
-        figure(figh).clf()
-        fg = figure(figh)
-        ax = fg.gca()
-        ax.set_axis_off()
-        ax.imshow(rawdata[c][t,:,:],
-                  origin='lower',
-                  vmin=cam[c].plotminmax[0], vmax=cam[c].plotminmax[1],
-                  cmap='gray')
-        ax.text(0.05, 0.075, cam[c].tKeo[t].strftime('%Y-%m-%dT%H:%M:%S.%f')[:23],
-                     ha='left',
-                     va='top',
-                     transform=ax.transAxes,
-                     color='limegreen',
-                     #weight='bold',
-                     size=24
-                    )
-
-    draw() #Must have this here or plot doesn't update in animation multiplot mode!
-    if in1d(('rawpng','save'),makeplot).any():
-        writeplots(fg,'cam{}rawFrame'.format(c),t,'png',progms,verbose=verbose)
-
-#%%
-def plotRealImg(sim,cam,rawdata,t,makeplot,prefix,titletxt,figh,spfid,progms,verbose):
-    showcb = False
-    #alltReq = sim.alltReq
-    figure(figh).clf()
-
-    fg,axm = subplots(nrows=1,ncols=2,sharey='row',num=figh, dpi=plotdpi, figsize=(15,5))
-    for c,ax in zip(cam,axm):
-        #fixme this would need help if one of the cameras isn't plotted (this will probably never happen)
-
-        #plotting raw uint16 data
-        hi = ax.imshow(rawdata[c][t,:,:],
-                         origin='lower',
-                         vmin=cam[c].plotminmax[0], vmax=cam[c].plotminmax[1],
-                         cmap='gray')
-
-        if showcb: #showing the colorbar makes the plotting go 5-10x more slowly
-            hc = fg.colorbar(hi, ax=ax) #not cax!
-            hc.set_label(str(rawdata[c].dtype) + ' data numbers')
-        ax.set_title('Cam{}: {}'.format(c,cam[c].tKeo[t]))
-        #ax.set_xlabel('x-pixel')
-        if c==0:
-            ax.set_ylabel('y-pixel')
-    #%% plotting 1D cut line
-        ax.plot(cam[c].cutcol,cam[c].cutrow,
-                 marker='.',linestyle='none',color='blue',markersize=1)
-        #plot magnetic zenith
-        ax.scatter(x=cam[c].cutcol[cam[c].angleMagzenind],
-                   y=cam[c].cutrow[cam[c].angleMagzenind],
-                   marker='o',facecolors='none',color='red',s=500)
-    #%% plot cleanup
-        ax.autoscale(True,tight=True) #fills existing axes
-        ax.grid(False) #in case Seaborn is used
-
-    draw() #Must have this here or plot doesn't update in animation multiplot mode!
-    writeplots(fg,'rawFrame',t,makeplot,progms,overridefmt='png',verbose=verbose)
-
-def plotPicard(A,b,cvar=None,verbose=0):
-    from picard import picard
+def plotPicard(A,b,cvar=None):
+    from pyAIRtools.picard import picard
     from scipy.sparse import issparse
     from numpy.linalg import svd
-    if verbose>0:
-        logging.info('computing SVD for Picard plot: {}  ...'.format(cvar))
+
+    logging.info('computing SVD for Picard plot: {}  ...'.format(cvar))
     if issparse(A):
         [U,s,V] = svd(A.todense(order='F'),full_matrices=False,compute_uv=1) #V is not used!
     else:
         [U,s,V] = svd(A,full_matrices=False,compute_uv=1) #V is not used!
     picard(asfortranarray(U), s, b)
 
-def plotJ1D(sim,PhiFwd,PhiInv,Ek,vlim,tInd,makeplot,prefix,titletxt,spfid,progms,verbose):
+def plotJ1D(sim,PhiFwd,PhiInv,Ek,vlim,tInd,makeplot,prefix,titletxt,spfid,progms):
   try:
     anno = False
-    #fontsizes
 
     fg = figure()
     ax = fg.gca()
 
-    for Phi,l in zip((PhiFwd,PhiInv),('$\Phi$','$\widehat{{\Phi}}$')):
+    for Phi,l in zip((PhiFwd,PhiInv),('$\Phi$','$\hat{{\Phi}}$')):
         if Phi is not None:
             Phitmp = Phi.copy(); Phitmp[Ek<E0min]=0
             iE0est = Phitmp.argmax()
@@ -522,7 +406,7 @@ def plotJ1D(sim,PhiFwd,PhiInv,Ek,vlim,tInd,makeplot,prefix,titletxt,spfid,progms
 
             try:
                 ax.loglog(Ek,Phi,marker='.',
-                          label= l+ ', {:0.0f} eV'.format(E0est))
+                          label= l)#+ ', {:0.0f} eV'.format(E0est))
                 if anno:
                     ax.axvline(E0est,linestyle='--',color='red')
                     ax.annotate(('$\hatE_0$={:0.0f}'.format(E0est) + ' eV'),
@@ -531,35 +415,34 @@ def plotJ1D(sim,PhiFwd,PhiInv,Ek,vlim,tInd,makeplot,prefix,titletxt,spfid,progms
                              ha='right', va='top',
                              arrowprops={'facecolor':'red', 'shrink':0.2, 'headwidth':8, 'width':2},)
             except ValueError as e:
-                warn('could not plot Jfwd1D due to non-positive value(s) in Jflux, t= {}   {}'
+                logging.error('could not plot Jfwd1D due to non-positive value(s) in Jflux, t= {}   {}'
                      '\n did you pick the correct --x1d ?   {}'.format(tInd,titletxt,e))
 
-    ax.grid(True)
+    ax.grid(True,'both')
     ax.autoscale(True,tight=False)
     ax.set_ylim(vlim)
     ax.set_xlim([Ek[0]*0.98, Ek[-1]*1.05])
 
-    ax.set_xlabel('particle energy [eV]', fontsize=afs,labelpad=0)
-    ax.set_ylabel('Differential Number Flux  [cm$^{-2}$s$^{-1}$eV$^{-1}$]',fontsize=afs,labelpad=0)
-    ax.set_title(titletxt,fontsize=tfs)
+    ax.set_xlabel('particle energy [eV]')
+    ax.set_ylabel('Differential Number Flux  [cm$^{-2}$s$^{-1}$eV$^{-1}$]')
+    ax.set_title(titletxt)
+    ax.legend(loc='upper right')
 
-    ax.tick_params(axis='both', which='both',labelsize=tkfs)
+    ax.tick_params(axis='both', which='both')
 
     if anno:    ax.legend(loc='lower left')
 
-    writeplots(fg,prefix,tInd,makeplot,progms,None,verbose)
+    writeplots(fg,prefix,tInd,makeplot,progms,None)
 
     if 'h5' in makeplot:
         dumph5(spfid,prefix,tInd,PhiFwd1d=PhiFwd,PhiInv1d=PhiInv,Ek=Ek)
   except Exception as e:
-    warn('tind {}   {}'.format(tInd,e))
+    logging.error('tind {}   {}'.format(tInd,e))
 #%%
-def plotJ(sim,Jflux,x,xp,Ek,EKpcolor,vlim,xlim,tInd,makeplot,prefix,titletxt,figh,spfid,progms,verbose):
+def plotJ(sim,Jflux,x,xp,Ek,EKpcolor,vlim,xlim,tInd,makeplot,prefix,titletxt,figh,spfid,progms):
   try:
     cnorm,sfmt = logfmt(makeplot)
     plt3 = 'octave'         #'octave' #'mpl'#'mayavi'
-    #fontsizes
-
 #%% 2-D
     pre = ('lin','log')
     vlow = (spacing(1),1.)
@@ -594,8 +477,7 @@ def plotJ(sim,Jflux,x,xp,Ek,EKpcolor,vlim,xlim,tInd,makeplot,prefix,titletxt,fig
 #                else:
 #                    clvl = linspace(vmin,vmax,6)
 
-                if verbose>-1:
-                    print('phi using contour levels {}'.format(clvl))
+                logging.debug('plotting flux Phi using contour levels {}'.format(clvl))
 
                 hc = ax.contour(x,Ek,Jflux,levels=clvl,
                                 linewidths=2,norm=c,vmin=v,vmax=vmax,
@@ -608,11 +490,10 @@ def plotJ(sim,Jflux,x,xp,Ek,EKpcolor,vlim,xlim,tInd,makeplot,prefix,titletxt,fig
             """
 
             cbar = fg.colorbar(hc,ax=ax,format=s,)
-            cbar.set_label('[cm$^{-2}$s$^{-1}$eV$^{-1}$]', labelpad=0, fontsize=afs)
-            cbar.ax.tick_params(labelsize=afs)
+            cbar.set_label('[cm$^{-2}$s$^{-1}$eV$^{-1}$]')
             #now let's fix the exponent label on the colorbar
-            cbar.ax.yaxis.get_offset_text().set_size(afs)
-            cbar.ax.yaxis.get_offset_text().set_position((-1, 1))
+ #           cbar.ax.yaxis.get_offset_text().set_size(afs)
+            cbar.ax.yaxis.get_offset_text().set_position((2, 10))
             if pstyle=='contour':
                 cbar.add_lines(hc)
 
@@ -620,36 +501,36 @@ def plotJ(sim,Jflux,x,xp,Ek,EKpcolor,vlim,xlim,tInd,makeplot,prefix,titletxt,fig
             #print('phi xlim {}'.format(xlim))
             ax.set_xlim(xlim)
 
-            ax.grid(True)
+            ax.grid(True,which='both')
 
             fg.subplots_adjust(top=0.85)
             doJlbl(ax,titletxt)
 
-            writeplots(fg,prefix+p,tInd,makeplot,progms,verbose=verbose)
+            writeplots(fg,prefix+p,tInd,makeplot,progms)
 
 #%% 3-D
     if '3d' in makeplot:
         try:
             ax3 = plotJ3(x,EKpcolor,Jflux,plt3)
         except Exception as e:
-            warn('* falling back to matplotlib.  {}'.format(e))
+            logging.info('could not do 3-D, falling back to matplotlib.  {}'.format(e))
             ax3 = plotJ3(x,EKpcolor,Jflux,'mpl')
         doJlbl(ax3,titletxt)
 
     if 'h5' in makeplot:
         dumph5(spfid,prefix,tInd,phi=Jflux,xp=xp,Ek=Ek,EKpcolor=EKpcolor)
   except Exception as e:
-    warn('tind {}   {}'.format(tInd,e))
+    logging.error('tind {}   {}'.format(tInd,e))
 
 def doJlbl(ax,titletxt):
-    ax.set_ylabel('Energy [eV]',fontsize=afs,labelpad=0)
-    ax.set_xlabel('$B_\perp$ [km]',fontsize=afs,labelpad=0)
-    ax.set_title(titletxt, fontsize=tfs, y = 1.02) # + '  $t_i=' + str(tInd) + '$'
+    ax.set_ylabel('Energy [eV]')
+    ax.set_xlabel('$B_\perp$ [km]')
+    ax.set_title(titletxt)
 
-    ax.xaxis.set_major_locator(MultipleLocator(1))
-    ax.xaxis.set_minor_locator(MultipleLocator(0.2))
+    ax.xaxis.set_major_locator(MultipleLocator(dxmax))
+    ax.xaxis.set_minor_locator(MultipleLocator(dxmin))
 
-    ax.tick_params(axis='both', which='both', direction='out',labelsize=afs)
+    ax.tick_params(axis='both', which='both', direction='out')
 #%%
 def plotJ3(x,EKpcolor,Jflux,plt3):
   try:
@@ -679,7 +560,7 @@ def plotJ3(x,EKpcolor,Jflux,plt3):
         octave.Jmesh(x,e,Jflux)
     return ax3
   except Exception as e:
-    warn('{}'.format(e))
+    logging.error('{}'.format(e))
 
 def getmin(vs,vu):
     if vu is not None:
@@ -687,49 +568,46 @@ def getmin(vs,vu):
     else:
         return vs
 
-def plotVER1D(sim,pfwd,pinv,zKM,vlim,tInd,makeplot,prefix,titletxt,spfid,progms,verbose):
+def plotVER1D(sim,pfwd,pinv,zKM,vlim,tInd,makeplot,prefix,titletxt,spfid,progms):
   try:
     fg = figure()
     ax = fg.gca()
 
-    for p,l in zip((pfwd,pinv),('fwd','est')):
+    for p,l in zip((pfwd,pinv),('$\mathbf{P}$','$\hat{\mathbf{P}}$')):
         if p is not None:
             ax.semilogx(p,zKM,label=l)
 
     ax.legend(loc='upper right')
-    ax.grid(True)
-    ax.set_xlabel('Volume emission rate [photons cm$^{-3}$s$^{-1}$]',fontsize=afs,labelpad=0)
-    ax.set_ylabel('$B_\parallel$ [km]',fontsize=afs,labelpad=-1)
+    ax.set_xlabel('Volume emission rate [photons cm$^{-3}$s$^{-1}$]')
+    ax.set_ylabel('$B_\parallel$ [km]')
 
-    if not sim.loadver:
-        titletxt += '\nReactions: {}'.format(sim.reacreq)
+#    if not sim.loadver:
+#        titletxt += '\nReactions: {}'.format(sim.reacreq)
 
-    ax.set_title(titletxt, fontsize=tfs, y=1.02)
+    ax.set_title(titletxt)
 
     ax.yaxis.set_major_locator(MultipleLocator(dymaj))
     ax.yaxis.set_minor_locator(MultipleLocator(dymin))
-    ax.tick_params(axis='both', which='major', direction='in',labelsize=tkfs)
+    ax.tick_params(axis='both', which='major', direction='in')
+    ax.grid(True,'both')
 
     ax.set_ylim(bottom=vlim[0],top=vlim[1])
     ax.set_xlim(vlim[4:6])
 
-    writeplots(fg,prefix,tInd,makeplot,progms,None,verbose)
+    writeplots(fg,prefix,tInd,makeplot,progms,None)
 
     if 'h5' in makeplot: #a separate stanza
         dumph5(spfid,prefix,tInd,pfwd1d=pfwd,pinv1d=pinv,z=zKM)
   except Exception as e:
-    warn('tind {}   {}'.format(tInd,e))
+    logging.error('tind {}   {}'.format(tInd,e))
 #%%
-def plotVER(sim,ver,x,xp,z,zp,vlim,tInd,makeplot,prefix,titletxt,figh,spfid,progms,verbose):
+def plotVER(sim,ver,x,xp,z,zp,vlim,tInd,makeplot,prefix,titletxt,figh,spfid,progms):
   try:
     cnorm,sfmt = logfmt(makeplot)
     '''
     # http://stackoverflow.com/questions/13943217/how-to-add-colorbars-to-scatterplots-created-like-this
     # http://stackoverflow.com/questions/18856069/how-to-shrink-a-subplot-colorbar
     '''
-
-
-
     vlow=(spacing(1),1.)
     pre = ('lin','log')
 
@@ -774,38 +652,38 @@ def plotVER(sim,ver,x,xp,z,zp,vlim,tInd,makeplot,prefix,titletxt,figh,spfid,prog
             http://stackoverflow.com/questions/16695275/set-limits-on-a-matplotlib-colorbar-without-changing-the-actual-plot
             """
             cbar = fg.colorbar(hc,ax=ax,format=s,)
-            cbar.set_label('[photons cm$^{-3}$s$^{-1}$]',labelpad=0,fontsize=afs)
-            cbar.ax.tick_params(labelsize=afs)
-            cbar.ax.yaxis.get_offset_text().set_size(afs)
-            cbar.ax.yaxis.get_offset_text().set_position((-1, 0))
+            cbar.set_label('[photons cm$^{-3}$s$^{-1}$]')
+#            cbar.ax.yaxis.get_offset_text().set_size(afs)
+            cbar.ax.yaxis.get_offset_text().set_position((2, 10))
             if pstyle=='contour':
                 cbar.add_lines(hc)
 
             ax.yaxis.set_major_locator(MultipleLocator(dymaj))
             ax.yaxis.set_minor_locator(MultipleLocator(dymin))
-            ax.xaxis.set_major_locator(MultipleLocator(1))
-            ax.xaxis.set_minor_locator(MultipleLocator(0.1))
-            ax.tick_params(axis='both', which='both', direction='out', labelsize=tfs) #not needed with seaborn
+            ax.xaxis.set_major_locator(MultipleLocator(dxmax))
+            ax.xaxis.set_minor_locator(MultipleLocator(dxmin))
+            ax.tick_params(axis='both', which='both', direction='out')
+            ax.grid(True,'both') #need both for seaborn
 
-            ax.set_xlabel('$B_\perp$ [km]',fontsize=afs)
-            ax.set_ylabel('$B_\parallel$ [km]',fontsize=afs)
+            ax.set_xlabel('$B_\perp$ [km]')
+            ax.set_ylabel('$B_\parallel$ [km]')
 
             ax.set_xlim(vlim[:2])
             ax.set_ylim(vlim[2:4])
-            ax.set_title(titletxt,fontsize=tfs)
+            ax.set_title(titletxt)
 
-            ax.grid(True)
 
-            writeplots(fg,prefix+p,tInd,makeplot,progms,verbose=verbose)
+
+            writeplots(fg,prefix+p,tInd,makeplot,progms)
     else:
         text(0,0,'Using Actual Data (ver=None)')
 
     if 'h5' in makeplot: #a separate stanza
         dumph5(spfid,prefix,tInd, p=ver,x=x,xp=xp,z=z,zp=zp)
   except Exception as e:
-    warn('tind {}   {}'.format(tInd,e))
+    logging.error('tind {}   {}'.format(tInd,e))
 #%%
-def plotBcompare(sim,braw,bfit,cam,prefix, spfid,vlim,tInd,figh,makeplot,progms,verbose):
+def plotBcompare(sim,braw,bfit,cam,prefix, spfid,vlim,tInd,figh,makeplot,progms):
   try:
     dosubtract = False
 
@@ -817,36 +695,34 @@ def plotBcompare(sim,braw,bfit,cam,prefix, spfid,vlim,tInd,figh,makeplot,progms,
     cnorm,sfmt = logfmt(makeplot,(-3,3))
     ax1.get_yaxis().set_major_formatter(sfmt[0]) #only need lin
 
-    ax1.yaxis.get_offset_text().set_size(afs)
-    ax1.tick_params(axis='both', which='both', direction='out',labelsize=afs)
+#    ax1.yaxis.get_offset_text().set_size(afs)
+    ax1.tick_params(axis='both', which='both', direction='out')
 
-    for c in cam:
-        cInd = cam[c].ind
-        ax1.plot(cam[c].angle_deg,braw[cInd],
-                 label=('$\mathbf{{B}}_{{camP{}}}$'.format(c)),)
-                 #color=cord[icm])#, marker='.')
+    for C in cam:
+        ax1.plot(C.angle_deg,braw[C.ind],
+                 label=('$\mathbf{{B}}_{}$'.format(C.name)),)
+                 #color=cord[icm])#)
 #%% plot fit
     # do we need twinax? Let's find out if they're within factor of 10
     maxfit = bfit.max(); maxraw = braw.max()
     if 10*maxraw > maxfit > 0.1*maxraw:
         singax = True
         ax2 = ax1
-        ax1.set_ylabel('$\mathbf{B}$ [photons sr$^{-1}$ s$^{-1}$]',labelpad=0,fontsize=afs)
+        ax1.set_ylabel('$\mathbf{B}$ [photons sr$^{-1}$ s$^{-1}$]')
     else:
         singax = False
         ax2 = ax1.twinx()
-        ax2.get_yaxis().set_major_formatter(sfmt)
-        ax1.set_ylabel('$\mathbf{B}$ [photons sr$^{-1}$ s$^{-1}$]',labelpad=0,fontsize=afs)
-        ax2.set_ylabel('$\mathbf{\widehat{B}}$ [photons sr$^{-1}$ s$^{-1}$]',labelpad=0,fontsize=afs)
+        ax2.get_yaxis().set_major_formatter(sfmt[0]) #only need lin
+        ax1.set_ylabel('$\mathbf{B}$ [photons sr$^{-1}$ s$^{-1}$]')
+        ax2.set_ylabel('$\mathbf{\hat{B}}$ [photons sr$^{-1}$ s$^{-1}$]')
 #%% now plot each camera
-    for c in cam:
-        cInd = cam[c].ind
-        ax2.plot(cam[c].angle_deg,bfit[cInd],
-                 label=('$\mathbf{{\widehat{{B}}}}_{{cam{}}}$'.format(c)),)
-                 #color=cord[icm])#, marker='.')
+    for C in cam:
+        ax2.plot(C.angle_deg,bfit[C.ind],
+                 label='$\hat{{\mathbf{{B}}}}_{}$'.format(C.name))
+                 #color=cord[icm]))
 
     if singax:
-        ax1.legend(loc='upper left', fontsize=afs)
+        ax1.legend(loc='lower left')
     else:
         '''
         legend for twinx http://stackoverflow.com/questions/5484922/secondary-axis-with-twinx-how-to-add-to-legend
@@ -855,9 +731,9 @@ def plotBcompare(sim,braw,bfit,cam,prefix, spfid,vlim,tInd,figh,makeplot,progms,
         h2, l2 = ax2.get_legend_handles_labels()
         ax1.legend(h1+h2, l1+l2, loc='upper right')
 
-    ax1.set_title('$\mathbf{B}$ ground-observed intensity', fontsize=tfs,y=1.04)
+    ax1.set_title('$\mathbf{B}$ ground-observed intensity')
 
-    ax1.set_xlabel('local view angle [deg.]',fontsize=afs)
+    ax1.set_xlabel('local view angle [deg.]')
     ax1.xaxis.set_major_locator(MultipleLocator(1))
 
     ax1.grid(True)
@@ -867,27 +743,26 @@ def plotBcompare(sim,braw,bfit,cam,prefix, spfid,vlim,tInd,figh,makeplot,progms,
     if dosubtract:
         bias=[]
         ax3 =figure().gca()
-        for c in cam:
-            cInd = cam[c].ind
-            bias.append(bfit[cInd].max() - braw[cInd].max())
-            ax3.plot(cam[c].angle_deg,braw[cInd] - (bfit[cInd]))#-bias[iCam]))
+        for C in cam:
+            bias.append(bfit[C.ind].max() - braw[C.ind].max())
+            ax3.plot(C.angle_deg,braw[C.ind] - (bfit[C.ind]))#-bias[iCam]))
 
-        ax3.set_title('error $\mathbf{{B}}_{{fwdf}} - B_{{est}}, bias={}'.format(bias),fontsize=12)
+        ax3.set_title('error $\mathbf{{B}}_{{fwd}} - B_{{est}}, bias={}'.format(bias))
         #  $t_i=' + str(tInd) + '$'
         ax3.set_xlabel('local view angle [deg.]')
         ax3.xaxis.set_major_locator(MultipleLocator(1))
-        ax3.set_ylabel('error',labelpad=0)
-        ax3.get_yaxis().set_major_formatter(sfmt)
+        ax3.set_ylabel('error')
+        ax3.get_yaxis().set_major_formatter(sfmt[0])
 
 
     if 'h5' in makeplot: #a separate stanza
-        dumph5(spfid,prefix,tInd,angle=[cam[c].angle_deg for c in cam],braw=braw,bfit=bfit)
+        dumph5(spfid,prefix,tInd,angle=[C.angle_deg for C in cam],braw=braw,bfit=bfit)
 
-    writeplots(fg,prefix,tInd,makeplot,progms,None,verbose)
+    writeplots(fg,prefix,tInd,makeplot,progms)
   except Exception as e:
-    warn('failed to plot brightness at tind {}   {}'.format(tInd,e))
+    logging.error('failed to plot brightness at tind {}   {}'.format(tInd,e))
 #%%
-def plotB(bpix,isrealdata,cam,vlim,tInd,figh,makeplot,labeltxt,progms,verbose):
+def plotB(bpix,isrealdata,cam,vlim,tInd,figh,makeplot,labeltxt,progms):
   try:
     cnorm,sfmt = logfmt(makeplot)
 
@@ -904,48 +779,47 @@ def plotB(bpix,isrealdata,cam,vlim,tInd,figh,makeplot,labeltxt,progms,verbose):
 #    if 10*maxraw > minmaxraw > 0.1*maxraw:
 #        singax = True
 #        ax2 = ax1
-#        ax1.set_ylabel('$b$ Data Numbers',labelpad=0,fontsize=afs)
+#        ax1.set_ylabel('$b$ Data Numbers')
 #    else:
 #        singax = False
 #        ax2 = ax1.twinx()
 #        ax2.get_yaxis().set_major_formatter(sfmt)
-#        ax1.set_ylabel('$b_{raw}$ data numbers',labelpad=0,fontsize=afs)
-#        ax2.set_ylabel( fittxt + ' Data Numbers',labelpad=0,fontsize=afs)
+#        ax1.set_ylabel('$b_{raw}$ data numbers')
+#        ax2.set_ylabel( fittxt + ' Data Numbers')
 #%% make plot
-    for c in cam:
-        std.append('{:0.1e}'.format(cam[c].noiselam))
-        cInd = cam[c].ind
+    for C in cam:
+        std.append('{:0.1e}'.format(C.noiselam))
 
-        ax1.plot(cam[c].angle_deg,  bpix[cInd],
-                 label = labeltxt + ',' +str(c) + '}$'
+        ax1.plot(C.angle_deg,  bpix[C.ind],
+                 label = labeltxt + ',' +str(C.name) + '}$'
                  )
                  #marker='.',
                  #color=cord[c])
     doBlbl(ax1,isrealdata,sfmt[0],vlim,labeltxt,std) #b is never log
 
-    writeplots(fgb,'b'+labeltxt[4:7],tInd,makeplot,progms,verbose=verbose)
+    writeplots(fgb,'b'+labeltxt[4:7],tInd,makeplot,progms)
   except Exception as e:
-    warn('tind {}   {}'.format(tInd,e))
+    logging.error('tind {}   {}'.format(tInd,e))
 
 def doBlbl(axb,isrealdata,sfmt,vlim,labeltxt,noiselam):
-    axb.legend(loc='upper left',fontsize=afs)
-    axb.set_title('Observer Intensity',fontsize=tfs)
+    axb.legend(loc='upper left')
+    axb.set_title('Observer Intensity')
 
-    axb.yaxis.get_offset_text().set_size(afs)
+#    axb.yaxis.get_offset_text().set_size(afs)
 
 #    if not isrealdata and noiseStd:
-#        ax.text(0.05,0.95,'noise std. dev.=' +noiseStd,fontsize=afs,
+#        ax.text(0.05,0.95,'noise std. dev.=' +noiseStd,
 #                transform=ax.transAxes,va='top',ha='left')
-    axb.set_xlabel('local view angle [deg.]',fontsize=afs)
+    axb.set_xlabel('local view angle [deg.]')
 
-    axb.xaxis.set_major_locator(MultipleLocator(1))
-    axb.xaxis.set_minor_locator(MultipleLocator(0.2))
-    axb.tick_params(axis='both', which='both', direction='out',labelsize=afs)
+    axb.xaxis.set_major_locator(MultipleLocator(dxmax))
+    axb.xaxis.set_minor_locator(MultipleLocator(dxmin))
+    axb.tick_params(axis='both', which='both', direction='out')
 
     #sfmt.set_powerlimits((-6, 6))
     axb.yaxis.set_major_formatter(sfmt)
 
-    axb.set_ylabel(labeltxt + '}$ [photons sr$^{-1}$ s$^{-1}$]',labelpad=-1,fontsize=afs) # yes the }$ is appropriate
+    axb.set_ylabel(labeltxt + '}$ [photons sr$^{-1}$ s$^{-1}$]') # yes the }$ is appropriate
 
     axb.grid(True,which='major')
     axb.autoscale(True,tight=True)
@@ -955,7 +829,7 @@ def allLinePlot(simfilelist):
 #%% priming
     nsim = len(simfilelist)
     nt = len(simfilelist[0])
-    with h5py.File(simfilelist[0][0],'r',libver='latest') as fid:
+    with h5py.File(str(simfilelist[0][0]),'r',libver='latest') as fid:
         J0 = fid['/Jn/j0'].value
         nE = J0.shape[0]
         Ek = fid['/EK'].value
@@ -964,7 +838,7 @@ def allLinePlot(simfilelist):
 #%% working
     for ti in range(nt):
         for si,fnlist in enumerate(simfilelist):
-            with h5py.File(fnlist[ti],'r',libver='latest') as fid:
+            with h5py.File(str(fnlist[ti]),'r',libver='latest') as fid:
                 Jme[si,:,ti] = fid['/Jn/jme_1D'].value
 
         ax = figure(ti).gca()
@@ -980,16 +854,16 @@ def planview3(cam,xKM,zKM,makeplot,figh,progms):
     decimaterayfactor = 16
     clr=['r','b','g','m']
 
-    for c in cam:
-        el =  cam[c].angle_deg[::decimaterayfactor] #yes double colon
+    for C in cam:
+        el =  C.angle_deg[::decimaterayfactor] #yes double colon
         Np = el.size
-        x0,y0,z0 = geodetic2ecef(cam[c].lat, cam[c].lon, cam[c].alt_m)
+        x0,y0,z0 = geodetic2ecef(C.lat, C.lon, C.alt_m)
         # get LLA of pixel rays at 100km altitude
         xray,yray,zray = aer2ecef(az,el,srange,
-                                  cam[c].lat, cam[c].lon, cam[c].alt_m)
+                                  C.lat, C.lon, C.alt_m)
         #camera rays
         for cri in range(Np):
-            ax.plot((x0,xray[cri]),(y0,yray[cri]),(z0,zray[cri]),color=clr[c])
+            ax.plot((x0,xray[cri]),(y0,yray[cri]),(z0,zray[cri]),color=clr[C.name])
 
     #plot sphere
     earthrad = 6371e3 #[m]
@@ -1002,9 +876,9 @@ def planview3(cam,xKM,zKM,makeplot,figh,progms):
     z = earthrad * outer(ones_like(u), cos(v))
     ax.plot_surface(x, y, z,  rstride=4, cstride=4, color='g')
   except Exception as e:
-    warn('{}'.format(e))
+    logging.error('{}'.format(e))
 #%%
-def planviewkml(cam,xKM,zKM,makeplot,figh,progms,verbose=0):
+def planviewkml(cam,xKM,zKM,makeplot,figh,progms):
   """
   https://developers.google.com/kml/documentation/cameras
   """
@@ -1039,25 +913,22 @@ def planviewkml(cam,xKM,zKM,makeplot,figh,progms,verbose=0):
                        tilt=45)
 
     lla = []
-    for c in cam:
+    for C in cam:
         #az is the temporary scalar defined above FIXME
-        el = cam[c].angle_deg[::decimaterayfactor] #double colon
+        el = C.angle_deg[::decimaterayfactor] #double colon
         Np = el.size
-        lat0 = cam[c].lat
-        lon0 = cam[c].lon
-        alt0 = cam[c].alt_m #[meters]
-        lla.append((lon0,lat0))
+        lla.append((C.lon,C.lat))
         # get LLA of pixel rays at 100km altitude
-        latre,lonre,altre = aer2geodetic(az,el,srange,lat0,lon0,alt0)
+        latre,lonre,altre = aer2geodetic(az,el,srange,C.lat,C.lon,C.alt_m)
         # get ECEF of center ray at 90km (bottom of model space)
         #centazray = az #TODO
         #centelray = cam[ci].angle_deg[Np//2]
         #xrc,yrc,zrc = aer2ecef(centazray,centelray,zbottom,lat0,lon0,alt0)
 
         #camera location points
-        bpnt = kml1d.newpoint(name='HiST{}'.format(c),
-                              description='camera {} location'.format(c),
-                              coords=[(lon0,lat0)],
+        bpnt = kml1d.newpoint(name='HiST{}'.format(C.name),
+                              description='camera {} location'.format(C.name),
+                              coords=[(C.lon,C.lat)],
                               altitudemode=skml.AltitudeMode.clamptoground)
         bpnt.style.iconstyle.icon.href='http://maps.google.com/mapfiles/kml/shapes/arrow.png' # 'http://maps.google.com/mapfiles/kml/paddle/pink-blank.png'
         bpnt.style.iconstyle.scale = 2.0
@@ -1069,21 +940,21 @@ def planviewkml(cam,xKM,zKM,makeplot,figh,progms,verbose=0):
         if 'kmlrays' in makeplot:
             for cri in range(Np):
                 linestr = kml1d.newlinestring(name='')
-                linestr.coords = [(lon0,       lat0,       alt0),
+                linestr.coords = [(C.lon,      C.lat,      C.alt_m),
                                   (lonre[cri], latre[cri], altre[cri])]
                 linestr.altitudemode = skml.AltitudeMode.relativetoground
-                linestr.style.linestyle.color = kclr[c]
+                linestr.style.linestyle.color = kclr[C.name]
 
 
         #plot
-        ax.plot(lonre,latre,'x',color=clr[c],markersize=6)
-        ax.plot(lon0,lat0,'o',color=clr[c],markersize=12,label='cam{}'.format(c))
+        ax.plot(lonre,latre,'x',color=clr[C.name],markersize=6)
+        ax.plot(C.lon,C.lat,'o',color=clr[C.name],markersize=12,label='cam{}'.format(C.name))
 
 
     ax.set_ylabel('WGS84 latitude [deg.]')
     ax.set_xlabel('WGS84 longitude [deg.]')
     ax.set_title('pixel locations at 100km altitude')
-    ax.legend(fontsize=afs)
+    ax.legend()
 
         #setup line on ground connecting sites
     """
@@ -1100,25 +971,25 @@ def planviewkml(cam,xKM,zKM,makeplot,figh,progms,verbose=0):
 
     #if 'kml' in makeplot or 'kmlrays' in makeplot: #write KML
     try:
-        kmlfn = join(progms,'cam'+'.kml')
-        if verbose>0: print('saving ' + kmlfn)
+        kmlfn = str(progms/'cam.kml')
+        logging.debug('saving ' + kmlfn)
         kml1d.save(kmlfn)
     except TypeError:
         pass #disbled writing
   except Exception as e:
-    warn('{}'.format(e))
+    logging.error('{}'.format(e))
 #%%
 def dumph5(fn,prefix,tInd,**writevar): #used in other .py too
     if fn is None or prefix is None:
         return
 
-    print('dumping {} to {}'.format(prefix, fn))
-    with h5py.File(fn,'a',libver='latest') as f:
+    logging.debug('dumping {} to {}'.format(prefix, fn))
+    with h5py.File(str(fn),'a',libver='latest') as f:
         for k,v in writevar.items():
             try:
                 f['/'+prefix+'/'+k]=v
             except Exception as e:
-                warn('failed to write {} /{}/{}.  {}'.format(fn,prefix,k,e))
+                logging.error('failed to write {} /{}/{}.  {}'.format(fn,prefix,k,e))
 
 #def writenoax(img,plotprefix,tInd,method,progms,minmax):
 #    tmpl = ('eps','jpg','png','pdf')
@@ -1129,26 +1000,8 @@ def dumph5(fn,prefix,tInd,**writevar): #used in other .py too
 #        print('saving ' + cn + '...')
 #        imsave(cn,img,vmin=minmax[0],vmax=minmax[1],format=fmt,cmap='gray')
 
-def writeplots(fg,plotprefix,tInd,method,progms,overridefmt=None,verbose=0):
-    draw() #Must have this here or plot doesn't update in animation multiplot mode!
-    #TIF was not faster and was 100 times the file size!
-    #PGF is slow and big file,
-    #RAW crashes
-    #JPG no faster than PNG
-
-    tmpl = ('eps','jpg','png','pdf')
-    used = in1d(tmpl,method)
-    if progms and used.any():
-        if overridefmt is not None:
-            fmt = overridefmt; dpi = epsdpi
-        else:
-            fmt = array(tmpl)[used][0]; dpi=plotdpi
-        cn = join(progms,(plotprefix + '_t{:03d}.{}'.format(tInd,fmt)))
-        if verbose>-1:
-            print('write {}'.format(cn))
-        fg.savefig(cn,bbox_inches='tight',dpi=dpi,format=fmt)  # this is slow and async
 #%%
-def getx0E0(Phifwd,Phifit,E,x,tInd,progms,makeplot,verbose):
+def getx0E0(Phifwd,Phifit,E,x,tInd,progms,makeplot):
 
   Npts = 200
   Nptsfits = (Npts//40, Npts//20)  #(nEnergyToUse+-, nXtouse+-)
@@ -1190,7 +1043,7 @@ def getx0E0(Phifwd,Phifit,E,x,tInd,progms,makeplot,verbose):
         try:
             gparam = gaussfit(gpeak,returnfitimage=False)
         except ValueError:
-            warn('gaussian fit doesnt work when peak is against edge of model space.'
+            logging.error('gaussian fit doesnt work when peak is against edge of model space.'
                  'gpix shape {} row {} col {}'.format(gpeak.shape,pkrow,pkcol))
             return nan, nan,None,None
 
@@ -1205,7 +1058,7 @@ def getx0E0(Phifwd,Phifit,E,x,tInd,progms,makeplot,verbose):
         try:
             return x[Ghcol], Elin[Ghrow], gpix, gpeak
         except IndexError:
-            warn('gaussian fit was outside model space')
+            logging.error('gaussian fit was outside model space')
             return nan, nan, None, None
 
     gx0=empty(2); gE0=empty(2); gpix=[]; gpeak=[]
@@ -1254,7 +1107,7 @@ def getx0E0(Phifwd,Phifit,E,x,tInd,progms,makeplot,verbose):
         try:
             hb = ca.pcolormesh(x,Elin,cPhifit)
             fg.colorbar(hb, ax=ca)
-            ca.set_title('$\hat{\Phi}$ estimated precip. intensity')
+            ca.set_title('$\hat{\Phi}$ est. precip. intensity')
             ca.set_xlabel('$B_\perp$ [km]')
             ca.set_ylabel('Beam Energy [eV]')
             ca.set_yscale('log')
@@ -1278,7 +1131,7 @@ def getx0E0(Phifwd,Phifit,E,x,tInd,progms,makeplot,verbose):
         try:
             hp = ca.pcolormesh(x,Elin,gpix[1])
             fg.colorbar(hp, ax=ca)
-            ca.set_title('$\hat{{\Phi}}$ estimate via gaussian fit:'
+            ca.set_title('$\hat{{\Phi}}$ est. via gaussian fit:'
                    ' $\hat{{B}}_{{\perp,0}}, \hat{{E}}_0$={:.2f},{:.0f})'.format(gx0[1],gE0[1]))
             ca.set_xlabel('$B_\perp$ [km]')
             ca.set_yscale('log')
@@ -1286,11 +1139,11 @@ def getx0E0(Phifwd,Phifit,E,x,tInd,progms,makeplot,verbose):
         except AttributeError:
             ca.text(0,0,'$\hat{\Phi} not used')
 
-        writeplots(fg,'gaussfitlin',tInd,makeplot,progms,verbose=verbose)
+        writeplots(fg,'gaussfitlin',tInd,makeplot,progms)
 
     #Ghrow,Ghcol = np.unravel_index(gfit.argmax(axis=None),gfit.shape, order='C')
 
     return gx0, gE0#, x[pkcol], Elin[pkrow]
   except Exception as e:
-      warn('gauss fit failure {}'.format(e))
+      logging.error('gauss fit failure {}'.format(e))
       return nan,nan
