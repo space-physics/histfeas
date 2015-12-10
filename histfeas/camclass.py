@@ -27,15 +27,6 @@ class Cam: #use this like an advanced version of Matlab struct
         self.verbose = verbose
         self.name = int(name)
 #%%
-        self.lat = cp['latWGS84']
-        self.lon = cp['lonWGS84']
-        self.alt_m = cp['Zkm']*1e3
-        self.z_km = cp['Zkm']
-        self.x_km = cp['Xkm']
-
-        if sim.realdata:
-            fn = Path(cp['fn']).expanduser()
-
         self.nCutPix = int(cp['nCutPix'])
 
         self.Bincl = cp['Bincl']
@@ -94,11 +85,8 @@ class Cam: #use this like an advanced version of Matlab struct
         self.savgolOrder = cp['savgolOrder']
 
         """ expects an HDF5 .h5 file"""
-
-        # data file name
         if sim.realdata:
-            self.fn = (sim.realdatapath / fn).expanduser()
-
+            self.fn = Path(sim.realdatapath / cp['fn']).expanduser()
             with h5py.File(str(self.fn),'r',libver='latest') as f:
                 self.filestartutc = f['/ut1_unix'][0]
                 self.filestoputc  = f['/ut1_unix'][-1]
@@ -111,8 +99,15 @@ class Cam: #use this like an advanced version of Matlab struct
                 self.transpose    = p['transpose'] == 1
                 self.fliplr       = p['fliplr'] == 1
                 self.flipud       = p['flipud'] == 1
+                
+                c = f['/siteloc']
+                self.lat   = c['lat'][0]
+                self.lon   = c['lon'][0]
+                self.alt_m = c['alt_m'][0]     
         else: #sim
             self.kineticsec = cp['kineticsec'] #simulation
+            self.alt_m = cp['Zkm']*1000
+            self.x_km = cp['Xkm']
 
 #%% camera model
         """
@@ -285,10 +280,10 @@ class Cam: #use this like an advanced version of Matlab struct
         angledist = angledist.to(u.deg).value
         # put distances into a 90-degree fan beam
         angle_deg = empty(self.superx,dtype=float)
-        MagZenInd = angledist.argmin() # whether slightly positive or slightly negative, this should be OK
+        MagZenInd = angledist.argmin() # whether minimum angle distance from MZ is slightly positive or slightly negative, this should be OK
 
-        angle_deg[MagZenInd:] = 90. + angledist[MagZenInd:]
-        angle_deg[:MagZenInd] = 90. - angledist[:MagZenInd]
+        angle_deg[MagZenInd:] = 90. - angledist[MagZenInd:]
+        angle_deg[:MagZenInd] = 90. + angledist[:MagZenInd]
 
         self.angle_deg = angle_deg
         self.angleMagzenind = MagZenInd

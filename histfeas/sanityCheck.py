@@ -6,10 +6,11 @@ GPL v3+
 REQUIRES *** PANDAS 0.16 *** or newer for read_excel to work properly!
 """
 from __future__ import division,absolute_import
+from pathlib2 import Path
 import logging
 from pandas import read_excel
-from warnings import warn
 from shutil import copy2
+from geopy.distance import vincenty
 #
 from .camclass import Cam
 from .simclass import Sim
@@ -43,6 +44,19 @@ def getParams(XLSfn,overrides,makeplot,progms):
     Fwd = sim.setupFwdXZ(sp)
 #%% setup cameras
     cam,cp = setupCam(sim,cp,Fwd['z'][-1])
+    
+    #find the x-coordinate (along B-perp) of each camera (can't do this inside camclass.py)
+    cam[0].x_km = 0 # NOTE arbitrarily picks the first camera x=0km
+    for C in cam[1:]:
+        C.x_km = vincenty((cam[0].lat,cam[0].lon),(C.lat,C.lon)).kilometers
+        
+    #store x,z in sim
+    if progms and overrides and overrides['ell']:
+        sim.FwdLfn = Path(progms) / sim.getEllHash(sp,cp,
+                            [c.x_km for c in cam],[c.alt_m/1000. for c in cam])
+    else:
+        sim.FwdLfn = Path('precompute') / sim.getEllHash(sp,cp,
+                            [c.x_km for c in cam],[c.alt_m/1000. for c in cam])
 
     # make the simulation time step match that of the fastest camera
     sim.kineticsec = min([C.kineticsec for C,u in zip(cam,sim.useCamBool) if u])
@@ -58,7 +72,7 @@ def setupCam(sim,cp,zmax):
     cam = []
 
     if sim.camxreq[0] is not None:
-        warn('overriding camera x-loc with {}'.format(sim.camxreq))
+        logging.warning('overriding camera x-loc with {}'.format(sim.camxreq))
         for i,(c,cx) in enumerate(zip(cp,sim.camxreq)):
             if sim.useCamBool[i]:
                 cp.iat['Xkm',c] = cx

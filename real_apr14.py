@@ -41,7 +41,7 @@ if __name__ == '__main__':
     p.add_argument('--ell',help='compute projection matrix',action='store_true')
     p.add_argument('-v','--verbose',help='verbosity',action='count',default=0)
     p.add_argument('-f','--frames',help='time steps to use',type=int,nargs='+')
-    p.add_argument('-o','--outdir',help='output directory',default='/tmp/realtry')
+    p.add_argument('-o','--outdir',help='output directory',default='out/realtry')
     p = p.parse_args()
 
     xlsreg='in/apr14.xlsx'
