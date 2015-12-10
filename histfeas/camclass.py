@@ -282,8 +282,8 @@ class Cam: #use this like an advanced version of Matlab struct
         angle_deg = empty(self.superx,dtype=float)
         MagZenInd = angledist.argmin() # whether minimum angle distance from MZ is slightly positive or slightly negative, this should be OK
 
-        angle_deg[MagZenInd:] = 90. - angledist[MagZenInd:]
-        angle_deg[:MagZenInd] = 90. + angledist[:MagZenInd]
+        angle_deg[MagZenInd:] = 90. + angledist[MagZenInd:]
+        angle_deg[:MagZenInd] = 90. - angledist[:MagZenInd]
 
         self.angle_deg = angle_deg
         self.angleMagzenind = MagZenInd
