@@ -22,7 +22,7 @@ from .observeVolume import definecamind
 
 def readresults(h5list,xlsfn,vlim,x1d,overrides,makeplot,verbose=0):
     Phifwd =[]; Phidict =[]; dhat=[]; drn=[]; Pest=[]; Pfwd=[]
-    tInd = [];
+    tInd = []; ut1_unix=[]
 #%%
     if not h5list:
         raise ValueError('no HDF5 files found')
@@ -51,25 +51,31 @@ def readresults(h5list,xlsfn,vlim,x1d,overrides,makeplot,verbose=0):
                 xp = f['/pest/xp'].value
                 z = f['/pest/z'].value
                 zp = f['/pest/zp'].value
-                
+
 #                d = f['/best/bfit'].value
 #                #TODO temp hack
 #                d[512:] = d[512:][::-1]
 #                dhat.append(d)
-#                
+#
 #                d = f['/best/braw'].value
 #                d[512:] = d[512:][::-1]
 #                drn.append(d)
 
                 dhat.append(f['/best/bfit'].value)
                 drn.append(f['/best/braw'].value)
-                
+
                 angle_deg = f['/best/angle'].value #NOTE: by definition, same angles for all time steps-the camera is not moving!
+
+                try: #realdata
+                    ut1_unix.append(f['/best/ut1_unix'].value)
+                except KeyError: #simultation, not real data
+                    pass
+
             except KeyError as e:
                 raise KeyError('It seems that data inversion did not complete? Or at least it was not written  {}'.format(e))
-                
+
 #%%
-            
+
     odir = h5.parent / 'reader'
 
     makedirs(str(odir),exist_ok=True)
@@ -86,8 +92,10 @@ def readresults(h5list,xlsfn,vlim,x1d,overrides,makeplot,verbose=0):
     ap,sim,cam,Fwd = getParams(xlsfn,overrides,makeplot,odir)
     cam = definecamind(cam,sim.nCutPix)
 #%% load original angles of camera
+    ut1_unix = asarray(ut1_unix)
     for i,C in enumerate(cam):
         C.angle_deg = angle_deg[i,:]
+        C.tKeo = ut1_unix[:,i]
 #%% load args if they exist
     for a in ap:
         #TODO assumes all are same distance apart
