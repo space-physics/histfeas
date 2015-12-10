@@ -10,7 +10,7 @@ from matplotlib.pyplot import show
 #
 import seaborn as sns
 sns.color_palette("cubehelix")
-sns.set(context='paper', style='whitegrid',font_scale=2,
+sns.set(context='paper', style='whitegrid',font_scale=1.5,#2,
         rc={'image.cmap': 'cubehelix_r'})
 #
 from histfeas.main_hist import doSim
@@ -18,7 +18,7 @@ from histfeas.loadAnalyze import readresults,findxlsh5
 
 def hist_figure(xlsreg):
     Phi0,Phifit =doSim(ParamFN=xlsreg,
-                  makeplot=['fwd','optim','png','h5','realvid'],
+                  makeplot=['realvid','png'],  #['fwd','optim','png','h5','realvid'],
                   timeInds=timeInds,
                   overrides = overrides, #{'minev': minev,'filter':filt, 'fwdguess':fwdguess,
 				                    #'fitm':fitm,'cam':cam,'camx':acx,'ell':ell,'Jfwd':influx},
