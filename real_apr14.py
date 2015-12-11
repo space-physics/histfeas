@@ -22,7 +22,7 @@ def hist_figure(xlsreg,makecomp):
                   timeInds=timeInds,
                   overrides = overrides, #{'minev': minev,'filter':filt, 'fwdguess':fwdguess,
 				                    #'fitm':fitm,'cam':cam,'camx':acx,'ell':ell,'Jfwd':influx},
-                  progms = outdir,
+                  odir = outdir,
                   x1d=x1d,
                   vlim = vlim,
                   animtime=None,
