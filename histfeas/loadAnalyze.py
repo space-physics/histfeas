@@ -10,7 +10,6 @@ from pathlib2 import Path
 import logging
 import re
 import h5py
-from os import makedirs
 from numpy import asarray,diff
 from matplotlib.pyplot import show
 #
@@ -77,9 +76,7 @@ def readresults(h5list,xlsfn,vlim,x1d,overrides,makeplot,verbose=0):
 #%%
 
     odir = h5.parent / 'reader'
-
-    makedirs(str(odir),exist_ok=True)
-
+    odir.mkdir(parents=True,exist_ok=True)
 
     try:
         Phifwd = asarray(Phifwd).transpose(1,2,0)

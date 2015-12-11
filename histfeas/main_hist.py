@@ -19,7 +19,6 @@ from __future__ import division,print_function
 from pathlib2 import Path
 import logging
 from sys import argv
-from os import makedirs
 from numpy import absolute,zeros,outer
 from numpy.random import normal
 from warnings import warn
@@ -37,22 +36,22 @@ from .FitVER import FitVERopt as FitVER #calls matplotlib
 from .plotsnew import goPlot #calls matplotlib
 from .analysehst import analyseres
 
-def doSim(ParamFN,makeplot,timeInds,overrides,progms,x1d,vlim,animtime, cmd,verbose=0):
-    progms = Path(progms).expanduser()
+def doSim(ParamFN,makeplot,timeInds,overrides,odir,x1d,vlim,animtime, cmd,verbose=0):
+    odir = Path(odir).expanduser()
     logging.basicConfig(level=30-verbose*10)
 
     #%% output directory
-    makedirs(str(progms), exist_ok=True)
-    (progms/'cmd.log').write_text(' '.join(argv)) #store command for future log
+    odir.mkdir(parents=True, exist_ok=True)
+    (odir/'cmd.log').write_text(' '.join(argv)) #store command for future log
 #%% Step 0) load data
-    ap,sim,cam,Fwd = getParams(ParamFN, overrides,makeplot,progms)
+    ap,sim,cam,Fwd = getParams(ParamFN, overrides,makeplot,odir)
 #%% setup loop
     if sim.realdata:
-        cam,rawdata,sim = getSimulData(sim,cam,makeplot,progms,verbose)
+        cam,rawdata,sim = getSimulData(sim,cam,makeplot,odir,verbose)
     else: #simulation
         rawdata = None
         if sim.raymap == 'astrometry':
-            cam = get1Dcut(cam,makeplot,progms,verbose)
+            cam = get1Dcut(cam,makeplot,odir,verbose)
     timeInds = sim.maketind(timeInds)
 #%% Step 1) get projection matrix
     Lfwd,Fwd,cam = getEll(sim,cam,Fwd,makeplot,verbose)
@@ -104,7 +103,7 @@ def doSim(ParamFN,makeplot,timeInds,overrides,progms,x1d,vlim,animtime, cmd,verb
         PhifitAll.append(jfit); bfitAll.append(bfit)
 #%% plot results
         goPlot(sim,Fwd,cam,Lfwd,Tm,bn,bfit,Pfwd,Pfit,Peig,Phi0,
-                     jfit,rawdata,ti,makeplot,progms,x1d,vlim)
+                     jfit,rawdata,ti,makeplot,odir,x1d,vlim)
         if animtime is not None:
             draw()
             pause(animtime)
@@ -116,16 +115,16 @@ def doSim(ParamFN,makeplot,timeInds,overrides,progms,x1d,vlim,animtime, cmd,verb
 #%% wrapup
     msg='{} done looping'.format(argv[0]); print(msg); #print(msg,file=stderr)
 
-    png2multipage(progms,'.eps','.tif',descr=cmd,delete=False) #gif writing is not working yet
+#    png2multipage(odir,'.eps','.tif',descr=cmd,delete=False) #gif writing is not working yet
 
     analyseres(sim,cam,Fwd['x'],Fwd['xPixCorn'],
                    Phi0all,PhifitAll,drnAll,bfitAll,vlim,
                    x0true=None,E0true=None,
-                   makeplot=makeplot,progms=progms)
+                   makeplot=makeplot,progms=odir)
 #%% debug: save variables to MAT file
-    if 'mat' in makeplot and progms is not None:
+    if 'mat' in makeplot and odir.is_dir():
         from scipy.io import savemat
-        cMatFN = progms/'comparePy.mat'
+        cMatFN = odir/'comparePy.mat'
         try:
             print('saving to:',cMatFN)
             vd = {'drnP':bn,'LP':Lfwd,'vP':Pfwd,'vfitP':Pfit,#'vhatP':Phat['vART'],

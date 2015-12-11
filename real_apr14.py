@@ -16,9 +16,9 @@ sns.set(context='paper', style='whitegrid',font_scale=1.5,#2,
 from histfeas.main_hist import doSim
 from histfeas.loadAnalyze import readresults,findxlsh5
 
-def hist_figure(xlsreg):
+def hist_figure(xlsreg,makecomp):
     Phi0,Phifit =doSim(ParamFN=xlsreg,
-                  makeplot=['realvid','png'],  #['fwd','optim','png','h5','realvid'],
+                  makeplot=makecomp,
                   timeInds=timeInds,
                   overrides = overrides, #{'minev': minev,'filter':filt, 'fwdguess':fwdguess,
 				                    #'fitm':fitm,'cam':cam,'camx':acx,'ell':ell,'Jfwd':influx},
@@ -37,7 +37,8 @@ if __name__ == '__main__':
     from argparse import ArgumentParser
     p = ArgumentParser(description='flaming figure plotter')
     p.add_argument('--load',help='load without recomputing',action='store_true')
-    p.add_argument('-m','--makeplot',help='plots to make',default=[],nargs='+')
+    p.add_argument('-c','--compute',help='plot modes to compute the first time  e.g. "realvid png"  or  "optim png h5"',nargs='+',default=['optim','png','h5'])
+    p.add_argument('-m','--makeplot',help='plots to load and make (must have been first computed via -c)',default=[],nargs='+')
     p.add_argument('--ell',help='compute projection matrix',action='store_true')
     p.add_argument('-v','--verbose',help='verbosity',action='count',default=0)
     p.add_argument('-f','--frames',help='time steps to use',type=int,nargs='+')
@@ -54,7 +55,7 @@ if __name__ == '__main__':
 
     if not p.load:
         print('running HiSTfeas program -- will write png and h5 to {}'.format(outdir))
-        Phi0,Phifit=hist_figure(xlsreg)
+        Phi0,Phifit = hist_figure(xlsreg,p.compute)
 
     h5list,xlsfn = findxlsh5(outdir)
     readresults(h5list,xlsfn,vlim,x1d,overrides,p.makeplot,p.verbose)
