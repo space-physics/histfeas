@@ -23,7 +23,7 @@ def hist_registration(regh5,regXLS):
                   makeplot=['fwd','optim'],
                   timeInds=None,
                   overrides = None, #{'minev': minev,'filter':filt, 'fwdguess':fwdguess, 'fitm':fitm,'cam':cam,'camx':acx,'ell':ell,'Jfwd':influx},
-                  progms = gettempdir(),
+                  odir = gettempdir(),
                   x1d=[None],
                   vlim = {'p':[None]*6,'j':[None]*2,'b':[None]*2},
                   animtime=None,
