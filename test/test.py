@@ -12,6 +12,9 @@ from numpy.testing import assert_allclose
 from sys import argv
 import h5py
 from tempfile import gettempdir
+#
+import matplotlib
+matplotlib.use('Agg') #fixes Travis NO DISPLAY bug
 #from os import devnull
 #
 from histfeas.main_hist import doSim
