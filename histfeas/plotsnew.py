@@ -256,7 +256,15 @@ def plotfwd(sim,cam,drn,xKM,xp,zKM,zp, ver,Phi0,fitp,Jxi,vlim,tInd,makeplot,spfi
     if doSubplots:
         fg,axs = subplots(nrow,3,figsize=(21,vsizeinch))
         axs = atleast_2d(axs)
-        fg.suptitle(datetime.utcfromtimestamp(cam[0].tKeo[tInd])) #FIXME here we just use the fastest camera, cam 0 apriori
+        try: #first run
+            dt = str(datetime.utcfromtimestamp(cam[0].tKeo[tInd]))
+        except IndexError: #loading data
+            dt = str(datetime.utcfromtimestamp(cam[0].tKeo))
+        except AttributeError:#simdata
+            dt=''
+        fg.suptitle(dt,fontsize='xx-large') #FIXME here we just use the fastest camera, cam 0 apriori
+        fg.subplots_adjust(top=0.95) # FIXME http://matplotlib.org/faq/howto_faq.html
+
     else:
         fg=None
         axs = array([(None,)*3,(None,)*3])
@@ -314,6 +322,8 @@ def plotoptim(sim,cam,drn,dhat,bcomptxt,ver,Phi0,Jxi,
             dt = str(datetime.utcfromtimestamp(cam[0].tKeo[tInd]))
         except IndexError: #loading data
             dt = str(datetime.utcfromtimestamp(cam[0].tKeo))
+        except AttributeError:#simdata
+            dt=''
         fg.suptitle(dt,fontsize='xx-large') #FIXME here we just use the fastest camera, cam 0 apriori
         fg.subplots_adjust(top=0.95) # FIXME http://matplotlib.org/faq/howto_faq.html
     else:
