@@ -22,7 +22,7 @@ def hist_registration(regh5,regXLS):
     Phi0,Phifit =doSim(ParamFN=regXLS,
                   makeplot=['fwd','optim'],
                   timeInds=None,
-                  overrides = None, #{'minev': minev,'filter':filt, 'fwdguess':fwdguess, 'fitm':fitm,'cam':cam,'camx':acx,'ell':ell,'Jfwd':influx},
+                  overrides = {'ell':True}, #{'minev': minev,'filter':filt, 'fwdguess':fwdguess, 'fitm':fitm,'cam':cam,'camx':acx,'ell':ell,'Jfwd':influx},
                   odir = gettempdir(),
                   x1d=[None],
                   vlim = {'p':[None]*6,'j':[None]*2,'b':[None]*2},
