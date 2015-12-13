@@ -5,6 +5,7 @@ Michael Hirsch
 """
 from __future__ import division,absolute_import
 from pathlib2 import Path
+from dateutil.parser import parse
 from sys import argv
 from matplotlib.pyplot import show
 #
@@ -43,6 +44,7 @@ if __name__ == '__main__':
     p.add_argument('-v','--verbose',help='verbosity',action='count',default=0)
     p.add_argument('-f','--frames',help='time steps to use',type=int,nargs='+')
     p.add_argument('-o','--outdir',help='output directory',default='out/realtry')
+    p.add_argument('-t','--treq',help='specific times requested',nargs='+')
     p = p.parse_args()
 
     xlsreg='in/apr14.xlsx'
@@ -51,7 +53,11 @@ if __name__ == '__main__':
     x1d = None
     vlim = {'p':[-3,3,90,400,5e4,5e5,5e4,5e5], 'j':[10,200, 10,200],
             'b':[0,750]}
-    overrides = {'ell':p.ell}
+
+    treq = [parse(t) for t in p.treq] if p.treq else None
+
+    overrides = {'ell':p.ell,
+                 'treq':treq}
 
     if not p.load:
         print('running HiSTfeas program -- will write png and h5 to {}'.format(outdir))
