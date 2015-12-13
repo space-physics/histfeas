@@ -16,9 +16,9 @@ from .camclass import Cam
 from .simclass import Sim
 
 
-def getParams(XLSfn,overrides,makeplot,progms):
-    if progms is not None:
-        copy2(str(XLSfn),str(progms))
+def getParams(XLSfn,overrides,makeplot,odir):
+    if odir is not None:
+        copy2(str(XLSfn),str(odir))
 #%% read spreadsheet
     #paramSheets = ('Sim','Cameras','Arc')
     xl = read_excel(str(XLSfn),sheetname=None,index_col=0,header=0)
@@ -39,21 +39,21 @@ def getParams(XLSfn,overrides,makeplot,progms):
     if not (nCutPix == nCutPix[0]).all():
         raise ValueError('sanityCheck: all cameras must have same 1D cut length')
 #%% class with parameters and function
-    sim = Sim(sp,cp,ap,ntimeslice,overrides,makeplot,progms)
+    sim = Sim(sp,cp,ap,ntimeslice,overrides,makeplot,odir)
 #%% grid setup
     Fwd = sim.setupFwdXZ(sp)
 #%% setup cameras
     cam,cp = setupCam(sim,cp,Fwd['z'][-1])
-    
+
     if sim.realdata:
         #find the x-coordinate (along B-perp) of each camera (can't do this inside camclass.py)
         cam[0].x_km = 0 # NOTE arbitrarily picks the first camera x=0km
         for C in cam[1:]:
             C.x_km = vincenty((cam[0].lat,cam[0].lon),(C.lat,C.lon)).kilometers
-        
+
     #store x,z in sim
-    if progms and overrides and overrides['ell']:
-        sim.FwdLfn = Path(progms) / sim.getEllHash(sp,cp,
+    if odir and overrides and overrides['ell']:
+        sim.FwdLfn = Path(odir) / sim.getEllHash(sp,cp,
                             [c.x_km for c in cam],[c.alt_m/1000. for c in cam])
     else:
         sim.FwdLfn = Path('precompute') / sim.getEllHash(sp,cp,

@@ -120,7 +120,7 @@ def doSim(ParamFN,makeplot,timeInds,overrides,odir,x1d,vlim,animtime, cmd,verbos
     analyseres(sim,cam,Fwd['x'],Fwd['xPixCorn'],
                    Phi0all,PhifitAll,drnAll,bfitAll,vlim,
                    x0true=None,E0true=None,
-                   makeplot=makeplot,progms=odir)
+                   makeplot=makeplot,odir=odir)
 #%% debug: save variables to MAT file
     if 'mat' in makeplot and odir.is_dir():
         from scipy.io import savemat

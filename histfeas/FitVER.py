@@ -4,7 +4,7 @@ GPLv3+
 """
 from __future__ import division,absolute_import
 import logging
-from numpy import absolute,asfortranarray,diff,ones,inf,empty_like
+from numpy import absolute,asfortranarray,diff,ones,inf,empty_like,isfinite
 from scipy.optimize import minimize
 from scipy.interpolate import interp1d
 from numpy.linalg import norm
@@ -125,9 +125,11 @@ def FitVERopt(L,bn,Phi0,MpDict,sim,cam,Fwd,tInd,makeplot,verbose):
 #%% gaussian fit
         #print('max |diff(phi)| = ' + str(np.abs(np.diff(fitp.x, n=1, axis=0)).max()))
         gx0,gE0 = getx0E0(None,Phifit['x'],Phifit['EK'],Fwd['x'],tInd,None,[None])
-        print(gx0)
-        print(gE0)
-        print('Estimated $B_{{\perp,0}},E_0$={:0.2f}, {:0.0f}'.format(gx0[1],gE0[1]))
+ #       print(gx0)
+#        print(gE0)
+        if isfinite([gx0[0],gE0[0]]).all():
+            print('Model input: (B_\perp,E_0) = ({:.2f}, {:.0f})'.format(gx0[0],gE0[0]))
+        print('Estimated (B_\perp, E_0) = ({:0.2f}, {:0.0f})'.format(gx0[1],gE0[1]))
         Phifit['gx0'] = gx0[1]
         Phifit['gE0'] = gE0[1]
 

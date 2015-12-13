@@ -15,7 +15,6 @@ from tempfile import gettempdir
 #
 import matplotlib
 matplotlib.use('Agg') #fixes Travis NO DISPLAY bug
-#from os import devnull
 #
 from histfeas.main_hist import doSim
 
@@ -42,17 +41,14 @@ def readCheck(Phi0,Phifit):
         # noise makes inversion result differ uniquely each run
         xerrpct=(f['/phifwd/x0'] - Phifit[0]['gx0']) / f['/phifwd/x0'] * 100
         xmsg = 'x0 estimation error [km] {:.1f} %'.format(xerrpct[0])
-        assert_allclose(f['/phifwd/x0'],Phifit[0]['gx0'],rtol=0.35,err_msg=xmsg)
+        assert abs(xerrpct[0]) < 30,'B_\perp location error out of tolerance'
 
         Eerrpct = (f['/phifwd/E0'] - Phifit[0]['gE0']) / f['/phifwd/E0'] * 100
         Emsg = 'E0 estimation error [eV] {:.1f} %'.format(Eerrpct[0])
-        assert_allclose(f['/phifwd/E0'],Phifit[0]['gE0'],rtol=0.35,err_msg=Emsg)
+        assert abs(Eerrpct[0]) < 30,'E_0 error out of tolerance'
 
-        #the str() are needed instead of format() !
         print(xmsg)
         print(Emsg)
-
-
 
 def writeout(regh5):
     with h5py.File(str(regh5),'a',libver='latest') as f:
@@ -67,5 +63,5 @@ if __name__ == '__main__':
 
     Phi0,Phifit=hist_registration(regh5,regXLS)
     readCheck(Phi0,Phifit)
-    print('OK:  simultation registration case')
+    print('OK:  simulation registration case')
 #%% real data

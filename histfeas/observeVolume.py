@@ -27,7 +27,12 @@ def getObs(sim,cam,L,tDataInd,ver,makePlots,dbglvl):
              "d" is a column-major vector, such that if our 1D cut is N pixels,
              HST0 occupies d(0:N-1), HST1 occupies d(N:2N-1), ...
             """
-            thisCamPix  = C.keo[:,tDataInd]
+            if C.keo.ndim==2: #more than 1 frame extracted
+                thisCamPix = C.keo[:,tDataInd]
+            elif C.keo.ndim==1:
+                thisCamPix = C.keo
+            else:
+                raise ValueError('ndim==2 or 1 for stack of 1-D extracted cut')
 
             thisCamPix = mogrifyData(thisCamPix, C) #for clarity
 
