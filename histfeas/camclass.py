@@ -78,8 +78,12 @@ class Cam: #use this like an advanced version of Matlab struct
 #        else:
 #            exit('*** unknown ray mapping method ' + self.raymap)
 #%% pixel noise/bias
-        self.noiselam = cp['noiseLam']
-        self.ccdbias = cp['CCDBias']
+        try:
+            self.noiselam = cp['noiseLam']
+            self.ccdbias = cp['CCDBias']
+        except KeyError: #realdata
+            pass
+
         self.debiasData = cp['debiasData']
         self.smoothspan = cp['smoothspan']
         self.savgolOrder = cp['savgolOrder']
@@ -99,11 +103,11 @@ class Cam: #use this like an advanced version of Matlab struct
                 self.transpose    = p['transpose'] == 1
                 self.fliplr       = p['fliplr'] == 1
                 self.flipud       = p['flipud'] == 1
-                
+
                 c = f['/siteloc']
                 self.lat   = c['lat'][0]
                 self.lon   = c['lon'][0]
-                self.alt_m = c['alt_m'][0]     
+                self.alt_m = c['alt_m'][0]
         else: #sim
             self.kineticsec = cp['kineticsec'] #simulation
             self.alt_m = cp['Zkm']*1000
@@ -162,16 +166,36 @@ class Cam: #use this like an advanced version of Matlab struct
     #TODO put doorientimage and doorient in one function for safety
     def doorientimage(self,frame):
         if self.transpose:
-            frame = frame.transpose(0,2,1)
+            if frame.ndim==3:
+                frame = frame.transpose(0,2,1)
+            elif frame.ndim==2:
+                frame = frame.T
+            else:
+                raise ValueError('ndim==2 or 3')
         # rotate -- note if you use origin='lower', rotCCW -> rotCW !
          #rotate works with first two axes
         if self.rotccw: #NOT isinstance integer_types!
-            frame = rot90(frame.transpose(1,2,0),k=self.rotccw).transpose(2,0,1)
+            if frame.ndim == 3:
+                frame = rot90(frame.transpose(1,2,0),k=self.rotccw).transpose(2,0,1)
+            elif frame.ndim == 2:
+                frame = rot90(frame,k=self.rotccw)
+            else:
+                raise ValueError('ndim==2 or 3')
         # flip
         if self.fliplr:
-            frame = fliplr(frame)
+            if frame.ndim == 3:
+                frame = fliplr(frame.transpose(1,2,0)).transpose(2,0,1)
+            elif frame.ndim==2:
+                frame = fliplr(frame)
+            else:
+                raise ValueError('ndim==2 or 3')
         if self.flipud:
-            frame = flipud(frame.transpose(1,2,0)).transpose(2,0,1)
+            if frame.ndim == 3:
+                frame = flipud(frame.transpose(1,2,0)).transpose(2,0,1)
+            elif frame.ndim==2:
+                frame = flipud(frame)
+            else:
+                raise ValueError('ndim==2 or 3')
         return frame
 
     def doorient(self,az,el,ra,dec):
@@ -205,7 +229,7 @@ class Cam: #use this like an advanced version of Matlab struct
         self.dec = dec
 
     def debias(self,data):
-        if isfinite(self.debiasData):
+        if hasattr(self,'debiasData') and isfinite(self.debiasData):
             logging.debug('Debiasing Data for Camera #{}'.format(self.name) )
             data -= self.debiasData
         return data
@@ -213,7 +237,7 @@ class Cam: #use this like an advanced version of Matlab struct
     def donoise(self,data):
          noisy = data.copy()
 
-         if isfinite(self.noiselam):
+         if hasattr(self,'noiselam') and isfinite(self.noiselam):
              logging.info('adding Poisson noise with \lambda={:0.1f} to camera #{}'.format(self.noiselam,self.name))
              dnoise = poisson(lam=self.noiselam,size=self.nCutPix)
              noisy += dnoise
@@ -221,7 +245,7 @@ class Cam: #use this like an advanced version of Matlab struct
              dnoise = None
 
 
-         if isfinite(self.ccdbias):
+         if hasattr(self,'ccdbias') and isfinite(self.ccdbias):
              logging.info('adding bias {:0.1e} to camera #{}'.format(self.ccdbias,self.name))
              noisy += self.ccdbias
 
@@ -332,7 +356,7 @@ class Cam: #use this like an advanced version of Matlab struct
                                ((nearRow==0) | (nearRow == self.az.shape[0]-1)))
             nearRow = nearRow[mask]
             nearCol = nearCol[mask]
-    
+
             self.findLSQ(nearRow, nearCol)
 
         if verbose>0:

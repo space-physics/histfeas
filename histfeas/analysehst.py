@@ -10,7 +10,7 @@ from .nans import nans
 
 
 def analyseres(sim,cam,x,xp,Phifwd,Phifit,drn,dhat,vlim,x0true=None,E0true=None,
-               makeplot=[None], progms=None):
+               makeplot=[None], odir=None):
     #not Phifit tests for None and []
     if Phifwd is None or not Phifit or Phifit[0]['x'] is None or x0true is None or E0true is None:
         return
@@ -35,7 +35,7 @@ def analyseres(sim,cam,x,xp,Phifwd,Phifit,drn,dhat,vlim,x0true=None,E0true=None,
 #%% back to work
     for i,jf in enumerate(Phifit):
         #note even if array is F_CONTIGUOUS, argmax is C-order!!
-        gx0[i,:],gE0[i,:] = getx0E0(Phifwd[...,i], jf['x'], jf['EK'],x,9999,progms,makeplot)
+        gx0[i,:],gE0[i,:] = getx0E0(Phifwd[...,i], jf['x'], jf['EK'],x,9999,odir,makeplot)
 
 
         print('t={} gaussian 2-D fits (true  truefit  estfit) for (x,E).'
@@ -45,21 +45,21 @@ def analyseres(sim,cam,x,xp,Phifwd,Phifit,drn,dhat,vlim,x0true=None,E0true=None,
                                                 gx0[i,0],  gE0[i,0],
                                                 gx0[i,1],  gE0[i,1]))
 
-        Eavgfwdx[i,:],Eavghatx[i,:] = avgcomp(Phifwd[...,i], jf['x'], jf['EK'],x,makeplot,progms)
+        Eavgfwdx[i,:],Eavghatx[i,:] = avgcomp(Phifwd[...,i], jf['x'], jf['EK'],x,makeplot,odir)
 
 #%% overall error
     gx0err = gx0[:,1] - x0true #-gx0[:,0]
     gE0err = gE0[:,1] - E0true #-gE0[:,0]
 #%% plots
-    #extplot(sim,cam,drn,dhat,vlim,makeplot,progms,verbose)
+    #extplot(sim,cam,drn,dhat,vlim,makeplot,odir,verbose)
 
 
-    doplot(x,Phifit,gE0,Eavgfwdx,Eavghatx, makeplot,progms)
+    doplot(x,Phifit,gE0,Eavgfwdx,Eavghatx, makeplot,odir)
 
-    plotgauss(x0true,gx0,gE0,gx0err,gE0err,makeplot,progms)
+    plotgauss(x0true,gx0,gE0,gx0err,gE0err,makeplot,odir)
 
 
-def doplot(x,Phifit,gE0,Eavgfwdx,Eavghatx, makeplot,progms):
+def doplot(x,Phifit,gE0,Eavgfwdx,Eavghatx, makeplot,odir):
 #    with open('cord.csv','r') as e:
 #        reader = csv.reader(e, delimiter=',', quoting = csv.QUOTE_NONE);
 #        cord = [[r.strip() for r in row] for row in reader][0]
@@ -74,7 +74,7 @@ def doplot(x,Phifit,gE0,Eavgfwdx,Eavghatx, makeplot,progms):
                 ax.set_ylabel('$||\hat{b} - b||_2$')
                 ax.set_title('Residual $b$')
                 ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-                writeplots(fg,'error_boptim',9999,makeplot,progms)
+                writeplots(fg,'error_boptim',9999,makeplot,odir)
             except AttributeError:
                 close(fg)
                 pass
@@ -87,7 +87,7 @@ def doplot(x,Phifit,gE0,Eavgfwdx,Eavghatx, makeplot,progms):
             ax.set_ylabel('Expected Value $\overline{E}$ [eV]')
             ax.set_title('Fwd model: Average Energy $\overline{E}$ vs $B_\perp$')
             ax.legend(['{:.0f} eV'.format(g) for g in gE0[:,0]],loc='best',fontsize=9)
-            writeplots(fgf,'Eavg_fwd',9999,makeplot,progms)
+            writeplots(fgf,'Eavg_fwd',9999,makeplot,odir)
 
         if 'optim' in makeplot and Eavghatx:
             fgo = figure()
@@ -97,24 +97,24 @@ def doplot(x,Phifit,gE0,Eavgfwdx,Eavghatx, makeplot,progms):
             ax.set_ylabel('Expected Value $\overline{E}$ [eV]')
             ax.set_title('ESTIMATED Average Energy $\overline{\hat{E}}$ vs $B_\perp$')
             ax.legend(['{:.0f} eV'.format(g) for g in gE0[:,0]],loc='best',fontsize=9)
-            writeplots(fgo,'Eavg_optim',9999,makeplot,progms)
+            writeplots(fgo,'Eavg_optim',9999,makeplot,odir)
     except Exception as e:
         logging.info('skipping average energy plotting.   {}'.format(e))
 
-def extplot(sim,cam,drn,dhat,vlim,makeplot,progms):
+def extplot(sim,cam,drn,dhat,vlim,makeplot,odir):
 #%% brightness plot -- plotting ALL at once to show evolution of dispersive event!
     try:
         if 'fwd' in makeplot and drn:
             for i,b in enumerate(drn):
-                plotB(b,sim.realdata,cam,vlim['b'],9999,19999,makeplot,'$bfwdall',progms)
+                plotB(b,cam,vlim['b'],9999,19999,makeplot,'$bfwdall',odir)
     # reconstructed brightness plot
         if 'optim' in makeplot and dhat is not None and len(dhat[0])>0:
             for i,b in enumerate(dhat):
-                plotB(b,sim.realdata,cam,vlim['b'],9999,29999,makeplot,'$bestall', progms)
+                plotB(b,cam,vlim['b'],9999,29999,makeplot,'$bestall', odir)
     except Exception as e:
         logging.info('skipping plotting overall analysis plots of intensity.  {}'.format(e))
 
-def plotgauss(x0true,gx0,gE0,gx0err,gE0err,makeplot,progms):
+def plotgauss(x0true,gx0,gE0,gx0err,gE0err,makeplot,odir):
     fg,(axx,axE) = subplots(1,2,sharey=False)
     axx.stem(x0true,gx0err)
     axx.set_xlabel('$B_\perp$ [km]')
@@ -135,8 +135,8 @@ def plotgauss(x0true,gx0,gE0,gx0err,gE0err,makeplot,progms):
     print('E_0 gaussfit-Estimation-error (fit-true) =' + ' '.join(
                                           ['{:.1f}'.format(j) for j in gE0err]))
 
-    if 'h5' in makeplot and progms is not None:
-        fout = progms/'fit_results.h5'
+    if 'h5' in makeplot and odir is not None:
+        fout = odir/'fit_results.h5'
         with h5py.File(str(fout),'w',libver='latest') as f:
             f['/tind'] = gx0err.index.values
 
@@ -146,7 +146,7 @@ def plotgauss(x0true,gx0,gE0,gx0err,gE0err,makeplot,progms):
             f['/gE0/err']=gE0err.values.astype(float)
             f['/gE0/fwdfit']=gE0
 
-def avgcomp(Phifwd,Phifit,Ek,x,makeplot,progms):
+def avgcomp(Phifwd,Phifit,Ek,x,makeplot,odir):
     nEnergy = Phifwd.shape[0]
 
     dE = empty(nEnergy)
@@ -177,7 +177,7 @@ def avgcomp(Phifwd,Phifit,Ek,x,makeplot,progms):
         ax.set_xlabel('x [km]')
         ax.set_ylabel('diff. num. flux')
 
-        writeplots(fg,'Eavg_fwd1d',9999,makeplot,progms)
+        writeplots(fg,'Eavg_fwd1d',9999,makeplot,odir)
 
     #%% average energy per x-location
     # formula is per JGR 2013 Dahlgren et al.

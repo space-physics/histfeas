@@ -9,7 +9,7 @@ from transcarread.readionoinit import getaltgrid
 
 class Sim:
 
-    def __init__(self,sp,cp,ap,ntimeslice,overrides,makeplot,progms):
+    def __init__(self,sp,cp,ap,ntimeslice,overrides,makeplot,odir):
         #%% how many cameras in use, and which ones?
         try:
             usecamreq = asarray(overrides['cam'])
@@ -39,19 +39,19 @@ class Sim:
         try:
             self.Jfwdh5 = overrides['Jfwd']
             logging.info('* overriding J0 flux with file: ' + overrides['Jfwd'])
-        except:
+        except (KeyError,TypeError):
             self.Jfwdh5 = None
 #%% manual override filter
         try:
             self.opticalfilter = overrides['filter'].lower()
             logging.info('* overriding filter choice with:',overrides['filter'])
-        except:
+        except (KeyError,TypeError):
             self.opticalfilter = sp.at['OpticalFilter','Transcar'].lower()
 #%% manual override minimum beam energy
         try:
             self.minbeamev = float(overrides['minev'])
             logging.info('* minimum beam energy set to: {}'.format(overrides['minev']))
-        except:
+        except (KeyError,TypeError): #use spreadsheet
             mbe = sp.at['minBeameV','Transcar']
             if isfinite(mbe):
                 self.minbeamev = mbe
@@ -61,7 +61,7 @@ class Sim:
         try:
             self.optimfitmeth = overrides['fitm']
             logging.info('* setting fit method to {}'.format(overrides['fitm']))
-        except (TypeError,KeyError):
+        except (KeyError,TypeError):
             self.optimfitmeth = str(sp.at['OptimFluxMethod','Recon']) #must have str() for FITver .lower()
 
         self.optimmaxiter = sp.at['OptimMaxiter','Recon']
@@ -75,7 +75,7 @@ class Sim:
             else:
                 self.savefwdL = sp.at['saveEll','Sim']
                 self.loadfwdL = sp.at['loadEll','Sim']
-        except:
+        except KeyError:
                 self.savefwdL = True
                 self.loadfwdL = False
 #%% setup plotting
@@ -137,11 +137,19 @@ class Sim:
 
         self.cal1dpath = sp.at['cal1Ddir','Cams']
 
-        try: #for real data only for now
-            self.startutc = parse(sp.at['reqStartUT','Cams'])
-            self.stoputc = parse(sp.at['reqStopUT','Cams'])
-        except (KeyError,AttributeError):
-            pass
+        try: #override
+            if overrides['treq'] is not None: #must be is not None for array case
+                self.treqlist = overrides['treq']
+            else:
+                self.startutc = parse(sp.at['reqStartUT','Cams'])
+                self.stoputc = parse(sp.at['reqStopUT','Cams'])
+        except (KeyError,TypeError):
+            try:
+                self.startutc = parse(sp.at['reqStartUT','Cams'])
+                self.stoputc = parse(sp.at['reqStopUT','Cams'])
+            except (KeyError,AttributeError):
+                pass
+
 
         self.timestepsperexp = sp.at['timestepsPerExposure','Sim']
         #%% recon
