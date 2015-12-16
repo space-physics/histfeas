@@ -108,7 +108,7 @@ def goPlot(sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
 
     if 'spectra' in makeplot:
         logging.warning('run spectral plots from calcemissions.py')
-#%% optional show plots
+#%% show video
     if 'realvid' in makeplot and sim.realdata:
         plotRealImg(sim,cam,rawdata,tInd,makeplot,odir=odir)
 
@@ -240,10 +240,11 @@ def goPlot(sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
                      'bart',vlim['b'],tInd, makeplot,odir)
 
 def tind2dt(cam,tind):
+    tfmt = '%Y-%m-%dT%H:%M:%S'
     try: #first run
-        return str(datetime.utcfromtimestamp(cam[0].tKeo[tind]))
+        return datetime.utcfromtimestamp(cam[0].tKeo[tind]).strftime(tfmt) 
     except IndexError: #loading data
-        return str(datetime.utcfromtimestamp(cam[0].tKeo))
+        return datetime.utcfromtimestamp(cam[0].tKeo).strftime(tfmt) 
     except AttributeError:#simdata
         return ''
 #%%
