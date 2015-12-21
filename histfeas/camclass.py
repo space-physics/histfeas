@@ -104,7 +104,7 @@ class Cam: #use this like an advanced version of Matlab struct
                 self.fliplr       = p['fliplr'] == 1
                 self.flipud       = p['flipud'] == 1
 
-                c = f['/siteloc']
+                c = f['/sensorloc']
                 self.lat   = c['lat'][0]
                 self.lon   = c['lon'][0]
                 self.alt_m = c['alt_m'][0]
