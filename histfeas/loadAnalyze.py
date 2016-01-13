@@ -4,13 +4,10 @@ To generate inputs for this program, run main_hist.py with
 -m h5
 option
 """
-
-from __future__ import division,absolute_import
-from pathlib2 import Path
+from pathlib import Path
 import logging
 import re
 import h5py
-from os import makedirs
 from numpy import asarray,diff
 from matplotlib.pyplot import show
 #
@@ -54,15 +51,15 @@ def readresults(h5list,xlsfn,vlim,x1d,overrides,makeplot,verbose=0):
 
                 dhat.append(f['/best/bfit'].value)
                 drn.append(f['/best/braw'].value)
-                
+
                 angle_deg = f['/best/angle'].value #NOTE: by definition, same angles for all time steps-the camera is not moving!
             except KeyError as e:
                 raise KeyError('It seems that data inversion did not complete? Or at least it was not written  {}'.format(e))
 #%%
 
-    progms = h5.parent / 'reader'
+    odir = h5.parent / 'reader'
 
-    makedirs(str(progms),exist_ok=True)
+    odir.mkdir(parents=True,exist_ok=True)
 
 
     try:
@@ -73,7 +70,7 @@ def readresults(h5list,xlsfn,vlim,x1d,overrides,makeplot,verbose=0):
     if not xlsfn:
         raise ValueError('No XLSX parameter file found')
 
-    ap,sim,cam,Fwd = getParams(xlsfn,overrides,makeplot,progms)
+    ap,sim,cam,Fwd = getParams(xlsfn,overrides,makeplot,odir)
     cam = definecamind(cam,sim.nCutPix)
 #%% load original angles of camera
     for i,C in enumerate(cam):
@@ -86,7 +83,7 @@ def readresults(h5list,xlsfn,vlim,x1d,overrides,makeplot,verbose=0):
 
         analyseres(sim,cam,
                    x, xp, Phifwd, Phidict, drn, dhat,
-                   vlim, x0true,E0true,makeplot, progms)
+                   vlim, x0true,E0true,makeplot, odir)
 
 #%% plots
     for ti,t in enumerate(tInd):
@@ -104,11 +101,11 @@ def readresults(h5list,xlsfn,vlim,x1d,overrides,makeplot,verbose=0):
 
         if 'fwd' in makeplot:
             plotfwd(sim,cam,drn[ti],x,xp,z,zp,
-                    Pfwd[ti],Phifwd[...,ti],Phidict[ti],Jxi,vlim,t,makeplot,None,progms)
+                    Pfwd[ti],Phifwd[...,ti],Phidict[ti],Jxi,vlim,t,makeplot,None,odir)
 
         if 'optim' in makeplot:
             plotoptim(sim,cam,drn[ti],dhat[ti],'best',pf,phif,Jxi,
-                      Pest[ti],Phidict[ti],x,xp,z,zp,vlim,t,makeplot,None,progms)
+                      Pest[ti],Phidict[ti],x,xp,z,zp,vlim,t,makeplot,None,odir)
 
 
 def findxlsh5(h5path):
@@ -121,7 +118,7 @@ def findxlsh5(h5path):
         h5list = sorted(h5path.glob('dump_*.h5'))
         xlsfn =  sorted(h5path.glob('*.xls*'))
 
-    if isinstance(xlsfn,list):
+    if isinstance(xlsfn,(list,tuple)):
         xlsfn = xlsfn[0]
 
     return h5list,xlsfn
