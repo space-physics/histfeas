@@ -111,12 +111,12 @@ def doSim(ParamFN,makeplot,timeInds,overrides,odir,x1d,vlim,animtime, cmd,verbos
 #%% wrapup
     msg='{} done looping'.format(argv[0]); print(msg); #print(msg,file=stderr)
 
-    png2multipage(progms,'.eps','.tif',descr=cmd,delete=False) #gif writing is not working yet
+    png2multipage(odir,'.eps','.tif',descr=cmd,delete=False) #gif writing is not working yet
 
     analyseres(sim,cam,Fwd['x'],Fwd['xPixCorn'],
                    Phi0all,PhifitAll,drnAll,bfitAll,vlim,
                    x0true=None,E0true=None,
-                   makeplot=makeplot,progms=odir)
+                   makeplot=makeplot,odir=odir)
 #%% debug: save variables to MAT file
     if 'mat' in makeplot and odir is not None:
         from scipy.io import savemat
