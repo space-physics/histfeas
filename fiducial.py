@@ -4,7 +4,7 @@ generates circular markings of az/el on videos
  montage anno_flame10061*.png -trim -tile 4x1 -geometry +1+0  out.png
 """
 from __future__ import division,absolute_import
-from pathlib2 import Path
+from pathlib import Path
 from matplotlib.patches import Ellipse
 from matplotlib.pyplot import figure,show, Axes
 import matplotlib
@@ -59,7 +59,7 @@ def fiducial(imgfn,xcrop,ycrop,outfn,rings,rays,pstr,oxyfull,wh0,
     #ax.autoscale(True) #scale to image, not rings
     #%% plot rings
     if rings:
-        ringincr = wh0[1]*2/5 #every 2 degrees
+        ringincr = wh0[1]*2/5. #every 2 degrees
         for c in xyr:
             ax.add_patch(Ellipse(xy=oxy,
                              width=2*c[0], height=2*c[1],

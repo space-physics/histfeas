@@ -1,5 +1,5 @@
 from __future__ import division,absolute_import
-from pathlib2 import Path
+from pathlib import Path
 import logging
 from numpy import (linspace, fliplr, flipud, rot90, arange,
                    polyfit,polyval,rint,empty, isfinite, isclose,
@@ -337,7 +337,7 @@ class Cam: #use this like an advanced version of Matlab struct
                                ((nearRow==0) | (nearRow == self.az.shape[0]-1)))
             nearRow = nearRow[mask]
             nearCol = nearCol[mask]
-    
+
             self.findLSQ(nearRow, nearCol)
 
         if verbose>0:
