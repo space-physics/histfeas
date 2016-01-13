@@ -1,11 +1,8 @@
 """
 sanity check for HST simulation parameters
 Michael Hirsch
-GPL v3+
-
-REQUIRES *** PANDAS 0.16 *** or newer for read_excel to work properly!
 """
-from __future__ import division,absolute_import
+from pathlib import Path
 import logging
 from pandas import read_excel
 from warnings import warn
@@ -15,9 +12,10 @@ from .camclass import Cam
 from .simclass import Sim
 
 
-def getParams(XLSfn,overrides,makeplot,progms):
-    if progms is not None:
-        copy2(str(XLSfn),str(progms))
+def getParams(XLSfn,overrides,makeplot,odir):
+    XLSfn = Path(XLSfn).expanduser()
+    if odir is not None:
+        copy2(str(XLSfn),str(odir))
 #%% read spreadsheet
     #paramSheets = ('Sim','Cameras','Arc')
     xl = read_excel(str(XLSfn),sheetname=None,index_col=0,header=0)
@@ -38,7 +36,7 @@ def getParams(XLSfn,overrides,makeplot,progms):
     if not (nCutPix == nCutPix[0]).all():
         raise ValueError('sanityCheck: all cameras must have same 1D cut length')
 #%% class with parameters and function
-    sim = Sim(sp,cp,ap,ntimeslice,overrides,makeplot,progms)
+    sim = Sim(sp,cp,ap,ntimeslice,overrides,makeplot,odir)
 #%% grid setup
     Fwd = sim.setupFwdXZ(sp)
 #%% setup cameras
