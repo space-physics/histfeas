@@ -5,6 +5,7 @@ GPLv3+
 from __future__ import print_function, division, absolute_import
 from numpy import exp,outer, zeros_like,zeros
 #
+from gridaurora.chapman import chapman_profile
 from histutils.findnearest import find_nearest
 from .transcararc import getpx
 
@@ -22,7 +23,7 @@ def getver(x,z,Mp,Phi0, w,h,x0,z0,xshape,zshape,pmax):
 
 def ChapmanArc(Wkm,H,X0,Z0,xKM,zKM,xshape, PC0=1):
     # chapman vert
-    pz = PC0 * exp(.5*(1-(zKM-Z0)/H - exp((Z0-zKM)/H)))
+    pz = PC0 * chapman_profile(Z0,zKM)
     # horizontal model
     px = getpx(xKM,Wkm,X0,xshape)
     # 2D model output
