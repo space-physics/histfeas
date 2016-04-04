@@ -1,5 +1,4 @@
-from __future__ import division,absolute_import
-from pathlib2 import Path
+from pathlib import Path
 import logging
 from numpy import (linspace, fliplr, flipud, rot90, arange,
                    polyfit,polyval,rint,empty, isfinite, isclose,
