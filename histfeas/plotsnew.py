@@ -1,5 +1,4 @@
-from __future__ import division,absolute_import
-from pathlib2 import Path
+from pathlib import Path
 import logging
 from tempfile import gettempdir
 from numpy import (s_,array,empty,empty_like,isnan,asfortranarray,linspace,outer,
@@ -242,9 +241,9 @@ def goPlot(sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
 def tind2dt(cam,tind):
     tfmt = '%Y-%m-%dT%H:%M:%S'
     try: #first run
-        return datetime.utcfromtimestamp(cam[0].tKeo[tind]).strftime(tfmt) 
+        return datetime.utcfromtimestamp(cam[0].tKeo[tind]).strftime(tfmt)
     except IndexError: #loading data
-        return datetime.utcfromtimestamp(cam[0].tKeo).strftime(tfmt) 
+        return datetime.utcfromtimestamp(cam[0].tKeo).strftime(tfmt)
     except AttributeError:#simdata
         return ''
 #%%

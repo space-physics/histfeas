@@ -1,5 +1,4 @@
-from __future__ import print_function, division,absolute_import
-from pathlib2 import Path
+from pathlib import Path
 import logging
 from numpy import asarray,where,arange,isfinite,ceil,hypot,atleast_1d
 import numpy as np # needed for all

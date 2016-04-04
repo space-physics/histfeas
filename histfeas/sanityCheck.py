@@ -5,8 +5,7 @@ GPL v3+
 
 REQUIRES *** PANDAS 0.16 *** or newer for read_excel to work properly!
 """
-from __future__ import division,absolute_import
-from pathlib2 import Path
+from pathlib import Path
 import logging
 from pandas import read_excel
 from shutil import copy2

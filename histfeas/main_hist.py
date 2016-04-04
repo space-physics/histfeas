@@ -15,8 +15,7 @@
 example: (fwd model only)
 python3 main_hist.py in/2cam_trans.xlsx /dev/shm/rev_trans2/ -m fwd png --vlim -0.5 3.5 90 350 1e9 1e10 --jlim 1e5 5e5 --blim 0 1e4 -f 0 120 20
 """
-from __future__ import division,print_function,unicode_literals #unicode_literals necessary for py2.7 yes
-from pathlib2 import Path
+from pathlib import Path
 import logging
 from sys import argv
 from numpy import absolute,zeros,outer
