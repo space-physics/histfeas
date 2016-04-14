@@ -98,14 +98,14 @@ class Sim:
         self.useztranscar = sp.at['UseTCz','Transcar'] == 1
         self.loadver = sp.at['loadVER','Transcar'] == 1
         self.loadverfn = sp.at['verfn','Transcar']
-        self.bg3fn = sp.at['BG3transFN','Sim']
-        self.windowfn = sp.at['windowFN','Sim']
-        self.qefn =sp.at['emccdQEfn','Sim']
-        self.transcarev = sp.at['BeamEnergyFN','Transcar']
+        self.bg3fn =     self.rootdir/sp.at['BG3transFN','Sim']
+        self.windowfn =  self.rootdir/sp.at['windowFN','Sim']
+        self.qefn =      self.rootdir/sp.at['emccdQEfn','Sim']
+        self.transcarev =   self.rootdir/sp.at['BeamEnergyFN','Transcar']
         self.transcarutc = parse(sp.at['tReq','Transcar'])
-        self.excratesfn = sp.at['ExcitationDATfn','Transcar']
-        self.transcarpath = sp.at['TranscarDataDir','Sim']
-        self.reactionfn = sp.at['reactionParam','Transcar']
+        self.excratesfn =  sp.at['ExcitationDATfn','Transcar'] #NO ROOTDIR!
+        self.transcarpath = self.rootdir/sp.at['TranscarDataDir','Sim']
+        self.reactionfn =   self.rootdir/sp.at['reactionParam','Transcar']
         self.transcarconfig = sp.at['simconfig','Transcar']
 
         if isfinite(sp.at['minflux','Recon']) and sp.at['minflux','Recon']>0:

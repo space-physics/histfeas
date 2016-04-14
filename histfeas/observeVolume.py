@@ -1,4 +1,3 @@
-from __future__ import division,absolute_import
 from numpy import empty,empty_like,s_,isnan,sin,cos,radians,append,diff,ones,outer
 import numpy as np #need this here
 from scipy.sparse import csc_matrix

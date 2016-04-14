@@ -11,7 +11,7 @@ from matplotlib.colors import LogNorm
 from matplotlib.ticker import LogFormatterMathtext, MultipleLocator, ScalarFormatter #for 1e4 -> 1 x 10^4, applied DIRECTLY in format=
 import h5py
 from scipy.interpolate import interp1d
-from pandas import DataFrame
+from xarray import DataArray
 #
 from .nans import nans
 #
@@ -97,7 +97,7 @@ def goPlot(sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
         ploteigver(fitp['EKpcolor'],zKM,Tm,vlim['p'],sim,T,makeplot,'peig',odir)
 
        #FIXME this is temporary hack until Peigen is passed to hist-feasibility as DataFrame
-        Peigen = DataFrame(Peig['Mp'],index=zKM,columns=fitp['EK'])
+        Peigen = DataArray(data=Peig['Mp'],coords=[zKM,fitp['EK']],dims=['alt_km','energy_ev'])
         plotOptMod(None,Peigen)
 
         ploteig1d(fitp['EK'],zKM,Tm,vlim['p'],sim,T,makeplot,'peig1d',odir)
