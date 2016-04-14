@@ -98,14 +98,14 @@ class Sim:
         self.useztranscar = sp.at['UseTCz','Transcar'] == 1
         self.loadver = sp.at['loadVER','Transcar'] == 1
         self.loadverfn = sp.at['verfn','Transcar']
-        self.bg3fn =     self.rootdir/sp.at['BG3transFN','Sim']
-        self.windowfn =  self.rootdir/sp.at['windowFN','Sim']
-        self.qefn =      self.rootdir/sp.at['emccdQEfn','Sim']
-        self.transcarev =   self.rootdir/sp.at['BeamEnergyFN','Transcar']
+        self.bg3fn =     (self.rootdir/sp.at['BG3transFN','Sim']).expanduser()
+        self.windowfn =  (self.rootdir/sp.at['windowFN','Sim']).expanduser()
+        self.qefn =      (self.rootdir/sp.at['emccdQEfn','Sim']).expanduser()
+        self.transcarev =   (self.rootdir/sp.at['BeamEnergyFN','Transcar']).expanduser()
         self.transcarutc = parse(sp.at['tReq','Transcar'])
         self.excratesfn =  sp.at['ExcitationDATfn','Transcar'] #NO ROOTDIR!
-        self.transcarpath = self.rootdir/sp.at['TranscarDataDir','Sim']
-        self.reactionfn =   self.rootdir/sp.at['reactionParam','Transcar']
+        self.transcarpath = (self.rootdir/sp.at['TranscarDataDir','Sim']).expanduser()
+        self.reactionfn =   (self.rootdir/sp.at['reactionParam','Transcar']).expanduser()
         self.transcarconfig = sp.at['simconfig','Transcar']
 
         if isfinite(sp.at['minflux','Recon']) and sp.at['minflux','Recon']>0:
@@ -139,7 +139,7 @@ class Sim:
         else:
             raise ValueError('Unknown Ray Angle Mapping method: {}'.format(self.raymap))
 
-        self.cal1dpath = sp.at['cal1Ddir','Cams']
+        self.cal1dpath = (self.rootdir/sp.at['cal1Ddir','Cams']).expanduser()
 
         try: #override
             if overrides['treq'] is not None: #must be is not None for array case

@@ -157,7 +157,7 @@ def doSaveEll(L,Fwd,sim,xFOVpixelEnds,zFOVpixelEnds,writeRays):
         h5ObszFPE = fid.create_dataset("/Obs/zFOVpixelEnds",data=zFOVpixelEnds); h5ObszFPE.attrs['Units'] = 'kilometers'
 #        h5xCam = fid.create_dataset('/Obs/xCam',data=sim.allCamXkm); h5xCam.attrs['Units'] = 'kilometers'
 #        h5zCam = fid.create_dataset('/Obs/zCam',data=sim.allCamZkm); h5zCam.attrs['Units'] = 'kilometers'
-    copy2(str(sim.FwdLfn), sim.cal1dpath)
+    copy2(str(sim.FwdLfn), str(sim.cal1dpath))
 
 
 def plotEll(nCam,xFOVpixelEnds,zFOVpixelEnds,xCam,zCam,Np,xpc,zpc,sz,sx,
