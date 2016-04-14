@@ -7,7 +7,6 @@ from datetime import datetime
 from pytz import UTC
 from dateutil.parser import parse
 from scipy.signal import savgol_filter
-from six import string_types
 from numpy.random import poisson
 import h5py
 from astropy.coordinates.angle_utilities import angular_separation
@@ -32,7 +31,7 @@ class Cam: #use this like an advanced version of Matlab struct
         self.Bdecl = cp['Bdecl']
         self.Bepoch = cp['Bepoch'] #it's OK, I want to feedthru nan if xls cell is empty!
 
-        if isinstance(self.Bepoch,string_types):
+        if isinstance(self.Bepoch,str):
             self.Bepoch = parse(self.Bepoch)
 
         if isfinite(self.Bincl) and isfinite(self.Bdecl):
@@ -64,10 +63,10 @@ class Cam: #use this like an advanced version of Matlab struct
         self.arbfov = cp['FOVdeg']
 
 #%% sky mapping
-        cal1Ddir = sim.cal1dpath
+        cal1Ddir = sim.rootdir/sim.cal1dpath
         cal1Dname = cp['cal1Dname']
-        if isinstance(cal1Ddir,string_types) and isinstance(cal1Dname,string_types):
-            self.cal1Dfn = (Path(cal1Ddir) / cal1Dname).expanduser()
+        if isinstance(cal1Ddir,Path) and isinstance(cal1Dname,str):
+            self.cal1Dfn = (cal1Ddir / cal1Dname).expanduser()
 
         self.raymap = sim.raymap
         if not sim.realdata and self.raymap == 'arbitrary': #don't use realdata with arbitrary, doesn't make sense and causes flipped brightness data when loading--you've been warned!
