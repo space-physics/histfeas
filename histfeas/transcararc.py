@@ -27,8 +27,8 @@ def getMp(sim,cam,zKM,makeplot):
 #%% read from transcar sim
     Peigen,EKpcolor = getTranscar(sim,cam[0].alt_m/1000.,90-cam[0].Bincl)[:2]
     assert isinstance(Peigen,DataArray),'Did not get DataArray from getTranscar, aborting.'
-    Ek = Peigen.energy_ev
-    zTranscar = Peigen.alt_km
+    Ek = Peigen.energy_ev.values
+    zTranscar = Peigen.alt_km.values
 #%% clip to Hist requested altitudes
     if not allclose(zKM,zTranscar):
         logging.warning('attempting to trim altitude grid, this may not be successful due to floating point error')
