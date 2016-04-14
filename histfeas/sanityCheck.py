@@ -5,7 +5,6 @@ GPL v3+
 
 REQUIRES *** PANDAS 0.16 *** or newer for read_excel to work properly!
 """
-from pathlib import Path
 import logging
 from pandas import read_excel
 from shutil import copy2
@@ -52,10 +51,10 @@ def getParams(XLSfn,overrides,makeplot,odir):
 
     #store x,z in sim
     if odir and overrides and overrides['ell']:
-        sim.FwdLfn = Path(odir) / sim.getEllHash(sp,cp,
+        sim.FwdLfn = sim.rootdir/ odir / sim.getEllHash(sp,cp,
                             [c.x_km for c in cam],[c.alt_m/1000. for c in cam])
     else:
-        sim.FwdLfn = Path('precompute') / sim.getEllHash(sp,cp,
+        sim.FwdLfn = sim.rootdir/'precompute' / sim.getEllHash(sp,cp,
                             [c.x_km for c in cam],[c.alt_m/1000. for c in cam])
 
     # make the simulation time step match that of the fastest camera

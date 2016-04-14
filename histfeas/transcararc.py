@@ -1,11 +1,9 @@
-from __future__ import division, absolute_import
 from numpy import (asfortranarray,atleast_3d, exp,sinc,pi,zeros, outer,
                    isnan,log,logspace,arange,allclose,diff,atleast_1d)
 import h5py
 from scipy.interpolate import interp1d
 import logging
-from six import string_types
-from pandas import DataFrame
+from xarray import DataArray
 #
 from gridaurora.eFluxGen import fluxgen
 from gridaurora.arcexcite import getTranscar
@@ -28,9 +26,9 @@ def getColumnVER(zgrid,zTranscar,Peig,Phi0):
 def getMp(sim,cam,zKM,makeplot):
 #%% read from transcar sim
     Peigen,EKpcolor = getTranscar(sim,cam[0].alt_m/1000.,90-cam[0].Bincl)[:2]
-    assert isinstance(Peigen,DataFrame),'trouble earlier on with getTranscar, aborting.'
-    Ek = Peigen.columns.values
-    zTranscar = Peigen.index.values
+    assert isinstance(Peigen,DataArray),'Did not get DataArray from getTranscar, aborting.'
+    Ek = Peigen.energy_ev
+    zTranscar = Peigen.alt_km
 #%% clip to Hist requested altitudes
     if not allclose(zKM,zTranscar):
         logging.warning('attempting to trim altitude grid, this may not be successful due to floating point error')
@@ -137,7 +135,7 @@ def upsampletime(ap,sim):
     return E0,Q0,Wbc,bl,bm,bh,Bm,Bhf, Wkm, X0,Xshape
 
 def getpx(xKM,Wkm,X0,xs):
-    assert isinstance(xs,string_types)
+    assert isinstance(xs,str)
     X0=atleast_1d(X0); Wkm=atleast_1d(Wkm)
     px = zeros((X0.size,xKM.size),order='F') #since numpy 2-D array naturally iterates over rows
 #%%
