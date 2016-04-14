@@ -6,8 +6,7 @@ Michael Hirsch
 To generate registration.h5 (only when making a new type of sim or real) type
 python
 """
-from __future__ import division,absolute_import
-from pathlib2 import Path
+from pathlib import Path
 from numpy.testing import assert_allclose
 from sys import argv
 import h5py

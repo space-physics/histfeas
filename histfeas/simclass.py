@@ -9,6 +9,11 @@ from transcarread.readionoinit import getaltgrid
 class Sim:
 
     def __init__(self,sp,cp,ap,ntimeslice,overrides,makeplot,odir):
+#%% root directory not here
+        try:
+            self.rootdir = Path(overrides['rootdir'])
+        except KeyError:
+            self.rootdir = Path('')
         #%% how many cameras in use, and which ones?
         try:
             usecamreq = asarray(overrides['cam'])
@@ -170,7 +175,7 @@ class Sim:
 
         if self.useztranscar:
             Fwd['x'] = makexzgrid(self.fwd_xlim, None, self.fwd_dxKM, None)[0]
-            zTranscar = getaltgrid(sp.at['altitudePreload','Transcar'])
+            zTranscar = getaltgrid(self.rootdir/sp.at['altitudePreload','Transcar'])
             Fwd['z'] = zTranscar[ (self.fwd_zlim[0] < zTranscar) & (zTranscar < self.fwd_zlim[1]) ]
         else:
             self.fwd_dzKM = sp.at['ZcellKM','Fwdf']
