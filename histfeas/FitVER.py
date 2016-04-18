@@ -65,8 +65,8 @@ def FitVERopt(L,bn,Phi0,MpDict,sim,cam,Fwd,tInd,makeplot,verbose):
         sx = Fwd['sx']
 
         cons = None
-        optimbound = sim.minflux*ones((nEnergy*sx,2))
-        optimbound[:,1] = inf  #None seems to give error
+        optimbound = sim.minflux*ones((nEnergy*sx,2))     # lower bound
+        optimbound[:,1] = inf  #None seems to give error  # upper bound
         if optimmeth=='nelder-mead':
             optimopt = {'maxiter':maxiter,'disp':minverbose} #100
         elif optimmeth=='bfgs':
