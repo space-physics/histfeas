@@ -60,7 +60,7 @@ def doSim(ParamFN,makeplot,timeInds,overrides,odir,x1d,vlim,animtime, cmd,verbos
     Peig = getMp(sim,cam,Fwd['z'],makeplot)
 #%% synthetic diff. num flux
     if not sim.realdata:
-        Phi0all = getPhi0(sim,ap,Fwd['x'],Peig['Ek'], makeplot)
+        Phi0all = getPhi0(sim,ap,Fwd['x'],Peig['Ek'], makeplot) # Nenergy x Nx x Ntime
     else:
         Phi0all = None
     logging.debug('timeInds: {}'.format(timeInds))
@@ -74,11 +74,11 @@ def doSim(ParamFN,makeplot,timeInds,overrides,odir,x1d,vlim,animtime, cmd,verbos
             we need to integrate in time over the relevant time slices
             the .sum(axis=2) does the integration/smearing in time
             """
-            Phi0 = Phi0all[...,ti]
+            Phi0 = Phi0all[...,ti] # Nenergy x Nx
 #%% Step 1) Forward model
-        Pfwd = getSimVER(Phi0, Peig, Fwd, sim, ap, ti)
+        Pfwd = getSimVER(Phi0, Peig, Fwd, sim, ap, ti) # Nz x Nx
 #%% Step 2) Observe Forward Model (create vector of observations)
-        bn = getObs(sim,cam,Lfwd,ti,Pfwd,makeplot,verbose)
+        bn = getObs(sim,cam,Lfwd,ti,Pfwd,makeplot,verbose) # Ncam*Npixel (1D vector)
         drnAll.append(bn)
 #%% Step 3) fit constituent energies to our estimated vHat and reproject
         try:
