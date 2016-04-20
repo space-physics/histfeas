@@ -71,7 +71,7 @@ def readresults(h5list,xlsfn,vlim,x1d,overrides,makeplot,verbose=0):
     odir.mkdir(parents=True,exist_ok=True)
 
     try:
-        Phifwd = asarray(Phifwd).transpose(1,2,0)
+        Phifwd = asarray(Phifwd).transpose(1,2,0) #result: Nenergy x Nx x Ntime
     except ValueError: #realdata
         pass
 
@@ -96,7 +96,7 @@ def readresults(h5list,xlsfn,vlim,x1d,overrides,makeplot,verbose=0):
                    vlim, x0true,E0true,makeplot, odir)
 
 #%% plots
-    for i in range(len(drn)):
+    for i in range(len(drn)): #for each time, do...
         try:
             Jxi = find_nearest(x,x1d[i])[0]
         except TypeError:
