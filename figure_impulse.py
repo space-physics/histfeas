@@ -18,7 +18,7 @@ from histfeas.loadAnalyze import readresults,findxlsh5
 
 def hist_figure(xlsreg):
     Phi0,Phifit =doSim(ParamFN=xlsreg,
-                  makeplot=['fwd','optim','png','h5'],
+                  makeplot=p.makeplot,
                   timeInds=timeInds,
                   overrides = overrides, #{'minev': minev,'filter':filt, 'fwdguess':fwdguess,
 				                    #'fitm':fitm,'cam':cam,'camx':acx,'ell':ell,'Jfwd':influx},
@@ -37,7 +37,7 @@ if __name__ == '__main__':
     from argparse import ArgumentParser
     p = ArgumentParser(description='flaming figure plotter')
     p.add_argument('--load',help='load without recomputing',action='store_true')
-    p.add_argument('-m','--makeplot',help='plots to make',default=[],nargs='+')
+    p.add_argument('-m','--makeplot',help='plots to make',default=['fwd','optim','png','h5'],nargs='+')
     p.add_argument('--ell',help='compute projection matrix',action='store_true')
     p.add_argument('-v','--verbose',help='verbosity',action='count',default=0)
     p.add_argument('-f','--frames',help='time steps to use',type=int)#default=(1,3))
