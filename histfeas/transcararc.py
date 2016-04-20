@@ -21,7 +21,7 @@ def getColumnVER(zgrid,zTranscar,Peig,Phi0):
 #        fver = interp1d(zTranscar, Peig, axis=0, kind='cubic')
 #        Tm = asfortranarray(fver(zKM))
 
-    return Tm.dot(Phi0)
+    return Tm @ Phi0
 
 def getMp(sim,cam,zKM,makeplot):
 #%% read from transcar sim
