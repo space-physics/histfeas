@@ -244,7 +244,7 @@ def tind2dt(cam,tind):
         return datetime.utcfromtimestamp(cam[0].tKeo[tind]).strftime(tfmt)
     except IndexError: #loading data
         return datetime.utcfromtimestamp(cam[0].tKeo).strftime(tfmt)
-    except AttributeError:#simdata
+    except (AttributeError,OSError):#simdata  #OSError thrown when nan fed into utcfromtimestamp
         return str(tind)
 #%%
 def plotfwd(sim,cam,drn,xKM,xp,zKM,zp, ver,Phi0,fitp,Jxi,vlim,tInd,makeplot,odir,
