@@ -145,7 +145,7 @@ def goPlot(sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
     if 'picardLT' in makeplot:
         LxColInd = s_[Jxi*sz:(Jxi+1)*sz] #faster than fancy indexing
         Lx = L[:,LxColInd] #ellipses here doesn't work
-        LT = Lx.dot(Tm)
+        LT = Lx @ Tm
         plotPicard(LT,drn,'LT')
 #%% 1-D slice plots
 

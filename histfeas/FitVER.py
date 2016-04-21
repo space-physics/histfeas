@@ -2,7 +2,6 @@
 Michael Hirsch
 GPLv3+
 """
-from __future__ import division,absolute_import
 import logging
 from numpy import absolute,asfortranarray,diff,ones,inf,empty_like,isfinite
 from scipy.optimize import minimize
@@ -111,7 +110,7 @@ def FitVERopt(L,bn,Phi0,MpDict,sim,cam,Fwd,tInd,makeplot,verbose):
         # we do this here so that we don't have to carry so many variables around
         vfit['optim'] = getColumnVER(sim.useztranscar,zTranscar, Mp, Phifit.x)
 #%% downscale result to complement upscaling
-        bfitu = L.dot( vfit['optim'].ravel(order='F') )
+        bfitu = L @ vfit['optim'].ravel(order='F')
 
         for s,c in zip(bscale,cInd):
             bfitu[c] /= s
@@ -139,8 +138,8 @@ def optfun(phiinv,L,Tm,b_obs,nEnergy,sx):
     """this provides the quantity to minimize
     Phi0 is a vector b/c that's what minimize needs, reshape is low cost (but this many times?)
     """
-    pinv = Tm.dot(phiinv.reshape(nEnergy,sx,order='F'))
-    binv = L.dot(pinv.ravel(order='F'))
+    pinv = Tm @ phiinv.reshape(nEnergy,sx,order='F')
+    binv = L  @ pinv.ravel(order='F')
     return norm(binv - b_obs, ord=2)
 
 def difffun(jfit,nEnergy=33,sx=109):
