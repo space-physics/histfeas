@@ -353,12 +353,14 @@ def plotoptim(sim,cam,drn,dhat,bcomptxt,ver,Phi0,Jxi,
         ('$\hat{{\phi}}_{{top}}$ diff. number flux at $B_\perp$={:0.2f} [km]'.format(xKM[Jxi])),
                            odir,fg,axs[1,1])
 
-    axs[1,2].axis('off')
-
 #http://stackoverflow.com/questions/10035446/how-can-i-make-a-blank-subplot-in-matplotlib
 #http://stackoverflow.com/questions/2176424/hiding-axis-text-in-matplotlib-plots
 
     if doSubplots:
+        try:
+            axs[1,2].axis('off') #FIXME a bit case dependent
+        except IndexError:
+            pass
         writeplots(fg,'est',T,makeplot,odir)
 
 #%% ############################################################################
