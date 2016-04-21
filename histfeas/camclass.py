@@ -255,6 +255,7 @@ class Cam: #use this like an advanced version of Matlab struct
          return noisy
 
     def dosmooth(self,data):
+        assert isfinite(data).all(),'NaN leaked into brightness data, savgol cannot handle NaN'
         if self.smoothspan > 0 and self.savgolOrder>0:
             logging.debug('Smoothing Data for Camera #{}'.format(self.name))
             data= savgol_filter(data, self.smoothspan, self.savgolOrder)

@@ -1,4 +1,3 @@
-from __future__ import print_function, division,absolute_import
 import logging
 from matplotlib.pyplot import figure,close,subplots
 from matplotlib.ticker import MaxNLocator#,ScalarFormatter# ,LogFormatterMathtext, #for 1e4 -> 1 x 10^4, applied DIRECTLY in format=
@@ -38,10 +37,10 @@ def analyseres(sim,cam,x,xp,Phifwd,Phifit,drn,dhat,vlim,x0true=None,E0true=None,
         gx0[i,:],gE0[i,:] = getx0E0(Phifwd[...,i], jf['x'], jf['EK'],x,9999,odir,makeplot)
 
 
-        print('t={} gaussian 2-D fits (true  truefit  estfit) for (x,E).'
-              ' Fwdtrue: {:.2f} {:.0f}'
-              ' Fwdfit: {:.2f} {:.0f}'
-              ' Optim: {:.2f} {:.0f}'.format(i, x0true.iat[i], E0true.iat[i],
+        print('t={} gaussian 2-D fits for (x,E):\n'
+              ' Fwdtrue: {:.2f} {:.0f}\n'
+              ' Fwdfit: {:.2f} {:.0f}\n'
+              ' Optim: {:.2f} {:.0f}\n'.format(i, x0true.iat[i], E0true.iat[i],
                                                 gx0[i,0],  gE0[i,0],
                                                 gx0[i,1],  gE0[i,1]))
 

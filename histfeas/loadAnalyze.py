@@ -87,9 +87,17 @@ def readresults(h5list,xlsfn,vlim,x1d,overrides,makeplot,verbose=0):
         C.tKeo = ut1_unix[:,i]
 #%% load args if they exist
     for a in ap:
-        #TODO assumes all are same distance apart
-        x0true = (ap[a].loc['X0km',:][:-1] + 0.5*diff(ap[a].loc['X0km',:]))#[tind]
-        E0true = (ap[a].loc['E0',:][:-1]   + 0.5*diff(ap[a].loc['E0',:]))  #[tInd]
+        """
+        TODO: assumes all are same distance apart (zero accel)
+        NOTE: Assumption is that arc is moving smoothly with zero acceleration,
+        so that mean position for each time step is = x[:-1] + 0.5*diff(x) as below.
+        """
+        if ap[a].at['Zshape',0] in ('flat','impulse'):
+            x0true = ap[a].loc['X0km',:][:-1]
+            E0true = ap[a].loc['E0',:][:-1]
+        else:
+            x0true = (ap[a].loc['X0km',:][:-1] + 0.5*diff(ap[a].loc['X0km',:]))
+            E0true = (ap[a].loc['E0',:][:-1]   + 0.5*diff(ap[a].loc['E0',:]))
 
         analyseres(sim,cam,
                    x, xp, Phifwd, Phidict, drn, dhat,
@@ -111,12 +119,12 @@ def readresults(h5list,xlsfn,vlim,x1d,overrides,makeplot,verbose=0):
         if 'fwd' in makeplot:
             plotfwd(sim,cam,drn[i],x,xp,z,zp,
                     Pfwd[i],Phifwd[...,i],Phidict[i],Jxi,vlim,i,makeplot,odir,
-                    doSubplots=True)
+                    doSubplots=True,overrides=overrides)
 
         if 'optim' in makeplot:
             plotoptim(sim,cam,drn[i],dhat[i],'best',pf,phif,Jxi,
                       Pest[i],Phidict[i],x,xp,z,zp,vlim,i,makeplot,odir,
-                      doSubplots=True)
+                      doSubplots=True,overrides=overrides)
 
 
 def findxlsh5(h5path):
