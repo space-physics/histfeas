@@ -10,6 +10,6 @@ imstem=est$n.png
 
 
 declare -a flist=$(find $rdir -maxdepth 2 -mindepth 2 -name "$imstem" | sort -V)
-echo "converting ${#flist[@]} png under $rdir matching pattern $imstem to gif"
+echo "converting png under $rdir matching pattern $imstem to $rdir/est$ngif"
 #echo ${flist[*]}
 convert -delay 30 $flist $rdir/est$n.gif
