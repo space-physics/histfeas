@@ -18,7 +18,6 @@ matplotlib.use('Agg') #fixes Travis NO DISPLAY bug
 from histfeas.main_hist import doSim
 
 rootdir = Path(__file__).parents[1]
-print(rootdir)
 
 def hist_registration(regh5,regXLS):
     Phi0,Phifit =doSim(ParamFN=regXLS,
