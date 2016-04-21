@@ -150,7 +150,7 @@ def loadEll(sim,Fwd,cam,makeplots,verbose):
     except (FileNotFoundError,OSError) as e:
         logging.error('{} not found. Recomputing new Ell file. {}'.format(sim.FwdLfn,e))
         sim.loadfwdL = False
-        Lfwd,Fwd,cam = getEll(sim,cam,Fwd,makeplots,verbose)
+        L,Fwd,cam = getEll(sim,cam,Fwd,makeplots,verbose)
     except AttributeError as e:
         logging.error('grid mismatch detected. use --ell command line option to save new Ell file. {}'.format(e))
 
