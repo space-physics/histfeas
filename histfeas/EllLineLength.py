@@ -17,7 +17,7 @@ from cvutils.lineClipping import cohensutherland
    L is an nCam*nPixel x sx*sz dimension projection matrix
    v is an sx*sz column-major vector of auroral VER
  by building up b,L,v in this way, the tomographic forward projection is implemented
- in Python numpy by b = L.dot(v), which in Matlab is b = L*v
+ in Python numpy by b = L @ v, which in Matlab is b = L*v
 
  let's start by describing b,L,v.
  We have made a mesh in the sky, let's say 41 elements from -10 to 10km with 0.5km horizontal spacing (x)
