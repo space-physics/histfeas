@@ -72,14 +72,14 @@ def setupCam(sim,cp,zmax):
 
     if sim.camxreq[0] is not None:
         logging.warning('overriding camera x-loc with {}'.format(sim.camxreq))
-        for i,(c,cx) in enumerate(zip(cp,sim.camxreq)):
+        for i,(C,cx) in enumerate(zip(cp,sim.camxreq)): #enumerate as in general camera 0 may not be used
             if sim.useCamBool[i]:
-                cp.iat['Xkm',c] = cx
-                cam.append(Cam(sim,cp[c], c, zmax))
+                cp.at['Xkm',C] = cx
+                cam.append(Cam(sim,cp[C], C, zmax))
     else:
-        for i,c in enumerate(cp):
+        for i,C in enumerate(cp):
             if sim.useCamBool[i]:
-                cam.append(Cam(sim,cp[c], c, zmax))
+                cam.append(Cam(sim,cp[C], C, zmax))
 
     if len(cam)==0:
         raise ValueError('0 cams are configured, Nothing to do.')
