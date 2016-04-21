@@ -14,11 +14,11 @@ class Sim:
             self.rootdir = Path(overrides['rootdir'])
         except KeyError:
             self.rootdir = Path('')
-        #%% how many cameras in use, and which ones?
+#%% how many cameras in use, and which ones?
         try:
             usecamreq = asarray(overrides['cam'])
             if usecamreq[0]: #override spreadsheet
-                logging.info(' Overriding XLS parameters, using cameras: {}'.format(usecamreq))
+                logging.warning(' Overriding XLS parameters, using cameras: {}'.format(usecamreq))
                 for ci,civ in enumerate(cp.loc['useCam']): # this might be a silly indexing method, but works
                     if (ci==usecamreq).any():
                         cp.at['useCam',ci] = 1 #do not use boolean, it screws up other rows
@@ -26,12 +26,14 @@ class Sim:
                         cp.at['useCam',ci] = 0 #do not use boolean, it screws up other rows
             if usecamreq[0]:
                 assert np.all(where(self.useCamBool)[0] == usecamreq) #not .all() in case of different length
-
- # camera position override check (work done in sanityCheck.setupCam)
+        except KeyError:
+            pass #normal case
+#%% camera position override check (work done in sanityCheck.setupCam)
+        try:
             self.camxreq = overrides['camx']
             if self.camxreq[0] and len(self.camxreq) != self.nCamUsed:
                 raise ValueError('must specify same number of x-loc and used cameras')
-        except: #cam override not specified
+        except KeyError: #cam override not specified
             self.camxreq = [None]
 #%%
         self.useCamBool = cp.loc['useCam'].values.astype(bool)

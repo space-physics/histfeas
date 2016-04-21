@@ -319,10 +319,11 @@ def plotoptim(sim,cam,drn,dhat,bcomptxt,ver,Phi0,Jxi,
         vfit = vfit['optim']
 
     if doSubplots:
+        ttxt = T + "\n x_cam " + str([c.x_km for c in cam])
         fg,axs = subplots(nrow,3,figsize=(21,vsizeinch))
         axs = atleast_2d(axs)
 
-        fg.suptitle(T,fontsize='xx-large') #FIXME here we just use the fastest camera, cam 0 apriori
+        fg.suptitle(ttxt,fontsize='x-large') #FIXME here we just use the fastest camera, cam 0 apriori
         fg.subplots_adjust(top=0.95) # FIXME http://matplotlib.org/faq/howto_faq.html
     else:
         fg=None
