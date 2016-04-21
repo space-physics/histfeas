@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -u; set -e
 
 #For a simulation root directory, finds all the camera position plot results and makes multipage GIFs or TIFFs as you like.
 
@@ -9,7 +9,7 @@ n=$2
 imstem=est$n.png
 
 
-flist=$(find $rdir -maxdepth 2 -mindepth 2 -name $imstem | sort )
+declare -a flist=$(find $rdir -maxdepth 2 -mindepth 2 -name "$imstem" | sort -V)
 echo "converting ${#flist[@]} png under $rdir matching pattern $imstem to gif"
-echo ${flist[*]}
-#convert -delay 20 $flist $rdir/est$n.gif
+#echo ${flist[*]}
+convert -delay 30 $flist $rdir/est$n.gif
