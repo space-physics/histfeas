@@ -4,7 +4,7 @@ import h5py
 #from numbapro import vectorize
 from numpy import empty,ones,ravel_multi_index,hypot,zeros,in1d,array
 from scipy.sparse import dok_matrix,issparse
-from shutil import copy2
+from shutil import copy2,SameFileError
 # local
 from cvutils.lineClipping import cohensutherland
 
@@ -157,7 +157,10 @@ def doSaveEll(L,Fwd,sim,xFOVpixelEnds,zFOVpixelEnds,writeRays):
         h5ObszFPE = fid.create_dataset("/Obs/zFOVpixelEnds",data=zFOVpixelEnds); h5ObszFPE.attrs['Units'] = 'kilometers'
 #        h5xCam = fid.create_dataset('/Obs/xCam',data=sim.allCamXkm); h5xCam.attrs['Units'] = 'kilometers'
 #        h5zCam = fid.create_dataset('/Obs/zCam',data=sim.allCamZkm); h5zCam.attrs['Units'] = 'kilometers'
-    copy2(str(sim.FwdLfn), str(sim.cal1dpath))
+    try:
+        copy2(str(sim.FwdLfn), str(sim.cal1dpath))
+    except SameFileError:
+        pass
 
 
 def plotEll(nCam,xFOVpixelEnds,zFOVpixelEnds,xCam,zCam,Np,xpc,zpc,sz,sx,
