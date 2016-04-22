@@ -33,7 +33,7 @@ class Sim:
             self.camxreq = overrides['camx']
             if self.camxreq[0] and len(self.camxreq) != self.nCamUsed:
                 raise ValueError('must specify same number of x-loc and used cameras')
-        except KeyError: #cam override not specified
+        except (TypeError,KeyError): #cam override not specified
             self.camxreq = [None]
 #%%
         self.useCamBool = cp.loc['useCam'].values.astype(bool)
