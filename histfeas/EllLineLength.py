@@ -160,7 +160,7 @@ def doSaveEll(L,Fwd,sim,xFOVpixelEnds,zFOVpixelEnds,writeRays):
     try:
         copy2(str(sim.FwdLfn), str(sim.cal1dpath))
     except SameFileError:
-        pass
+        logging.critical('could not copy ell file over itself')
 
 
 def plotEll(nCam,xFOVpixelEnds,zFOVpixelEnds,xCam,zCam,Np,xpc,zpc,sz,sx,
