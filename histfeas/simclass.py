@@ -74,16 +74,11 @@ class Sim:
 #%% force compute ell
         try:
             if overrides and overrides['ell']:
-                #sp.loc['saveEll','Sim'] = 1 #we'll save to out/date directory!
-                #sp.loc['loadEll','Sim'] = 0
-                self.savefwdL = True
                 self.loadfwdL = False
             else:
-                self.savefwdL = sp.at['saveEll','Sim']
-                self.loadfwdL = sp.at['loadEll','Sim']
+                self.loadfwdL = True
         except KeyError:
-                self.savefwdL = True
-                self.loadfwdL = False
+                self.loadfwdL = True
 #%% setup plotting
 #        self.plots = {}
 #
