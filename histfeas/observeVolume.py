@@ -147,6 +147,8 @@ def loadEll(sim,Fwd,cam,makeplots,verbose):
             except KeyError:
                 logging.critical('could not load FOV ends, maybe this is an old Ell file')
 
+        print('Loaded projection matrix L from {}'.format(sim.FwdLfn))
+
     except (FileNotFoundError,OSError) as e:
         logging.error('{} not found. Recomputing new Ell file. {}'.format(sim.FwdLfn,e))
         sim.loadfwdL = False
