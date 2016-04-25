@@ -20,7 +20,8 @@ def readresults(h5list,xlsfn,vlim,x1d,overrides,makeplot,verbose=0):
     Phifwd =[]; Phidict =[]; dhat=[]; drn=[]; Pest=[]; Pfwd=[]; ut1_unix=[]
 #%%
     if not h5list:
-        raise ValueError('no HDF5 files found')
+        print('no HDF5 files found from your analysis run.')
+        return
 
     for h5 in h5list:
         assert h5.is_file()

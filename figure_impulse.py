@@ -38,11 +38,10 @@ if __name__ == '__main__':
     p = ArgumentParser(description='flaming figure plotter')
     p.add_argument('--load',help='load without recomputing',action='store_true')
     p.add_argument('-m','--makeplot',help='plots to make',default=['fwd','optim','png','h5'],nargs='+')
-    p.add_argument('--ell',help='compute projection matrix',action='store_true')
     p.add_argument('--cx',help='override cam positions (must specify all)',nargs='+',type=float)
     p.add_argument('-v','--verbose',help='verbosity',action='count',default=0)
     p.add_argument('-f','--frames',help='time steps to use',type=int)#default=(1,3))
-    p.add_argument('-o','--outdir',help='output directory',default=Path(gettempdir())/'out/impulse')
+    p.add_argument('-o','--outdir',help='output directory',default=Path(gettempdir()) / 'out/impulse')
     p = p.parse_args()
 
     xlsreg='in/2cam_impulse.xlsx'
@@ -52,7 +51,7 @@ if __name__ == '__main__':
     x1d = [1,1,1]
     vlim = {'p':[-1.5,4.5,90,300,5e7,8e8,5e7,2e9], 'j':[1e3,1.1e5, 1e3,8e5],
             'b':[0, 2000]}
-    overrides = {'ell':p.ell,'camx':p.cx}
+    overrides = {'camx':p.cx}
 
     if not p.load:
         print('running HiSTfeas program -- will write png and h5 to {}'.format(outdir))
