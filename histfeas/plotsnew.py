@@ -239,11 +239,14 @@ def goPlot(sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
                      'bart',vlim['b'],tInd, makeplot,odir)
 
 def tind2dt(cam,tind):
-    tfmt = '%Y-%m-%dT%H:%M:%S'
+    tfmt = '%Y-%m-%dT%H:%M:%S.%f'
+
+    #NOTE: the [:-3] is arbitrary to keep 3 digits right of the decimal.
+
     try: #first run
-        return datetime.utcfromtimestamp(cam[0].tKeo[tind]).strftime(tfmt)
+        return datetime.utcfromtimestamp(cam[0].tKeo[tind]).strftime(tfmt)[:-3]
     except IndexError: #loading data
-        return datetime.utcfromtimestamp(cam[0].tKeo).strftime(tfmt)
+        return datetime.utcfromtimestamp(cam[0].tKeo).strftime(tfmt)[:-3]
     except (AttributeError,OSError):#simdata  #OSError thrown when nan fed into utcfromtimestamp
         return str(tind)
 #%%
@@ -260,12 +263,12 @@ def plotfwd(sim,cam,drn,xKM,xp,zKM,zp, ver,Phi0,fitp,Jxi,vlim,tInd,makeplot,odir
     T = tind2dt(cam,tInd)
 
     if doSubplots:
-        ttxt = T + "\n x_cam " + str([c.x_km for c in cam])
+        ttxt = T + "\n x_cam " + str(['{:.2f}'.format(c.x_km) for c in cam])
         fg,axs = subplots(nrow,3,figsize=(21,vsizeinch))
         axs = atleast_2d(axs)
 
         fg.suptitle(ttxt,fontsize='x-large') #FIXME here we just use the fastest camera, cam 0 apriori
-        fg.subplots_adjust(top=0.95) # FIXME http://matplotlib.org/faq/howto_faq.html
+        fg.subplots_adjust(top=0.9) # FIXME http://matplotlib.org/faq/howto_faq.html
 
     else:
         fg=None
