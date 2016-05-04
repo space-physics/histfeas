@@ -53,8 +53,8 @@ if __name__ == '__main__':
     timeInds=p.frames
 
     x1d = None
-    vlim = {'p':[-3,3,90,400,5e4,5e5,5e4,5e5], 'j':[10,200, 10,200],
-            'b':[0,2000]}
+    vlim = {'p':[-3,7,90,400,5e4,8e5,5e4,8e5], 'j':[10,250, 10,250],
+            'b':[0,1500]}
 
     treq = [parse(t) for t in p.treq] if p.treq else None
 
