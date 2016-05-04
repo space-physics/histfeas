@@ -2,8 +2,6 @@
 sanity check for HST simulation parameters
 Michael Hirsch
 GPL v3+
-
-REQUIRES *** PANDAS 0.16 *** or newer for read_excel to work properly!
 """
 import logging
 from pandas import read_excel
@@ -51,11 +49,8 @@ def getParams(XLSfn,overrides,makeplot,odir):
 
     #store x,z in sim
     ellname=sim.getEllHash(sp,cp, [c.x_km for c in cam],[c.alt_m/1000. for c in cam])
-
-    if odir:
-        sim.FwdLfn = sim.rootdir/ odir / ellname
-    else:
-        sim.FwdLfn = sim.rootdir/'precompute' / ellname
+    #will try to load this and compute if needed. Will be copied to output directory too.
+    sim.FwdLfn = sim.rootdir/'precompute' / ellname
 
     # make the simulation time step match that of the fastest camera
     sim.kineticsec = min([C.kineticsec for C,u in zip(cam,sim.useCamBool) if u])

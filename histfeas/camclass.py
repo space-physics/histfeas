@@ -228,7 +228,7 @@ class Cam: #use this like an advanced version of Matlab struct
 
     def debias(self,data):
         if hasattr(self,'debiasData') and isfinite(self.debiasData):
-            logging.debug('Debiasing Data for Camera #{}'.format(self.name) )
+            logging.debug('Debiasing Data for Camera #{} by -{}'.format(self.name,self.debiasData) )
             data -= self.debiasData
         return data
 
