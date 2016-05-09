@@ -1,4 +1,3 @@
-from __future__ import division,absolute_import
 from pathlib import Path
 import logging
 from numpy import (linspace, fliplr, flipud, rot90, arange,
@@ -8,7 +7,6 @@ from datetime import datetime
 from pytz import UTC
 from dateutil.parser import parse
 from scipy.signal import savgol_filter
-from six import string_types
 from numpy.random import poisson
 import h5py
 from astropy.coordinates.angle_utilities import angular_separation
@@ -27,22 +25,13 @@ class Cam: #use this like an advanced version of Matlab struct
         self.verbose = verbose
         self.name = int(name)
 #%%
-        self.lat = cp['latWGS84']
-        self.lon = cp['lonWGS84']
-        self.alt_m = cp['Zkm']*1e3
-        self.z_km = cp['Zkm']
-        self.x_km = cp['Xkm']
-
-        if sim.realdata:
-            fn = Path(cp['fn']).expanduser()
-
         self.nCutPix = int(cp['nCutPix'])
 
         self.Bincl = cp['Bincl']
         self.Bdecl = cp['Bdecl']
         self.Bepoch = cp['Bepoch'] #it's OK, I want to feedthru nan if xls cell is empty!
 
-        if isinstance(self.Bepoch,string_types):
+        if isinstance(self.Bepoch,str):
             self.Bepoch = parse(self.Bepoch)
 
         if isfinite(self.Bincl) and isfinite(self.Bdecl):
@@ -74,10 +63,10 @@ class Cam: #use this like an advanced version of Matlab struct
         self.arbfov = cp['FOVdeg']
 
 #%% sky mapping
-        cal1Ddir = sim.cal1dpath
+        cal1Ddir = sim.rootdir/sim.cal1dpath
         cal1Dname = cp['cal1Dname']
-        if isinstance(cal1Ddir,string_types) and isinstance(cal1Dname,string_types):
-            self.cal1Dfn = (Path(cal1Ddir) / cal1Dname).expanduser()
+        if isinstance(cal1Ddir,Path) and isinstance(cal1Dname,str):
+            self.cal1Dfn = (cal1Ddir / cal1Dname).expanduser()
 
         self.raymap = sim.raymap
         if not sim.realdata and self.raymap == 'arbitrary': #don't use realdata with arbitrary, doesn't make sense and causes flipped brightness data when loading--you've been warned!
@@ -87,8 +76,12 @@ class Cam: #use this like an advanced version of Matlab struct
 #        else:
 #            exit('*** unknown ray mapping method ' + self.raymap)
 #%% pixel noise/bias
-        self.noiselam = cp['noiseLam']
-        self.ccdbias = cp['CCDBias']
+        try:
+            self.noiselam = cp['noiseLam']
+            self.ccdbias = cp['CCDBias']
+        except KeyError: #realdata
+            pass
+
         self.debiasData = cp['debiasData']
         self.smoothspan = cp['smoothspan']
         self.savgolOrder = cp['savgolOrder']
@@ -97,7 +90,7 @@ class Cam: #use this like an advanced version of Matlab struct
 
         # data file name
         if sim.realdata:
-            self.fn = (sim.realdatapath / fn).expanduser()
+            self.fn = (sim.realdatapath / cp['fn']).expanduser()
 
             with h5py.File(str(self.fn),'r',libver='latest') as f:
                 self.filestartutc = f['/ut1_unix'][0]
@@ -111,8 +104,15 @@ class Cam: #use this like an advanced version of Matlab struct
                 self.transpose    = p['transpose'] == 1
                 self.fliplr       = p['fliplr'] == 1
                 self.flipud       = p['flipud'] == 1
+
+                c = f['/sensorloc']
+                self.lat   = c['lat'][0]
+                self.lon   = c['lon'][0]
+                self.alt_m = c['alt_m'][0]
         else: #sim
             self.kineticsec = cp['kineticsec'] #simulation
+            self.alt_m = cp['Zkm']*1000
+            self.x_km = cp['Xkm']
 
 #%% camera model
         """
@@ -167,16 +167,36 @@ class Cam: #use this like an advanced version of Matlab struct
     #TODO put doorientimage and doorient in one function for safety
     def doorientimage(self,frame):
         if self.transpose:
-            frame = frame.transpose(0,2,1)
+            if frame.ndim==3:
+                frame = frame.transpose(0,2,1)
+            elif frame.ndim==2:
+                frame = frame.T
+            else:
+                raise ValueError('ndim==2 or 3')
         # rotate -- note if you use origin='lower', rotCCW -> rotCW !
          #rotate works with first two axes
         if self.rotccw: #NOT isinstance integer_types!
-            frame = rot90(frame.transpose(1,2,0),k=self.rotccw).transpose(2,0,1)
+            if frame.ndim == 3:
+                frame = rot90(frame.transpose(1,2,0),k=self.rotccw).transpose(2,0,1)
+            elif frame.ndim == 2:
+                frame = rot90(frame,k=self.rotccw)
+            else:
+                raise ValueError('ndim==2 or 3')
         # flip
         if self.fliplr:
-            frame = fliplr(frame)
+            if frame.ndim == 3:
+                frame = fliplr(frame.transpose(1,2,0)).transpose(2,0,1)
+            elif frame.ndim==2:
+                frame = fliplr(frame)
+            else:
+                raise ValueError('ndim==2 or 3')
         if self.flipud:
-            frame = flipud(frame.transpose(1,2,0)).transpose(2,0,1)
+            if frame.ndim == 3:
+                frame = flipud(frame.transpose(1,2,0)).transpose(2,0,1)
+            elif frame.ndim==2:
+                frame = flipud(frame)
+            else:
+                raise ValueError('ndim==2 or 3')
         return frame
 
     def doorient(self,az,el,ra,dec):
@@ -210,15 +230,15 @@ class Cam: #use this like an advanced version of Matlab struct
         self.dec = dec
 
     def debias(self,data):
-        if isfinite(self.debiasData):
-            logging.debug('Debiasing Data for Camera #{}'.format(self.name) )
+        if hasattr(self,'debiasData') and isfinite(self.debiasData):
+            logging.debug('Debiasing Data for Camera #{} by -{}'.format(self.name,self.debiasData) )
             data -= self.debiasData
         return data
 
     def donoise(self,data):
          noisy = data.copy()
 
-         if isfinite(self.noiselam):
+         if hasattr(self,'noiselam') and isfinite(self.noiselam):
              logging.info('adding Poisson noise with \lambda={:0.1f} to camera #{}'.format(self.noiselam,self.name))
              dnoise = poisson(lam=self.noiselam,size=self.nCutPix)
              noisy += dnoise
@@ -226,7 +246,7 @@ class Cam: #use this like an advanced version of Matlab struct
              dnoise = None
 
 
-         if isfinite(self.ccdbias):
+         if hasattr(self,'ccdbias') and isfinite(self.ccdbias):
              logging.info('adding bias {:0.1e} to camera #{}'.format(self.ccdbias,self.name))
              noisy += self.ccdbias
 
@@ -238,6 +258,7 @@ class Cam: #use this like an advanced version of Matlab struct
          return noisy
 
     def dosmooth(self,data):
+        assert isfinite(data).all(),'NaN leaked into brightness data, savgol cannot handle NaN'
         if self.smoothspan > 0 and self.savgolOrder>0:
             logging.debug('Smoothing Data for Camera #{}'.format(self.name))
             data= savgol_filter(data, self.smoothspan, self.savgolOrder)
@@ -285,7 +306,7 @@ class Cam: #use this like an advanced version of Matlab struct
         angledist = angledist.to(u.deg).value
         # put distances into a 90-degree fan beam
         angle_deg = empty(self.superx,dtype=float)
-        MagZenInd = angledist.argmin() # whether slightly positive or slightly negative, this should be OK
+        MagZenInd = angledist.argmin() # whether minimum angle distance from MZ is slightly positive or slightly negative, this should be OK
 
         angle_deg[MagZenInd:] = 90. + angledist[MagZenInd:]
         angle_deg[:MagZenInd] = 90. - angledist[:MagZenInd]

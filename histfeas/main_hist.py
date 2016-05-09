@@ -21,7 +21,7 @@ from warnings import warn
 from matplotlib.pyplot import close,draw,pause,show
 #
 from gridaurora.eFluxGen import maxwellian
-from pyimagevideo.imagemultipage import png2multipage
+#from pyimagevideo.imagemultipage import png2multipage
 from histutils.simulFrame import getSimulData
 from histutils.get1Dcut import get1Dcut #we need cam.angle_deg for plotting
 from .sanityCheck import getParams
@@ -54,10 +54,10 @@ def doSim(ParamFN,makeplot,timeInds,overrides,odir,x1d,vlim,animtime, cmd,verbos
 #%% preallocation
     PhifitAll = []; drnAll = []; bfitAll=[]
 #%% load eigenprofiles from Transcar
-    Peig = getMp(sim,Fwd['z'],makeplot)
+    Peig = getMp(sim,cam,Fwd['z'],makeplot)
 #%% synthetic diff. num flux
     if not sim.realdata:
-        Phi0all = getPhi0(sim,ap,Fwd['x'],Peig['Ek'], makeplot)
+        Phi0all = getPhi0(sim,ap,Fwd['x'],Peig['Ek'], makeplot) # Nenergy x Nx x Ntime
     else:
         Phi0all = None
     logging.debug('timeInds: {}'.format(timeInds))
@@ -71,11 +71,11 @@ def doSim(ParamFN,makeplot,timeInds,overrides,odir,x1d,vlim,animtime, cmd,verbos
             we need to integrate in time over the relevant time slices
             the .sum(axis=2) does the integration/smearing in time
             """
-            Phi0 = Phi0all[...,ti]
+            Phi0 = Phi0all[...,ti] # Nenergy x Nx
 #%% Step 1) Forward model
-        Pfwd = getSimVER(Phi0, Peig, Fwd, sim, ap, ti)
+        Pfwd = getSimVER(Phi0, Peig, Fwd, sim, ap, ti) # Nz x Nx
 #%% Step 2) Observe Forward Model (create vector of observations)
-        bn = getObs(sim,cam,Lfwd,ti,Pfwd,makeplot,verbose)
+        bn = getObs(sim,cam,Lfwd,ti,Pfwd,makeplot,verbose) # Ncam*Npixel (1D vector)
         drnAll.append(bn)
 #%% Step 3) fit constituent energies to our estimated vHat and reproject
         try:
@@ -111,14 +111,14 @@ def doSim(ParamFN,makeplot,timeInds,overrides,odir,x1d,vlim,animtime, cmd,verbos
 #%% wrapup
     msg='{} done looping'.format(argv[0]); print(msg); #print(msg,file=stderr)
 
-    png2multipage(odir,'.eps','.tif',descr=cmd,delete=False) #gif writing is not working yet
+#    png2multipage(odir,'.eps','.tif',descr=cmd,delete=False) #gif writing is not working yet
 
     analyseres(sim,cam,Fwd['x'],Fwd['xPixCorn'],
                    Phi0all,PhifitAll,drnAll,bfitAll,vlim,
                    x0true=None,E0true=None,
                    makeplot=makeplot,odir=odir)
 #%% debug: save variables to MAT file
-    if 'mat' in makeplot and odir is not None:
+    if 'mat' in makeplot and odir.is_dir():
         from scipy.io import savemat
         cMatFN = odir/'comparePy.mat'
         try:

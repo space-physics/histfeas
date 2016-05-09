@@ -1,3 +1,6 @@
+.. image:: https://travis-ci.org/scienceopen/histfeas.svg?branch=master
+    :target: https://travis-ci.org/scienceopen/histfeas
+
 .. image:: https://codeclimate.com/github/scienceopen/hist-feasibility/badges/gpa.svg
    :target: https://codeclimate.com/github/scienceopen/hist-feasibility
 

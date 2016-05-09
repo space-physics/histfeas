@@ -6,7 +6,6 @@ option
 """
 from pathlib import Path
 import logging
-import re
 import h5py
 from numpy import asarray,diff
 from matplotlib.pyplot import show
@@ -18,17 +17,13 @@ from .plotsnew import plotoptim,plotfwd
 from .observeVolume import definecamind
 
 def readresults(h5list,xlsfn,vlim,x1d,overrides,makeplot,verbose=0):
-    Phifwd =[]; Phidict =[]; dhat=[]; drn=[]; Pest=[]; Pfwd=[]
-    tInd = [];
+    Phifwd =[]; Phidict =[]; dhat=[]; drn=[]; Pest=[]; Pfwd=[]; ut1_unix=[]
 #%%
     if not h5list:
-        raise ValueError('no HDF5 files found')
+        print('no HDF5 files found from your analysis run.')
+        return
 
     for h5 in h5list:
-        tInd.append(int(re.compile(r'(\d+)$').search(h5.stem).group(1))) #NOTE assumes trailing time integers
-
-        logging.debug('tind {}  reading {}'.format(tInd[-1],h5))
-
         assert h5.is_file()
         with h5py.File(str(h5),'r',libver='latest') as f:
             try: #simulation
@@ -53,17 +48,21 @@ def readresults(h5list,xlsfn,vlim,x1d,overrides,makeplot,verbose=0):
                 drn.append(f['/best/braw'].value)
 
                 angle_deg = f['/best/angle'].value #NOTE: by definition, same angles for all time steps-the camera is not moving!
+
+                try: #realdata
+                    ut1_unix.append(f['/best/ut1_unix'].value)
+                except KeyError: #simultation, not real data
+                    pass
+
             except KeyError as e:
                 raise KeyError('It seems that data inversion did not complete? Or at least it was not written  {}'.format(e))
 #%%
 
     odir = h5.parent / 'reader'
-
     odir.mkdir(parents=True,exist_ok=True)
 
-
     try:
-        Phifwd = asarray(Phifwd).transpose(1,2,0)
+        Phifwd = asarray(Phifwd).transpose(1,2,0) #result: Nenergy x Nx x Ntime
     except ValueError: #realdata
         pass
 
@@ -73,39 +72,50 @@ def readresults(h5list,xlsfn,vlim,x1d,overrides,makeplot,verbose=0):
     ap,sim,cam,Fwd = getParams(xlsfn,overrides,makeplot,odir)
     cam = definecamind(cam,sim.nCutPix)
 #%% load original angles of camera
+    ut1_unix = asarray(ut1_unix)
     for i,C in enumerate(cam):
         C.angle_deg = angle_deg[i,:]
+        C.tKeo = ut1_unix[:,i]
 #%% load args if they exist
     for a in ap:
-        #TODO assumes all are same distance apart
-        x0true = (ap[a].loc['X0km',:][:-1] + 0.5*diff(ap[a].loc['X0km',:]))[tInd]
-        E0true = (ap[a].loc['E0',:][:-1]   + 0.5*diff(ap[a].loc['E0',:]))[tInd]
+        """
+        TODO: assumes all are same distance apart (zero accel)
+        NOTE: Assumption is that arc is moving smoothly with zero acceleration,
+        so that mean position for each time step is = x[:-1] + 0.5*diff(x) as below.
+        """
+        if ap[a].at['Zshape',0] in ('flat','impulse'):
+            x0true = ap[a].loc['X0km',:][:-1]
+            E0true = ap[a].loc['E0',:][:-1]
+        else:
+            x0true = (ap[a].loc['X0km',:][:-1] + 0.5*diff(ap[a].loc['X0km',:]))
+            E0true = (ap[a].loc['E0',:][:-1]   + 0.5*diff(ap[a].loc['E0',:]))
 
         analyseres(sim,cam,
                    x, xp, Phifwd, Phidict, drn, dhat,
                    vlim, x0true,E0true,makeplot, odir)
 
 #%% plots
-    for ti,t in enumerate(tInd):
+    for i in range(len(drn)): #for each time, do...
         try:
-            Jxi = find_nearest(x,x1d[ti])[0]
-        except:
+            Jxi = find_nearest(x,x1d[i])[0]
+        except TypeError:
             Jxi = None
 
-        try:
-            pf = Pfwd[ti]
-            phif = Phifwd[...,ti]
-        except:
-            pf = None
-            phif = None
+        try: #simulation
+            pf = Pfwd[i]
+            phif = Phifwd[...,i]
+        except IndexError: #realdata
+            pf = None;  phif = None
 
         if 'fwd' in makeplot:
-            plotfwd(sim,cam,drn[ti],x,xp,z,zp,
-                    Pfwd[ti],Phifwd[...,ti],Phidict[ti],Jxi,vlim,t,makeplot,None,odir)
+            plotfwd(sim,cam,drn[i],x,xp,z,zp,
+                    Pfwd[i],Phifwd[...,i],Phidict[i],Jxi,vlim,i,makeplot,odir,
+                    doSubplots=True,overrides=overrides)
 
         if 'optim' in makeplot:
-            plotoptim(sim,cam,drn[ti],dhat[ti],'best',pf,phif,Jxi,
-                      Pest[ti],Phidict[ti],x,xp,z,zp,vlim,t,makeplot,None,odir)
+            plotoptim(sim,cam,drn[i],dhat[i],'best',pf,phif,Jxi,
+                      Pest[i],Phidict[i],x,xp,z,zp,vlim,i,makeplot,odir,
+                      doSubplots=True,overrides=overrides)
 
 
 def findxlsh5(h5path):
@@ -114,9 +124,11 @@ def findxlsh5(h5path):
     if h5path.is_file():
         h5list = [h5path]
         xlsfn = sorted(h5path.parent.glob('*.xls*'))
-    else:
-        h5list = sorted(h5path.glob('dump_*.h5'))
+    elif h5path.is_dir():
+        h5list = sorted(h5path.glob('dump*.h5'))
         xlsfn =  sorted(h5path.glob('*.xls*'))
+    else:
+        raise ValueError('no path or file at {}'.format(h5path))
 
     if isinstance(xlsfn,(list,tuple)):
         xlsfn = xlsfn[0]

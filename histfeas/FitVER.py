@@ -2,9 +2,8 @@
 Michael Hirsch
 GPLv3+
 """
-from __future__ import division,absolute_import
 import logging
-from numpy import absolute,asfortranarray,diff,ones,inf,empty_like
+from numpy import absolute,asfortranarray,diff,ones,inf,empty_like,isfinite
 from scipy.optimize import minimize
 from scipy.interpolate import interp1d
 from numpy.linalg import norm
@@ -65,8 +64,8 @@ def FitVERopt(L,bn,Phi0,MpDict,sim,cam,Fwd,tInd,makeplot,verbose):
         sx = Fwd['sx']
 
         cons = None
-        optimbound = sim.minflux*ones((nEnergy*sx,2))
-        optimbound[:,1] = inf  #None seems to give error
+        optimbound = sim.minflux*ones((nEnergy*sx,2))     # lower bound
+        optimbound[:,1] = inf  #None seems to give error  # upper bound
         if optimmeth=='nelder-mead':
             optimopt = {'maxiter':maxiter,'disp':minverbose} #100
         elif optimmeth=='bfgs':
@@ -111,7 +110,7 @@ def FitVERopt(L,bn,Phi0,MpDict,sim,cam,Fwd,tInd,makeplot,verbose):
         # we do this here so that we don't have to carry so many variables around
         vfit['optim'] = getColumnVER(sim.useztranscar,zTranscar, Mp, Phifit.x)
 #%% downscale result to complement upscaling
-        bfitu = L.dot( vfit['optim'].ravel(order='F') )
+        bfitu = L @ vfit['optim'].ravel(order='F')
 
         for s,c in zip(bscale,cInd):
             bfitu[c] /= s
@@ -125,9 +124,11 @@ def FitVERopt(L,bn,Phi0,MpDict,sim,cam,Fwd,tInd,makeplot,verbose):
 #%% gaussian fit
         #print('max |diff(phi)| = ' + str(np.abs(np.diff(fitp.x, n=1, axis=0)).max()))
         gx0,gE0 = getx0E0(None,Phifit['x'],Phifit['EK'],Fwd['x'],tInd,None,[None])
-        print(gx0)
-        print(gE0)
-        print('Estimated $B_{{\perp,0}},E_0$={:0.2f}, {:0.0f}'.format(gx0[1],gE0[1]))
+ #       print(gx0)
+#        print(gE0)
+        if isfinite([gx0[0],gE0[0]]).all():
+            print('Model input: (B_\perp,E_0) = ({:.2f}, {:.0f})'.format(gx0[0],gE0[0]))
+        print('Estimated (B_\perp, E_0) = ({:0.2f}, {:0.0f})'.format(gx0[1],gE0[1]))
         Phifit['gx0'] = gx0[1]
         Phifit['gE0'] = gE0[1]
 
@@ -137,8 +138,8 @@ def optfun(phiinv,L,Tm,b_obs,nEnergy,sx):
     """this provides the quantity to minimize
     Phi0 is a vector b/c that's what minimize needs, reshape is low cost (but this many times?)
     """
-    pinv = Tm.dot(phiinv.reshape(nEnergy,sx,order='F'))
-    binv = L.dot(pinv.ravel(order='F'))
+    pinv = Tm @ phiinv.reshape(nEnergy,sx,order='F')
+    binv = L  @ pinv.ravel(order='F')
     return norm(binv - b_obs, ord=2)
 
 def difffun(jfit,nEnergy=33,sx=109):

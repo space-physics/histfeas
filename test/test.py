@@ -6,23 +6,25 @@ Michael Hirsch
 To generate registration.h5 (only when making a new type of sim or real) type
 python
 """
-from __future__ import division,absolute_import
 from pathlib import Path
 from numpy.testing import assert_allclose
 from sys import argv
 import h5py
 from tempfile import gettempdir
-#from os import devnull
+#
+import matplotlib
+matplotlib.use('Agg') #fixes Travis NO DISPLAY bug
 #
 from histfeas.main_hist import doSim
 
-
+rootdir = Path(__file__).parents[1]
 
 def hist_registration(regh5,regXLS):
     Phi0,Phifit =doSim(ParamFN=regXLS,
                   makeplot=['fwd','optim'],
                   timeInds=None,
-                  overrides = None, #{'minev': minev,'filter':filt, 'fwdguess':fwdguess, 'fitm':fitm,'cam':cam,'camx':acx,'ell':ell,'Jfwd':influx},
+
+                  overrides = {'rootdir':rootdir}, #{'minev': minev,'filter':filt, 'fwdguess':fwdguess, 'fitm':fitm,'cam':cam,'camx':acx,'ell':ell,'Jfwd':influx},
                   odir = gettempdir(),
                   x1d=[None],
                   vlim = {'p':[None]*6,'j':[None]*2,'b':[None]*2},
@@ -39,17 +41,14 @@ def readCheck(Phi0,Phifit):
         # noise makes inversion result differ uniquely each run
         xerrpct=(f['/phifwd/x0'] - Phifit[0]['gx0']) / f['/phifwd/x0'] * 100
         xmsg = 'x0 estimation error [km] {:.1f} %'.format(xerrpct[0])
-        assert_allclose(f['/phifwd/x0'],Phifit[0]['gx0'],rtol=0.35,err_msg=xmsg)
+        assert abs(xerrpct[0]) < 30,'B_\perp location error out of tolerance'
 
         Eerrpct = (f['/phifwd/E0'] - Phifit[0]['gE0']) / f['/phifwd/E0'] * 100
         Emsg = 'E0 estimation error [eV] {:.1f} %'.format(Eerrpct[0])
-        assert_allclose(f['/phifwd/E0'],Phifit[0]['gE0'],rtol=0.35,err_msg=Emsg)
+        assert abs(Eerrpct[0]) < 30,'E_0 error out of tolerance'
 
-        #the str() are needed instead of format() !
         print(xmsg)
         print(Emsg)
-
-
 
 def writeout(regh5):
     with h5py.File(str(regh5),'a',libver='latest') as f:
@@ -64,5 +63,5 @@ if __name__ == '__main__':
 
     Phi0,Phifit=hist_registration(regh5,regXLS)
     readCheck(Phi0,Phifit)
-    print('OK:  simultation registration case')
+    print('OK:  simulation registration case')
 #%% real data
