@@ -27,8 +27,8 @@ def FitVERopt(L,bn,Phi0,MpDict,sim,cam,Fwd,tInd,makeplot,verbose):
     It is equivalent to temporarily upscale observed brightness once before minimization
     Then downscale once after minimization
     """
-    bscale = [C.dn2intens for C in cam]
-    cInd   = [C.ind       for C in cam]
+    bscale = [C.dn2intens for C in cam if C.usecam]
+    cInd   = [C.ind       for C in cam if C.usecam]
     bnu = empty_like(bn)
     for s,c in zip(bscale,cInd):
         bnu[c] = bn[c] * s #DONT use 1/intens2dn --that's wrong for real data case!

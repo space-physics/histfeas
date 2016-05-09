@@ -40,7 +40,7 @@ class Sim:
 
         self.nCamUsed = self.useCamBool.sum() #result is an int
 
-        self.nCutPix = cp.at['nCutPix',0] #FIXME someday allow different # of pixels..
+        self.nCutPix = cp.loc['nCutPix',0] #FIXME someday allow different # of pixels..
 
         for Cn,u in zip(cp.loc['nCutPix',:],self.useCamBool):
             if u:
