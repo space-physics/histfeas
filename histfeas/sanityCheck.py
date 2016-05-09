@@ -1,11 +1,10 @@
 """
-sanity check for HST simulation parameters
+sanity check for HiST parameters
 Michael Hirsch
 """
 from pathlib import Path
 import logging
 from pandas import read_excel
-from warnings import warn
 from shutil import copy2
 from geopy.distance import vincenty
 #
@@ -32,10 +31,6 @@ def getParams(XLSfn,overrides,makeplot,odir):
             ntimeslice=ap[s].shape[1]-1
 
     logging.info('# of observer time steps in spreadsheet: {}'.format(ntimeslice))
-#%% ***** must be outside camclass ********
-    nCutPix = cp.loc['nCutPix'].values
-    if not (nCutPix == nCutPix[0]).all():
-        raise ValueError('sanityCheck: all cameras must have same 1D cut length')
 #%% class with parameters and function
     sim = Sim(sp,cp,ap,ntimeslice,overrides,makeplot,odir)
 #%% grid setup
