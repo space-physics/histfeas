@@ -1,11 +1,9 @@
-from __future__ import division, absolute_import
 from numpy import (asfortranarray,atleast_3d, exp,sinc,pi,zeros, outer,
-                   isnan,log,logspace,arange,allclose,diff,atleast_1d)
+                   isnan,log,logspace,arange,allclose,diff,atleast_1d,isfinite,empty,nan)
 import h5py
 from scipy.interpolate import interp1d
 import logging
-from six import string_types
-from pandas import DataFrame
+from xarray import DataArray
 #
 from gridaurora.eFluxGen import fluxgen
 from gridaurora.arcexcite import getTranscar
@@ -23,14 +21,14 @@ def getColumnVER(zgrid,zTranscar,Peig,Phi0):
 #        fver = interp1d(zTranscar, Peig, axis=0, kind='cubic')
 #        Tm = asfortranarray(fver(zKM))
 
-    return Tm.dot(Phi0)
+    return Tm @ Phi0
 
-def getMp(sim,zKM,makeplot):
+def getMp(sim,cam,zKM,makeplot):
 #%% read from transcar sim
-    Peigen,EKpcolor = getTranscar(sim,sim.obsalt_km,sim.zenang)[:2]
-    assert isinstance(Peigen,DataFrame),'trouble earlier on with getTranscar, aborting.'
-    Ek = Peigen.columns.values
-    zTranscar = Peigen.index.values
+    Peigen,EKpcolor = getTranscar(sim,cam[0].alt_m/1000.,90-cam[0].Bincl)[:2]
+    assert isinstance(Peigen,DataArray),'Did not get DataArray from getTranscar, aborting.'
+    Ek = Peigen.energy_ev.values
+    zTranscar = Peigen.alt_km.values
 #%% clip to Hist requested altitudes
     if not allclose(zKM,zTranscar):
         logging.warning('attempting to trim altitude grid, this may not be successful due to floating point error')
@@ -82,18 +80,46 @@ def assemblePhi0(sim,ap,Ek,xKM):
 
     for a in ap: #iterate over arcs, using superposition
 #%% upsample to sim time steps
+        assert (ap[a].loc['Zshape',0] == ap[a].loc['Zshape',:]).all(),'upgrade code to meld Zshapes'
+
         E0,Q0,Wbc,bl,bm,bh,Bm,Bhf, Wkm,X0,Xshape = upsampletime(ap[a],sim)
 
-        pz = fluxgen(Ek, E0,Q0,Wbc,bl,bm,bh,Bm,Bhf)[0]
+        if ap[a].at['Zshape',0] == 'transcar':
+            phiz = fluxgen(Ek, E0,Q0,Wbc,bl,bm,bh,Bm,Bhf)[0] # Nenergy x Ntime
+        elif ap[a].at['Zshape',0] == 'flat':
+            phiz = zeros((Ek.size, sim.nTimeSlice)) #zeros not empty or nan
+            for i,e in enumerate(E0):
+                try:
+                    phiz[Ek<=e,i] = Q0[i]  # Nenergy x Ntime_sim
+                except ValueError:
+                    pass
+        elif ap[a].at['Zshape',0] == 'impulse':
+            phiz = zeros((Ek.size, sim.nTimeSlice)) #zeros not empty or nan
+            for i,e in enumerate(E0):
+                try:
+                    phiz[find_nearest(Ek,e)[0],i] = Q0[i]  # Nenergy x Ntime_sim
+                except ValueError:
+                    pass
+        else:
+            raise NotImplementedError('not supposed to reach here with zshape={}'.format(ap[a].at['Zshape',0]))
 #%% horizontal modulation
-        px = getpx(xKM,Wkm,X0,Xshape)
-        for i in range(sim.nTimeSlice):
-            #unsmeared in time
-            phi0sim = zeros((Ek.size,xKM.size),order='F') #NOT empty, since we're summing!
-            for j in range(sim.timestepsperexp):
-                phi0sim += outer(pz[:,i*sim.timestepsperexp+j],
-                                 px[i*sim.timestepsperexp+j,:])
-            Phi0[...,i] += phi0sim
+        phix = getpx(xKM,Wkm,X0,Xshape)
+
+        if ap[a].at['Zshape',0] == 'transcar':
+            for i in range(sim.nTimeSlice):
+                #unsmeared in time
+                phi0sim = zeros((Ek.size,xKM.size),order='F') #NOT empty, since we're summing!
+                for j in range(sim.timestepsperexp):
+                    phi0sim += outer(phiz[:,i*sim.timestepsperexp+j],
+                                     phix[i*sim.timestepsperexp+j,:])
+                Phi0[...,i] += phi0sim
+        elif ap[a].at['Zshape',0] in ('impulse','flat'):
+            phix[~isfinite(phix)] = 0.
+            for i in range(sim.nTimeSlice):
+                Phi0[...,i] += outer(phiz[:,i],phix[i,:])
+        else:
+            raise NotImplementedError
+
     return Phi0
 
 def upsampletime(ap,sim):
@@ -117,15 +143,27 @@ def upsampletime(ap,sim):
     #probably could be done with lambda
 
     f = interp1d(texp,ap.loc['E0'].values.astype(float));     E0  = f(tsim)
+    if (~isfinite(E0)).any():
+        E0 = ap.loc['E0'].values.astype(float)[:-1]
+
     f = interp1d(texp,ap.loc['Q0'].values.astype(float));     Q0  = f(tsim)
+    if (~isfinite(Q0)).any():
+        Q0 = ap.loc['Q0'].values.astype(float)[:-1]
+
     f = interp1d(texp,ap.loc['Wbc',:].values.astype(float));  Wbc = f(tsim)
     f = interp1d(texp,ap.loc['bl'].values.astype(float));     bl  = f(tsim)
     f = interp1d(texp,ap.loc['bm'].values.astype(float));     bm  = f(tsim)
     f = interp1d(texp,ap.loc['bh'].values.astype(float));     bh  = f(tsim)
     f = interp1d(texp,ap.loc['Bm'].values.astype(float));     Bm  = f(tsim)
     f = interp1d(texp,ap.loc['Bhf'].values.astype(float));    Bhf = f(tsim)
+
     f = interp1d(texp,ap.loc['Wkm'].values.astype(float));    Wkm = f(tsim)
+    if (~isfinite(Wkm)).any():
+        Wkm = ap.loc['Wkm'].values.astype(float)[:-1]
+
     f = interp1d(texp,ap.loc['X0km'].values.astype(float));   X0  = f(tsim)
+    if (~isfinite(X0)).any():
+        X0 = ap.loc['X0km'].values.astype(float)[:-1]
 
     logging.info('new E0 upsamp [eV]: {}'.format(E0))
 
@@ -137,7 +175,7 @@ def upsampletime(ap,sim):
     return E0,Q0,Wbc,bl,bm,bh,Bm,Bhf, Wkm, X0,Xshape
 
 def getpx(xKM,Wkm,X0,xs):
-    assert isinstance(xs,string_types)
+    assert isinstance(xs,str)
     X0=atleast_1d(X0); Wkm=atleast_1d(Wkm)
     px = zeros((X0.size,xKM.size),order='F') #since numpy 2-D array naturally iterates over rows
 #%%

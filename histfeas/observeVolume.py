@@ -1,15 +1,14 @@
-from __future__ import division,absolute_import
+import logging
 from numpy import empty,empty_like,s_,isnan,sin,cos,radians,append,diff,ones,outer
 import numpy as np #need this here
 from scipy.sparse import csc_matrix
 import h5py
-from warnings import warn
 from time import time
 #
 from .nans import nans
 from .EllLineLength import EllLineLength
 
-def getObs(sim,cam,L,tDataInd,ver,makePlots,dbglvl):
+def getObs(sim,cam,L,tDataInd,ver,makePlots,verbose):
     """
     real data: extract brightness vector from disk data
     simulation: create brightness from projection matrix and fwd model VER
@@ -27,7 +26,12 @@ def getObs(sim,cam,L,tDataInd,ver,makePlots,dbglvl):
              "d" is a column-major vector, such that if our 1D cut is N pixels,
              HST0 occupies d(0:N-1), HST1 occupies d(N:2N-1), ...
             """
-            thisCamPix  = C.keo[:,tDataInd]
+            if C.keo.ndim==2: #more than 1 frame extracted
+                thisCamPix = C.keo[:,tDataInd]
+            elif C.keo.ndim==1:
+                thisCamPix = C.keo
+            else:
+                raise ValueError('ndim==2 or 1 for stack of 1-D extracted cut')
 
             thisCamPix = mogrifyData(thisCamPix, C) #for clarity
 
@@ -37,7 +41,7 @@ def getObs(sim,cam,L,tDataInd,ver,makePlots,dbglvl):
 
     elif ver is not None: #or not np.any(np.isnan(v)): # no NaN in v # using synthetic data
         """ FIEFK """
-        bp = L.dot(ver.ravel(order='F'))
+        bp = L @ ver.ravel(order='F')
         assert bp.size == nCutPix * sim.nCamUsed
 
         bn = nans(bp.shape) #nans as a flag to check if something screwed up
@@ -47,7 +51,7 @@ def getObs(sim,cam,L,tDataInd,ver,makePlots,dbglvl):
    #assert np.any(np.isnan(drn)) == False # must be AFTER all drn are assigned, or you can get false positive errors!
     if isnan(bn).any():
         dumpFN = 'obsdump_t {}.h5'.format(tDataInd)
-        warn('NaN detected at tInd = {}   dumping variables to {}'.format(tDataInd,dumpFN))
+        logging.critical('NaN detected at tInd = {}   dumping variables to {}'.format(tDataInd,dumpFN))
         with h5py.File(str(dumpFN),'w',libver='latest') as fid:
             fid.create_dataset("/bn",data=bn)
             fid.create_dataset("/v",data=ver)
@@ -55,7 +59,7 @@ def getObs(sim,cam,L,tDataInd,ver,makePlots,dbglvl):
 
     return bn
 
-def makeCamFOVpixelEnds(Fwd,sim,cam,makePlots,dbglvl):
+def makeCamFOVpixelEnds(Fwd,sim,cam,makePlots,verbose):
 
     nCutPix = sim.nCutPix
 
@@ -70,7 +74,7 @@ def makeCamFOVpixelEnds(Fwd,sim,cam,makePlots,dbglvl):
          the minus sign on x makes the angle origin at local east
         '''
         xFOVpixelEnds[:,C.name] = -(C.fovmaxlen * cos(radians(C.angle_deg))) + C.x_km
-        zFOVpixelEnds[:,C.name] =  (C.fovmaxlen * sin(radians(C.angle_deg))) + C.z_km
+        zFOVpixelEnds[:,C.name] =  (C.fovmaxlen * sin(radians(C.angle_deg))) + C.alt_m/1000.
 
         C.xFOVpixelEnds = xFOVpixelEnds[:,C.name] #for plots.py
         C.zFOVpixelEnds = zFOVpixelEnds[:,C.name]
@@ -111,13 +115,14 @@ def makeCamFOVpixelEnds(Fwd,sim,cam,makePlots,dbglvl):
 # we say (for now) that ell=area of polygon intersection between FOV pixel and sky voxel
     tic = time()
     #used .values for future use of Numba
-    L = EllLineLength(Fwd,xFOVpixelEnds,zFOVpixelEnds,nCutPix,sim,makePlots,dbglvl)
+    L = EllLineLength(Fwd,xFOVpixelEnds,zFOVpixelEnds,[c.x_km for c in cam],[c.alt_m/1000. for c in cam],
+                      nCutPix,sim,makePlots,verbose)
     print('computed L in {:0.1f}'.format(time()-tic) + ' seconds.')
     return L,Fwd,cam
 #%%
-def loadEll(Fwd,cam,EllFN,verbose):
+def loadEll(sim,Fwd,cam,makeplots,verbose):
     try:
-      with h5py.File(str(EllFN),'r',libver='latest') as fid:
+      with h5py.File(str(sim.FwdLfn),'r',libver='latest') as fid:
         L = csc_matrix(fid['/L'])
 
         if Fwd is not None: #we're in main program
@@ -140,14 +145,18 @@ def loadEll(Fwd,cam,EllFN,verbose):
                     C.xFOVpixelEnds = fid['/Obs/xFOVpixelEnds'][:,i]
                     C.zFOVpixelEnds = fid['/Obs/zFOVpixelEnds'][:,i]
             except KeyError:
-                warn('could not load FOV ends, maybe this is an old Ell file')
+                logging.critical('could not load FOV ends, maybe this is an old Ell file')
 
-    except FileNotFoundError as e:
-        raise FileNotFoundError('{} not found.\nuse --ell command line option to save new Ell file. {}'.format(EllFN,e))
+        print('Loaded projection matrix L from {}'.format(sim.FwdLfn))
+
+    except (FileNotFoundError,OSError) as e:
+        logging.error('{} not found. Recomputing new Ell file. {}'.format(sim.FwdLfn,e))
+        sim.loadfwdL = False
+        L,Fwd,cam = getEll(sim,cam,Fwd,makeplots,verbose)
     except AttributeError as e:
-        raise AttributeError('grid mismatch detected. use --ell command line option to save new Ell file. {}'.format(e))
+        logging.error('grid mismatch detected. use --ell command line option to save new Ell file. {}'.format(e))
 
-    if verbose>0: print('loadEll: Loaded "L,Fwd,Obs" data from: {}'.format(EllFN))
+    if verbose>0: print('loadEll: Loaded "L,Fwd,Obs" data from: {}'.format(sim.FwdLfn))
 
     return L,Fwd,cam
 
@@ -166,15 +175,15 @@ def mogrifyData(data,cam):
 
     return data
 
-def getEll(sim,cam,Fwd,makePlots,dbglvl):
+def getEll(sim,cam,Fwd,makeplots,verbose):
 
     if not sim.loadfwdL:
         if sim.nCamUsed != sim.useCamBool.size:
             raise ValueError('To make a fresh L matrix, you must enable ALL cameras all(useThisCam == 1) ')
 
-        L,Fwd,cam = makeCamFOVpixelEnds(Fwd,sim,cam,makePlots,dbglvl)
+        L,Fwd,cam = makeCamFOVpixelEnds(Fwd,sim,cam,makeplots,verbose)
     else:
-        L,Fwd,cam = loadEll(Fwd,cam,sim.FwdLfn,dbglvl)
+        L,Fwd,cam = loadEll(sim,Fwd,cam,makeplots,verbose)
 
     L = removeUnusedCamera(L,sim.useCamBool,sim.nCutPix)
     cam = definecamind(cam,sim.nCutPix)

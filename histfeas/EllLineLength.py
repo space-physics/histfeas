@@ -1,10 +1,10 @@
-from __future__ import print_function, division,absolute_import
+import logging
 import h5py
 #from numba import jit
 #from numbapro import vectorize
 from numpy import empty,ones,ravel_multi_index,hypot,zeros,in1d,array
 from scipy.sparse import dok_matrix,issparse
-from shutil import copy2
+from shutil import copy2,SameFileError
 # local
 from cvutils.lineClipping import cohensutherland
 
@@ -17,7 +17,7 @@ from cvutils.lineClipping import cohensutherland
    L is an nCam*nPixel x sx*sz dimension projection matrix
    v is an sx*sz column-major vector of auroral VER
  by building up b,L,v in this way, the tomographic forward projection is implemented
- in Python numpy by b = L.dot(v), which in Matlab is b = L*v
+ in Python numpy by b = L @ v, which in Matlab is b = L*v
 
  let's start by describing b,L,v.
  We have made a mesh in the sky, let's say 41 elements from -10 to 10km with 0.5km horizontal spacing (x)
@@ -38,7 +38,7 @@ from cvutils.lineClipping import cohensutherland
  line length "ell" for each element of L. This is how we implement the line integral.
 '''
 
-def EllLineLength(Fwd,xFOVpixelEnds,zFOVpixelEnds,Np,sim,makePlots,dbglvl):
+def EllLineLength(Fwd,xFOVpixelEnds,zFOVpixelEnds,allCamXkm,allCamZkm,Np,sim,makePlots,dbglvl):
     plotEachRay=False
     writeRays = False #write pixel rays to hdf5 for viewing
 
@@ -62,14 +62,13 @@ def EllLineLength(Fwd,xFOVpixelEnds,zFOVpixelEnds,Np,sim,makePlots,dbglvl):
 
     xzplot =None
     L = goCalcEll(maxNell,nCam,Np,sz,sx,xpc,zpc,xFOVpixelEnds,zFOVpixelEnds,
-                          sim.allCamXkm,sim.allCamZkm,plotEachRay,dbglvl)
+                          allCamXkm,allCamZkm,plotEachRay,dbglvl)
 
     #%% write results to HDF5 file
-    if sim.savefwdL:
-        doSaveEll(L,Fwd,sim,xFOVpixelEnds,zFOVpixelEnds,writeRays)
+    doSaveEll(L,Fwd,sim,xFOVpixelEnds,zFOVpixelEnds,writeRays)
 
     if 'ell' in makePlots and plotEachRay and xzplot:
-        plotEll(nCam,xFOVpixelEnds,zFOVpixelEnds,sim.xCam,sim.zCam,Np,xpc,zpc,
+        plotEll(nCam,xFOVpixelEnds,zFOVpixelEnds,allCamXkm,allCamZkm,Np,xpc,zpc,
                 sz,sx,xzplot,sim.FwdLfn,plotEachRay,makePlots,
                 (None,None,None,None,None,None))
     if issparse(L):
@@ -152,12 +151,15 @@ def doSaveEll(L,Fwd,sim,xFOVpixelEnds,zFOVpixelEnds,writeRays):
         h5FwdxPC = fid.create_dataset("/Fwd/xPixCorn",data=Fwd['xPixCorn']); h5FwdxPC.attrs['Units'] = 'kilometers'
         h5FwdzPC = fid.create_dataset("/Fwd/zPixCorn",data=Fwd['zPixCorn']); h5FwdzPC.attrs['Units'] = 'kilometers'
 
-        #h5ObsPA =  fid.create_dataset("/Obs/pixAngle",data=pixAngleDeg);  h5ObsPA.attrs['Units'] = 'Degrees'
+#       h5ObsPA =  fid.create_dataset("/Obs/pixAngle",data=pixAngleDeg);  h5ObsPA.attrs['Units'] = 'Degrees'
         h5ObsxFPE = fid.create_dataset("/Obs/xFOVpixelEnds",data=xFOVpixelEnds); h5ObsxFPE.attrs['Units'] = 'kilometers'
         h5ObszFPE = fid.create_dataset("/Obs/zFOVpixelEnds",data=zFOVpixelEnds); h5ObszFPE.attrs['Units'] = 'kilometers'
-        h5xCam = fid.create_dataset('/Obs/xCam',data=sim.allCamXkm); h5xCam.attrs['Units'] = 'kilometers'
-        h5zCam = fid.create_dataset('/Obs/zCam',data=sim.allCamZkm); h5zCam.attrs['Units'] = 'kilometers'
-    copy2(str(sim.FwdLfn), sim.cal1dpath)
+#        h5xCam = fid.create_dataset('/Obs/xCam',data=sim.allCamXkm); h5xCam.attrs['Units'] = 'kilometers'
+#        h5zCam = fid.create_dataset('/Obs/zCam',data=sim.allCamZkm); h5zCam.attrs['Units'] = 'kilometers'
+    try:
+        copy2(str(sim.FwdLfn), str(sim.cal1dpath))
+    except SameFileError:
+        logging.critical('could not copy ell file over itself {}'.format(sim.cal1dpath))
 
 
 def plotEll(nCam,xFOVpixelEnds,zFOVpixelEnds,xCam,zCam,Np,xpc,zpc,sz,sx,

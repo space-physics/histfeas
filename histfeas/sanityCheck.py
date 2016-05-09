@@ -7,6 +7,7 @@ import logging
 from pandas import read_excel
 from warnings import warn
 from shutil import copy2
+from geopy.distance import vincenty
 #
 from .camclass import Cam
 from .simclass import Sim
@@ -42,6 +43,17 @@ def getParams(XLSfn,overrides,makeplot,odir):
 #%% setup cameras
     cam,cp = setupCam(sim,cp,Fwd['z'][-1])
 
+    if sim.realdata:
+        #find the x-coordinate (along B-perp) of each camera (can't do this inside camclass.py)
+        cam[0].x_km = 0 # NOTE arbitrarily picks the first camera x=0km
+        for C in cam[1:]:
+            C.x_km = vincenty((cam[0].lat,cam[0].lon),(C.lat,C.lon)).kilometers
+
+    #store x,z in sim
+    ellname=sim.getEllHash(sp,cp, [c.x_km for c in cam],[c.alt_m/1000. for c in cam])
+    #will try to load this and compute if needed. Will be copied to output directory too.
+    sim.FwdLfn = sim.rootdir/'precompute' / ellname
+
     # make the simulation time step match that of the fastest camera
     sim.kineticsec = min([C.kineticsec for C,u in zip(cam,sim.useCamBool) if u])
 
@@ -56,15 +68,15 @@ def setupCam(sim,cp,zmax):
     cam = []
 
     if sim.camxreq[0] is not None:
-        warn('overriding camera x-loc with {}'.format(sim.camxreq))
-        for i,(c,cx) in enumerate(zip(cp,sim.camxreq)):
+        logging.warning('overriding camera x-loc with {}'.format(sim.camxreq))
+        for i,(C,cx) in enumerate(zip(cp,sim.camxreq)): #enumerate as in general camera 0 may not be used
             if sim.useCamBool[i]:
-                cp.iat['Xkm',c] = cx
-                cam.append(Cam(sim,cp[c], c, zmax))
+                cp.at['Xkm',C] = cx
+                cam.append(Cam(sim,cp[C], C, zmax))
     else:
-        for i,c in enumerate(cp):
+        for i,C in enumerate(cp):
             if sim.useCamBool[i]:
-                cam.append(Cam(sim,cp[c], c, zmax))
+                cam.append(Cam(sim,cp[C], C, zmax))
 
     if len(cam)==0:
         raise ValueError('0 cams are configured, Nothing to do.')
