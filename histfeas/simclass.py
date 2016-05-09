@@ -41,6 +41,10 @@ class Sim:
         self.nCamUsed = self.useCamBool.sum() #result is an int
 
         self.nCutPix = cp.at['nCutPix',0] #FIXME someday allow different # of pixels..
+
+        for Cn,u in zip(cp.loc['nCutPix',:],self.useCamBool):
+            if u:
+                assert Cn==self.nCutPix,'all cameras must have same 1D cut length'
 #%% manual override flux file
         try:
             self.Jfwdh5 = overrides['Jfwd']

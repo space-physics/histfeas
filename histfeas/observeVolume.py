@@ -179,7 +179,7 @@ def getEll(sim,cam,Fwd,makeplots,verbose):
 
     if not sim.loadfwdL:
         if sim.nCamUsed != sim.useCamBool.size:
-            raise ValueError('To make a fresh L matrix, you must enable ALL cameras all(useThisCam == 1) ')
+            logging.warning('To make a fresh L matrix, you must enable all HiST Cameras')
 
         L,Fwd,cam = makeCamFOVpixelEnds(Fwd,sim,cam,makeplots,verbose)
     else:
