@@ -21,6 +21,7 @@ def getObs(sim,cam,L,tDataInd,ver,makePlots,verbose):
     if sim.realdata:
         bn = empty(nCutPix * sim.nCamUsed,dtype=float,order='F') #FIXME assumes all cuts same length AND that cam 0 is used
         for C in cam:
+            if not C.usecam: continue
             """
              remember that we put "d" in lexigraphical form,
              "d" is a column-major vector, such that if our 1D cut is N pixels,
@@ -141,9 +142,10 @@ def loadEll(sim,Fwd,cam,makeplots,verbose):
         if cam is not None:
             try:
                 for i,C in enumerate(cam):
-                    #cam[ci].angle_deg =  fid['/Obs/pixAngle'][:,i]
-                    C.xFOVpixelEnds = fid['/Obs/xFOVpixelEnds'][:,i]
-                    C.zFOVpixelEnds = fid['/Obs/zFOVpixelEnds'][:,i]
+                    if C.usecam:
+                        #cam[ci].angle_deg =  fid['/Obs/pixAngle'][:,i]
+                        C.xFOVpixelEnds = fid['/Obs/xFOVpixelEnds'][:,i]
+                        C.zFOVpixelEnds = fid['/Obs/zFOVpixelEnds'][:,i]
             except KeyError:
                 logging.critical('could not load FOV ends, maybe this is an old Ell file')
 

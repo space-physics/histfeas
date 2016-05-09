@@ -23,7 +23,14 @@ verbose=0
 class Cam: #use this like an advanced version of Matlab struct
     def __init__(self,sim,cp,name,zmax,verbose=0):
         self.verbose = verbose
-        self.name = int(name)
+
+        self.usecam = bool(cp['useCam'])
+        if not self.usecam and sim.realdata and name.lower() == 'asi':
+            self.fn = list(Path(cp['fn']).expanduser().glob('*.FITS'))
+            self.name='asi'
+            return
+        elif self.usecam:
+            self.name = int(name)
 #%%
         self.nCutPix = int(cp['nCutPix'])
 

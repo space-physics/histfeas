@@ -42,15 +42,16 @@ def getParams(XLSfn,overrides,makeplot,odir):
         #find the x-coordinate (along B-perp) of each camera (can't do this inside camclass.py)
         cam[0].x_km = 0 # NOTE arbitrarily picks the first camera x=0km
         for C in cam[1:]:
-            C.x_km = vincenty((cam[0].lat,cam[0].lon),(C.lat,C.lon)).kilometers
+            if C.usecam:
+                C.x_km = vincenty((cam[0].lat,cam[0].lon),(C.lat,C.lon)).kilometers
 
     #store x,z in sim
-    ellname=sim.getEllHash(sp,cp, [c.x_km for c in cam],[c.alt_m/1000. for c in cam])
+    ellname=sim.getEllHash(sp,cp, [C.x_km for C in cam if C.usecam],[C.alt_m/1000. for C in cam if C.usecam])
     #will try to load this and compute if needed. Will be copied to output directory too.
     sim.FwdLfn = sim.rootdir/'precompute' / ellname
 
     # make the simulation time step match that of the fastest camera
-    sim.kineticsec = min([C.kineticsec for C,u in zip(cam,sim.useCamBool) if u])
+    sim.kineticsec = min([C.kineticsec for C in cam if C.usecam])
 
 
     logging.info('fwd model voxels:\n'
@@ -64,15 +65,13 @@ def setupCam(sim,cp,zmax):
 
     if sim.camxreq[0] is not None:
         logging.warning('overriding camera x-loc with {}'.format(sim.camxreq))
-        for i,(C,cx) in enumerate(zip(cp,sim.camxreq)): #enumerate as in general camera 0 may not be used
-            if sim.useCamBool[i]:
-                cp.at['Xkm',C] = cx
-                cam.append(Cam(sim,cp[C], C, zmax))
+        for C,cx in zip(cp,sim.camxreq): #enumerate as in general camera 0 may not be used
+            cp.at['Xkm',C] = cx
+            cam.append(Cam(sim,cp[C], C, zmax))
     else:
-        for i,C in enumerate(cp):
-            if sim.useCamBool[i]:
-                cam.append(Cam(sim,cp[C], C, zmax))
+        for C in cp:
+            cam.append(Cam(sim,cp[C], C, zmax))
 
-    if len(cam)==0:
-        raise ValueError('0 cams are configured, Nothing to do.')
+    assert len(cam)>0,'0 cams are configured, Nothing to do.'
+
     return cam,cp
