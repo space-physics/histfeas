@@ -28,6 +28,11 @@ class Cam: #use this like an advanced version of Matlab struct
         if not self.usecam and sim.realdata and name.lower() == 'asi':
             self.fn = list(Path(cp['fn']).expanduser().glob('*.FITS'))
             self.name='asi'
+
+            self.clim = [None]*2
+            if isfinite(cp['plotMinVal']): self.clim[0] =  cp['plotMinVal']
+            if isfinite(cp['plotMaxVal']): self.clim[1] =  cp['plotMaxVal']
+
             return
         elif self.usecam:
             self.name = int(name)
