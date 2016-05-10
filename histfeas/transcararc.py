@@ -1,4 +1,4 @@
-from numpy import (asfortranarray,atleast_3d, exp,sinc,pi,zeros, outer,
+from numpy import (asfortranarray,atleast_3d, exp,sinc,pi,zeros, outer,in1d,
                    isnan,log,logspace,arange,allclose,diff,atleast_1d,isfinite,empty,nan)
 import h5py
 from scipy.interpolate import interp1d
@@ -24,6 +24,8 @@ def getColumnVER(zgrid,zTranscar,Peig,Phi0):
     return Tm @ Phi0
 
 def getMp(sim,cam,zKM,makeplot):
+    if not in1d(('fwd','optim'),makeplot).any():
+        return
 #%% read from transcar sim
     Peigen,EKpcolor = getTranscar(sim,cam[0].alt_m/1000.,90-cam[0].Bincl)[:2]
     assert isinstance(Peigen,DataArray),'Did not get DataArray from getTranscar, aborting.'
