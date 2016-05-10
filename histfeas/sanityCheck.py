@@ -36,7 +36,7 @@ def getParams(XLSfn,overrides,makeplot,odir):
 #%% grid setup
     Fwd = sim.setupFwdXZ(sp)
 #%% setup cameras
-    cam,cp = setupCam(sim,cp,Fwd['z'][-1])
+    cam,cp = setupCam(sim,cp,Fwd['z'][-1],makeplot)
 
     if sim.realdata:
         #find the x-coordinate (along B-perp) of each camera (can't do this inside camclass.py)
@@ -60,17 +60,17 @@ def getParams(XLSfn,overrides,makeplot,odir):
     return ap,sim,cam,Fwd
 ###############################################
 
-def setupCam(sim,cp,zmax):
+def setupCam(sim,cp,zmax,makeplot):
     cam = []
 
     if sim.camxreq[0] is not None:
         logging.warning('overriding camera x-loc with {}'.format(sim.camxreq))
         for C,cx in zip(cp,sim.camxreq): #enumerate as in general camera 0 may not be used
             cp.at['Xkm',C] = cx
-            cam.append(Cam(sim,cp[C], C, zmax))
+            cam.append(Cam(sim,cp[C], C, zmax,makeplot))
     else:
         for C in cp:
-            cam.append(Cam(sim,cp[C], C, zmax))
+            cam.append(Cam(sim,cp[C], C, zmax,makeplot))
 
     assert len(cam)>0,'0 cams are configured, Nothing to do.'
 

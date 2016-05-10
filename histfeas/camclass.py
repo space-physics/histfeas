@@ -14,6 +14,8 @@ from astropy import units as u
 #
 from pymap3d.azel2radec import azel2radec
 from pymap3d.coordconv3d import aer2ecef
+from dascutils.readDASCfits import readDASC
+from themisasi.fov import mergefov
 
 epoch = datetime(1970,1,1,tzinfo=UTC)
 
@@ -21,7 +23,7 @@ verbose=0
 
 
 class Cam: #use this like an advanced version of Matlab struct
-    def __init__(self,sim,cp,name,zmax,verbose=0):
+    def __init__(self,sim,cp,name,zmax,makeplot,verbose=0):
         self.verbose = verbose
 
         self.usecam = bool(cp['useCam'])
@@ -32,6 +34,13 @@ class Cam: #use this like an advanced version of Matlab struct
             self.clim = [None]*2
             if isfinite(cp['plotMinVal']): self.clim[0] =  cp['plotMinVal']
             if isfinite(cp['plotMaxVal']): self.clim[1] =  cp['plotMaxVal']
+
+            _,(self.az,self.el),self.lla,_ = readDASC(self.fn[0],cp['azcalfn'],cp['elcalfn'])
+
+            if 'realvid' in makeplot:
+                self.hlrows,self.hlcols = mergefov(None,self.lla,self.az,self.el,None,None,
+                                               ['../histutils/cal/hst0cal.h5','../histutils/cal/hst1cal.h5'],
+                                               projalt=110e3,site='DASC')
 
             return
         elif self.usecam:
