@@ -263,7 +263,7 @@ def plotfwd(sim,cam,drn,xKM,xp,zKM,zp, ver,Phi0,fitp,Jxi,vlim,tInd,makeplot,odir
     T = tind2dt(cam,tInd)
 
     if doSubplots:
-        ttxt = T + "\n x_cam " + str(['{:.2f}'.format(c.x_km) for c in cam])
+        ttxt = T + "\n x_cam " + str(['{:.2f}'.format(c.x_km) for c in cam if c.usecam])
         fg,axs = subplots(nrow,3,figsize=(21,vsizeinch))
         axs = atleast_2d(axs)
 
@@ -322,7 +322,7 @@ def plotoptim(sim,cam,drn,dhat,bcomptxt,ver,Phi0,Jxi,
         vfit = vfit['optim']
 
     if doSubplots:
-        ttxt = T + "\n x_cam " + str([c.x_km for c in cam])
+        ttxt = T + "\n x_cam " + str([c.x_km for c in cam if c.usecam])
         fg,axs = subplots(nrow,3,figsize=(21,vsizeinch))
         axs = atleast_2d(axs)
 
@@ -373,19 +373,21 @@ def plotnoise(cam,T,figh,makeplot,prefix,odir):
       ax = fg.add_subplot(211)
 
       for C in cam:
-         ax.plot(C.dnoise, label=C.name)
-         ax.set_ylabel('amplitude')
-         ax.set_title('Noise that was injected into raw intensity data')
-         ax.grid(True)
+          if C.usecam:
+             ax.plot(C.dnoise, label=C.name)
+             ax.set_ylabel('amplitude')
+             ax.set_title('Noise that was injected into raw intensity data')
+             ax.grid(True)
       ax.legend(loc='best')
 
       ax2 = fg.add_subplot(212)
       for C in cam:
-         ax2.plot(C.noisy, label=C.name)
-         ax2.set_ylabel('amplitude')
-         ax2.set_xlabel('pixel number')
-         ax2.set_title('Noisy data')
-         ax2.grid(True)
+          if C.usecam:
+             ax2.plot(C.noisy, label=C.name)
+             ax2.set_ylabel('amplitude')
+             ax2.set_xlabel('pixel number')
+             ax2.set_title('Noisy data')
+             ax2.grid(True)
       ax2.legend(loc='best')
 
       writeplots(fg,prefix,T,makeplot,odir)
@@ -793,7 +795,8 @@ def plotBcompare(sim,braw,bfit,cam,prefix, vlim,tInd,figh,makeplot,odir,
     ax1.tick_params(axis='both', which='both', direction='out')
 
     for C in cam:
-        ax1.plot(C.angle_deg,braw[C.ind],
+        if C.usecam:
+            ax1.plot(C.angle_deg,braw[C.ind],
                  label=('$\mathbf{{B}}_{}$'.format(C.name)),)
                  #color=cord[icm])#)
 #%% plot fit
@@ -811,7 +814,8 @@ def plotBcompare(sim,braw,bfit,cam,prefix, vlim,tInd,figh,makeplot,odir,
         ax2.set_ylabel('$\mathbf{\hat{B}}$ [photons sr$^{-1}$ s$^{-1}$]')
 #%% now plot each camera
     for C in cam:
-        ax2.plot(C.angle_deg,bfit[C.ind],
+        if C.usecam:
+            ax2.plot(C.angle_deg,bfit[C.ind],
                  label='$\hat{{\mathbf{{B}}}}_{}$'.format(C.name))
                  #color=cord[icm]))
 
@@ -838,8 +842,9 @@ def plotBcompare(sim,braw,bfit,cam,prefix, vlim,tInd,figh,makeplot,odir,
         bias=[]
         ax3 =figure().gca()
         for C in cam:
-            bias.append(bfit[C.ind].max() - braw[C.ind].max())
-            ax3.plot(C.angle_deg,braw[C.ind] - (bfit[C.ind]))#-bias[iCam]))
+            if C.usecam:
+                bias.append(bfit[C.ind].max() - braw[C.ind].max())
+                ax3.plot(C.angle_deg,braw[C.ind] - (bfit[C.ind]))#-bias[iCam]))
 
         ax3.set_title('error $\mathbf{{B}}_{{fwd}} - B_{{est}}, bias={}'.format(bias))
         #  $t_i=' + str(tInd) + '$'
@@ -850,15 +855,15 @@ def plotBcompare(sim,braw,bfit,cam,prefix, vlim,tInd,figh,makeplot,odir,
 
     if sim.realdata:
         try:
-            ut1_unix=[c.tKeo[tInd] for c in cam]
+            ut1_unix=[c.tKeo[tInd] for c in cam if c.usecam]
         except IndexError:
-            ut1_unix=[c.tKeo for c in cam]
+            ut1_unix=[c.tKeo for c in cam if c.usecam]
     else:
         ut1_unix=nans(len(cam))
 
 
     if 'h5' in makeplot: #a separate stanza
-        dumph5(prefix,T,odir,angle=[C.angle_deg for C in cam],braw=braw,bfit=bfit,
+        dumph5(prefix,T,odir,angle=[C.angle_deg for C in cam if C.usecam],braw=braw,bfit=bfit,
                ut1_unix=ut1_unix)
 
     writeplots(fg,prefix,T,makeplot,odir)
@@ -881,6 +886,7 @@ def plotB(bpix,cam,vlim,T,figh,makeplot,labeltxt,odir,fg=None,ax1=None):
 #%% do we need twinax? Let's find out if they're within factor of 10
 #    thiscammax = empty(len(cam))
 #    for c in cam:
+#      if c.usecam:
 #        thiscammax[c] = bpix[cam[c].ind].max()
 #    maxraw = thiscammax.max(); minmaxraw = thiscammax.min()
 #    if 10*maxraw > minmaxraw > 0.1*maxraw:
@@ -895,9 +901,11 @@ def plotB(bpix,cam,vlim,T,figh,makeplot,labeltxt,odir,fg=None,ax1=None):
 #        ax2.set_ylabel( fittxt + ' Data Numbers')
 #%% make plot
     for C in cam:
-        if hasattr(C,'noiselam'): std.append('{:0.1e}'.format(C.noiselam))
+        if C.usecam:
+            if hasattr(C,'noiselam'):
+                std.append('{:0.1e}'.format(C.noiselam))
 
-        ax1.plot(C.angle_deg,  bpix[C.ind],
+            ax1.plot(C.angle_deg,  bpix[C.ind],
                  label = labeltxt + ',' +str(C.name) + '}$'
                  )
                  #marker='.',
@@ -957,15 +965,16 @@ def planview3(cam,xKM,zKM,makeplot,figh,odir):
     clr=['r','b','g','m']
 
     for C in cam:
-        el =  C.angle_deg[::decimaterayfactor] #yes double colon
-        Np = el.size
-        x0,y0,z0 = geodetic2ecef(C.lat, C.lon, C.alt_m)
-        # get LLA of pixel rays at 100km altitude
-        xray,yray,zray = aer2ecef(az,el,srange,
-                                  C.lat, C.lon, C.alt_m)
-        #camera rays
-        for cri in range(Np):
-            ax.plot((x0,xray[cri]),(y0,yray[cri]),(z0,zray[cri]),color=clr[C.name])
+        if C.usecam:
+            el =  C.angle_deg[::decimaterayfactor] #yes double colon
+            Np = el.size
+            x0,y0,z0 = geodetic2ecef(C.lat, C.lon, C.alt_m)
+            # get LLA of pixel rays at 100km altitude
+            xray,yray,zray = aer2ecef(az,el,srange,
+                                      C.lat, C.lon, C.alt_m)
+            #camera rays
+            for cri in range(Np):
+                ax.plot((x0,xray[cri]),(y0,yray[cri]),(z0,zray[cri]),color=clr[C.name])
 
     #plot sphere
     earthrad = 6371e3 #[m]
@@ -1014,6 +1023,7 @@ def planviewkml(cam,xKM,zKM,makeplot,figh,odir):
 
     lla = []
     for C in cam:
+      if C.usecam:
         #az is the temporary scalar defined above FIXME
         el = C.angle_deg[::decimaterayfactor] #double colon
         Np = el.size
