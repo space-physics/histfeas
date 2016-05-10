@@ -30,20 +30,16 @@ Installation
 ------------
 go to the directory where you want to install this program under e.g. ~/code
 
-then, in Terminal (for Linux, Mac or Cygwin on Windows), copy and paste
+then, in Terminal (for Linux, Mac or Cygwin on Windows), copy and paste::
 
-.. code:: bash
+   git clone --depth 1 https://github.com/scienceopen/histfeas
+   cd histfeas
+   conda install requirements.txt
+   python setup.py develop
 
-  $ git clone --depth 1 https://github.com/scienceopen/histfeas
-  $ cd histfeas
-  $ conda install requirements.txt
-  $ python setup.py develop
+You can check that things are working OK by::
 
-You can check that things are working OK by:
-
-.. code:: bash
-
- $ python test/registration.py
+    python test/test.py
 
 Usage notes
 ------------
@@ -58,9 +54,9 @@ Simulation Examples
 
 simulate flaming aurora with two cameras
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. code:: bash
+::
 
- $ python RunHistfeas.py in/2cam_flame.xlsx out/test_flame2/ -m fwd optim png show h5
+  python RunHistfeas.py in/2cam_flame.xlsx out/test_flame2/ -m fwd optim png show h5
 
 you can then look to the `Output Processing`_ section for how to load the HDF5 files
 you just produced in ``out/test_flame2``
@@ -70,17 +66,15 @@ Real Data Examples
 
 reading real data and displaying a live video
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+::
 
-.. code:: bash
-
- $ python RunHistfeas.py in/apr14.xlsx out/apr14 -m realvid -a 0.1
+  python RunHistfeas.py in/apr14.xlsx out/apr14 -m realvid -a 0.1
 
 reading real data and saving the joint image frames to disk
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+::
 
-.. code:: bash
-
-  $ python RunHistfeas.py in/apr14.xlsx out/apr14 -m realvid rawpng -a 0.1
+   python RunHistfeas.py in/apr14.xlsx out/apr14 -m realvid rawpng -a 0.1
 
 
 
@@ -90,12 +84,11 @@ Utility Examples
 
 plot eigenprofiles from 2013 JGR and current transcar sim
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+::
 
-.. code:: bash
+   python RunHistfeas.py in/jgr2013_2cam.xlsx /tmp -m eig eig1d -p  -f 0 1 1
 
- python RunHistfeas.py in/jgr2013_2cam.xlsx /tmp -m eig eig1d -p  -f 0 1 1
-
- python RunHistfeas.py in/2cam_flame.xlsx /tmp -m eig eig1d -p --vlim 0 0 90 1000 1e-1 5e3 -f 0 1 1
+   python RunHistfeas.py in/2cam_flame.xlsx /tmp -m eig eig1d -p --vlim 0 0 90 1000 1e-1 5e3 -f 0 1 1
 
 Output selection (via -m command)
 ---------------------------------
@@ -186,9 +179,9 @@ the same ``analysehst.py`` that's used by the simulation online--good coding pra
 
 **Example of offline output processing**
 
-.. code:: bash
+::
 
- python loadAnalyze.py test/registration.h5
+  python loadAnalyze.py test/registration.h5
 
 
 
@@ -201,17 +194,22 @@ Calibration
 
 **cam0**
 
-.. code:: bash
+::
 
- $ ./histutils/rawDMCreader.py -i ~/HSTdata/DataField/2013-04-14/HST0/2013-04-14T07-00-CamSer7196_frames_363000-1-369200.DMCdata -f 0 10 1 --avg --fits
- $ mv ~/HSTdata/DataField/2013-04-14/HST1/2013-04-14T07-00-CamSer7196_frames_363000-1-369200_mean_frames.fits ~/HST/calibration/hst0cal.fits
- $ ./astrometry/fits2azel.py -i ~/HST/calibration/hst0cal.fits --h5 -c 65.1186367 -147.432975 -t 2013-04-14T08:54:00Z --png
+   ./histutils/rawDMCreader.py -i ~/HSTdata/DataField/2013-04-14/HST0/2013-04-14T07-00-CamSer7196_frames_363000-1-369200.DMCdata -f 0 10 1 --avg --fits
+   
+
+   mv ~/HSTdata/DataField/2013-04-14/HST1/2013-04-14T07-00-CamSer7196_frames_363000-1-369200_mean_frames.fits ~/HST/calibration/hst0cal.fits
+   
+   ./astrometry/fits2azel.py -i ~/HST/calibration/hst0cal.fits --h5 -c 65.1186367 -147.432975 -t 2013-04-14T08:54:00Z --png
 
 
 **cam1**
 
-.. code:: bash
+::
 
- $ ./histutils/rawDMCreader.py -i ~/HSTdata/DataField/2013-04-14/HST1/2013-04-14T07-00-CamSer1387_frames_205111-1-208621.DMCdata -f 0 10 1 --avg --fits
- $ mv ~/HSTdata/DataField/2013-04-14/HST1/2013-04-14T07-00-CamSer1387_frames_205111-1-208621_mean_frames.fits ~/HST/calibration/hst1cal.fits
- $ ./astrometry/fits2azel.py -i ~/HST/calibration/hst1cal.fits --h5 -c 65.12657 -147.496908333 -t 2013-04-14T08:54:00Z --png
+   ./histutils/rawDMCreader.py -i ~/HSTdata/DataField/2013-04-14/HST1/2013-04-14T07-00-CamSer1387_frames_205111-1-208621.DMCdata -f 0 10 1 --avg --fits
+   
+   mv ~/HSTdata/DataField/2013-04-14/HST1/2013-04-14T07-00-CamSer1387_frames_205111-1-208621_mean_frames.fits ~/HST/calibration/hst1cal.fits
+   
+   ./astrometry/fits2azel.py -i ~/HST/calibration/hst1cal.fits --h5 -c 65.12657 -147.496908333 -t 2013-04-14T08:54:00Z --png
