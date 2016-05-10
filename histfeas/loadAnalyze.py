@@ -74,8 +74,9 @@ def readresults(h5list,xlsfn,vlim,x1d,overrides,makeplot,verbose=0):
 #%% load original angles of camera
     ut1_unix = asarray(ut1_unix)
     for i,C in enumerate(cam):
-        C.angle_deg = angle_deg[i,:]
-        C.tKeo = ut1_unix[:,i]
+        if C.usecam:
+            C.angle_deg = angle_deg[i,:]
+            C.tKeo = ut1_unix[:,i]
 #%% load args if they exist
     for a in ap:
         """

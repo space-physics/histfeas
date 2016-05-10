@@ -92,7 +92,10 @@ def doSim(ParamFN,makeplot,timeInds,overrides,odir,x1d,vlim,animtime, cmd,verbos
             else: #normal case, no a priori
                 Phi0r = zeros(Fwd['sx']*Peig['Mp'].shape[1]) #ones() is NOT appropriate -- must be tapered down for higher energy beams to keep physically plausible.
         except (KeyError,TypeError):
-            Phi0r = zeros(Fwd['sx']*Peig['Mp'].shape[1]) #ones() is NOT appropriate -- must be tapered down for higher energy beams to keep physically plausible.
+            try:
+                Phi0r = zeros(Fwd['sx']*Peig['Mp'].shape[1]) #ones() is NOT appropriate -- must be tapered down for higher energy beams to keep physically plausible.
+            except TypeError: # no fwd or optim
+                Phi0r = None
 
         Pfit,jfit,Tm,bfit = FitVER(Lfwd, bn, Phi0r, Peig, sim, cam,Fwd, ti, makeplot,verbose)
 #%% collect results

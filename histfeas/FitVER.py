@@ -3,7 +3,7 @@ Michael Hirsch
 GPLv3+
 """
 import logging
-from numpy import absolute,asfortranarray,diff,ones,inf,empty_like,isfinite
+from numpy import absolute,asfortranarray,diff,ones,inf,empty_like,isfinite,in1d
 from scipy.optimize import minimize
 from scipy.interpolate import interp1d
 from numpy.linalg import norm
@@ -15,6 +15,9 @@ from .plotsnew import getx0E0
 
 
 def FitVERopt(L,bn,Phi0,MpDict,sim,cam,Fwd,tInd,makeplot,verbose):
+    if not in1d(('gaussian','optim'),makeplot).any():
+        return (None,)*4
+
     assert L.ndim==2
     assert bn.ndim==1   and bn.flags['F_CONTIGUOUS']==True
     assert Phi0.ndim==1 and Phi0.flags['F_CONTIGUOUS']==True
@@ -46,10 +49,10 @@ def FitVERopt(L,bn,Phi0,MpDict,sim,cam,Fwd,tInd,makeplot,verbose):
     assert sz == Fwd['sz']
     assert Tm.flags['F_CONTIGUOUS'] is True
 
-    '''in case optim not run -- don't remove'''
-    Phifit['x'] = None #nans((nEnergy,Fwd['sx'])) #don't remove this
-    Phifit['EK'] = EK
-    Phifit['EKpcolor'] = EKpcolor
+#    '''in case optim not run '''
+#    Phifit['x'] = None #don't remove this
+#    Phifit['EK'] = EK
+#    Phifit['EKpcolor'] = EKpcolor
 #%% optimization
     '''
     Note: Only SLSQP and COBYA allow constraints (Not L-BFGS-B)
@@ -58,7 +61,7 @@ def FitVERopt(L,bn,Phi0,MpDict,sim,cam,Fwd,tInd,makeplot,verbose):
     http://stackoverflow.com/questions/23476152/dynamically-writing-the-objective-function-and-constraints-for-scipy-optimize-mi
     '''
 
-    if 'gaussian' in makeplot or 'optim' in makeplot:
+    if in1d(('gaussian','optim'),makeplot).any():
         optimmeth= sim.optimfitmeth.lower()
         maxiter = sim.optimmaxiter #it's already int
         sx = Fwd['sx']
@@ -117,7 +120,6 @@ def FitVERopt(L,bn,Phi0,MpDict,sim,cam,Fwd,tInd,makeplot,verbose):
 
         bfit['optim'] = bfitu
 #%%
-        # this is repeated because the assignment overwrites from minimize()
         Phifit['EK'] = EK
         Phifit['EKpcolor'] = EKpcolor
         # don't remove the two lines above (ek,ekpcolor)
