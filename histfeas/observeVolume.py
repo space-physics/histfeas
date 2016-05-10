@@ -74,11 +74,12 @@ def makeCamFOVpixelEnds(Fwd,sim,cam,makePlots,verbose):
          here we have 2 vertices per angle instead of 3 (line instead of polygon)
          the minus sign on x makes the angle origin at local east
         '''
-        xFOVpixelEnds[:,C.name] = -(C.fovmaxlen * cos(radians(C.angle_deg))) + C.x_km
-        zFOVpixelEnds[:,C.name] =  (C.fovmaxlen * sin(radians(C.angle_deg))) + C.alt_m/1000.
+        if C.usecam:
+            xFOVpixelEnds[:,C.name] = -(C.fovmaxlen * cos(radians(C.angle_deg))) + C.x_km
+            zFOVpixelEnds[:,C.name] =  (C.fovmaxlen * sin(radians(C.angle_deg))) + C.alt_m/1000.
 
-        C.xFOVpixelEnds = xFOVpixelEnds[:,C.name] #for plots.py
-        C.zFOVpixelEnds = zFOVpixelEnds[:,C.name]
+            C.xFOVpixelEnds = xFOVpixelEnds[:,C.name] #for plots.py
+            C.zFOVpixelEnds = zFOVpixelEnds[:,C.name]
 
 #%% (2) observational model auroral pixels
 # now we make a matrix with the corner x,y coordinates of the auroral fwd
@@ -116,7 +117,9 @@ def makeCamFOVpixelEnds(Fwd,sim,cam,makePlots,verbose):
 # we say (for now) that ell=area of polygon intersection between FOV pixel and sky voxel
     tic = time()
     #used .values for future use of Numba
-    L = EllLineLength(Fwd,xFOVpixelEnds,zFOVpixelEnds,[c.x_km for c in cam],[c.alt_m/1000. for c in cam],
+    L = EllLineLength(Fwd,xFOVpixelEnds,zFOVpixelEnds,
+                      [c.x_km for c in cam if c.usecam],
+                      [c.alt_m/1000. for c in cam if c.usecam],
                       nCutPix,sim,makePlots,verbose)
     print('computed L in {:0.1f}'.format(time()-tic) + ' seconds.')
     return L,Fwd,cam
@@ -201,5 +204,6 @@ def removeUnusedCamera(L,useCamBool,nCutPix):
 def definecamind(cam,nCutPix):
     ''' store indices of b vector corresponding to each camera (in case some cameras not used) '''
     for i,C in enumerate(cam):
-        C.ind = s_[ i*nCutPix : (i+1)*nCutPix ]
+        if C.usecam:
+            C.ind = s_[ i*nCutPix : (i+1)*nCutPix ]
     return cam
