@@ -24,10 +24,6 @@ from gridaurora.eFluxGen import maxwellian
 #from pyimagevideo.imagemultipage import png2multipage
 from histutils.simulFrame import getSimulData
 from histutils.get1Dcut import get1Dcut #we need cam.angle_deg for plotting
-try:
-    from themisasi.fov import mergefov #for ASI with narrow FOV outline plot
-except ImportError:
-    mergefov = None
 #
 from .sanityCheck import getParams
 from .AuroraFwdModel import getSimVER
