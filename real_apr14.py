@@ -61,7 +61,7 @@ if __name__ == '__main__':
     overrides = {'treq':treq}
 
     if not p.load:
-        print('running HiSTfeas program -- will write png and h5 to {}'.format(outdir))
+        print('running HiSTfeas program writing {} to {}'.format(p.compute,outdir))
         Phi0,Phifit = hist_figure(xlsreg,p.compute)
 
     h5list,xlsfn = findxlsh5(outdir)
