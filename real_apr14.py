@@ -9,17 +9,11 @@ from tempfile import gettempdir
 from pathlib import Path
 from dateutil.parser import parse
 from sys import argv
-from matplotlib.pyplot import show
-#
-import seaborn as sns
-sns.color_palette("cubehelix")
-sns.set(context='paper', style='whitegrid',font_scale=1.5,#2,
-        rc={'image.cmap': 'cubehelix_r'})
-#
-from histfeas.main_hist import doSim
-from histfeas.loadAnalyze import readresults,findxlsh5
 
 def hist_figure(xlsreg,makecomp):
+    #imported here to allow matplotlib.use
+    from histfeas.main_hist import doSim
+
     Phi0,Phifit =doSim(ParamFN=xlsreg,
                   makeplot=makecomp,
                   timeInds=timeInds,
@@ -48,6 +42,19 @@ if __name__ == '__main__':
     p.add_argument('-t','--treq',help='specific times requested',nargs='+')
     p = p.parse_args()
 
+    if not 'show' in p.makeplot:
+        import matplotlib
+        matplotlib.use('Agg')
+        print(matplotlib.get_backend())
+    #
+    from matplotlib.pyplot import show
+
+    import seaborn as sns
+    sns.color_palette("cubehelix")
+    sns.set(context='paper', style='whitegrid',font_scale=1.5,#2,
+        rc={'image.cmap': 'cubehelix_r'})
+
+
     xlsreg='in/apr14T085430.xlsx'
     outdir = Path(p.outdir)
     timeInds=p.frames
@@ -64,6 +71,7 @@ if __name__ == '__main__':
         print('running HiSTfeas program writing {} to {}'.format(p.compute,outdir))
         Phi0,Phifit = hist_figure(xlsreg,p.compute)
 
+    from histfeas.loadAnalyze import readresults,findxlsh5 #import here to allow matplotlib.use
     h5list,xlsfn = findxlsh5(outdir)
     readresults(h5list,xlsfn,vlim,x1d,overrides,p.makeplot,p.verbose)
 
