@@ -45,6 +45,9 @@ class Sim:
         for Cn,u in zip(cp.loc['nCutPix',:],self.useCamBool):
             if u:
                 assert Cn==self.nCutPix,'all cameras must have same 1D cut length'
+
+        if 'realvid' in makeplot:
+            self.fovfn = sp.at['fovfn','Cams']
 #%% manual override flux file
         try:
             self.Jfwdh5 = overrides['Jfwd']
