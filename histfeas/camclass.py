@@ -2,7 +2,7 @@ from pathlib import Path
 import logging
 from numpy import (linspace, fliplr, flipud, rot90, arange,
                    polyfit,polyval,rint,empty, isfinite, isclose,
-                   absolute, hypot, unravel_index,logical_not,in1d)
+                   absolute, hypot, unravel_index,in1d,array)
 from datetime import datetime
 from pytz import UTC
 from dateutil.parser import parse
@@ -38,20 +38,22 @@ class Cam: #use this like an advanced version of Matlab struct
             _,(self.az,self.el),self.lla,_ = readDASC(self.fn[0],cp['azcalfn'],cp['elcalfn'])
 
 
-            if in1d(('realvid','h5'),makeplot).all():
-                print('fov: writing {}'.format(sim.fovfn))
-                self.hlrows,self.hlcols = mergefov(None,self.lla,self.az,self.el,None,None,
-                               ['../histutils/cal/hst0cal.h5','../histutils/cal/hst1cal.h5'],
-                               projalt=110e3,site='DASC')
-                with h5py.File(sim.fovfn,'a',libver='latest') as H:
-                    H['/rows'] = self.hlrows
-                    H['/cols'] = self.hlcols
-            elif 'realvid' in makeplot:
-                with h5py.File(sim.fovfn,'r',libver='latest') as H:
-                    self.hlrows = H['/rows'].value
-                    self.hlcols = H['/cols'].value
+            if 'realvid' in makeplot:
+                if 'h5' in makeplot:
+                    print('fov: writing {}'.format(sim.fovfn))
+                    self.hlrows,self.hlcols = mergefov(None,self.lla,self.az,self.el,None,None,
+                                   ['../histutils/cal/hst0cal.h5','../histutils/cal/hst1cal.h5'],
+                                   projalt=110e3,site='DASC')
+                    with h5py.File(sim.fovfn,'w',libver='latest') as H:
+                        H['/rows'] = array(self.hlrows) # Ncam x 4 x Nx  (list,list,ndarray)
+                        H['/cols'] = array(self.hlcols)
+                else:
+                    with h5py.File(sim.fovfn,'r',libver='latest') as H:
+                        self.hlrows = H['/rows'].value
+                        self.hlcols = H['/cols'].value
 
             return
+
         elif self.usecam:
             self.name = int(name)
 #%%
