@@ -43,7 +43,7 @@ class Cam: #use this like an advanced version of Matlab struct
                 self.hlrows,self.hlcols = mergefov(None,self.lla,self.az,self.el,None,None,
                                ['../histutils/cal/hst0cal.h5','../histutils/cal/hst1cal.h5'],
                                projalt=110e3,site='DASC')
-                with h5py.File(sim.fovfn,'w',libver='latest') as H:
+                with h5py.File(sim.fovfn,'a',libver='latest') as H:
                     H['/rows'] = self.hlrows
                     H['/cols'] = self.hlcols
             elif 'realvid' in makeplot:

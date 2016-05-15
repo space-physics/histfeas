@@ -4,7 +4,7 @@ from setuptools import setup
 
 exepath = os.path.dirname(sys.executable)
 try:
-    subprocess.call([os.path.join(exepath,'conda'),'install','--yes','--file','requirements.txt'])
+    subprocess.run([os.path.join(exepath,'conda'),'install','--yes','--file','requirements.txt'])
 except Exception as e:
     print('tried conda in {}, but you will need to install packages in requirements.txt  {}'.format(exepath,e))
 
