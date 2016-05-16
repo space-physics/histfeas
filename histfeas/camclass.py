@@ -386,7 +386,7 @@ class Cam: #use this like an advanced version of Matlab struct
 
 
         if discardEdgepix:
-            mask = logical_not(((nearCol==0) | (nearCol == self.az.shape[1]-1)) |
+            mask = ~(((nearCol==0) | (nearCol == self.az.shape[1]-1)) |
                                ((nearRow==0) | (nearRow == self.az.shape[0]-1)))
             nearRow = nearRow[mask]
             nearCol = nearCol[mask]
