@@ -1,6 +1,7 @@
 from pathlib import Path
 import logging
-from numpy import asarray,where,arange,isfinite,ceil,hypot,atleast_1d
+from hashlib import md5
+from numpy import asarray,where,arange,isfinite,ceil,hypot,atleast_1d,fromstring
 import numpy as np # needed for all
 from dateutil.parser import parse
 #
@@ -8,23 +9,26 @@ from transcarread.readionoinit import getaltgrid
 
 class Sim:
 
-    def __init__(self,sp,cp,ap,ntimeslice,overrides,makeplot,odir):
+    def __init__(self,sp,ap,ntimeslice,overrides,makeplot,odir):
 #%% root directory not here
         try:
-            self.rootdir = Path(overrides['rootdir'])
+            self.rootdir = Path(overrides['rootdir']).expanduser()
         except KeyError:
             self.rootdir = Path('')
 #%% how many cameras in use, and which ones?
+        self.camnames = sp['cam']['name'].split(',')
+        self.useCamBool = fromstring(sp['cam']['useCam'],dtype=bool,sep=',')
+
         try:
             usecamreq = asarray(overrides['cam'])
-            if usecamreq[0]: #override spreadsheet
-                logging.warning(' Overriding XLS parameters, using cameras: {}'.format(usecamreq))
-                for ci,civ in enumerate(cp.loc['useCam']): # this might be a silly indexing method, but works
-                    if (ci==usecamreq).any():
-                        cp.at['useCam',ci] = 1 #do not use boolean, it screws up other rows
+            if usecamreq[0] is not None: #override spreadsheet
+                logging.warning(' Overriding INI, using cameras: {}'.format(usecamreq))
+                for i,civ in enumerate(self.useCamBool): # this might be a silly indexing method, but works
+                    if (i==usecamreq).any():
+                        self.useCamBool[i] = True
                     else:
-                        cp.at['useCam',ci] = 0 #do not use boolean, it screws up other rows
-            if usecamreq[0]:
+                        self.useCamBool[i] = False
+            if usecamreq[0] is not None:
                 assert np.all(where(self.useCamBool)[0] == usecamreq) #not .all() in case of different length
         except KeyError:
             pass #normal case
@@ -36,22 +40,18 @@ class Sim:
         except (TypeError,KeyError): #cam override not specified
             self.camxreq = [None]
 #%%
-        self.useCamBool = cp.loc['useCam'].values.astype(bool)
-
         self.nCamUsed = self.useCamBool.sum() #result is an int
 
-        self.nCutPix = cp.loc['nCutPix',0] #FIXME someday allow different # of pixels..
-
-        for Cn,u in zip(cp.loc['nCutPix',:],self.useCamBool):
-            if u:
-                assert Cn==self.nCutPix,'all cameras must have same 1D cut length'
+        nCutPix = fromstring(sp['cam']['nCutPix'],dtype=int,sep=',') #FIXME someday allow different # of pixels..
+        assert (nCutPix[self.useCamBool] == nCutPix[self.useCamBool][0]).all(),'all cameras must have same 1D cut length'
+        self.nCutpix = nCutPix[self.useCamBool][0]
 
         if 'realvid' in makeplot:
-            self.fovfn = sp.at['fovfn','Cams']
+            self.fovfn = sp.get('cams','fovfn',fallback=None)
 #%% manual override flux file
         try:
             self.Jfwdh5 = overrides['Jfwd']
-            logging.info('* overriding J0 flux with file: ' + overrides['Jfwd'])
+            logging.info('* overriding J0 flux with file: {}'.format(overrides['Jfwd']))
         except (KeyError,TypeError):
             self.Jfwdh5 = None
 #%% manual override filter
@@ -59,25 +59,22 @@ class Sim:
             self.opticalfilter = overrides['filter'].lower()
             logging.info('* overriding filter choice with:',overrides['filter'])
         except (KeyError,TypeError):
-            self.opticalfilter = sp.at['OpticalFilter','Transcar'].lower()
+            self.opticalfilter = sp['transcar']['opticalFilter'].lower()
 #%% manual override minimum beam energy
         try:
             self.minbeamev = float(overrides['minev'])
             logging.info('* minimum beam energy set to: {}'.format(overrides['minev']))
         except (KeyError,TypeError): #use spreadsheet
-            mbe = sp.at['minBeameV','Transcar']
-            if isfinite(mbe):
-                self.minbeamev = mbe
-            else:
-                self.minbeamev = 0.
+            self.minbeamev = sp.getfloat('transcar','minbeamev',fallback=0)
+
 #%% fit method
         try:
             self.optimfitmeth = overrides['fitm']
             logging.info('* setting fit method to {}'.format(overrides['fitm']))
         except (KeyError,TypeError):
-            self.optimfitmeth = str(sp.at['OptimFluxMethod','Recon']) #must have str() for FITver .lower()
+            self.optimfitmeth = sp.get('recon','OptimFluxMethod',fallback='').lower()
 
-        self.optimmaxiter = sp.at['OptimMaxiter','Recon']
+        self.optimmaxiter = sp.getint('recon','OptimMaxiter',fallback=None)
 #%% force compute ell
         try:
             if overrides and overrides['ell']:
@@ -94,47 +91,42 @@ class Sim:
 #        if 'fwd' in makeplot:
 #            self.plots['fwd'] =   ('bnoise','bfwd','pfwd','phifwd','pfwd_1d','phifwd_1d')
 #%%how many synthetic arcs are we using
-        self.nArc = len(ap)
+        #self.nArc = len(ap) #TODO adapt to ini file
         self.nTimeSlice = ntimeslice
 #%% transcar
-        self.lambminmax = (sp.at['lambdamin','Sim'],sp.at['lambdamax','Sim']) #for plotting only
+        self.lambminmax = (sp.getfloat('sim','lambdamin',fallback=None),
+                           sp.getfloat('sim','lambdamax',fallback=None)) #for plotting only
 
-        self.useztranscar = sp.at['UseTCz','Transcar'] == 1
-        self.loadver = sp.at['loadVER','Transcar'] == 1
-        self.loadverfn = sp.at['verfn','Transcar']
-        self.bg3fn =     (self.rootdir/sp.at['BG3transFN','Sim']).expanduser()
-        self.windowfn =  (self.rootdir/sp.at['windowFN','Sim']).expanduser()
-        self.qefn =      (self.rootdir/sp.at['emccdQEfn','Sim']).expanduser()
-        self.transcarev =   (self.rootdir/sp.at['BeamEnergyFN','Transcar']).expanduser()
-        self.transcarutc = parse(sp.at['tReq','Transcar'])
-        self.excratesfn =  sp.at['ExcitationDATfn','Transcar'] #NO ROOTDIR!
-        self.transcarpath = (self.rootdir/sp.at['TranscarDataDir','Sim']).expanduser()
-        self.reactionfn =   (self.rootdir/sp.at['reactionParam','Transcar']).expanduser()
-        self.transcarconfig = sp.at['simconfig','Transcar']
+        self.useztranscar = sp.getboolean('transcar','UseTCz',fallback=None)
+        self.loadver      = sp.getboolean('transcar','loadVER',fallback=None)
+        self.loadverfn    = sp.get('transcar','verfn',fallback=None)
+        self.bg3fn =     (self.rootdir/sp['sim']['BG3transFN']).expanduser()
+        self.windowfn =  (self.rootdir/sp['sim']['windowFN']).expanduser()
+        self.qefn =      (self.rootdir/sp['sim']['emccdQEfn']).expanduser()
+        self.transcarev =   (self.rootdir/sp['transcar']['BeamEnergyFN']).expanduser()
+        self.transcarutc = parse(sp['transcar']['tReq'])
+        self.excratesfn =  sp['transcar']['ExcitationDATfn'] #NO ROOTDIR!
+        self.transcarpath = (self.rootdir/sp['sim']['TranscarDataDir']).expanduser()
+        self.reactionfn =   (self.rootdir/sp['transcar']['reactionParam']).expanduser()
+        self.transcarconfig = sp['transcar']['simconfig']
 
-        if isfinite(sp.at['minflux','Recon']) and sp.at['minflux','Recon']>0:
-            self.minflux= sp.at['minflux','Recon']
-        else:
-            self.minflux= 0
+        self.minflux= sp.getfloat('recon','minflux',fallback=0.)
 
         self.reacreq = ()
-        if sp.at['metastable','Transcar'] == 1: self.reacreq += 'metastable',
-        if sp.at['atomic','Transcar'] == 1: self.reacreq += 'atomic',
-        if sp.at['N21NG','Transcar'] == 1: self.reacreq += 'n21ng',
-        if sp.at['N2Meinel','Transcar'] == 1: self.reacreq += 'n2meinel',
-        if sp.at['N22PG','Transcar'] == 1: self.reacreq += 'n22pg',
-        if sp.at['N21PG','Transcar'] == 1: self.reacreq += 'n21pg',
+        if sp.getboolean('transcar','metastable',fallback=None): self.reacreq += 'metastable',
+        if sp.getboolean('transcar','atomic',fallback=None): self.reacreq += 'atomic',
+        if sp.getboolean('transcar','N21NG',fallback=None): self.reacreq += 'n21ng',
+        if sp.getboolean('transcar','N2meinel',fallback=None): self.reacreq += 'n2meinel',
+        if sp.getboolean('transcar','N22PG',fallback=None): self.reacreq += 'n22pg',
+        if sp.getboolean('transcar','N21PG',fallback=None): self.reacreq += 'n21pg',
 
-        self.realdata = sp.at['useActualData','Sim'] == 1
+        self.realdata = sp.getboolean('sim','useActualData',fallback=None)
         if self.realdata:
-            self.realdatapath = Path(sp.at['ActualDataDir','Cams']).expanduser()
+            self.realdatapath = Path(sp['cams']['ActualDataDir']).expanduser()
 
-        self.raymap = str(sp.at['RayAngleMapping','Cams']).lower()
+        self.raymap = str(sp['cams']['RayAngleMapping']).lower()
 
-        if sp.loc['downsampleEnergy','Transcar'] >1:
-            self.downsampleEnergy = sp.at['downsampleEnergy','Transcar']
-        else:
-            self.downsampleEnergy = False
+        self.downsampleEnergy = sp.getfloat('transcar','downsampleEnergy',fallback=False)
 
         if self.raymap == 'astrometry':
             logging.info('Using ASTROMETRY-based per-pixel 1D cut mapping to 2D model space')
@@ -143,46 +135,44 @@ class Sim:
         else:
             raise ValueError('Unknown Ray Angle Mapping method: {}'.format(self.raymap))
 
-        self.cal1dpath = (self.rootdir/sp.at['cal1Ddir','Cams']).expanduser()
+        self.cal1dpath = (self.rootdir/sp['cams']['cal1Ddir']).expanduser()
 
         try: #override
             if overrides['treq'] is not None: #must be is not None for array case
                 self.treqlist = overrides['treq']
             else:
-                self.startutc = parse(sp.at['reqStartUT','Cams'])
-                self.stoputc = parse(sp.at['reqStopUT','Cams'])
+                self.startutc = parse(sp.get('cams','reqStartUT',fallback=None)) #not fallback=''
+                self.stoputc =  parse(sp.get('cams','reqStopUT', fallback=None))
         except (KeyError,TypeError):
             try:
-                self.startutc = parse(sp.at['reqStartUT','Cams'])
-                self.stoputc = parse(sp.at['reqStopUT','Cams'])
+                self.startutc = parse(sp.get('cams','reqStartUT',fallback=None))
+                self.stoputc =  parse(sp.get('cams','reqStopUT', fallback=None))
             except (KeyError,AttributeError):
                 pass
 
 
-        self.timestepsperexp = sp.at['timestepsPerExposure','Sim']
+        self.timestepsperexp = sp['sim']['timestepsPerExposure']
         #%% recon
-        self.artinit = str(sp.at['initVector','Recon']).lower()
-        try:
-            self.artmaxiter = int(sp.at['maxIter','Recon'])
-        except ValueError: #this is normal,just means we're not using ART
-            self.artmaxiter = 0
-        self.artlambda = sp.at['lambda','Recon']
-        self.artstop = sp.at['stoprule','Recon']
-        self.arttau = sp.at['MDPtauDelta','Recon']
+        self.artinit =    sp.get('recon','initVector',fallback='').lower()
+        self.artmaxiter = sp.getint('recon','maxIter',fallback=0)
+
+        self.artlambda = sp.getfloat('recon','lambda',fallback=None)
+        self.artstop =   sp.get('recon','stoprule',fallback=None)
+        self.arttau =    sp.getfloat('recon','MDPtauDelta',fallback=None)
 
     def setupFwdXZ(self,sp):
         Fwd = {}
-        self.fwd_xlim = (sp.at['XminKM','Fwdf'], sp.at['XmaxKM','Fwdf'])
-        self.fwd_zlim = (sp.at['ZminKM','Fwdf'], sp.at['ZmaxKM','Fwdf'])
-        self.fwd_dxKM = sp.at['XcellKM','Fwdf']
+        self.fwd_xlim = (sp.getfloat('fwd','XminKM'), sp.getfloat('fwd','XmaxKM'))
+        self.fwd_zlim = (sp.getfloat('fwd','ZminKM'), sp.getfloat('fwd','ZmaxKM'))
+        self.fwd_dxKM = sp.getfloat('fwd','XcellKM')
 
 
         if self.useztranscar:
             Fwd['x'] = makexzgrid(self.fwd_xlim, None, self.fwd_dxKM, None)[0]
-            zTranscar = getaltgrid(self.rootdir/sp.at['altitudePreload','Transcar'])
+            zTranscar = getaltgrid(self.rootdir/sp['transcar']['altitudePreload'])
             Fwd['z'] = zTranscar[ (self.fwd_zlim[0] < zTranscar) & (zTranscar < self.fwd_zlim[1]) ]
         else:
-            self.fwd_dzKM = sp.at['ZcellKM','Fwdf']
+            self.fwd_dzKM = sp['fwd']['ZcellKM']
             (Fwd['x'], Fwd['z']) = makexzgrid(self.fwd_xlim, self.fwd_zlim, self.fwd_dxKM, self.fwd_dzKM)
         if Fwd['z'] is None:
             raise ValueError('You must specify zmax zmin zcell when not using transcar altitudes in XLS')
@@ -198,6 +188,7 @@ class Sim:
 
         if Fwd['sx'] * Fwd['sz'] > 10e6:
             logging.warning('Fwd Grid size seems excessive at more than 10 million cells')
+
         return Fwd
 
     def maketind(self,timeInds):
@@ -212,8 +203,6 @@ class Sim:
         return timeInds[timeInds<self.nTimeSlice] #(it's <, not <=) slice off commond line requests beyond number of frames
 
     def getEllHash(self,sp,cp,x,z):
-        from hashlib import md5
-
         EllCritParams =  [x, z,
                           cp.loc['nCutPix'].values, cp.loc['FOVmaxLengthKM'].values,
                           str(sp.at['RayAngleMapping','Cams']).lower(),

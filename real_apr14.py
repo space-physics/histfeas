@@ -55,7 +55,7 @@ if __name__ == '__main__':
         rc={'image.cmap': 'cubehelix_r'})
 
 
-    xlsreg='in/apr14T085430.xlsx'
+    xlsreg='in/apr14T085430.ini'
     outdir = Path(p.outdir)
     timeInds=p.frames
 

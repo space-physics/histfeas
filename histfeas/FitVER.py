@@ -62,28 +62,27 @@ def FitVERopt(L,bn,Phi0,MpDict,sim,cam,Fwd,tInd,makeplot,verbose):
     '''
 
     if in1d(('gaussian','optim'),makeplot).any():
-        optimmeth= sim.optimfitmeth.lower()
         maxiter = sim.optimmaxiter #it's already int
         sx = Fwd['sx']
 
         cons = None
         optimbound = sim.minflux*ones((nEnergy*sx,2))     # lower bound
         optimbound[:,1] = inf  #None seems to give error  # upper bound
-        if optimmeth=='nelder-mead':
+        if   sim.optimfitmeth =='nelder-mead':
             optimopt = {'maxiter':maxiter,'disp':minverbose} #100
-        elif optimmeth=='bfgs':
+        elif sim.optimfitmeth =='bfgs':
             optimopt = {'maxiter':maxiter,'disp':minverbose,'norm':2} #20
-        elif optimmeth=='tnc':
+        elif sim.optimfitmeth =='tnc':
             optimopt = {'maxiter':maxiter,'disp':minverbose} #20
-        elif optimmeth=='l-bfgs-b':
+        elif sim.optimfitmeth =='l-bfgs-b':
             # defaults: maxfun=5*nEnergy*sx, maxiter=10
             optimopt = {'maxfun':maxiter*nEnergy*sx,'maxiter':maxiter,
                         'disp':minverbose} #100 maxiter works well
-        elif optimmeth=='slsqp':
+        elif sim.optimfitmeth =='slsqp':
             optimopt = {'maxiter':maxiter,'disp':minverbose} #2
             cons = {'type': 'ineq',
                     'fun': difffun}
-        elif optimmeth=='cobyla':
+        elif sim.optimfitmeth =='cobyla':
             optimopt = {'maxiter':maxiter,'disp':minverbose,'rhobeg':1e1,'tol':1} #10
         else:
             raise TypeError('unknown minimization method: {}'.format(optimmeth))
