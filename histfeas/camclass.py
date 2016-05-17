@@ -2,7 +2,7 @@ from pathlib import Path
 import logging
 from numpy import (linspace, fliplr, flipud, rot90, arange,
                    polyfit,polyval,rint,empty, isfinite, isclose,
-                   absolute, hypot, unravel_index,in1d,array)
+                   absolute, hypot, unravel_index,in1d,array,fromstring)
 from datetime import datetime
 from pytz import UTC
 from dateutil.parser import parse
@@ -26,10 +26,12 @@ class Cam: #use this like an advanced version of Matlab struct
     def __init__(self,sim,cp,name,zmax,makeplot,verbose=0):
         self.verbose = verbose
 
-        self.usecam = bool(cp['useCam'])
-        if not self.usecam and sim.realdata and name.lower() == 'asi':
+        ci = cp['name'].split(',').index(name)
+        self.usecam = sim.useCamBool[ci]
+
+        if not self.usecam and sim.realdata and name.lower().startswith('asi'):
             self.fn = list(Path(cp['fn']).expanduser().glob('*.FITS'))
-            self.name='asi'
+            self.name = name
 
             self.clim = [None]*2
             if isfinite(cp['plotMinVal']): self.clim[0] =  cp['plotMinVal']
@@ -57,32 +59,32 @@ class Cam: #use this like an advanced version of Matlab struct
         elif self.usecam:
             self.name = int(name)
 #%%
-        self.nCutPix = int(cp['nCutPix'])
+        self.nCutPix = int(cp['nCutPix'].split(',')[ci])
 
-        self.Bincl = cp['Bincl']
-        self.Bdecl = cp['Bdecl']
-        self.Bepoch = cp['Bepoch'] #it's OK, I want to feedthru nan if xls cell is empty!
 
-        if isinstance(self.Bepoch,str):
-            self.Bepoch = parse(self.Bepoch)
+        self.Bincl =  splitconf(cp,'Bincl',ci)
+        self.Bdecl =  splitconf(cp,'Bdecl',ci)
+        self.Bepoch = splitconf(cp,'Bepoch',ci,parse)
 
-        if isfinite(self.Bincl) and isfinite(self.Bdecl):
+        try:
             self.Baz = 180. + self.Bdecl
             self.Bel = self.Bincl
-        else:
-            self.Baz = None; self.Bel = None
+        except TypeError:
+            pass
 
-        self.timeShiftSec = cp['timeShiftSec'] if isfinite(cp['timeShiftSec']) else 0.
+
+        self.timeShiftSec = splitconf(cp,'timeShiftSec',ci,fallback=0.)
+
 
         self.clim = [None]*2
-        if isfinite(cp['plotMinVal']): self.clim[0] =  cp['plotMinVal']
-        if isfinite(cp['plotMaxVal']): self.clim[1] =  cp['plotMaxVal']
+        self.clim[0] = splitconf(cp,'plotMinVal',ci)
+        self.clim[1] = splitconf(cp,'plotMaxVal',ci)
 
-        self.intensityScaleFactor = cp['intensityScaleFactor']
-        self.lowerthres = cp['lowerthres']
+        self.intensityScaleFactor = splitconf(cp,'intensityScaleFactor',ci,fallback=1.)
+        self.lowerthres = splitconf(cp,'lowerthres',ci)
 
 #%% check FOV and 1D cut sizes for sanity
-        self.fovmaxlen = cp['FOVmaxLengthKM']
+        self.fovmaxlen = splitconf(cp,'FOVmaxLengthKM',ci)
 
         if self.fovmaxlen > 10e3:
             logging.warning('sanityCheck: Your FOV length seems excessive > 10000 km')
@@ -91,12 +93,12 @@ class Cam: #use this like an advanced version of Matlab struct
         if self.fovmaxlen < (1.5*zmax):
             logging.warning('sanityCheck: To avoid unexpected pixel/sky voxel intersection problems, make your candidate camera FOV at least 1.5 times longer than your maximum Z altitude.')
 
-        self.boresightEl = cp['boresightElevDeg']
-        self.arbfov = cp['FOVdeg']
+        self.boresightEl = splitconf(cp,'boresightElevDeg',ci)
+        self.arbfov =      splitconf(cp,'FOVdeg',ci)
 
 #%% sky mapping
         cal1Ddir = sim.rootdir/sim.cal1dpath
-        cal1Dname = cp['cal1Dname']
+        cal1Dname = cp['cal1Dname'].split(',')[ci]
         if isinstance(cal1Ddir,Path) and isinstance(cal1Dname,str):
             self.cal1Dfn = (cal1Ddir / cal1Dname).expanduser()
 
@@ -108,21 +110,18 @@ class Cam: #use this like an advanced version of Matlab struct
 #        else:
 #            exit('*** unknown ray mapping method ' + self.raymap)
 #%% pixel noise/bias
-        try:
-            self.noiselam = cp['noiseLam']
-            self.ccdbias = cp['CCDBias']
-        except KeyError: #realdata
-            pass
+        self.noiselam = splitconf(cp,'noiseLam',ci)
+        self.ccdbias =  splitconf(cp,'CCDBias',ci)
 
-        self.debiasData = cp['debiasData']
-        self.smoothspan = cp['smoothspan']
-        self.savgolOrder = cp['savgolOrder']
+        self.debiasData = splitconf(cp,'debiasData',ci)
+        self.smoothspan = splitconf(cp,'smoothspan',ci,dt=int)
+        self.savgolOrder = splitconf(cp,'savgolOrder',ci,dt=int)
 
         """ expects an HDF5 .h5 file"""
 
         # data file name
         if sim.realdata:
-            self.fn = (sim.realdatapath / cp['fn']).expanduser()
+            self.fn = (sim.realdatapath / cp['fn'].split(',')[ci]).expanduser()
 
             with h5py.File(str(self.fn),'r',libver='latest') as f:
                 self.filestartutc = f['/ut1_unix'][0]
@@ -142,9 +141,9 @@ class Cam: #use this like an advanced version of Matlab struct
                 self.lon   = c['lon'][0]
                 self.alt_m = c['alt_m'][0]
         else: #sim
-            self.kineticsec = cp['kineticsec'] #simulation
-            self.alt_m = cp['Zkm']*1000
-            self.x_km = cp['Xkm']
+            self.kineticsec = splitconf(cp,'kineticsec',ci) #simulation
+            self.alt_m =      splitconf(cp,'Zkm',ci)*1000
+            self.x_km =       splitconf(cp,'Xkm',ci)
 
 #%% camera model
         """
@@ -314,9 +313,12 @@ class Cam: #use this like an advanced version of Matlab struct
         return data
 
     def dolowerthres(self,data):
-        if isfinite(self.lowerthres):
+        try:
             print('Thresholding Data to 0 when DN < {} for Camera {}'.format(self.lowerthres,self.name))
             data[ data < self.lowerthres ] = 0
+        except TypeError:
+            pass
+
         return data
 
     def findLSQ(self,nearrow,nearcol):
@@ -404,3 +406,19 @@ class Cam: #use this like an advanced version of Matlab struct
             #ax.set_title('pixel indices (pre-least squares)')
             ax.set_xlim([0,self.az.shape[1]])
             ax.set_ylim([0,self.az.shape[0]])
+
+def splitconf(conf,key,i,dt=float,fallback=None,sep=','):
+    assert isinstance(i,int),'single integer index only'
+
+    if isinstance(key,(tuple,list)):
+        return splitconf(conf[key[0]],key[1:],i,dt,fallback,sep)
+    elif isinstance(key,str):
+        val = conf.get(key,fallback=None)
+    else:
+        raise TypeError('invalid key type {}'.format(type(key)))
+
+    try:
+        return dt(val.split(sep)[i])
+    except (ValueError,AttributeError):
+        pass
+
