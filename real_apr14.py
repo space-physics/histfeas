@@ -51,7 +51,7 @@ if __name__ == '__main__':
 
     import seaborn as sns
     sns.color_palette("cubehelix")
-    sns.set(context='paper', style='whitegrid',font_scale=1.5,#2,
+    sns.set(context='paper', style='whitegrid',font_scale=1.5,
         rc={'image.cmap': 'cubehelix_r'})
 
 

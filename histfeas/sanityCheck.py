@@ -45,7 +45,7 @@ def getParams(inifn,overrides,makeplot,odir):
                 C.x_km = vincenty((cam[0].lat,cam[0].lon),(C.lat,C.lon)).kilometers
 
     #store x,z in sim
-    ellname=sim.getEllHash(xl, [C.x_km for C in cam if C.usecam],[C.alt_m/1000. for C in cam if C.usecam])
+    ellname=sim.getEllHash(xl, [C.x_km for C in cam],[C.alt_m/1000. for C in cam])
     #will try to load this and compute if needed. Will be copied to output directory too.
     sim.FwdLfn = sim.rootdir/'precompute' / ellname
 
