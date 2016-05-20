@@ -6,6 +6,7 @@ import numpy as np # needed for all
 from dateutil.parser import parse
 #
 from transcarread.readionoinit import getaltgrid
+from .camclass import splitconf
 
 class Sim:
 
@@ -91,11 +92,11 @@ class Sim:
 #        if 'fwd' in makeplot:
 #            self.plots['fwd'] =   ('bnoise','bfwd','pfwd','phifwd','pfwd_1d','phifwd_1d')
 #%%how many synthetic arcs are we using
-        #self.nArc = len(ap) #TODO adapt to ini file
+        self.nArc = len(ap) # number of dict entries
         self.nTimeSlice = ntimeslice
 #%% transcar
-        self.lambminmax = (sp.getfloat('sim','lambdamin',fallback=None),
-                           sp.getfloat('sim','lambdamax',fallback=None)) #for plotting only
+        self.lambminmax = (splitconf(sp,('sim','lambdamin')),
+                           splitconf(sp,('sim','lambdamax'))) #for plotting only
 
         self.useztranscar = sp.getboolean('transcar','UseTCz',fallback=None)
         self.loadver      = sp.getboolean('transcar','loadVER',fallback=None)
@@ -120,7 +121,7 @@ class Sim:
         if sp.getboolean('transcar','N22PG',fallback=None): self.reacreq += 'n22pg',
         if sp.getboolean('transcar','N21PG',fallback=None): self.reacreq += 'n21pg',
 
-        self.realdata = sp.getboolean('sim','useActualData',fallback=None)
+        self.realdata = sp.getboolean('sim','realdata',fallback=None)
         if self.realdata:
             self.realdatapath = Path(sp['cams']['ActualDataDir']).expanduser()
 
@@ -147,11 +148,11 @@ class Sim:
             try:
                 self.startutc = parse(sp.get('cams','reqStartUT',fallback=None))
                 self.stoputc =  parse(sp.get('cams','reqStopUT', fallback=None))
-            except (KeyError,AttributeError):
+            except (KeyError,ValueError):
                 pass
 
 
-        self.timestepsperexp = sp['sim']['timestepsPerExposure']
+        self.timestepsperexp = sp.getint('sim','timestepsPerExposure')
         #%% recon
         self.artinit =    sp.get('recon','initVector',fallback='').lower()
         self.artmaxiter = sp.getint('recon','maxIter',fallback=0)

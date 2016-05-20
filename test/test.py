@@ -59,7 +59,7 @@ if __name__ == '__main__':
 #%% simulation only
     tdir  = Path(__file__).parent
     regh5 = tdir / 'registration.h5'
-    regXLS= tdir / 'registration.xlsx'
+    regXLS= tdir / 'registration.ini'
 
     Phi0,Phifit=hist_registration(regh5,regXLS)
     readCheck(Phi0,Phifit)

@@ -63,7 +63,7 @@ def downsampleEnergy(Ek,EKpcolor,Mp,downsamp):
         logging.warning('should these NaNs be set to zero?')
     return Ek2,EKpcolor2,Mp2
 
-def getPhi0(sim,ap,xKM,Ek,makeplots):
+def getPhi0(sim,arc,xKM,Ek,makeplots):
     #%% get flux
     if not sim.realdata:
         if sim.Jfwdh5 is not None:
@@ -71,31 +71,29 @@ def getPhi0(sim,ap,xKM,Ek,makeplots):
             with h5py.File(str(sim.Jfwdh5),'r',libver='latest') as f:
                 Phi0 = asfortranarray(atleast_3d(f['/phiInit']))
         else:
-            Phi0 = assemblePhi0(sim,ap,Ek,xKM)
+            Phi0 = assemblePhi0(sim,arc,Ek,xKM)
         assert xKM.size == Phi0.shape[1]
     else:
         Phi0 = None
     return Phi0
 
-def assemblePhi0(sim,ap,Ek,xKM):
+def assemblePhi0(sim,arc,Ek,xKM):
     Phi0 = zeros((Ek.size,xKM.size,sim.nTimeSlice),order='F') #NOT empty, since we sum to build it!
 
-    for a in ap: #iterate over arcs, using superposition
+    for a in arc: #iterate over arcs, using superposition
 #%% upsample to sim time steps
-        assert (ap[a].loc['Zshape',0] == ap[a].loc['Zshape',:]).all(),'upgrade code to meld Zshapes'
+        E0,Q0,Wbc,bl,bm,bh,Bm,Bhf, Wkm,X0 = upsampletime(arc[a],sim)
 
-        E0,Q0,Wbc,bl,bm,bh,Bm,Bhf, Wkm,X0,Xshape = upsampletime(ap[a],sim)
-
-        if ap[a].at['Zshape',0] == 'transcar':
+        if arc[a].zshape == 'transcar':
             phiz = fluxgen(Ek, E0,Q0,Wbc,bl,bm,bh,Bm,Bhf)[0] # Nenergy x Ntime
-        elif ap[a].at['Zshape',0] == 'flat':
+        elif arc[a].zshape == 'flat':
             phiz = zeros((Ek.size, sim.nTimeSlice)) #zeros not empty or nan
             for i,e in enumerate(E0):
                 try:
                     phiz[Ek<=e,i] = Q0[i]  # Nenergy x Ntime_sim
                 except ValueError:
                     pass
-        elif ap[a].at['Zshape',0] == 'impulse':
+        elif arc[a].zshape == 'impulse':
             phiz = zeros((Ek.size, sim.nTimeSlice)) #zeros not empty or nan
             for i,e in enumerate(E0):
                 try:
@@ -103,11 +101,11 @@ def assemblePhi0(sim,ap,Ek,xKM):
                 except ValueError:
                     pass
         else:
-            raise NotImplementedError('not supposed to reach here with zshape={}'.format(ap[a].at['Zshape',0]))
+            raise NotImplementedError('unknown zshape = {}'.format(arc.zshape))
 #%% horizontal modulation
-        phix = getpx(xKM,Wkm,X0,Xshape)
+        phix = getpx(xKM,Wkm,X0,arc[a].xshape)
 
-        if ap[a].at['Zshape',0] == 'transcar':
+        if arc[a].zshape == 'transcar':
             for i in range(sim.nTimeSlice):
                 #unsmeared in time
                 phi0sim = zeros((Ek.size,xKM.size),order='F') #NOT empty, since we're summing!
@@ -115,7 +113,7 @@ def assemblePhi0(sim,ap,Ek,xKM):
                     phi0sim += outer(phiz[:,i*sim.timestepsperexp+j],
                                      phix[i*sim.timestepsperexp+j,:])
                 Phi0[...,i] += phi0sim
-        elif ap[a].at['Zshape',0] in ('impulse','flat'):
+        elif arc[a].zshape in ('impulse','flat'):
             phix[~isfinite(phix)] = 0.
             for i in range(sim.nTimeSlice):
                 Phi0[...,i] += outer(phiz[:,i],phix[i,:])
@@ -124,14 +122,13 @@ def assemblePhi0(sim,ap,Ek,xKM):
 
     return Phi0
 
-def upsampletime(ap,sim):
+def upsampletime(arc,sim):
     #%% obtain observation time steps from spreadsheet (for now, equal to kinetic time)
-    texp = ap.loc['tReqOffsetSec'].values.astype(float)
-    if abs(sim.kineticsec - diff(texp).mean()) > 1e-3:
+    if abs(sim.kineticsec - diff(arc.texp).mean()) > 1e-3:
         logging.error('exposure time not matching spreadsheet arc time step')
     # make simulation time, also defined as seconds since Transcar tReq
     dtsim =sim.kineticsec/sim.timestepsperexp
-    tsim = arange(texp[0],texp[-1],dtsim)
+    tsim = arange(arc.texp[0],arc.texp[-1],dtsim)
 
 # FUTURE
 #    #tsim is a finer time step than texp, the camera exposure
@@ -144,37 +141,32 @@ def upsampletime(ap,sim):
 
     #probably could be done with lambda
 
-    f = interp1d(texp,ap.loc['E0'].values.astype(float));     E0  = f(tsim)
+    f = interp1d(arc.texp, arc.E0);     E0  = f(tsim)
     if (~isfinite(E0)).any():
-        E0 = ap.loc['E0'].values.astype(float)[:-1]
+        E0 = arc.E0[:-1]
 
-    f = interp1d(texp,ap.loc['Q0'].values.astype(float));     Q0  = f(tsim)
+    f = interp1d(arc.texp, arc.Q0);     Q0  = f(tsim)
     if (~isfinite(Q0)).any():
-        Q0 = ap.loc['Q0'].values.astype(float)[:-1]
+        Q0 = arc.Q0[:-1]
 
-    f = interp1d(texp,ap.loc['Wbc',:].values.astype(float));  Wbc = f(tsim)
-    f = interp1d(texp,ap.loc['bl'].values.astype(float));     bl  = f(tsim)
-    f = interp1d(texp,ap.loc['bm'].values.astype(float));     bm  = f(tsim)
-    f = interp1d(texp,ap.loc['bh'].values.astype(float));     bh  = f(tsim)
-    f = interp1d(texp,ap.loc['Bm'].values.astype(float));     Bm  = f(tsim)
-    f = interp1d(texp,ap.loc['Bhf'].values.astype(float));    Bhf = f(tsim)
+    f = interp1d(arc.texp, arc.Wbc);  Wbc = f(tsim)
+    f = interp1d(arc.texp, arc.bl);   bl  = f(tsim)
+    f = interp1d(arc.texp, arc.bm);   bm  = f(tsim)
+    f = interp1d(arc.texp, arc.bh);   bh  = f(tsim)
+    f = interp1d(arc.texp, arc.Bm0);  Bm  = f(tsim)
+    f = interp1d(arc.texp, arc.Bhf);  Bhf = f(tsim)
 
-    f = interp1d(texp,ap.loc['Wkm'].values.astype(float));    Wkm = f(tsim)
+    f = interp1d(arc.texp, arc.Wkm);    Wkm = f(tsim)
     if (~isfinite(Wkm)).any():
-        Wkm = ap.loc['Wkm'].values.astype(float)[:-1]
+        Wkm = arc.Wkm[:-1]
 
-    f = interp1d(texp,ap.loc['X0km'].values.astype(float));   X0  = f(tsim)
+    f = interp1d(arc.texp, arc.X0km);   X0  = f(tsim)
     if (~isfinite(X0)).any():
-        X0 = ap.loc['X0km'].values.astype(float)[:-1]
+        X0 = arc.X0km[:-1]
 
     logging.info('new E0 upsamp [eV]: {}'.format(E0))
 
-    if ap.loc['Xshape'].eq(ap.at['Xshape',0]).all():
-        Xshape = ap.at['Xshape',0]
-    else:
-        raise NotImplementedError('upgrade code to meld Xshapes ')
-
-    return E0,Q0,Wbc,bl,bm,bh,Bm,Bhf, Wkm, X0,Xshape
+    return E0,Q0,Wbc,bl,bm,bh,Bm,Bhf, Wkm, X0
 
 def getpx(xKM,Wkm,X0,xs):
     assert isinstance(xs,str)
