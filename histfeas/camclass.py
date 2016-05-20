@@ -91,7 +91,7 @@ class Cam: #use this like an advanced version of Matlab struct
         self.lowerthres = splitconf(cp,'lowerthres',ci)
 
 #%% check FOV and 1D cut sizes for sanity
-        self.fovmaxlen = splitconf(cp,'FOVmaxLengthKM',ci)
+        self.fovmaxlen = splitconf(cp,'FOVmaxLengthKM',ci) #required
 
         if self.fovmaxlen > 10e3:
             logging.warning('sanityCheck: Your FOV length seems excessive > 10000 km')
@@ -117,7 +117,7 @@ class Cam: #use this like an advanced version of Matlab struct
 #        else:
 #            exit('*** unknown ray mapping method ' + self.raymap)
 #%% pixel noise/bias
-        self.noiselam = splitconf(cp,'noiseLam',ci)
+        self.noiselam = splitconf(cp,'noiseLam',ci,fallback=0.)
         self.ccdbias =  splitconf(cp,'CCDBias',ci)
 
         self.debiasData = splitconf(cp,'debiasData',ci)
@@ -151,10 +151,15 @@ class Cam: #use this like an advanced version of Matlab struct
             self.kineticsec = splitconf(cp,'kineticsec',ci) #simulation
             self.alt_m =      splitconf(cp,'Zkm',ci)*1000
             self.x_km =       splitconf(cp,'Xkm',ci)
+            self.transpose =  splitconf(cp,'transpose',ci)
+            self.fliplr    =  splitconf(cp,'fliplr',ci)
+            self.flipud    =  splitconf(cp,'flipud',ci)
+            self.rotccw    =  splitconf(cp,'rotccw',ci,fallback=0.)
 
         self.pixarea_sqcm = splitconf(cp,'pixarea_sqcm',ci)
         self.pedn = splitconf(cp,'pedn',ci)
         self.ampgain = splitconf(cp,'ampgain',ci)
+
 #%% camera model
         """
         A model for sensor gain
@@ -419,18 +424,29 @@ class Cam: #use this like an advanced version of Matlab struct
             ax.set_xlim([0,self.az.shape[1]])
             ax.set_ylim([0,self.az.shape[0]])
 
-def splitconf(conf,key,i,dtype=float,fallback=None,sep=','):
-    assert isinstance(i,int),'single integer index only'
+def splitconf(conf,key,i=None,dtype=float,fallback=None,sep=','):
+    if i is not None:
+        assert isinstance(i,(int,slice)),'single integer index only'
 
     if isinstance(key,(tuple,list)):
-        return splitconf(conf[key[0]],key[1:],i,dtype,fallback,sep)
+        if len(key)>1: #drilldown
+            return splitconf(conf[key[0]],key[1:],i,dtype,fallback,sep)
+        else:
+            return splitconf(conf,key[0],i,dtype,fallback,sep)
     elif isinstance(key,str):
-        val = conf.get(key,fallback=None)
+        val = conf.get(key,fallback=fallback)
     else:
         raise TypeError('invalid key type {}'.format(type(key)))
 
     try:
         return dtype(val.split(sep)[i])
     except (ValueError,AttributeError,IndexError):
-        pass
-
+        return fallback
+    except TypeError:
+        if i is None:
+            try:
+                return [dtype(v) for v in val.split(sep)] #return list of all values instead of just one
+            except ValueError:
+                return fallback
+        else:
+            return fallback

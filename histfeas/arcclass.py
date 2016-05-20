@@ -1,13 +1,35 @@
-"""
-Michael Hirsch
-GPLv3+
-"""
-from __future__ import print_function, division, absolute_import
-from numpy import exp,outer, zeros_like,zeros
+#!/usr/bin/env python3
+from numpy import outer, zeros_like,zeros,fromstring
 #
 from gridaurora.chapman import chapman_profile
 from histutils.findnearest import find_nearest
 from .transcararc import getpx
+
+
+class Arc():
+
+    def __init__(self,xl):
+        self.zshape = xl['Zshape']
+        self.xshape = xl['Xshape']
+
+        self.texp = fromstring(xl['tsec'],sep=',')
+
+        self.Pnorm = fromstring(xl['Pnorm'],sep=',')
+
+        self.E0 = fromstring(xl['E0'],sep=',')
+        self.Q0 = fromstring(xl['Q0'],sep=',')
+        self.Wbc = fromstring(xl['Wbc'],sep=',')
+        self.bl = fromstring(xl['bl'],sep=',')
+        self.bm = fromstring(xl['bm'],sep=',')
+        self.bh = fromstring(xl['bh'],sep=',')
+        self.Bm0 = fromstring(xl['Bm0'],sep=',')
+        self.Bhf = fromstring(xl['Bhf'],sep=',')
+
+        self.X0km = fromstring(xl['x0km'],sep=',')
+        self.Wkm = fromstring(xl['Wkm'],sep=',')
+
+
+
 
 def getver(x,z,Mp,Phi0, w,h,x0,z0,xshape,zshape,pmax):
     if zshape=='chapman':

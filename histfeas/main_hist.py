@@ -41,7 +41,7 @@ def doSim(ParamFN,makeplot,timeInds,overrides,odir,x1d,vlim,animtime, cmd,verbos
     odir.mkdir(parents=True,exist_ok=True)
     (odir/'cmd.log').write_text(' '.join(argv)) #store command for future log
 #%% Step 0) load data
-    ap,sim,cam,Fwd = getParams(ParamFN, overrides,makeplot,odir)
+    arc,sim,cam,Fwd = getParams(ParamFN, overrides,makeplot,odir)
 #%% setup loop
     if sim.realdata:
         cam,rawdata,sim = getSimulData(sim,cam,makeplot,odir,verbose)
@@ -58,7 +58,7 @@ def doSim(ParamFN,makeplot,timeInds,overrides,odir,x1d,vlim,animtime, cmd,verbos
     Peig = getMp(sim,cam,Fwd['z'],makeplot)
 #%% synthetic diff. num flux
     if not sim.realdata:
-        Phi0all = getPhi0(sim,ap,Fwd['x'],Peig['Ek'], makeplot) # Nenergy x Nx x Ntime
+        Phi0all = getPhi0(sim,arc,Fwd['x'],Peig['Ek'], makeplot) # Nenergy x Nx x Ntime
     else:
         Phi0all = None
     logging.debug('timeInds: {}'.format(timeInds))
@@ -74,7 +74,7 @@ def doSim(ParamFN,makeplot,timeInds,overrides,odir,x1d,vlim,animtime, cmd,verbos
             """
             Phi0 = Phi0all[...,ti] # Nenergy x Nx
 #%% Step 1) Forward model
-        Pfwd = getSimVER(Phi0, Peig, Fwd, sim, ap, ti) # Nz x Nx
+        Pfwd = getSimVER(Phi0, Peig, Fwd, sim, arc, ti) # Nz x Nx
 #%% Step 2) Observe Forward Model (create vector of observations)
         bn = getObs(sim,cam,Lfwd,ti,Pfwd,makeplot,verbose) # Ncam*Npixel (1D vector)
         drnAll.append(bn)

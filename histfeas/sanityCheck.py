@@ -10,7 +10,7 @@ from geopy.distance import vincenty
 #
 from .camclass import Cam
 from .simclass import Sim
-
+from .arcclass import Arc
 
 def getParams(inifn,overrides,makeplot,odir):
     inifn = Path(inifn).expanduser()
@@ -21,17 +21,10 @@ def getParams(inifn,overrides,makeplot,odir):
     xl = ConfigParser(allow_no_value=True, inline_comment_prefixes=('#'),strict=True)
     xl.read(str(inifn))
 #%% read arcs (if any)
-    ap = {}; ntimeslice=None
-    for s in xl:
-        if s.startswith('Arc'):
-            ap[s] = xl[s]
-            if ntimeslice is not None and ap[s].shape[1]-1 != ntimeslice:
-                raise ValueError('for now, all Arcs must have same number of times (columns)')
-            ntimeslice=ap[s].shape[1]-1
-
+    arc,ntimeslice = setupArc(xl)
     logging.info('# of observer time steps in spreadsheet: {}'.format(ntimeslice))
 #%% class with parameters and function
-    sim = Sim(xl,ap,ntimeslice,overrides,makeplot,odir)
+    sim = Sim(xl,arc,ntimeslice,overrides,makeplot,odir)
 #%% grid setup
     Fwd = sim.setupFwdXZ(xl)
 #%% setup cameras
@@ -56,8 +49,25 @@ def getParams(inifn,overrides,makeplot,odir):
     logging.info('fwd model voxels:\n'
           'B_perp: N={}   B_parallel: M={}'.format(Fwd['sx'],Fwd['sz']))
 #%% init variables
-    return ap,sim,cam,Fwd
+    return arc,sim,cam,Fwd
 ###############################################
+
+def setupArc(xl):
+    arc = {}
+    ntimeslice=None
+
+    for s in xl:
+        if s.startswith('arc'):
+            if ntimeslice is not None and getntimes(xl[s]) != ntimeslice:
+                raise ValueError('for now, all Arcs must have same number of times (columns)')
+            ntimeslice = getntimes(xl[s]) # last time is blended with 2nd to last time
+
+            arc[s] = Arc(xl[s])
+
+    return arc, ntimeslice
+
+def getntimes(arc):
+    return len(arc['tsec'].split(','))-1
 
 def setupCam(sim,cp,zmax,makeplot):
     cam = []
