@@ -91,7 +91,7 @@ class Cam: #use this like an advanced version of Matlab struct
         self.lowerthres = splitconf(cp,'lowerthres',ci)
 
 #%% check FOV and 1D cut sizes for sanity
-        self.fovmaxlen = splitconf(cp,'FOVmaxLengthKM',ci) #required
+        self.fovmaxlen = splitconf(cp,'FOVmaxLengthKM',ci,fallback=nan)
 
         if self.fovmaxlen > 10e3:
             logging.warning('sanityCheck: Your FOV length seems excessive > 10000 km')
@@ -149,7 +149,7 @@ class Cam: #use this like an advanced version of Matlab struct
                 self.alt_m = c['alt_m'][0]
         else: #sim
             self.kineticsec = splitconf(cp,'kineticsec',ci) #simulation
-            self.alt_m =      splitconf(cp,'Zkm',ci)*1000
+            self.alt_m =      splitconf(cp,'Zkm',ci,fallback=nan)*1000
             self.x_km =       splitconf(cp,'Xkm',ci)
             self.transpose =  splitconf(cp,'transpose',ci)
             self.fliplr    =  splitconf(cp,'fliplr',ci)
@@ -331,7 +331,7 @@ class Cam: #use this like an advanced version of Matlab struct
 
     def dolowerthres(self,data):
         try:
-            print('Thresholding Data to 0 when DN < {} for Camera {}'.format(self.lowerthres,self.name))
+            print('Thresholding Data to 0 when DN < {:.1f} for Camera {}'.format(self.lowerthres,self.name))
             data[ data < self.lowerthres ] = 0
         except TypeError:
             pass

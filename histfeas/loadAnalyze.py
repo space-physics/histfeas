@@ -124,10 +124,10 @@ def findxlsh5(h5path):
 
     if h5path.is_file():
         h5list = [h5path]
-        xlsfn = sorted(h5path.parent.glob('*.xls*'))
+        xlsfn = sorted(h5path.parent.glob('*.ini'))
     elif h5path.is_dir():
         h5list = sorted(h5path.glob('dump*.h5'))
-        xlsfn =  sorted(h5path.glob('*.xls*'))
+        xlsfn =  sorted(h5path.glob('*.ini'))
     else:
         raise ValueError('no path or file at {}'.format(h5path))
 
