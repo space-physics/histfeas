@@ -2,7 +2,7 @@ from pathlib import Path
 import logging
 from numpy import (linspace, fliplr, flipud, rot90, arange,
                    polyfit,polyval,rint,empty, isfinite, isclose,
-                   absolute, hypot, unravel_index,in1d,array,fromstring)
+                   absolute, hypot, unravel_index,in1d,array,nan)
 from datetime import datetime
 from pytz import UTC
 from dateutil.parser import parse
@@ -30,14 +30,21 @@ class Cam: #use this like an advanced version of Matlab struct
         self.usecam = sim.useCamBool[ci]
 
         if not self.usecam and sim.realdata and name.lower().startswith('asi'):
-            self.fn = list(Path(cp['fn']).expanduser().glob('*.FITS'))
+            self.fn = list(Path(cp['fn'].split(',')[ci]).expanduser().glob('*.FITS'))
             self.name = name
 
             self.clim = [None]*2
-            if isfinite(cp['plotMinVal']): self.clim[0] =  cp['plotMinVal']
-            if isfinite(cp['plotMaxVal']): self.clim[1] =  cp['plotMaxVal']
+            if splitconf(cp,'plotMinVal',ci) is not None:
+                self.clim[0] =  splitconf(cp,'plotMinVal',ci)
+            if splitconf(cp,'plotMaxVal',ci) is not None:
+                self.clim[1] =  splitconf(cp,'plotMaxVal',ci)
 
-            _,(self.az,self.el),self.lla,_ = readDASC(self.fn[0],cp['azcalfn'],cp['elcalfn'])
+            _,(self.az,self.el),self.lla,_ = readDASC(self.fn[0],
+                                                cp['azcalfn'].split(',')[ci],
+                                                cp['elcalfn'].split(',')[ci])
+
+            self.x_km  = nan
+            self.alt_m = nan
 
 
             if 'realvid' in makeplot:
@@ -59,7 +66,7 @@ class Cam: #use this like an advanced version of Matlab struct
         elif self.usecam:
             self.name = int(name)
 #%%
-        self.nCutPix = int(cp['nCutPix'].split(',')[ci])
+        self.ncutpix = int(cp['nCutPix'].split(',')[ci])
 
 
         self.Bincl =  splitconf(cp,'Bincl',ci)
@@ -88,7 +95,7 @@ class Cam: #use this like an advanced version of Matlab struct
 
         if self.fovmaxlen > 10e3:
             logging.warning('sanityCheck: Your FOV length seems excessive > 10000 km')
-        if self.nCutPix > 4096:
+        if self.ncutpix > 4096:
             logging.warning('sanityCheck: Program execution time may be excessive due to large number of camera pixels')
         if self.fovmaxlen < (1.5*zmax):
             logging.warning('sanityCheck: To avoid unexpected pixel/sky voxel intersection problems, make your candidate camera FOV at least 1.5 times longer than your maximum Z altitude.')
@@ -114,8 +121,8 @@ class Cam: #use this like an advanced version of Matlab struct
         self.ccdbias =  splitconf(cp,'CCDBias',ci)
 
         self.debiasData = splitconf(cp,'debiasData',ci)
-        self.smoothspan = splitconf(cp,'smoothspan',ci,dt=int)
-        self.savgolOrder = splitconf(cp,'savgolOrder',ci,dt=int)
+        self.smoothspan = splitconf(cp,'smoothspan',ci,dtype=int)
+        self.savgolOrder = splitconf(cp,'savgolOrder',ci,dtype=int)
 
         """ expects an HDF5 .h5 file"""
 
@@ -145,23 +152,23 @@ class Cam: #use this like an advanced version of Matlab struct
             self.alt_m =      splitconf(cp,'Zkm',ci)*1000
             self.x_km =       splitconf(cp,'Xkm',ci)
 
+        self.pixarea_sqcm = splitconf(cp,'pixarea_sqcm',ci)
+        self.pedn = splitconf(cp,'pedn',ci)
+        self.ampgain = splitconf(cp,'ampgain',ci)
 #%% camera model
         """
         A model for sensor gain
         pedn is photoelectrons per data number
         This is used in fwd model and data inversion
         """
-        hasgainparam = isfinite(self.kineticsec) and isfinite(cp['pixarea_sqcm']) and isfinite(cp['pedn']) and isfinite(cp['ampgain'])
-
-        if hasgainparam:
-            self.dn2intens = cp['pedn'] / (self.kineticsec * cp['pixarea_sqcm'] * cp['ampgain'])
+        try:
+            self.dn2intens = self.pedn / (self.kineticsec * self.pixarea_sqcm * self.ampgain)
             if sim.realdata:
-                self.intens2dn = 1
+                self.intens2dn = 1.
             else:
-                self.intens2dn = 1/self.dn2intens
-        else: #this will give tiny ver and flux
-            self.intens2dn = self.dn2intens = 1
-
+                self.intens2dn = 1./self.dn2intens
+        except TypeError: #this will give tiny ver and flux
+            self.intens2dn = self.dn2intens = 1.
 #%% summary
         if sim.realdata:
             logging.info('cam{} timeshift: {} seconds'.format(self.name,self.timeShiftSec))
@@ -181,7 +188,7 @@ class Cam: #use this like an advanced version of Matlab struct
         #raySpacingDeg = self.arbfov / self.nCutPix
         maxAng = self.boresightEl + self.arbfov/2
         minAng = self.boresightEl - self.arbfov/2
-        angles=linspace(maxAng, minAng, num=self.nCutPix, endpoint=True)
+        angles=linspace(maxAng, minAng, num=self.ncutpix, endpoint=True)
         assert isclose(angles[0],maxAng) & isclose(angles[-1],minAng)
         return angles
 
@@ -269,17 +276,15 @@ class Cam: #use this like an advanced version of Matlab struct
     def donoise(self,data):
          noisy = data.copy()
 
-         if hasattr(self,'noiselam') and isfinite(self.noiselam):
-             logging.info('adding Poisson noise with \lambda={:0.1f} to camera #{}'.format(self.noiselam,self.name))
-             dnoise = poisson(lam=self.noiselam,size=self.nCutPix)
-             noisy += dnoise
-         else:
-             dnoise = None
+         logging.info('adding Poisson noise with $\lambda={}$ to camera #{}'.format(self.noiselam,self.name))
+         dnoise = poisson(lam=self.noiselam,size=self.ncutpix)
+         noisy += dnoise
 
-
-         if hasattr(self,'ccdbias') and isfinite(self.ccdbias):
-             logging.info('adding bias {:0.1e} to camera #{}'.format(self.ccdbias,self.name))
+         try:
+             logging.info('adding bias {:.1f} to camera #{}'.format(self.ccdbias,self.name))
              noisy += self.ccdbias
+         except TypeError:
+             pass
 
          # kept for diagnostic purposes
 #         self.raw = data #these are untouched pixel intensities
@@ -290,14 +295,18 @@ class Cam: #use this like an advanced version of Matlab struct
 
     def dosmooth(self,data):
         assert isfinite(data).all(),'NaN leaked into brightness data, savgol cannot handle NaN'
-        if self.smoothspan > 0 and self.savgolOrder>0:
-            logging.debug('Smoothing Data for Camera #{}'.format(self.name))
-            data= savgol_filter(data, self.smoothspan, self.savgolOrder)
-        return data #LEAVE THIS AS SEPARATE LINE!
+        try:
+            if self.smoothspan > 0 and self.savgolOrder>0:
+                logging.debug('Smoothing Data for Camera #{}'.format(self.name))
+                data= savgol_filter(data, self.smoothspan, self.savgolOrder)
+        except TypeError:
+            pass
+
+        return data
 
     def fixnegval(self,data):
         mask = data<0
-        if mask.sum()>0.2*self.nCutPix:
+        if mask.sum()>0.2*self.ncutpix:
             logging.info('Setting {} negative Data values to 0 for Camera #{}'.format(mask.sum(), self.name))
 
         data[mask] = 0
@@ -306,10 +315,13 @@ class Cam: #use this like an advanced version of Matlab struct
         return data
 
     def scaleintens(self,data):
-        if isfinite(self.intensityScaleFactor) and self.intensityScaleFactor !=1 :
+        try:
             logging.info('Scaling data to Cam #{} by factor of {}'.format(self.name,self.intensityScaleFactor))
             data *= self.intensityScaleFactor
             #assert isnan(data).any() == False
+        except TypeError:
+            pass
+
         return data
 
     def dolowerthres(self,data):
@@ -407,18 +419,18 @@ class Cam: #use this like an advanced version of Matlab struct
             ax.set_xlim([0,self.az.shape[1]])
             ax.set_ylim([0,self.az.shape[0]])
 
-def splitconf(conf,key,i,dt=float,fallback=None,sep=','):
+def splitconf(conf,key,i,dtype=float,fallback=None,sep=','):
     assert isinstance(i,int),'single integer index only'
 
     if isinstance(key,(tuple,list)):
-        return splitconf(conf[key[0]],key[1:],i,dt,fallback,sep)
+        return splitconf(conf[key[0]],key[1:],i,dtype,fallback,sep)
     elif isinstance(key,str):
         val = conf.get(key,fallback=None)
     else:
         raise TypeError('invalid key type {}'.format(type(key)))
 
     try:
-        return dt(val.split(sep)[i])
-    except (ValueError,AttributeError):
+        return dtype(val.split(sep)[i])
+    except (ValueError,AttributeError,IndexError):
         pass
 

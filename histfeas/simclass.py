@@ -44,7 +44,7 @@ class Sim:
 
         nCutPix = fromstring(sp['cam']['nCutPix'],dtype=int,sep=',') #FIXME someday allow different # of pixels..
         assert (nCutPix[self.useCamBool] == nCutPix[self.useCamBool][0]).all(),'all cameras must have same 1D cut length'
-        self.nCutpix = nCutPix[self.useCamBool][0]
+        self.ncutpix = nCutPix[self.useCamBool][0]
 
         if 'realvid' in makeplot:
             self.fovfn = sp.get('cams','fovfn',fallback=None)
@@ -124,7 +124,7 @@ class Sim:
         if self.realdata:
             self.realdatapath = Path(sp['cams']['ActualDataDir']).expanduser()
 
-        self.raymap = str(sp['cams']['RayAngleMapping']).lower()
+        self.raymap = sp['cams']['RayAngleMapping'].lower()
 
         self.downsampleEnergy = sp.getfloat('transcar','downsampleEnergy',fallback=False)
 
@@ -202,22 +202,23 @@ class Sim:
 
         return timeInds[timeInds<self.nTimeSlice] #(it's <, not <=) slice off commond line requests beyond number of frames
 
-    def getEllHash(self,sp,cp,x,z):
+    def getEllHash(self,sp,x,z):
         EllCritParams =  [x, z,
-                          cp.loc['nCutPix'].values, cp.loc['FOVmaxLengthKM'].values,
-                          str(sp.at['RayAngleMapping','Cams']).lower(),
-                          sp.at['XcellKM','Fwdf'],
-                          sp.at['XminKM','Fwdf'], sp.at['XmaxKM','Fwdf'],
-                          sp.at['EllIs','Sim'].lower(),
-                          sp.at['UseTCz','Transcar'] ]
+                          fromstring(sp['cam']['nCutPix'],dtype=int,sep=','),
+                          fromstring(sp['cam']['FOVmaxLengthKM'],dtype=float,sep=','),
+                          sp['cams']['RayAngleMapping'],
+                          sp.getfloat('fwd','XcellKM'), sp.getfloat('fwd','XminKM'),
+                          sp.getfloat('fwd','XmaxKM'),
+                          sp['sim']['EllIs'].lower(),
+                          sp.getboolean('transcar','UseTCz')]
 
         if not self.useztranscar: #FIXME maybe we should always consider these for best safety
-            EllCritParams.extend([sp.at['ZcellKM','Fwdf'],
-                                  sp.at['ZminKM','Fwdf'], sp.at['ZmaxKM','Fwdf'] ])
+            EllCritParams.extend([sp.getfloat('fwd','ZcellKM'),
+                                  sp.getfloat('fwd','ZminKM'), sp.getfloat('fwd','ZmaxKM') ])
 
         if self.raymap == 'arbitrary':
-            EllCritParams.extend([cp.loc['boresightElevDeg'].values,
-                                  cp.loc['FOVdeg'].values])
+            EllCritParams.extend([fromstring(sp['cam']['boresightElevDeg'],dtype=float,sep=','),
+                                  fromstring(sp['cam']['FOVdeg'],dtype=float,sep=',')])
 
         # get a long string from a mix of numbers and strings
         EllTxt = ''.join([str(n) for n in EllCritParams]) #so fast!

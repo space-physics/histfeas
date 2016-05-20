@@ -16,7 +16,7 @@ def getObs(sim,cam,L,tDataInd,ver,makePlots,verbose):
     if not sim.realdata and ver is None:
         return
 
-    nCutPix = sim.nCutPix
+    nCutPix = sim.ncutpix
 
     if sim.realdata:
         bn = empty(nCutPix * sim.nCamUsed,dtype=float,order='F') #FIXME assumes all cuts same length AND that cam 0 is used
@@ -62,7 +62,7 @@ def getObs(sim,cam,L,tDataInd,ver,makePlots,verbose):
 
 def makeCamFOVpixelEnds(Fwd,sim,cam,makePlots,verbose):
 
-    nCutPix = sim.nCutPix
+    nCutPix = sim.ncutpix
 
     # when creating a new L, we always use all cameras, so ha['nCam'] is good here
     # order='F' not needed here because we don't reshape or ravel this variable
@@ -190,8 +190,8 @@ def getEll(sim,cam,Fwd,makeplots,verbose):
     else:
         L,Fwd,cam = loadEll(sim,Fwd,cam,makeplots,verbose)
 
-    L = removeUnusedCamera(L,sim.useCamBool,sim.nCutPix)
-    cam = definecamind(cam,sim.nCutPix)
+    L = removeUnusedCamera(L,sim.useCamBool,sim.ncutpix)
+    cam = definecamind(cam,sim.ncutpix)
 
     return L,Fwd,cam
 

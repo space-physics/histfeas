@@ -80,7 +80,7 @@ def goPlot(sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
     sx = Fwd['sx']
     sz = Fwd['sz']
 
-    nCutPix = sim.nCutPix #FIXME assumes all cams same # of pixels
+    nCutPix = sim.ncutpix #FIXME assumes all cams same # of pixels
 
 #%% get xind
     try:
