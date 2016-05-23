@@ -108,13 +108,8 @@ def readresults(h5list,xlsfn,vlim,x1d,overrides,makeplot,verbose=0):
             pf = None;  phif = None
 
         if 'fwd' in makeplot:
-            if sim.realdata:
-                plotfwd(sim,cam,drn[i],x,xp,z,zp,
-                    None,None,Phidict[i],Jxi,vlim,i,makeplot,odir,
-                    doSubplots=True,overrides=overrides)
-            else:
-                plotfwd(sim,cam,drn[i],x,xp,z,zp,
-                    Pfwd[i],Phifwd[...,i],Phidict[i],Jxi,vlim,i,makeplot,odir,
+            plotfwd(sim,cam,drn[i],x,xp,z,zp,
+                    pf,phif,Phidict[i],Jxi,vlim,i,makeplot,odir,
                     doSubplots=True,overrides=overrides)
 
         if 'optim' in makeplot:
