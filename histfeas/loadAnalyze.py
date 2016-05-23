@@ -5,7 +5,6 @@ To generate inputs for this program, run main_hist.py with
 option
 """
 from pathlib import Path
-import logging
 import h5py
 from numpy import asarray,diff
 from matplotlib.pyplot import show
@@ -69,8 +68,8 @@ def readresults(h5list,xlsfn,vlim,x1d,overrides,makeplot,verbose=0):
     if not xlsfn:
         raise ValueError('No XLSX parameter file found')
 
-    ap,sim,cam,Fwd = getParams(xlsfn,overrides,makeplot,odir)
-    cam = definecamind(cam,sim.nCutPix)
+    arc,sim,cam,Fwd = getParams(xlsfn,overrides,makeplot,odir)
+    cam = definecamind(cam,sim.ncutpix)
 #%% load original angles of camera
     ut1_unix = asarray(ut1_unix)
     for i,C in enumerate(cam):
@@ -78,18 +77,18 @@ def readresults(h5list,xlsfn,vlim,x1d,overrides,makeplot,verbose=0):
             C.angle_deg = angle_deg[i,:]
             C.tKeo = ut1_unix[:,i]
 #%% load args if they exist
-    for a in ap:
+    for a in arc:
         """
         TODO: assumes all are same distance apart (zero accel)
         NOTE: Assumption is that arc is moving smoothly with zero acceleration,
         so that mean position for each time step is = x[:-1] + 0.5*diff(x) as below.
         """
-        if ap[a].at['Zshape',0] in ('flat','impulse'):
-            x0true = ap[a].loc['X0km',:][:-1]
-            E0true = ap[a].loc['E0',:][:-1]
+        if arc.zshape in ('flat','impulse'):
+            x0true = arc[a].loc['X0km',:][:-1]
+            E0true = arc[a].loc['E0',:][:-1]
         else:
-            x0true = (ap[a].loc['X0km',:][:-1] + 0.5*diff(ap[a].loc['X0km',:]))
-            E0true = (ap[a].loc['E0',:][:-1]   + 0.5*diff(ap[a].loc['E0',:]))
+            x0true = (arc[a].loc['X0km',:][:-1] + 0.5*diff(arc[a].loc['X0km',:]))
+            E0true = (arc[a].loc['E0',:][:-1]   + 0.5*diff(arc[a].loc['E0',:]))
 
         analyseres(sim,cam,
                    x, xp, Phifwd, Phidict, drn, dhat,
@@ -109,7 +108,12 @@ def readresults(h5list,xlsfn,vlim,x1d,overrides,makeplot,verbose=0):
             pf = None;  phif = None
 
         if 'fwd' in makeplot:
-            plotfwd(sim,cam,drn[i],x,xp,z,zp,
+            if sim.realdata:
+                plotfwd(sim,cam,drn[i],x,xp,z,zp,
+                    None,None,Phidict[i],Jxi,vlim,i,makeplot,odir,
+                    doSubplots=True,overrides=overrides)
+            else:
+                plotfwd(sim,cam,drn[i],x,xp,z,zp,
                     Pfwd[i],Phifwd[...,i],Phidict[i],Jxi,vlim,i,makeplot,odir,
                     doSubplots=True,overrides=overrides)
 

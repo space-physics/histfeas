@@ -252,22 +252,19 @@ def tind2dt(cam,tind):
 #%%
 def plotfwd(sim,cam,drn,xKM,xp,zKM,zp, ver,Phi0,fitp,Jxi,vlim,tInd,makeplot,odir,
             doSubplots=True,overrides={}):
-
-    if Jxi is None or 'optim' in makeplot:
-        nrow = 1
-        vsizeinch = 10
-    else:
-        nrow = 2
-        vsizeinch = 15
+#%% number of subplot rows
+    nrow = 1 if Jxi is None or 'optim' in makeplot else 2
+#%% number of subplot columns
+    ncol = 1 if sim.realdata else 3
 
     T = tind2dt(cam,tInd)
 
     if doSubplots:
         ttxt = T + "\n x_cam " + str(['{:.2f}'.format(c.x_km) for c in cam if c.usecam])
-        fg,axs = subplots(nrow,3,figsize=(21,vsizeinch))
+        fg,axs = subplots(nrow,ncol,figsize=(ncol*7.5,nrow*7.5))
         axs = atleast_2d(axs)
 
-        fg.suptitle(ttxt,fontsize='x-large') #FIXME here we just use the fastest camera, cam 0 apriori
+        fg.suptitle(ttxt) #FIXME here we just use the fastest camera, cam 0 apriori
         fg.subplots_adjust(top=0.9) # FIXME http://matplotlib.org/faq/howto_faq.html
 
     else:
@@ -305,13 +302,8 @@ def plotfwd(sim,cam,drn,xKM,xp,zKM,zp, ver,Phi0,fitp,Jxi,vlim,tInd,makeplot,odir
 def plotoptim(sim,cam,drn,dhat,bcomptxt,ver,Phi0,Jxi,
               vfit,fitp,xKM,xp,zKM,zp,vlim,tInd,makeplot,odir,
               doSubplots=True,overrides={}):
-
-    if Jxi is None:
-        nrow = 1
-        vsizeinch = 10
-    else:
-        nrow = 2
-        vsizeinch = 15
+#%% always 3 columns in subplot
+    nrow = 1 if Jxi is None else 2
 
     T = tind2dt(cam,tInd)
 
@@ -322,8 +314,8 @@ def plotoptim(sim,cam,drn,dhat,bcomptxt,ver,Phi0,Jxi,
         vfit = vfit['optim']
 
     if doSubplots:
-        ttxt = T + "\n x_cam " + str([c.x_km for c in cam if c.usecam])
-        fg,axs = subplots(nrow,3,figsize=(21,vsizeinch))
+        ttxt = T + "\n x_cam " + str(['{:.2f}'.format(c.x_km) for c in cam if c.usecam])
+        fg,axs = subplots(nrow,3,figsize=(21,nrow*7.5))
         axs = atleast_2d(axs)
 
         fg.suptitle(ttxt,fontsize='x-large') #FIXME here we just use the fastest camera, cam 0 apriori

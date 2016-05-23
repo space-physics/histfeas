@@ -197,7 +197,7 @@ def getEll(sim,cam,Fwd,makeplots,verbose):
 
 def removeUnusedCamera(L,useCamBool,nCutPix):
     ''' remove unused cameras (rows of L) '''
-    arow = ones(nCutPix).astype(bool)
+    arow = ones(nCutPix,bool)
     grow = outer(arow,useCamBool).ravel(order='F')
     return L[grow,:]
 
