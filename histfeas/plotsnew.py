@@ -3,7 +3,7 @@ import logging
 from tempfile import gettempdir
 from numpy import (s_,array,empty,empty_like,isnan,asfortranarray,linspace,outer,
                    sin,cos,pi,ones_like,nan,unravel_index,meshgrid,logspace,
-                   log10,spacing,atleast_2d)
+                   log10,spacing,atleast_2d,ndarray)
 from datetime import datetime
 #from numpy.ma import masked_invalid #for pcolormesh, which doesn't like NaN
 from matplotlib.pyplot import figure,subplots, clf,text,colorbar
@@ -1230,9 +1230,12 @@ def dumph5(prefix,tInd,odir=gettempdir(),**writevar): #used in other .py too
     fn = Path(odir).expanduser()/('dump' + nametime(tInd) +'.h5')
 
     logging.info('dumping {} to {}'.format(prefix, fn))
-    with h5py.File(str(fn),'a',libver='latest') as f:
+    with h5py.File(str(fn),'a',libver='latest') as H:
         for k,v in writevar.items():
             try:
-                f['/'+prefix+'/'+k]=v
+                if isinstance(v,ndarray) and v.ndim>1:
+                    H.create_dataset('/'+prefix+'/'+k, data=v, compression='gzip')
+                else:
+                    H['/'+prefix+'/'+k] = v
             except Exception as e:
                 logging.error('failed to write {} /{}/{}.  {}'.format(fn,prefix,k,e))

@@ -7,7 +7,7 @@ option
 from pathlib import Path
 import h5py
 from numpy import asarray,diff
-from matplotlib.pyplot import show
+from matplotlib.pyplot import show,close
 #
 from histutils.findnearest import find_nearest
 from .analysehst import analyseres
@@ -119,6 +119,10 @@ def readresults(h5list, inifn,vlim,x1d,overrides,makeplot,verbose=0):
                       Pest[i],Phidict[i],x,xp,z,zp,vlim,i,makeplot,odir,
                       doSubplots=True,overrides=overrides)
 
+        if 'show' in makeplot:
+            show()
+        else:
+            close('all')
 
 def findxlsh5(h5path):
     h5path = Path(h5path).expanduser()
