@@ -1,5 +1,5 @@
 import logging
-from numpy import empty,empty_like,s_,isnan,sin,cos,radians,append,diff,ones,outer
+from numpy import empty,empty_like,isnan,sin,cos,radians,append,diff,ones,outer
 import numpy as np #need this here
 from scipy.sparse import csc_matrix
 import h5py
@@ -191,19 +191,19 @@ def getEll(sim,cam,Fwd,makeplots,verbose):
         L,Fwd,cam = loadEll(sim,Fwd,cam,makeplots,verbose)
 
     L = removeUnusedCamera(L,sim.useCamBool,sim.ncutpix)
-    cam = definecamind(cam,sim.ncutpix)
+    cam = definecamind(cam)
 
     return L,Fwd,cam
 
-def removeUnusedCamera(L,useCamBool,nCutPix):
+def removeUnusedCamera(L,useCamBool,ncutpix):
     ''' remove unused cameras (rows of L) '''
-    arow = ones(nCutPix,bool)
+    arow = ones(ncutpix,bool)
     grow = outer(arow,useCamBool).ravel(order='F')
     return L[grow,:]
 
-def definecamind(cam,nCutPix):
+def definecamind(cam):
     ''' store indices of b vector corresponding to each camera (in case some cameras not used) '''
     for i,C in enumerate(cam):
         if C.usecam:
-            C.ind = s_[ i*nCutPix : (i+1)*nCutPix ]
+            C.ind = slice(i*C.ncutpix, (i+1)*C.ncutpix)
     return cam

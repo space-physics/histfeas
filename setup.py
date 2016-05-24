@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 import os,sys,subprocess
 from setuptools import setup
 
@@ -18,7 +18,7 @@ setup(name='histfeas',
 	  long_description=long_description,
 	  author='Michael Hirsch',
 	  url='https://github.com/scienceopen/histfeas',
-	  install_requires=['histutils','lowtran','pymap3d','astrometry_azel','cvutils','gridaurora','transcarread','pyimagevideo','dascutils',
+	  install_requires=['histutils','lowtran','pymap3d','astrometry_azel','cvutils','gridaurora','transcarread','pyimagevideo','dascutils','pybashutils',
                         'gaussfitter',
                         'tifffile','Wand',
 		        'geopy'],
@@ -32,7 +32,8 @@ setup(name='histfeas',
         'https://github.com/scienceopen/transcarread/tarball/master#egg=transcarread',
         'https://github.com/scienceopen/gaussfitter/tarball/master#egg=gaussfitter',
         'https://github.com/scienceopen/pyimagevideo/tarball/master#egg=pyimagevideo',
-        'https://github.com/scienceopen/dascutils/tarball/master#egg=dascutils'
+        'https://github.com/scienceopen/dascutils/tarball/master#egg=dascutils',
+        'https://github.com/scienceopen/pybashutils/tarball/master#egg=pybashutils'
                           ],
       packages=['histfeas'],
 	  )

@@ -251,7 +251,7 @@ def tind2dt(cam,tind):
         return str(tind)
 #%%
 def plotfwd(sim,cam,drn,xKM,xp,zKM,zp, ver,Phi0,fitp,Jxi,vlim,tInd,makeplot,odir,
-            doSubplots=True,overrides={}):
+            doSubplots=True,overrides=[]):
 #%% number of subplot rows
     nrow = 1 if Jxi is None or 'optim' in makeplot else 2
 #%% number of subplot columns
