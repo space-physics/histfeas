@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """
--c realvid png   # plot simultaneous HST 2 cam + DASC all sky
--c fwd optim png h5 # compute inversion based on optical intensity, save plots as png and result as hdf5 for quick replot
+-m realvid png   # plot simultaneous HST 2 cam + DASC all sky
+-m fwd optim png h5 # compute inversion based on optical intensity, save plots as png and result as hdf5 for quick replot
 
+--load -m fwd optim png # load and replot inversion with say different axes limits (far faster than needlessly recomputing)
 """
 import logging
 logging.basicConfig(level=logging.WARNING)
@@ -10,6 +11,10 @@ from tempfile import gettempdir
 from pathlib import Path
 from dateutil.parser import parse
 from sys import argv
+#
+from pythonutils.ulimit_nofile import raise_nofile
+raise_nofile(4096) # ulimit -n 1024 will crash with OSError. This is a temporary setting extinguishing with Python session.
+
 
 def hist_figure(xlsreg,makecomp):
     #imported here to allow matplotlib.use
@@ -34,6 +39,7 @@ def hist_figure(xlsreg,makecomp):
 if __name__ == '__main__':
     from argparse import ArgumentParser
     p = ArgumentParser(description='flaming figure plotter')
+    p.add_argument('ini',help='ini file to load')
     p.add_argument('--load',help='load without recomputing',action='store_true')
     p.add_argument('-m','--makeplot',help='plots to make (realvid png      fwd optim png h5)',default=[],nargs='+')
     p.add_argument('-v','--verbose',help='verbosity',action='count',default=0)
@@ -54,13 +60,11 @@ if __name__ == '__main__':
     sns.set(context='paper', style='whitegrid',font_scale=1.5,
         rc={'image.cmap': 'cubehelix_r'})
 
-
-    xlsreg='in/apr14T085430.ini'
     outdir = Path(p.outdir)
     timeInds=p.frames
 
     x1d = None
-    vlim = {'p':[-3,7,90,400,5e4,8e5,5e4,8e5], 'j':[10,250, 10,250],
+    vlim = {'p':[None,None,90,400,5e4,8e5,5e4,8e5], 'j':[10,250, 10,250],
             'b':[0,2000]}
 
     treq = [parse(t) for t in p.treq] if p.treq else None
@@ -69,8 +73,9 @@ if __name__ == '__main__':
 
     if not p.load:
         print('running HiSTfeas program writing {} to {}'.format(p.makeplot,outdir))
-        Phi0,Phifit = hist_figure(xlsreg,p.makeplot)
-
+        Phi0,Phifit = hist_figure(p.ini,p.makeplot)
+        p.makeplot = [] #don't redo plots just made
+#%% load results and plot
     from histfeas.loadAnalyze import readresults,findxlsh5 #import here to allow matplotlib.use
     h5list,xlsfn = findxlsh5(outdir)
     readresults(h5list,xlsfn,vlim,x1d,overrides,p.makeplot,p.verbose)

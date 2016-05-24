@@ -15,12 +15,15 @@ from .sanityCheck import getParams
 from .plotsnew import plotoptim,plotfwd
 from .observeVolume import definecamind
 
-def readresults(h5list,xlsfn,vlim,x1d,overrides,makeplot,verbose=0):
+def readresults(h5list, inifn,vlim,x1d,overrides,makeplot,verbose=0):
     Phifwd =[]; Phidict =[]; dhat=[]; drn=[]; Pest=[]; Pfwd=[]; ut1_unix=[]
 #%%
     if not h5list:
         print('no HDF5 files found from your analysis run.')
         return
+
+    if len(h5list)>500:
+        print('loading {} files from {}'.format(len(h5list),h5list[0].parent))
 
     for h5 in h5list:
         assert h5.is_file()
@@ -58,18 +61,17 @@ def readresults(h5list,xlsfn,vlim,x1d,overrides,makeplot,verbose=0):
 #%%
 
     odir = h5.parent / 'reader'
+    print('writing output to {}'.format(odir))
     odir.mkdir(parents=True,exist_ok=True)
 
-    try:
+    if Phifwd: #sim data
         Phifwd = asarray(Phifwd).transpose(1,2,0) #result: Nenergy x Nx x Ntime
-    except ValueError: #realdata
-        pass
 
-    if not xlsfn:
-        raise ValueError('No XLSX parameter file found')
+    if not inifn:
+        raise ValueError('No .ini parameter file found')
 
-    arc,sim,cam,Fwd = getParams(xlsfn,overrides,makeplot,odir)
-    cam = definecamind(cam,sim.ncutpix)
+    arc,sim,cam,Fwd = getParams(inifn,overrides,makeplot,odir)
+    cam = definecamind(cam)
 #%% load original angles of camera
     ut1_unix = asarray(ut1_unix)
     for i,C in enumerate(cam):
@@ -123,17 +125,17 @@ def findxlsh5(h5path):
 
     if h5path.is_file():
         h5list = [h5path]
-        xlsfn = sorted(h5path.parent.glob('*.ini'))
+        inifn = sorted(h5path.parent.glob('*.ini'))
     elif h5path.is_dir():
         h5list = sorted(h5path.glob('dump*.h5'))
-        xlsfn =  sorted(h5path.glob('*.ini'))
+        inifn =  sorted(h5path.glob('*.ini'))
     else:
         raise ValueError('no path or file at {}'.format(h5path))
 
-    if isinstance(xlsfn,(list,tuple)):
-        xlsfn = xlsfn[0]
+    if isinstance(inifn,(list,tuple)):
+        inifn = inifn[0]
 
-    return h5list,xlsfn
+    return h5list,inifn
 
 if __name__ == '__main__':
     from argparse import ArgumentParser

@@ -36,7 +36,6 @@ from .analysehst import analyseres
 def doSim(ParamFN,makeplot,timeInds,overrides,odir,x1d,vlim,animtime, cmd,verbose=0):
     odir = Path(odir).expanduser()
     logging.basicConfig(level=30-verbose*10)
-
     #%% output directory
     odir.mkdir(parents=True,exist_ok=True)
     (odir/'cmd.log').write_text(' '.join(argv)) #store command for future log
