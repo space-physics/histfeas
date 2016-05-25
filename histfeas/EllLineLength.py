@@ -186,8 +186,7 @@ def plotEll(nCam,xFOVpixelEnds,zFOVpixelEnds,xCam,zCam,Np,xpc,zpc,sz,sx,
             ax.plot(x=xzplot[ixz][:2],
                     y=xzplot[ixz][-2:],
                     color='red')
-            draw() #need plt.pause(0.01) just after this
-            pause(0.01) #need plt.draw() just before this
+            draw(); pause(0.01)
     else:
         for iCam in range(nCam):
             for iray in range(0,Np,decimfactor):
