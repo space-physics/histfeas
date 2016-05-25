@@ -17,7 +17,7 @@ import logging
 from sys import argv
 from numpy import absolute,zeros,outer
 from numpy.random import normal
-from warnings import warn
+from time import time
 from matplotlib.pyplot import close,draw,pause,show
 #
 from gridaurora.eFluxGen import maxwellian
@@ -31,9 +31,9 @@ from .transcararc import getMp,getPhi0,getpx #calls matplotlib
 from .observeVolume import getEll,getObs #calls matplotlib
 from .FitVER import FitVERopt as FitVER #calls matplotlib
 from .plotsnew import goPlot #calls matplotlib
-from .analysehst import analyseres
 
 def doSim(ParamFN,makeplot,timeInds,overrides,odir,x1d,vlim,animtime, cmd,verbose=0):
+    tic = time()
     odir = Path(odir).expanduser()
     logging.basicConfig(level=30-verbose*10)
     #%% output directory
@@ -43,6 +43,7 @@ def doSim(ParamFN,makeplot,timeInds,overrides,odir,x1d,vlim,animtime, cmd,verbos
     arc,sim,cam,Fwd = getParams(ParamFN, overrides,makeplot,odir)
 #%% setup loop
     if sim.realdata:
+        # can load enormous amount of data into rawdata, Ncam x Nframe x Ny x Nx (verify dim order?)
         cam,rawdata,sim = getSimulData(sim,cam,makeplot,odir,verbose)
     else: #simulation
         rawdata = None
@@ -51,16 +52,11 @@ def doSim(ParamFN,makeplot,timeInds,overrides,odir,x1d,vlim,animtime, cmd,verbos
     timeInds = sim.maketind(timeInds)
 #%% Step 1) get projection matrix
     Lfwd,Fwd,cam = getEll(sim,cam,Fwd,makeplot,verbose)
-#%% preallocation
-    PhifitAll = []; drnAll = []; bfitAll=[]
 #%% load eigenprofiles from Transcar
     Peig = getMp(sim,cam,Fwd['z'],makeplot)
 #%% synthetic diff. num flux
-    if not sim.realdata:
-        Phi0all = getPhi0(sim,arc,Fwd['x'],Peig['Ek'], makeplot) # Nenergy x Nx x Ntime
-    else:
-        Phi0all = None
-    logging.debug('timeInds: {}'.format(timeInds))
+    Phi0all = getPhi0(sim,arc,Fwd['x'],Peig['Ek'], makeplot) # Nenergy x Nx x Ntime
+    print(time()-tic)
 #%%start looping for each time slice in keogram (just once if simulated)
     for ti in timeInds:
         logging.info('entering time {}'.format(ti))
@@ -76,30 +72,9 @@ def doSim(ParamFN,makeplot,timeInds,overrides,odir,x1d,vlim,animtime, cmd,verbos
         Pfwd = getSimVER(Phi0, Peig, Fwd, sim, arc, ti) # Nz x Nx
 #%% Step 2) Observe Forward Model (create vector of observations)
         bn = getObs(sim,cam,Lfwd,ti,Pfwd,makeplot,verbose) # Ncam*Npixel (1D vector)
-        drnAll.append(bn)
 #%% Step 3) fit constituent energies to our estimated vHat and reproject
-        try:
-            if overrides['fwdguess'][0] == 'maxwellian':
-                Phi0z = maxwellian(Peig['Ek'],1e3,1e10)[0].ravel(order='F')
-                Phi0r = outer(Phi0z, getpx(Fwd['x'],Wkm=1e3,X0=0,xs='gaussian'))
-            elif overrides['fwdguess'][0] == 'true':
-                Phi0r = Phi0.ravel(order='F')
-                warn('** WARNING: feeding minimizer the true answer--testing only!! **')
-            elif overrides['fwdguess'][0] == 'randn':
-                randfact = absolute(normal(1,overrides['fwdguess'][1], size=Phi0.size))
-                warn('** WARNING: feeding minizer true answer times {}'.format(randfact))
-                Phi0r = randfact * Phi0.ravel(order='F')
-            else: #normal case, no a priori
-                Phi0r = zeros(Fwd['sx']*Peig['Mp'].shape[1]) #ones() is NOT appropriate -- must be tapered down for higher energy beams to keep physically plausible.
-        except (KeyError,TypeError):
-            try:
-                Phi0r = zeros(Fwd['sx']*Peig['Mp'].shape[1]) #ones() is NOT appropriate -- must be tapered down for higher energy beams to keep physically plausible.
-            except TypeError: # no fwd or optim
-                Phi0r = None
-
+        Phi0r = initPhi(Phi0,Peig,Fwd,overrides)
         Pfit,jfit,Tm,bfit = FitVER(Lfwd, bn, Phi0r, Peig, sim, cam,Fwd, ti, makeplot,verbose)
-#%% collect results
-        PhifitAll.append(jfit); bfitAll.append(bfit)
 #%% plot results
         goPlot(sim,Fwd,cam,Lfwd,Tm,bn,bfit,Pfwd,Pfit,Peig,Phi0,
                      jfit,rawdata,ti,makeplot,odir,x1d,vlim)
@@ -116,22 +91,24 @@ def doSim(ParamFN,makeplot,timeInds,overrides,odir,x1d,vlim,animtime, cmd,verbos
 
 #    png2multipage(odir,'.eps','.tif',descr=cmd,delete=False) #gif writing is not working yet
 
-    analyseres(sim,cam,Fwd['x'],Fwd['xPixCorn'],
-                   Phi0all,PhifitAll,drnAll,bfitAll,vlim,
-                   x0true=None,E0true=None,
-                   makeplot=makeplot,odir=odir)
-#%% debug: save variables to MAT file
-    if 'mat' in makeplot and odir.is_dir():
-        from scipy.io import savemat
-        cMatFN = odir/'comparePy.mat'
-        try:
-            print('saving to:',cMatFN)
-            vd = {'drnP':bn,'LP':Lfwd,'vP':Pfwd,'vfitP':Pfit,#'vhatP':Phat['vART'],
-                  'xPixCorn':Fwd['xPixCorn'],'zPixCorn':Fwd['zPixCorn']}
-            savemat(str(cMatFN),oned_as='column',mdict=vd )
-        except Exception as e:
-            logging.warning('failed to save to mat file.  {}'.format(e))
-
     msg ='{} program end'.format(argv[0]); print(msg); #print(msg,file=stderr)
 
-    return Phi0all,PhifitAll #keep these, used for registration.py
+def initPhi(Phi0,Peig,Fwd,overrides):
+    try:
+        if overrides['fwdguess'][0] == 'maxwellian':
+            Phi0z = maxwellian(Peig['Ek'],1e3,1e10)[0].ravel(order='F')
+            return outer(Phi0z, getpx(Fwd['x'],Wkm=1e3,X0=0,xs='gaussian'))
+        elif overrides['fwdguess'][0] == 'true':
+            logging.error('Feeding minimizer the true answer--testing only')
+            return Phi0.ravel(order='F')
+        elif overrides['fwdguess'][0] == 'randn':
+            randfact = absolute(normal(1,overrides['fwdguess'][1], size=Phi0.size))
+            logging.error('feeding minizer true answer times {}'.format(randfact))
+            return randfact * Phi0.ravel(order='F')
+        else: #normal case, no a priori
+            return zeros(Fwd['sx']*Peig['Mp'].shape[1]) #ones() is NOT appropriate -- must be tapered down for higher energy beams to keep physically plausible.
+    except (KeyError,TypeError):
+        try:
+            return zeros(Fwd['sx']*Peig['Mp'].shape[1]) #ones() is NOT appropriate -- must be tapered down for higher energy beams to keep physically plausible.
+        except TypeError: # no fwd or optim
+            pass

@@ -3,6 +3,7 @@ import logging
 from hashlib import md5
 from numpy import asarray,where,arange,isfinite,ceil,hypot,atleast_1d,fromstring
 import numpy as np # needed for all
+from datetime import datetime
 from dateutil.parser import parse
 #
 from transcarread.readionoinit import getaltgrid
@@ -140,7 +141,13 @@ class Sim:
 
         try: #override
             if overrides['treq'] is not None: #must be is not None for array case
+                if isinstance(overrides['treq'][0],(datetime,float,int)):
+                    pass
+                elif isinstance(overrides['treq'][0],str):
+                    overrides['treq'] = [parse(t).timestamp() for t in overrides['treq']]
+
                 self.treqlist = overrides['treq']
+
             else:
                 self.startutc = parse(sp.get('cams','reqStartUT',fallback=None)) #not fallback=''
                 self.stoputc =  parse(sp.get('cams','reqStopUT', fallback=None))

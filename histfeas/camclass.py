@@ -2,9 +2,7 @@ from pathlib import Path
 import logging
 from numpy import (linspace, fliplr, flipud, rot90, arange,
                    polyfit,polyval,rint,empty, isfinite, isclose,
-                   absolute, hypot, unravel_index,in1d,array,nan)
-from datetime import datetime
-from pytz import UTC
+                   absolute, hypot, unravel_index,array,nan)
 from dateutil.parser import parse
 from scipy.signal import savgol_filter
 from numpy.random import poisson
@@ -16,8 +14,6 @@ from pymap3d.azel2radec import azel2radec
 from pymap3d.coordconv3d import aer2ecef
 from dascutils.readDASCfits import readDASC
 from themisasi.fov import mergefov
-
-epoch = datetime(1970,1,1,tzinfo=UTC)
 
 verbose=0
 
