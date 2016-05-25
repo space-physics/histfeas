@@ -144,9 +144,9 @@ class Cam: #use this like an advanced version of Matlab struct
                 self.flipud       = p['flipud'] == 1
 
                 c = f['/sensorloc']
-                self.lat   = c['lat'][0]
-                self.lon   = c['lon'][0]
-                self.alt_m = c['alt_m'][0]
+                self.lat   = c['lat']
+                self.lon   = c['lon']
+                self.alt_m = c['alt_m']
         else: #sim
             self.kineticsec = splitconf(cp,'kineticsec',ci) #simulation
             self.alt_m =      splitconf(cp,'Zkm',ci,fallback=nan)*1000
