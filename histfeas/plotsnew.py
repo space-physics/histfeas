@@ -68,7 +68,7 @@ def placetxt(x,y,txt,ax):
             bbox=dict(boxstyle="round,pad=0.0",fc='black', alpha=0.25))
 
 def goPlot(sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
-                            fitp,rawdata,tInd,makeplot,odir,x1d,vlim):
+                            Phifit,rawdata,tInd,makeplot,odir,x1d,vlim):
 #%% nicer file naming
     T = tind2dt(cam,tInd)
 #%% convenience
@@ -94,16 +94,17 @@ def goPlot(sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
         Jxi = None
 #%% eigenfunction
     if 'eig' in makeplot:
-        ploteigver(fitp['EKpcolor'],zKM,Tm,vlim['p'],sim,T,makeplot,'peig',odir)
+        ploteigver(Phifit['EKpcolor'],zKM,Tm,vlim['p'],sim,T,makeplot,'peig',odir)
 
        #FIXME this is temporary hack until Peigen is passed to hist-feasibility as DataFrame
-        Peigen = DataArray(data=Peig['Mp'],coords=[zKM,fitp['EK']],dims=['alt_km','energy_ev'])
+        Peigen = DataArray(data=Peig['Mp'],
+                           coords=[zKM,Phifit['EK']], dims=['alt_km','energy_ev'])
         plotOptMod(None,Peigen)
 
-        ploteig1d(fitp['EK'],zKM,Tm,vlim['p'],sim,T,makeplot,'peig1d',odir)
+        ploteig1d(Phifit['EK'],zKM,Tm,vlim['p'],sim,T,makeplot,'peig1d',odir)
 
     if 'tphi0' in makeplot:
-        plottphi0(Tm,Phi0,Jxi,fitp['EK'],zKM,vlim['p'],sim,T,makeplot,'tphi0',odir)
+        plottphi0(Tm,Phi0,Jxi,Phifit['EK'],zKM,vlim['p'],sim,T,makeplot,'tphi0',odir)
 
     if 'spectra' in makeplot:
         logging.warning('run spectral plots from calcemissions.py')
@@ -168,15 +169,15 @@ def goPlot(sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
         plotnoise(cam,T,253,makeplot,'bnoise',odir)
 
     if 'fwd' in makeplot:
-        plotfwd(sim,cam,drn,xKM,xp,zKM,zp, ver,Phi0,fitp,Jxi,vlim,tInd,makeplot,odir)
+        plotfwd(sim,cam,drn,xKM,xp,zKM,zp, ver,Phi0, Phifit,Jxi,vlim,tInd,makeplot,odir)
 #%% gaussian fit of optim
     if 'gaussian' in makeplot and 'fwd' in makeplot:
         plotBcompare(sim,drn,dhat['gaussian'],cam,sim.nCamUsed,
                      'bgaussfit',vlim['b'],tInd, makeplot,odir)
 
-        gx0,gE0 = getx0E0(None,fitp['gaussian'],fitp['EK'],xKM,tInd,odir,makeplot)
+        gx0,gE0 = getx0E0(None,Phifit['gaussian'], Phifit['EK'],xKM,tInd,odir,makeplot)
 #'Neval = {:d}'.format(fitp.nfev)
-        plotJ(sim,fitp['gaussian'], xKM,xp, fitp['EK'],fitp['EKpcolor'],
+        plotJ(sim,Phifit['gaussian'], xKM,xp, Phifit['EK'], Phifit['EKpcolor'],
               vlim['j'][:2],vlim['p'][:2],T, makeplot,'jgaussian',
               '$\hat{\phi}_{gaussian,optim}$ diff. number flux', odir)
 
@@ -187,15 +188,15 @@ def goPlot(sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
 #%% optimize search plots
     if 'optim' in makeplot:
         plotoptim(sim,cam,drn,dhat,bcomptxt,ver,Phi0,Jxi,
-                  vfit,fitp,xKM,xp,zKM,zp,vlim,tInd,makeplot,odir)
+                  vfit,Phifit,xKM,xp,zKM,zp,vlim,tInd,makeplot,odir)
 #%% maximum entropy
     if 'phimaxent' in makeplot:
-        plotJ(sim,fitp['maxent'],xKM,xp,fitp['EK'],fitp['EKpcolor'],
+        plotJ(sim, Phifit['maxent'],xKM,xp, Phifit['EK'], Phifit['EKpcolor'],
               vlim['j'][:2],vlim['p'][:2],T,makeplot,'jme',
                 '$\Phi_{maxent}$ diff. number flux',odir)
 
     if 'phimaxent1d' in makeplot and Jxi is not None:
-        plotJ1D(sim,fitp['maxent'][:,Jxi],fitp['EK'],vlim['j'][2:4],T,makeplot,'jme_1D',
+        plotJ1D(sim, Phifit['maxent'][:,Jxi], Phifit['EK'],vlim['j'][2:4],T,makeplot,'jme_1D',
                 ('Differential Number flux at $B_\perp$={:0.2f} [km]'.format(xKM[Jxi])),
                 odir)
     if 'bmaxent' in makeplot:
@@ -227,7 +228,7 @@ def goPlot(sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
                 logging.warning('could not plot vfwd vmaxent comparison.  {}'.format(e))
 #%% diff number flux from ART
     if 'jart' in makeplot:
-        plotJ(sim,fitp['art'],xKM,xp,fitp['EK'],fitp['EKpcolor'],
+        plotJ(sim, Phifit['art'],xKM,xp, Phifit['EK'], Phifit['EKpcolor'],
               vlim['j'][:2],vlim['p'][:2],T,makeplot,'jart',
                 '$\hat{\Phi}_{art}$ J from Kaczmarz ART on LT and b', odir)
     if 'vart' in makeplot:
@@ -300,7 +301,7 @@ def plotfwd(sim,cam,drn,xKM,xp,zKM,zp, ver,Phi0,fitp,Jxi,vlim,tInd,makeplot,odir
         writeplots(fg,'fwd',T,makeplot,odir)
 #%%
 def plotoptim(sim,cam,drn,dhat,bcomptxt,ver,Phi0,Jxi,
-              vfit,fitp,xKM,xp,zKM,zp,vlim,tInd,makeplot,odir,
+              vfit,Phifit,xKM,xp,zKM,zp,vlim,tInd,makeplot,odir,
               doSubplots=True,overrides={}):
 #%% always 3 columns in subplot
     nrow = 1 if Jxi is None else 2
@@ -332,11 +333,15 @@ def plotoptim(sim,cam,drn,dhat,bcomptxt,ver,Phi0,Jxi,
             '$\hat{\mathbf{P}}$ volume emission rate',
               1815,odir,fg,axs[0,1])
 #%% flux
-    plotJ(sim,fitp['x'],xKM,xp,fitp['EK'],fitp['EKpcolor'],
+    plotJ(sim, Phifit['x'],xKM,xp, Phifit['EK'], Phifit['EKpcolor'],
           vlim['j'][:2],vlim['p'][:2],T,makeplot,'phiest',
           '$\hat{\mathbf{\phi}}_{top}$ diff. number flux',
           1901,odir,fg,axs[0,2])
           #'Neval = {:d}'.format(fitp.nfev)
+
+
+    if 'h5' in makeplot:
+        dumph5('phiest',T,odir,gx0=Phifit['gx0'],gE0=Phifit['gE0'])
 
     if Jxi is not None:
         plotVER1D(sim,ver[:,Jxi],vfit[:,Jxi],zKM,
@@ -344,7 +349,7 @@ def plotoptim(sim,cam,drn,dhat,bcomptxt,ver,Phi0,Jxi,
                   '$\hat{{\mathbf{{P}}}}$ volume emission rate at $B_\perp$={:0.2f} [km]'.format(xKM[Jxi]),
                   odir,fg,axs[1,0])
 
-        plotJ1D(sim,Phi0[:,Jxi],fitp['x'][:,Jxi],fitp['EK'],vlim['j'][2:4],T,makeplot,'phiest1d',
+        plotJ1D(sim,Phi0[:,Jxi], Phifit['x'][:,Jxi], Phifit['EK'],vlim['j'][2:4],T,makeplot,'phiest1d',
         ('$\hat{{\phi}}_{{top}}$ diff. number flux at $B_\perp$={:0.2f} [km]'.format(xKM[Jxi])),
                            odir,fg,axs[1,1])
 
@@ -1080,7 +1085,7 @@ def planviewkml(cam,xKM,zKM,makeplot,figh,odir):
         logging.error('problem writing KML {}'.format(kmlfn)) #disabled writing
 
 #%% gaussian fit
-def getx0E0(Phifwd,Phifit,E,x,tInd,odir,makeplot):
+def getx0E0(Phifwd,Phifit,E,x,tInd,odir=None,makeplot=[]):
 
     Npts = 200
     Nptsfits = (Npts//40, Npts//20)  #(nEnergyToUse+-, nXtouse+-)

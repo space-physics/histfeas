@@ -70,7 +70,7 @@ if __name__ == '__main__':
 
     odir=gettempdir()
 #%% do inversion
-#    hist_registration(regh5,regini,odir)
+    hist_registration(regh5,regini,odir)
 #%% find result HDF5
     h5list,_ = findxlsh5(odir)
 #%% load result
