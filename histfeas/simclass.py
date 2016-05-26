@@ -15,7 +15,7 @@ class Sim:
 #%% root directory not here
         try:
             self.rootdir = Path(overrides['rootdir']).expanduser()
-        except KeyError:
+        except (TypeError,KeyError):
             self.rootdir = Path('')
 #%% how many cameras in use, and which ones?
         self.camnames = sp['cam']['name'].split(',')
@@ -32,7 +32,7 @@ class Sim:
                         self.useCamBool[i] = False
             if usecamreq[0] is not None:
                 assert np.all(where(self.useCamBool)[0] == usecamreq) #not .all() in case of different length
-        except KeyError:
+        except (TypeError,KeyError):
             pass #normal case
 #%% camera position override check (work done in sanityCheck.setupCam)
         try:

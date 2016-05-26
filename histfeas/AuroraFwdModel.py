@@ -4,7 +4,7 @@ generates modeled aurora volume emission rate
 Michael Hirsch
 GPLv3+
 """
-from __future__ import print_function, division,absolute_import
+import logging
 from numpy import isnan,zeros
 from warnings import warn
 #
@@ -17,8 +17,8 @@ def getSimVER(Phi0,Mp,Fwd,sim,arc,tInd):
         return
 
     Pfwd=zeros((Fwd['z'].size,Phi0.shape[1]),float) #TODO for non transcar cases
-    for a in arc:
-        if arc[a].zshape in ('flat','impulse','transcar'):
+    for k,a in arc.items():
+        if a.zshape in ('flat','impulse','transcar'):
             '''
             recall that phi(z,E) is 2-D matrix, and other matrices involved
             must be updated accordingly from original April 2014 try code
@@ -28,12 +28,12 @@ def getSimVER(Phi0,Mp,Fwd,sim,arc,tInd):
         else:
             warn('these cases not yet updated for upsampled time!')
             Pfwd += getver(Fwd['x'], Fwd['z'], Mp, Phi0,
-                      arc[a].Wkm, arc[a].Hkm, arc[a].X0km,
-                      arc[a].Z0km, arc[a].Xshape, arc[a].Zshape,
-                      arc[a].Pnorm)
+                      a.Wkm, a.Hkm, a.X0km,
+                      a.Z0km, a.Xshape, a.Zshape,
+                      a.Pnorm)
 
     if isnan(Pfwd).any():
+        logging.critical('NaN detected in VER')
         return None
     else:
         return Pfwd
-

@@ -269,7 +269,7 @@ def plotfwd(sim,cam,drn,xKM,xp,zKM,zp, ver,Phi0,fitp,Jxi,vlim,tInd,makeplot,odir
 
     else:
         fg=None
-        axs = array([(None,)*3,(None,)*3])
+        axs = array([(None,)*nrow,(None,)*ncol])
 
     plotB(drn,cam,vlim['b'],T,1500,makeplot,'$B_{fwd',odir,fg,axs[0,0])
 
@@ -1228,6 +1228,9 @@ def dumph5(prefix,tInd,odir=gettempdir(),**writevar): #used in other .py too
         return
 
     fn = Path(odir).expanduser()/('dump' + nametime(tInd) +'.h5')
+
+    if not fn.is_file():
+        print('creating {}'.format(fn))
 
     logging.info('dumping {} to {}'.format(prefix, fn))
     with h5py.File(str(fn),'a',libver='latest') as H:
