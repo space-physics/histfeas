@@ -40,7 +40,7 @@ def analyseres(sim,cam,x,xp,Phifwd,Phifit,drn,dhat,vlim,x0true=None,E0true=None,
         print('t={} gaussian 2-D fits for (x,E):\n'
               ' Fwdtrue: {:.2f} {:.0f}\n'
               ' Fwdfit: {:.2f} {:.0f}\n'
-              ' Optim: {:.2f} {:.0f}\n'.format(i, x0true.iat[i], E0true.iat[i],
+              ' Optim: {:.2f} {:.0f}\n'.format(i, x0true[i], E0true[i],
                                                 gx0[i,0],  gE0[i,0],
                                                 gx0[i,1],  gE0[i,1]))
 

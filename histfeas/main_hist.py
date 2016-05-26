@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 """
  Michael Hirsch
 
@@ -10,7 +10,7 @@
  4) Test reconstruction & fit by reprojecting to synthetic image brightness
 
 example: (fwd model only)
-python3 main_hist.py in/2cam_trans.xlsx /dev/shm/rev_trans2/ -m fwd png --vlim -0.5 3.5 90 350 1e9 1e10 --jlim 1e5 5e5 --blim 0 1e4 -f 0 120 20
+python main_hist.py in/2cam_trans.xlsx /dev/shm/rev_trans2/ -m fwd png --vlim -0.5 3.5 90 350 1e9 1e10 --jlim 1e5 5e5 --blim 0 1e4 -f 0 120 20
 """
 from pathlib import Path
 import logging
@@ -21,7 +21,6 @@ from time import time
 from matplotlib.pyplot import close,draw,pause,show
 #
 from gridaurora.eFluxGen import maxwellian
-#from pyimagevideo.imagemultipage import png2multipage
 from histutils.simulFrame import getSimulData
 from histutils.get1Dcut import get1Dcut #we need cam.angle_deg for plotting
 #
@@ -56,7 +55,7 @@ def doSim(ParamFN,makeplot,timeInds,overrides,odir,x1d,vlim,animtime, cmd,verbos
     Peig = getMp(sim,cam,Fwd['z'],makeplot)
 #%% synthetic diff. num flux
     Phi0all = getPhi0(sim,arc,Fwd['x'],Peig['Ek'], makeplot) # Nenergy x Nx x Ntime
-    print(time()-tic)
+    print('{:.1f} sec to prepare for HiSTfeas loop'.format(time()-tic))
 #%%start looping for each time slice in keogram (just once if simulated)
     for ti in timeInds:
         logging.info('entering time {}'.format(ti))
@@ -87,10 +86,6 @@ def doSim(ParamFN,makeplot,timeInds,overrides,odir,x1d,vlim,animtime, cmd,verbos
             close('all')
 
 #%% wrapup
-    msg='{} done looping'.format(argv[0]); print(msg); #print(msg,file=stderr)
-
-#    png2multipage(odir,'.eps','.tif',descr=cmd,delete=False) #gif writing is not working yet
-
     msg ='{} program end'.format(argv[0]); print(msg); #print(msg,file=stderr)
 
 def initPhi(Phi0,Peig,Fwd,overrides):

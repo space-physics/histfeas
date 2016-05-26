@@ -15,7 +15,7 @@ from .sanityCheck import getParams
 from .plotsnew import plotoptim,plotfwd
 from .observeVolume import definecamind
 
-def readresults(h5list, inifn,vlim,x1d,overrides,makeplot,verbose=0):
+def readresults(h5list, inifn,vlim=(None,None),x1d=None,overrides=[],makeplot=[],verbose=0):
     Phifwd =[]; Phidict =[]; dhat=[]; drn=[]; Pest=[]; Pfwd=[]; ut1_unix=[]
 #%%
     if not h5list:
@@ -67,9 +67,6 @@ def readresults(h5list, inifn,vlim,x1d,overrides,makeplot,verbose=0):
     if Phifwd: #sim data
         Phifwd = asarray(Phifwd).transpose(1,2,0) #result: Nenergy x Nx x Ntime
 
-    if not inifn:
-        raise ValueError('No .ini parameter file found')
-
     arc,sim,cam,Fwd = getParams(inifn,overrides,makeplot,odir)
     cam = definecamind(cam)
 #%% load original angles of camera
@@ -79,18 +76,18 @@ def readresults(h5list, inifn,vlim,x1d,overrides,makeplot,verbose=0):
             C.angle_deg = angle_deg[i,:]
             C.tKeo = ut1_unix[:,i]
 #%% load args if they exist
-    for a in arc:
+    for k,a in arc.items():
         """
         TODO: assumes all are same distance apart (zero accel)
         NOTE: Assumption is that arc is moving smoothly with zero acceleration,
         so that mean position for each time step is = x[:-1] + 0.5*diff(x) as below.
         """
-        if arc.zshape in ('flat','impulse'):
-            x0true = arc[a].loc['X0km',:][:-1]
-            E0true = arc[a].loc['E0',:][:-1]
+        if a.zshape in ('flat','impulse'):
+            x0true = a.X0km[:-1]
+            E0true = a.E0[:-1]
         else:
-            x0true = (arc[a].loc['X0km',:][:-1] + 0.5*diff(arc[a].loc['X0km',:]))
-            E0true = (arc[a].loc['E0',:][:-1]   + 0.5*diff(arc[a].loc['E0',:]))
+            x0true = (a.X0km[:-1] + 0.5*diff(a.X0km))
+            E0true = (a.E0[:-1]   + 0.5*diff(a.E0))
 
         analyseres(sim,cam,
                    x, xp, Phifwd, Phidict, drn, dhat,
@@ -123,6 +120,8 @@ def readresults(h5list, inifn,vlim,x1d,overrides,makeplot,verbose=0):
             show()
         else:
             close('all')
+
+    return Phifwd, Phidict
 
 def findxlsh5(h5path):
     h5path = Path(h5path).expanduser()

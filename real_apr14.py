@@ -72,13 +72,13 @@ if __name__ == '__main__':
     overrides = {'treq':treq}
 
     if not p.load:
-        print('running HiSTfeas program writing {} to {}'.format(p.makeplot,outdir))
-        Phi0,Phifit = hist_figure(p.ini,p.makeplot)
+        print('writing {} to {}'.format(p.makeplot,outdir))
+        hist_figure(p.ini,p.makeplot)
         p.makeplot = [] #don't redo plots just made
 #%% load results and plot
     from histfeas.loadAnalyze import readresults,findxlsh5 #import here to allow matplotlib.use
-    h5list,xlsfn = findxlsh5(outdir)
-    readresults(h5list,xlsfn,vlim,x1d,overrides,p.makeplot,p.verbose)
+    h5list,inifn = findxlsh5(outdir)
+    readresults(h5list,inifn,vlim,x1d,overrides,p.makeplot,p.verbose)
 
     if 'show' in p.makeplot:
         show()

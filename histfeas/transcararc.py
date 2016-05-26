@@ -80,20 +80,20 @@ def getPhi0(sim,arc,xKM,Ek,makeplots):
 def assemblePhi0(sim,arc,Ek,xKM):
     Phi0 = zeros((Ek.size,xKM.size,sim.nTimeSlice),order='F') #NOT empty, since we sum to build it!
 
-    for a in arc: #iterate over arcs, using superposition
+    for k,a in arc.items(): #iterate over arcs, using superposition
 #%% upsample to sim time steps
-        E0,Q0,Wbc,bl,bm,bh,Bm,Bhf, Wkm,X0 = upsampletime(arc[a],sim)
+        E0,Q0,Wbc,bl,bm,bh,Bm,Bhf, Wkm,X0 = upsampletime(a,sim)
 
-        if arc[a].zshape == 'transcar':
+        if a.zshape == 'transcar':
             phiz = fluxgen(Ek, E0,Q0,Wbc,bl,bm,bh,Bm,Bhf)[0] # Nenergy x Ntime
-        elif arc[a].zshape == 'flat':
+        elif a.zshape == 'flat':
             phiz = zeros((Ek.size, sim.nTimeSlice)) #zeros not empty or nan
             for i,e in enumerate(E0):
                 try:
                     phiz[Ek<=e,i] = Q0[i]  # Nenergy x Ntime_sim
                 except ValueError:
                     pass
-        elif arc[a].zshape == 'impulse':
+        elif a.zshape == 'impulse':
             phiz = zeros((Ek.size, sim.nTimeSlice)) #zeros not empty or nan
             for i,e in enumerate(E0):
                 try:
@@ -101,11 +101,11 @@ def assemblePhi0(sim,arc,Ek,xKM):
                 except ValueError:
                     pass
         else:
-            raise NotImplementedError('unknown zshape = {}'.format(arc.zshape))
+            raise NotImplementedError('unknown zshape = {}'.format(a.zshape))
 #%% horizontal modulation
-        phix = getpx(xKM,Wkm,X0,arc[a].xshape)
+        phix = getpx(xKM,Wkm,X0, a.xshape)
 
-        if arc[a].zshape == 'transcar':
+        if a.zshape == 'transcar':
             for i in range(sim.nTimeSlice):
                 #unsmeared in time
                 phi0sim = zeros((Ek.size,xKM.size),order='F') #NOT empty, since we're summing!
@@ -113,7 +113,7 @@ def assemblePhi0(sim,arc,Ek,xKM):
                     phi0sim += outer(phiz[:,i*sim.timestepsperexp+j],
                                      phix[i*sim.timestepsperexp+j,:])
                 Phi0[...,i] += phi0sim
-        elif arc[a].zshape in ('impulse','flat'):
+        elif a.zshape in ('impulse','flat'):
             phix[~isfinite(phix)] = 0.
             for i in range(sim.nTimeSlice):
                 Phi0[...,i] += outer(phiz[:,i],phix[i,:])
