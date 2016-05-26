@@ -37,7 +37,9 @@ def readresults(h5list, inifn,vlim=(None,None),x1d=None,overrides=[],makeplot=[]
             try:
                 Phidict.append({'x':f['/phiest/phi'].value,
                                 'EK':f['/phiest/Ek'].value,
-                                'EKpcolor':f['/phiest/EKpcolor'].value})
+                                'EKpcolor':f['/phiest/EKpcolor'].value,
+                                'gx0':f['/phiest/gx0'].value,
+                                'gE0':f['/phiest/gE0'].value,})
 
                 Pest.append(f['/pest/p'].value)
 
