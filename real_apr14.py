@@ -20,7 +20,7 @@ def hist_figure(xlsreg,makecomp):
     #imported here to allow matplotlib.use
     from histfeas.main_hist import doSim
 
-    Phi0,Phifit =doSim(ParamFN=xlsreg,
+    doSim(ParamFN=xlsreg,
                   makeplot=makecomp,
                   timeInds=timeInds,
                   overrides = overrides, #{'minev': minev,'filter':filt, 'fwdguess':fwdguess,
@@ -32,8 +32,6 @@ def hist_figure(xlsreg,makecomp):
                   cmd = ' '.join(argv),
                   verbose=0
                   )
-
-    return Phi0,Phifit
 
 
 if __name__ == '__main__':
