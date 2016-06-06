@@ -12,7 +12,7 @@
 example: (fwd model only)
 python main_hist.py in/2cam_trans.xlsx /dev/shm/rev_trans2/ -m fwd png --vlim -0.5 3.5 90 350 1e9 1e10 --jlim 1e5 5e5 --blim 0 1e4 -f 0 120 20
 """
-from pathlib import Path
+from . import Path
 import logging
 from sys import argv
 from numpy import absolute,zeros,outer

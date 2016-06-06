@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 """
 Registration case for HiST program
 Michael Hirsch
@@ -6,7 +6,7 @@ Michael Hirsch
 To generate registration.h5 (only when making a new type of sim or real) type
 python
 """
-from pathlib import Path
+from histfeas import Path
 from os import chdir
 from numpy.testing import assert_allclose
 from sys import argv
