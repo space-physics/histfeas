@@ -1,4 +1,4 @@
-from pathlib import Path
+from . import Path
 import logging
 from numpy import (linspace, fliplr, flipud, rot90, arange,
                    polyfit,polyval,rint,empty, isfinite, isclose,

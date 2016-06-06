@@ -2,9 +2,9 @@
 sanity check for HiST parameters
 Michael Hirsch
 """
-from pathlib import Path
+from . import Path
 import logging
-from configparser import ConfigParser
+from six.moves.configparser import ConfigParser
 from shutil import copy2
 from geopy.distance import vincenty
 #
