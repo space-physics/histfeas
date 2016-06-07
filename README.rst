@@ -168,8 +168,7 @@ Our IEEE TGARS article (in review) details the math and algorithm.
 
 Output Processing
 ------------------
-The .h5 HDF5 files output by the ``-h5`` command-line parameter can be loaded in nearly any analysis
-software such as GNU Octave, Matlab, IDL, Mathematica, etc.
+HDF5 is the primary output along with PNGs of selected plots.
 Some of the 1-D variables are duplicated because we don't know a-priori simulation parts will be run--disk space use is trivial, so we have left this alone.
 
 The naming of the variables follows `Plot explanation`_
