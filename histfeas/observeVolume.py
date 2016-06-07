@@ -13,7 +13,7 @@ def getObs(sim,cam,L,tDataInd,ver,makePlots,verbose):
     real data: extract brightness vector from disk data
     simulation: create brightness from projection matrix and fwd model VER
     """
-    if not sim.realdata and ver is None:
+    if not sim.realdata and ver is None: #perhaps loading radar or allsky data
         return
 
     nCutPix = sim.ncutpix
@@ -42,7 +42,8 @@ def getObs(sim,cam,L,tDataInd,ver,makePlots,verbose):
 
     elif ver is not None: #or not np.any(np.isnan(v)): # no NaN in v # using synthetic data
         """ FIEFK """
-        bp = L @ ver.ravel(order='F')
+ #       bp = L @ ver.ravel(order='F')
+        bp = L.dot(ver.ravel(order='F'))
         assert bp.size == nCutPix * sim.nCamUsed
 
         bn = nans(bp.shape) #nans as a flag to check if something screwed up

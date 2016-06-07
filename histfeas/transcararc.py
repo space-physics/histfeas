@@ -1,5 +1,6 @@
+#!/usr/bin/env python
 from numpy import (asfortranarray,atleast_3d, exp,sinc,pi,zeros, outer,in1d,
-                   isnan,log,logspace,arange,allclose,diff,atleast_1d,isfinite,empty,nan)
+                   isnan,log,logspace,arange,allclose,diff,atleast_1d,isfinite)
 import h5py
 from scipy.interpolate import interp1d
 import logging
@@ -21,7 +22,9 @@ def getColumnVER(zgrid,zTranscar,Peig,Phi0):
 #        fver = interp1d(zTranscar, Peig, axis=0, kind='cubic')
 #        Tm = asfortranarray(fver(zKM))
 
-    return Tm @ Phi0
+
+    return Tm.dot(Phi0)
+#   return Tm @ Phi0
 
 def getMp(sim,cam,zKM,makeplot):
     if not in1d(('fwd','optim'),makeplot).any():

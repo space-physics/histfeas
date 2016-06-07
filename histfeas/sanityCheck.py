@@ -18,7 +18,10 @@ def getParams(inifn,overrides,makeplot,odir):
         copy2(str(inifn),str(odir))
 #%% read spreadsheet
     #paramSheets = ('Sim','Cameras','Arc')
-    xl = ConfigParser(allow_no_value=True, inline_comment_prefixes=('#'),strict=True)
+    try:
+        xl = ConfigParser(allow_no_value=True, inline_comment_prefixes=('#'), strict=True)
+    except TypeError: #py27
+        xl = ConfigParser(allow_no_value=True)
     xl.read(str(inifn))
 #%% read arcs (if any)
     arc,ntimeslice = setupArc(xl)
@@ -56,7 +59,9 @@ def setupArc(xl):
     arc = {}
     ntimeslice=None
 
-    for s in xl:
+    print(xl)
+
+    for s in xl.sections(): # for py27
         if s.startswith('arc'):
             if ntimeslice is not None and getntimes(xl[s]) != ntimeslice:
                 raise ValueError('for now, all Arcs must have same number of times (columns)')
