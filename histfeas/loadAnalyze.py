@@ -1,10 +1,10 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 """
 To generate inputs for this program, run main_hist.py with
 -m h5
 option
 """
-from pathlib import Path
+from . import Path
 import h5py
 from numpy import asarray,diff
 from matplotlib.pyplot import show,close

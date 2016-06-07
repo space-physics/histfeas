@@ -1,10 +1,15 @@
+from six import PY2
 import logging
 import h5py
 #from numba import jit
 #from numbapro import vectorize
 from numpy import empty,ones,ravel_multi_index,hypot,zeros,in1d,array
 from scipy.sparse import dok_matrix,issparse
-from shutil import copy2,SameFileError
+from shutil import copy2
+if PY2:
+    SameFileError=OSError
+else:
+    from shutil import SameFileError
 # local
 from cvutils.lineClipping import cohensutherland
 
@@ -55,12 +60,12 @@ def EllLineLength(Fwd,xFOVpixelEnds,zFOVpixelEnds,allCamXkm,allCamZkm,Np,sim,mak
 #This goes OUTSIDE all loops!
     if dbglvl>0:
         print('EllLineLength: Number of 1D pixels in cut: ',Np)
-        print('x: ', end=''); print(Fwd['x'])
-        print('xpc: ',end=''); print(xpc)
-        print('z: ', end=''); print(Fwd['z'])
-        print('zpc: ',end=''); print(zpc)
+        print('x: {}'.format(Fwd['x']))
+        print('xpc: {}'.format(xpc))
+        print('z: {}'.format(Fwd['z']))
+        print('zpc: {}'.format(zpc))
 
-    xzplot =None
+    xzplot = None
     L = goCalcEll(maxNell,nCam,Np,sz,sx,xpc,zpc,xFOVpixelEnds,zFOVpixelEnds,
                           allCamXkm,allCamZkm,plotEachRay,dbglvl)
 

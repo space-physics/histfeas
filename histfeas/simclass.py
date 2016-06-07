@@ -1,4 +1,5 @@
-from pathlib import Path
+#!/usr/bin/env python
+from . import Path
 import logging
 from hashlib import md5
 from numpy import asarray,where,arange,isfinite,ceil,hypot,atleast_1d,fromstring

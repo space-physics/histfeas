@@ -1,4 +1,4 @@
-from pathlib import Path
+from . import Path
 import logging
 from tempfile import gettempdir
 from numpy import (s_,array,empty,empty_like,isnan,asfortranarray,linspace,outer,
@@ -19,12 +19,12 @@ try:
     import plotly.plotly as py
     from plotly.graph_objs import Data,Figure,XAxis,YAxis,Contour, Layout
 except:
-    pass
+    plotly=None
 #
 try:
     from gaussfitter import gaussfit,twodgaussian
 except Exception as e:
-    logging.warning('gaussfitter not installed')
+    gaussfitter = None
 #
 from histutils.findnearest import find_nearest
 from histutils.plotsimul import plotRealImg,plotPlainImg
@@ -146,7 +146,8 @@ def goPlot(sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
     if 'picardLT' in makeplot:
         LxColInd = s_[Jxi*sz:(Jxi+1)*sz] #faster than fancy indexing
         Lx = L[:,LxColInd] #ellipses here doesn't work
-        LT = Lx @ Tm
+#        LT = Lx @ Tm
+        LT = Lx.dot(Tm)
         plotPicard(LT,drn,'LT')
 #%% 1-D slice plots
 
