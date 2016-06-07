@@ -13,6 +13,7 @@ with open('README.rst','r') as f:
 	long_description = f.read()
 
 setup(name='histfeas',
+      packages=['histfeas'],
 	  description='Feasibility study for HiST auroral tomography system',
 	  long_description=long_description,
 	  author='Michael Hirsch',
