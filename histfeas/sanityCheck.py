@@ -17,7 +17,6 @@ def getParams(inifn,overrides,makeplot,odir):
     if odir is not None:
         copy2(str(inifn),str(odir))
 #%% read spreadsheet
-    #paramSheets = ('Sim','Cameras','Arc')
     try:
         xl = ConfigParser(allow_no_value=True, inline_comment_prefixes=('#'), strict=True)
     except TypeError: #py27
@@ -56,6 +55,10 @@ def getParams(inifn,overrides,makeplot,odir):
 ###############################################
 
 def setupArc(xl):
+    """
+    in the .ini file, sections [arc] using csv for each arc
+    will create synthetic auroral arcs
+    """
     arc = {}
     ntimeslice=None
 
