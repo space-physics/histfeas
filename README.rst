@@ -14,19 +14,12 @@ hist-feasibility
 Feasibility study for auroral tomography
 
 :Author: Michael Hirsch
-:Version: 0.1
 :Date: June 2015
 
 .. contents::
 
 .. image:: doc/montout.png
     :alt: montage of output
-
-Prereqs
--------
-Since the inherent function of this program is generating plots, you will need a windowing system::
-
-	apt-get install libsm6 libxrender1 libfontconfig1
 
 Installation
 ------------
@@ -213,3 +206,11 @@ Calibration
    mv ~/HSTdata/DataField/2013-04-14/HST1/2013-04-14T07-00-CamSer1387_frames_205111-1-208621_mean_frames.fits ~/HST/calibration/hst1cal.fits
    
    ./astrometry/fits2azel.py -i ~/HST/calibration/hst1cal.fits --h5 -c 65.12657 -147.496908333 -t 2013-04-14T08:54:00Z --png
+
+
+Install Errors
+==============
+Since the inherent function of this program is generating plots, you will need a windowing system::
+
+	apt-get install libsm6 libxrender1 libfontconfig1
+
