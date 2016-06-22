@@ -145,8 +145,8 @@ class Cam: #use this like an advanced version of Matlab struct
                 self.alt_m = c['alt_m']
         else: #sim
             self.kineticsec = splitconf(cp,'kineticsec',ci) #simulation
-            self.alt_m =      splitconf(cp,'Zkm',ci,fallback=nan)*1000
-            self.x_km =       splitconf(cp,'Xkm',ci)
+            self.alt_m =      splitconf(cp,'zkm',ci)*1000 # no fallback, must specify z-location of each cam
+            self.x_km =       splitconf(cp,'xkm',ci) # no fallback, must specify x-location of each cam
             self.transpose =  splitconf(cp,'transpose',ci)
             self.fliplr    =  splitconf(cp,'fliplr',ci)
             self.flipud    =  splitconf(cp,'flipud',ci)
@@ -269,7 +269,7 @@ class Cam: #use this like an advanced version of Matlab struct
         self.dec = dec
 
     def debias(self,data):
-        if hasattr(self,'debiasData') and isfinite(self.debiasData):
+        if hasattr(self,'debiasData') and self.debiasData is not None and isfinite(self.debiasData):
             logging.debug('Debiasing Data for Camera #{} by -{}'.format(self.name,self.debiasData) )
             data -= self.debiasData
         return data

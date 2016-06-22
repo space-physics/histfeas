@@ -8,7 +8,8 @@ from sys import argv
 
 def hist_figure(xlsreg):
     from histfeas.main_hist import doSim
-    Phi0,Phifit =doSim(ParamFN=xlsreg,
+
+    doSim(ParamFN=xlsreg,
                   makeplot=['fwd','optim','png','h5'],
                   timeInds=timeInds,
                   overrides = overrides, #{'minev': minev,'filter':filt, 'fwdguess':fwdguess,
@@ -21,7 +22,6 @@ def hist_figure(xlsreg):
                   verbose=0
                   )
 
-    return Phi0,Phifit
 
 
 if __name__ == '__main__':
@@ -29,7 +29,7 @@ if __name__ == '__main__':
     p = ArgumentParser(description='flaming figure plotter')
     p.add_argument('--load',help='load without recomputing',action='store_true')
     p.add_argument('-m','--makeplot',help='plots to make',default=[],nargs='+')
-    p.add_argument('--ell',help='compute projection matrix',action='store_true')
+    p.add_argument('-L','--ell',help='compute projection matrix',action='store_true')
     p.add_argument('-v','--verbose',help='verbosity',action='count',default=0)
     p.add_argument('-f','--frames',help='time steps to use',type=int)#default=(1,3))
     p.add_argument('-o','--outdir',help='output directory',default=Path(gettempdir())/'out/rev2_flame2')
@@ -58,7 +58,7 @@ if __name__ == '__main__':
 
     if not p.load:
         print('running HiSTfeas program -- will write png and h5 to {}'.format(outdir))
-        Phi0,Phifit=hist_figure(xlsreg)
+        hist_figure(xlsreg)
 
     from histfeas.loadAnalyze import readresults,findxlsh5
     h5list,xlsfn = findxlsh5(outdir)
