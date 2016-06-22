@@ -62,7 +62,7 @@ def setupArc(xl):
     arc = {}
     ntimeslice=None
 
-    print(xl)
+    #print(xl)
 
     for s in xl.sections(): # for py27
         if s.startswith('arc'):
@@ -75,7 +75,7 @@ def setupArc(xl):
     return arc, ntimeslice
 
 def getntimes(arc):
-    return len(arc['tsec'].split(','))-1
+    return len(arc['texp'].split(','))-1
 
 def setupCam(sim,cp,zmax,makeplot):
     cam = []

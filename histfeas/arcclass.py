@@ -12,7 +12,7 @@ class Arc():
         self.zshape = xl['Zshape']
         self.xshape = xl['Xshape']
 
-        self.texp = fromstring(xl['tsec'],sep=',')
+        self.texp = fromstring(xl['texp'],sep=',')
 
         self.Pnorm = fromstring(xl['Pnorm'],sep=',')
 
