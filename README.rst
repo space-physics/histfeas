@@ -19,22 +19,23 @@ Feasibility study for auroral tomography
 
 .. contents::
 
-Tested on Python 3.5
-
-Primarily tested on Linux, but should work on Mac or Cygwin (windows) as well.
-
 .. image:: doc/montout.png
     :alt: montage of output
+
+Prereqs
+-------
+Since the inherent function of this program is generating plots, you will need a windowing system::
+
+	apt-get install libsm6 libxrender1 libfontconfig1
 
 Installation
 ------------
 go to the directory where you want to install this program under e.g. ~/code
 
-then, in Terminal (for Linux, Mac or Cygwin on Windows), copy and paste::
+then, in Terminal copy and paste::
 
    git clone --depth 1 https://github.com/scienceopen/histfeas
    cd histfeas
-   conda install requirements.txt
    python setup.py develop
 
 You can check that things are working OK by::
