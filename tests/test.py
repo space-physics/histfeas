@@ -29,7 +29,7 @@ def hist_registration(regh5,regXLS,odir):
           makeplot=['fwd','optim','h5'],
           timeInds=None,
 
-          overrides = {'rootdir':rootdir}, #{'minev': minev,'filter':filt, 'fwdguess':fwdguess, 'fitm':fitm,'cam':cam,'camx':acx,'ell':ell,'Jfwd':influx},
+          overrides = {'rootdir':rootdir},#,'ell':True}, #{'minev': minev,'filter':filt, 'fwdguess':fwdguess, 'fitm':fitm,'cam':cam,'camx':acx,'ell':ell,'Jfwd':influx},
           odir = odir,
           x1d=None,
           vlim = {'p':[None]*6,'j':[None]*2,'b':[None]*2},
