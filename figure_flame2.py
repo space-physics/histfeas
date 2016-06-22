@@ -31,7 +31,7 @@ if __name__ == '__main__':
     p.add_argument('-m','--makeplot',help='plots to make',default=[],nargs='+')
     p.add_argument('-L','--ell',help='compute projection matrix',action='store_true')
     p.add_argument('-v','--verbose',help='verbosity',action='count',default=0)
-    p.add_argument('-f','--frames',help='time steps to use',type=int)#default=(1,3))
+    p.add_argument('-f','--frames',help='time steps to use',nargs='+',type=int)#default=(1,3))
     p.add_argument('-o','--outdir',help='output directory',default=Path(gettempdir())/'out/rev2_flame2')
     p = p.parse_args()
 
@@ -49,7 +49,13 @@ if __name__ == '__main__':
 
     xlsreg='in/2cam_flame.ini'
     outdir = Path(p.outdir).expanduser()
-    timeInds=p.frames
+
+    if len(p.frames)==2:
+        timeInds=range(p.frames[0],p.frames[1])
+    elif len(p.frames)==3:
+        timeInds=range(p.frames[0],p.frames[1],p.frames[2])
+    else:
+        timeInds=p.frames
 
     x1d = [1,1,1]
     vlim = {'p':[-1.5,4.5,90,300,5e7,8e8,5e7,2e9], 'j':[1e3,1.1e5, 1e3,8e5],

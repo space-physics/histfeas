@@ -1,8 +1,7 @@
-#!/bin/env python3
 """
 ./real_apr14.py -c realvid fwd png
 
-For a real video root directory, finds all the time results and makes multipage GIFs or TIFFs as you like from the PNGs.
+For a real video root directory, finds all the time results and makes multipage GIFs or TIFFs as you like from the PNGs
 if you have very many PNGs, you might like to use FFV1 in an .avi instead of .gif.
 """
 from pathlib import Path
