@@ -53,7 +53,6 @@ ha.nyPixel = 512; %number of "y-pixels" in camera
 
 ha.rowInd = 1; %future 3D primitive approach!
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %The focal length results in the following FOV
 ha.FOVdeg=[atand(8.2/ha.focallengthMM(1)),atand(8.2/ha.focallengthMM(2))];
@@ -77,18 +76,15 @@ ha.nxGridAurora = 3000;
 ha.nyGridAurora = 400;
 
 %% Step 1) Auroral arc generation, point by point iteration
-% <update> this may be replaced with "chap_gauss_arc" perhaps!
+% FIXME this may be replaced with "chap_gauss_arc" perhaps!
 
 [aurora,ha.dmax] = make2Daurora(ha,arc);
-
 %% Step 2) lines of sight (path integrals) through auroral arc
-
 ha = makeFigures(ha,aurora);
 
 [intpix1,intpix2] = computeLOS(ha,aurora);
 
 %% Step 3) plot results
-
 [image1,image2] =finalPlot(ha,intpix1,intpix2,aurora,arc);
 
 if nargout==0, clear, end %eliminate nuisance console printing
@@ -118,7 +114,6 @@ aurora(ha.nxGridAurora/2 ... center of x-samples (where HST1 boresight live)
       z...              at this altitude sample bin
       )=v;                %is assigned Chapman fcn brightness "v"
 end
-
 %% 1b) Tapering the emissions on the edges of the aurora
 dmax=round(arc.widthKM*100/2);
 for d1=1:dmax %for each sample horizontal offset bin
@@ -127,13 +122,12 @@ for d1=1:dmax %for each sample horizontal offset bin
     value(value<0) = 0;
 
     for iArc = 1:ha.nArc
-        aurora(ha.nxGridAurora/2+arc.HorizOffsetKM(ha.rowInd,iArc)*100+d1,z)=value;
-        aurora(ha.nxGridAurora/2+arc.HorizOffsetKM(ha.rowInd,iArc)*100-d1,z)=value;
+        aurora(ha.nxGridAurora/2 + arc.HorizOffsetKM(ha.rowInd,iArc)*100 + d1, z) = value;
+        aurora(ha.nxGridAurora/2 + arc.HorizOffsetKM(ha.rowInd,iArc)*100 - d1, z) = value;
     end
 end %for d1
 end %for z
-
-%now we have a 2D slice of simulated aurora, let's do something with it!
+%now we have a 2D slice of simulated aurora, let's do something with it
 end
 
 function ha = makeFigures(ha,aurora)
