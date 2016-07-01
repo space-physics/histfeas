@@ -1,12 +1,11 @@
 .. image:: https://travis-ci.org/scienceopen/histfeas.svg?branch=master
     :target: https://travis-ci.org/scienceopen/histfeas
 
-.. image:: https://codeclimate.com/github/scienceopen/hist-feasibility/badges/gpa.svg
-   :target: https://codeclimate.com/github/scienceopen/hist-feasibility
+.. image:: https://codeclimate.com/github/scienceopen/histfeas/badges/gpa.svg
+   :target: https://codeclimate.com/github/scienceopen/histfeas
 
-
-.. image:: https://coveralls.io/repos/scienceopen/hist-feasibility/badge.svg?branch=master&service=github
-    :target: https://coveralls.io/github/scienceopen/hist-feasibility?branch=master
+.. image:: https://coveralls.io/repos/scienceopen/histfeas/badge.svg?branch=master&service=github
+    :target: https://coveralls.io/github/scienceopen/histfeas?branch=master
 
 ================
 hist-feasibility
