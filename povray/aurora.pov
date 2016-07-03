@@ -12,7 +12,7 @@ global_settings {
 
 #declare hist0=
  camera {
-    location <clock,0,0>
+    location <0,0,0>
     look_at <0,100,0>
     angle 20 // degrees FOV
     up y
@@ -69,8 +69,8 @@ camera{hist1}
 
 #declare group1=
     union{
-    object{arc1 translate <1,0,0> }
-    object{arc2 translate <1+clock*.1, 0, 0> }
+    object{arc1 translate <1+clock*.2, 0, 0> }
+    object{arc2 translate <1+clock*1,  0, 0> }
     }
     
 #declare aurora1=
