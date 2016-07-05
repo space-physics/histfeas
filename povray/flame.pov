@@ -1,7 +1,7 @@
 #version 3.7;
-
 // Flaming Auroral Emission field of view
 // Michael Hirsch
+
 global_settings { 
     assumed_gamma 1.0  
     ambient_light 0
@@ -14,73 +14,121 @@ global_settings {
  camera {
     location <0,0,0>
     look_at <0,100,0>
-    angle 20 // degrees FOV
-    up y
+    angle 5 // degrees FOV
+    up z
     right x
-    rotate <0,0,0>
+    //rotate <0,0,0>
 }
 
 #declare hist1=
  camera {
     location <5,1,0>
     look_at <0,100,0>
-    rotate <0,0,0>
     angle 10
-    up <0,0,1>
-    right <1,0,0>
-    rotate <0,0,0>
+    up z
+    right x
+    //rotate <0,0,0>
 }
 
-camera{hist1}
+camera{hist0}
 
-#declare auroral_emissions= media {
+#declare flame = media {
       emission 0.5
       intervals 20
-          density {
+      density {
             gradient y 
             turbulence <5,.1,1> 
             scale <.02,1,.05>
             color_map {
-                [0.0  color rgb <0,    0,   0>]
-                [0.25 color rgb <0,    0,   0>] // sharp bottomside cutoff
-                [0.3  color rgb <.15, .8,   .1>]  
-                [0.375 color rgb <0.1,.6,  .1>]
-                [0.45 color rgb <.025,.15,   .00>]
-                [0.6  color rgb <.035, .1,   0>]
-                [0.65 color rgb <0.04, .05,  0>]
-                [0.85 color rgb <.05, .01,  0>]
-                [1.0  color rgb <0,   0,    0>]
+                [0.0              color rgb <0,    0,              0>]
+                [0.25 +clock*0.02 color rgb <0,    0,              0>] // sharp bottomside cutoff
+                [0.3  +clock*0.02 color rgb <.15-clock*.05*.15/.8, 
+                                             .8 -clock*.05,   
+                                             .1 -clock*.05*.1/.8>]  
+                [0.375+clock*0.02 color rgb <.1 -clock*.05*.1/.6, 
+                                            .6  -clock*.05,   
+                                            .1  -clock*.05*.1/.6>]
+                [0.45 +clock*0.02 color rgb <.025-clock*.01*.025/.15,
+                                             .15 -clock*.01,  
+                                             .0>]
+                [0.6  +clock*0.02 color rgb <.035, 
+                                             .1  ,  
+                                             0>]
+                [0.65             color rgb <0.04, .05,            0>]
+                [0.85             color rgb <.05, .01,             0>]
+                [1.0              color rgb <0,   0,               0>]
                 }
           }
         }  
+        
+#declare static = media {
+      emission 0.5
+      intervals 20
+      density {
+            gradient y 
+            turbulence <5,.1,1> 
+            scale <.02,1,.05>
+            color_map {
+                [0.0              color rgb <0,    0,   0>]
+                [0.25             color rgb <0,    0,   0>] // sharp bottomside cutoff
+                [0.3              color rgb <.15, .8,   .1>]  
+                [0.375            color rgb <0.1,.6,  .1>]
+                [0.45             color rgb <.025,.15,   .00>]
+                [0.6              color rgb <.035, .1,   0>]
+                [0.65             color rgb <0.04, .05,  0>]
+                [0.85             color rgb <.05, .01,  0>]
+                [1.0              color rgb <0,   0,    0>]
+                }
+          }
+        } 
 
 
 #declare arc1=
- box{
- <0, 0, -1> <.2,1,1>
- hollow // won't glow without "hollow" 
- }
+ cylinder{ <-1, 0, -1>, <-1,1,-1>,.1
+hollow // won't glow without "hollow" 
+}
  
 #declare arc2=
- box{
- <0, 0, -1> <.2,1,1>
- hollow
- }
+ cylinder{ <1, 0, 1>, <1,1,1>,.1
+hollow
+}
+ 
+#declare arc3=
+ cylinder{ <1, 0, -1>, <1,1,-1>,.1
+hollow // won't glow without "hollow" 
+}
 
-#declare group1=
+#declare arc4=
+ cylinder{ <-1, 0, 1>, <-1,1,1>,.1
+hollow // won't glow without "hollow" 
+}
+#declare grp_static=
     union{
-    object{arc1 translate <1+clock*.2, 0, 0> }
-    object{arc2 translate <1+clock*1,  0, 0> }
+    object{arc2}
+    object{arc3}
+    object{arc4}
     }
     
-#declare aurora1=
-object {group1 
-    interior {media{auroral_emissions}}
-    pigment { rgbt 1}
+#declare aurora_static=
+object {grp_static 
+    interior {media{static}}
+    pigment { rgbt 1} // "t" transparency
 } 
 
-object {aurora1 
-        scale     <1, 50,  20> 
+object {aurora_static 
+        scale     <1, 50,  1> 
+        rotate    0 
+        translate <0, 100, 0>
+        }
+        
+#declare aurora_flame=
+object{ arc1
+    interior {media{flame}}
+    pigment { rgbt 1} // "t" transparency
+} 
+
+object {aurora_flame 
+        scale     <1, 50,  1> 
         rotate    0 
         translate <0, 100, 0>
         }
