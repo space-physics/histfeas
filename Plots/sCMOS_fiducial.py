@@ -22,9 +22,9 @@ magzenith_xy = (1328,876)
 #half-width, half-height of the first oval
 # that is, 5 degreees elevation = wh0[1]
 wh0 = (252,234)
-lblring=array((88,86,84,82))
+
 axlim=None#(1000,1650,1200,550) #optional choose pixel indices to show (xmin,xmax, ymax,ymin)
-ringmult=90-lblring
+ringmult=(2.,4.,6.,8.) # magnetic zenith angle to label with rings
 # for first image only
 rings=True
 rays=False
@@ -44,7 +44,7 @@ for f in flist:
 #%% plot!
     outfn = 'anno_{}.png'.format(f)
     fiducial(img, xycrop[0], xycrop[1], outfn, rings, rays,
-             tstr, magzenith_xy, wh0, lblring, ringmult, axlim)
+             tstr, magzenith_xy, wh0, ringmult, axlim)
 
     rings=rays=False
 
