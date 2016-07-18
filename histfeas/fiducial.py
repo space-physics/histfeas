@@ -29,8 +29,7 @@ def ccdfid(imgfn,calfn):
     opt = imread(str(imgfn))
     plotazelscale(opt,cal['az'],cal['el'])
 
-def fiducial(img,xcrop,ycrop,outfn,rings,rays,pstr,oxyfull,wh0,
-             lblring,ringmult,axlim=None):
+def fiducial(img,xcrop,ycrop,outfn,rings,rays,pstr,oxyfull,wh0, ringmult,axlim=None):
 
     """
     img: geographic zenith, full frame video frame including axes/margins
@@ -42,20 +41,16 @@ def fiducial(img,xcrop,ycrop,outfn,rings,rays,pstr,oxyfull,wh0,
     assert isinstance(rays,bool)
 #%% setup rings
     xyr = []
-    #zero-based indexing, geographic zenith
-    #oxyfull = [1242,297]
 #%% shift to account for post-processing crop of video (by me)
     oxy = [oxyfull[0]-xcrop, oxyfull[1]-ycrop]
-
-    xyr.append(array([wh0[0]*2/5-xcrop, wh0[1]*2/5-ycrop])) #by inspection
-
+    xyr1 = array((wh0[0]*2/5-xcrop, wh0[1]*2/5-ycrop)) #by inspection
 #%% width,height of rest of ovals
     for i in ringmult:
-        xyr.append(i*xyr[0]+1) #multiple of radius
+        xyr.append(i*xyr1 + 1.) #multiple of radius
 #%% init image
     fg = figure()
     ax = Axes(fg, [0., 0., 1., 1.])
-    ax. set_axis_off()
+    ax.set_axis_off()
     fg.add_axes(ax)
     if axlim:
         ax.axis(axlim)
@@ -69,8 +64,8 @@ def fiducial(img,xcrop,ycrop,outfn,rings,rays,pstr,oxyfull,wh0,
                              width=2*c[0], height=2*c[1],
                              fc='none',ec='white',lw=1))
         #%% annotate rings
-        for m,r in zip(ringmult,lblring):
-            angtxt(ringincr*m, oxy,'{}$^\circ$'.format(r), ax, wh0)
+        for m in ringmult:
+            angtxt(ringincr*m, oxy,'{:.0f}$^\circ$'.format(m), ax, wh0)
 
     #%% plot rays
     magzenel = 77.5
