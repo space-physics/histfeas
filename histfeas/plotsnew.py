@@ -6,7 +6,7 @@ from numpy import (s_,array,empty,empty_like,isnan,asfortranarray,linspace,outer
                    log10,spacing,atleast_2d,ndarray)
 from datetime import datetime
 #from numpy.ma import masked_invalid #for pcolormesh, which doesn't like NaN
-from matplotlib.pyplot import figure,subplots, clf,text,colorbar
+from matplotlib.pyplot import figure,subplots, text,colorbar
 from matplotlib.colors import LogNorm
 from matplotlib.ticker import LogFormatterMathtext, MultipleLocator, ScalarFormatter #for 1e4 -> 1 x 10^4, applied DIRECTLY in format=
 import h5py
@@ -30,7 +30,7 @@ from histutils.findnearest import find_nearest
 from histutils.plotsimul import plotRealImg,plotPlainImg
 from gridaurora.opticalmod import plotOptMod
 from gridaurora.plots import ploteigver,writeplots,nametime
-
+from .io import planviewkml
 #%% plot globals
 longtitle=False
 #pcmcmap = get_cmap('jet')
@@ -984,106 +984,6 @@ def planview3(cam,xKM,zKM,makeplot,figh,odir):
     y = earthrad * outer(sin(u), sin(v))
     z = earthrad * outer(ones_like(u), cos(v))
     ax.plot_surface(x, y, z,  rstride=4, cstride=4, color='g')
-
-#%% KML
-def planviewkml(cam,xKM,zKM,makeplot,figh,odir):
-    """
-    https://developers.google.com/kml/documentation/cameras
-    """
-    from pymap3d import aer2geodetic#, aer2ecef
-    import simplekml as skml
-    decimaterayfactor = 16
-
-    az = 106.444916022 #TODO arbitrary should be from real camera pointing
-    srange = 500e3 #[m]
-
-    clr=['r','b','g','m']
-    kclr = ['ff5c5ccd','ffff0000']
-    ax = figure(figh).gca(); clf()
-
-    cnorm,sfmt = logfmt(makeplot,(-6,6))
-
-
-    kml1d = skml.Kml()
-    #setup camera (I preferred LookAt)
-#        camview = skml.Camera(latitude=67.2,
-#                              longitude=-147.2,
-#                              altitude=100e3, #meters, int
-#                              heading = 180., tilt = 10., roll = 0.,
-#                              altitudemode = skml.AltitudeMode.relativetoground)
-    #setup LookAt
-    lkat = skml.LookAt(latitude=65.111,
-                       longitude=-147.465,
-                       altitude=0,
-                       heading=180,
-                       range=4e3,
-                       tilt=45)
-
-    lla = []
-    for C in cam:
-      if C.usecam:
-        #az is the temporary scalar defined above FIXME
-        el = C.angle_deg[::decimaterayfactor] #double colon
-        Np = el.size
-        lla.append((C.lon,C.lat))
-        # get LLA of pixel rays at 100km altitude
-        latre,lonre,altre = aer2geodetic(az,el,srange,C.lat,C.lon,C.alt_m)
-        # get ECEF of center ray at 90km (bottom of model space)
-        #centazray = az #TODO
-        #centelray = cam[ci].angle_deg[Np//2]
-        #xrc,yrc,zrc = aer2ecef(centazray,centelray,zbottom,lat0,lon0,alt0)
-
-        #camera location points
-        bpnt = kml1d.newpoint(name='HiST{}'.format(C.name),
-                              description='camera {} location'.format(C.name),
-                              coords=[(C.lon,C.lat)],
-                              altitudemode=skml.AltitudeMode.clamptoground)
-        bpnt.style.iconstyle.icon.href='http://maps.google.com/mapfiles/kml/shapes/arrow.png' # 'http://maps.google.com/mapfiles/kml/paddle/pink-blank.png'
-        bpnt.style.iconstyle.scale = 2.0
-        bpnt.style.labelstyle.size= 2.5
-        #bpnt.camera = camview
-        bpnt.lookat = lkat
-
-        #camera rays
-        if 'kmlrays' in makeplot:
-            for cri in range(Np):
-                linestr = kml1d.newlinestring(name='')
-                linestr.coords = [(C.lon,      C.lat,      C.alt_m),
-                                  (lonre[cri], latre[cri], altre[cri])]
-                linestr.altitudemode = skml.AltitudeMode.relativetoground
-                linestr.style.linestyle.color = kclr[C.name]
-
-
-        #plot
-        ax.plot(lonre,latre,'x',color=clr[C.name],markersize=6)
-        ax.plot(C.lon,C.lat,'o',color=clr[C.name],markersize=12,label='cam{}'.format(C.name))
-
-
-    ax.set_ylabel('WGS84 latitude [deg.]')
-    ax.set_xlabel('WGS84 longitude [deg.]')
-    ax.set_title('pixel locations at 100km altitude')
-    ax.legend()
-
-        #setup line on ground connecting sites
-    """
-    https://developers.google.com/kml/faq#linestyle
-    https://simplekml.readthedocs.org/en/latest/geometries.html#simplekml.LineString
-    """
-    ls = kml1d.newlinestring(name='3 km', coords=lla)
-    ls.style.linestyle.width=5
-    ls.style.linestyle.color=skml.Color.yellow
-    ls.style.labelstyle.scale=2.5
-    ls.style.labelstyle.color = skml.Color.white
-    ls.style.labelstyle.gxlabelvisibility=1
-    ls.visiblity=1
-
-    #if 'kml' in makeplot or 'kmlrays' in makeplot: #write KML
-    try:
-        kmlfn = str(odir/'cam.kml')
-        logging.debug('saving {}'.format(kmlfn))
-        kml1d.save(kmlfn)
-    except TypeError:
-        logging.error('problem writing KML {}'.format(kmlfn)) #disabled writing
 
 #%% gaussian fit
 def getx0E0(Phifwd,Phifit,E,x,tInd,odir=None,makeplot=[]):
