@@ -22,7 +22,7 @@ setup(name='histfeas',
 			'cvutils','gridaurora','transcarread','pyimagevideo','dascutils','pythonutils',
                         'gaussfitter',
                         'Wand',
-		         'geopy'],
+		         'geopy','simplekml'],
 	  extras_require = {'tifffile':['tifffile']},
       dependency_links = [
         'https://github.com/scienceopen/themisasi/tarball/master#egg=themisasi',
