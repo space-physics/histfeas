@@ -1,3 +1,4 @@
+*.kml
 *.pov-state
 povray/*.png
 precompute/fovhstdasc.h5
