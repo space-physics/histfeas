@@ -1,5 +1,6 @@
 import simplekml
 import logging
+from geopy.distance import vincenty as vdist
 from matplotlib.pyplot import figure,clf
 #
 from pymap3d.coordconv3d import aer2geodetic#, aer2ecef
@@ -64,17 +65,7 @@ def planviewkml(cam,xKM,zKM,makeplot,figh,odir):
     ax.set_title('pixel locations at 100km altitude')
     ax.legend()
 #%% setup line on ground connecting sites
-    """
-    https://developers.google.com/kml/faq#linestyle
-    https://simplekml.readthedocs.org/en/latest/geometries.html#simplekml.LineString
-    """
-    ls = kml1d.newlinestring(name='3 km', coords=lla)
-    ls.style.linestyle.width = 5
-    ls.style.linestyle.color = simplekml.Color.yellow
-    ls.style.labelstyle.scale= 2.5
-    ls.style.labelstyle.color= simplekml.Color.white
-    ls.style.labelstyle.gxlabelvisibility=1
-    ls.visiblity=1
+    kml1d = KMLline(kml1d)
 #%% write KML
     try:
         kmlfn = odir/'cam.kml'
@@ -86,7 +77,7 @@ def planviewkml(cam,xKM,zKM,makeplot,figh,odir):
 def campoint(kml,latlon,sitename='',lkat=None):
     """
     camera location points
-    latlon: len=2 or 3 vector of WGS84 lat,lon
+    latlon: len=2 or 3 vector of WGS84 lat,lon (optional altitude,meters)
     """
     bpnt = kml.newpoint(name=sitename,
                           #description = 'camera {} location'.format(C.name),
@@ -100,5 +91,27 @@ def campoint(kml,latlon,sitename='',lkat=None):
     #bpnt.camera = camview
     if lkat is not None:
         bpnt.lookat = lkat
+
+    return kml
+
+def KMLline(kml,lla):
+    """
+    https://developers.google.com/kml/faq#linestyle
+    https://simplekml.readthedocs.org/en/latest/geometries.html#simplekml.LineString
+
+    lla: list of len=2 or 3 tuples of WGS84 lat,lon (optional altitude,meters)
+    """
+    assert len(lla[0]) in (2,3),'lla must be 2 or 3 length vector lat,lon,(alt)'
+
+    dist_km = vdist(lla[0][:2],lla[1][:2]).km
+
+    ls = kml.newlinestring(name='{:.1f} km'.format(dist_km),
+                           coords=(lla[0][::-1], lla[1][::-1]))
+    ls.style.linestyle.width = 5
+    ls.style.linestyle.color = simplekml.Color.yellow
+    ls.style.labelstyle.scale= 2.5
+    ls.style.labelstyle.color= simplekml.Color.white
+    ls.style.labelstyle.gxlabelvisibility=1
+    ls.visiblity=1
 
     return kml
