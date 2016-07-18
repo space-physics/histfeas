@@ -1,3 +1,4 @@
+Plots/*.png
 *.kml
 *.pov-state
 povray/*.png
