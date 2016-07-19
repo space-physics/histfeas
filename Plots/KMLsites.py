@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 script to write instrument locations to KML for repeatable, extensible plots in Google Earth
 """
