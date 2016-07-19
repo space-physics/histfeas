@@ -13,6 +13,10 @@ sites = {'HiST0':(65.1186367, -147.432975),
          'HiST1':(65.12657,   -147.496908333),
          'PFISR':(65.12992,   -147.47104)}
 
+sites2 = {'Pedro Dome':(65.034, -147.5),
+          'Murphy Dome':(64.952,-148.357)}
+
+sites.update(sites2)
 #%%
 kmlfn = Path(kmlfn).expanduser()
 kml = simplekml.Kml()

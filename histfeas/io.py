@@ -111,7 +111,8 @@ def KMLline(kml,lla):
     ls.style.linestyle.color = simplekml.Color.yellow
     ls.style.labelstyle.scale= 2.5
     ls.style.labelstyle.color= simplekml.Color.white
-    ls.style.labelstyle.gxlabelvisibility=1
-    ls.visiblity=1
+    ls.style.linestyle.gxlabelvisibility=1 # NOT !! labelstyle !!
+#    ls.visiblity=1
+    print(kml.kml())
 
     return kml
