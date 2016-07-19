@@ -18,6 +18,8 @@ from numpy import array,cos,sin,radians,ndarray
 #
 from GeoData.plotting import plotazelscale
 
+RINGCALDEG = 5.
+
 if PY2: FileNotFoundError = OSError
 
 def ccdfid(imgfn,calfn):
@@ -39,17 +41,11 @@ def fiducial(img,xcrop,ycrop,outfn,rings,rays,pstr,oxyfull,wh0, ringmult,axlim=N
     assert isinstance(ycrop,int)
     assert isinstance(rings,bool)
     assert isinstance(rays,bool)
-#%% setup rings
-    xyr = []
 #%% shift to account for post-processing crop of video (by me)
     oxy = [oxyfull[0]-xcrop, oxyfull[1]-ycrop]
-    xyr1 = array((wh0[0]*2/5-xcrop, wh0[1]*2/5-ycrop)) #by inspection
-#%% width,height of rest of ovals
-    for i in ringmult:
-        xyr.append(i*xyr1 + 1.) #multiple of radius
 #%% init image
     fg = figure()
-    ax = Axes(fg, [0., 0., 1., 1.])
+    ax = Axes(fg, [0., 0., 1., 1.]) #square
     ax.set_axis_off()
     fg.add_axes(ax)
     if axlim:
@@ -57,16 +53,19 @@ def fiducial(img,xcrop,ycrop,outfn,rings,rays,pstr,oxyfull,wh0, ringmult,axlim=N
     ax.imshow(img,cmap='gray',origin='upper')
     #ax.autoscale(True) #scale to image, not rings
     #%% plot rings
+    # algorithm assumes uniform spaced rings
     if rings:
-        ringincr = wh0[1]*2/5. #every 2 degrees
-        for c in xyr:
-            ax.add_patch(Ellipse(xy=oxy,
-                             width=2*c[0], height=2*c[1],
-                             fc='none',ec='white',lw=1))
-        #%% annotate rings
+        xyr1 = array((wh0[0]*ringmult[0]/RINGCALDEG-xcrop,
+                      wh0[1]*ringmult[0]/RINGCALDEG-ycrop)) #by inspection
+        ringincr = wh0[1]*ringmult[0]/RINGCALDEG #every 2 degrees
         for m in ringmult:
-            angtxt(ringincr*m, oxy,'{:.0f}$^\circ$'.format(m), ax, wh0)
+            xyr = m*xyr1 + 1.
 
+            ax.add_patch(Ellipse(xy=oxy,
+                         width=xyr[0], height=xyr[1],
+                         fc='none',ec='white',lw=1))
+
+            angtxt(ringincr*m/2., oxy,'{:.0f}$^\circ$'.format(m), ax, wh0)
     #%% plot rays
     magzenel = 77.5
     magzenaz = 207.5
