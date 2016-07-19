@@ -7,7 +7,7 @@ from __future__ import division
 from six import PY2
 from . import Path
 from matplotlib.patches import Ellipse
-from matplotlib.pyplot import figure, Axes
+from matplotlib.pyplot import figure, Axes,close
 import matplotlib
 matplotlib.rcParams.update({'font.family':'sans-serif',
                            'font.sans-serif':'Arial',
@@ -31,7 +31,7 @@ def ccdfid(imgfn,calfn):
     opt = imread(str(imgfn))
     plotazelscale(opt,cal['az'],cal['el'])
 
-def fiducial(img,xcrop,ycrop,outfn,rings,rays,pstr,oxyfull,wh0, ringmult,axlim=None):
+def fiducial(img,xcrop,ycrop,outfn,rings,rays,t,pstr,oxyfull,wh0, ringmult,axlim=None):
 
     """
     img: geographic zenith, full frame video frame including axes/margins
@@ -89,14 +89,16 @@ def fiducial(img,xcrop,ycrop,outfn,rings,rays,pstr,oxyfull,wh0, ringmult,axlim=N
     ax.text(0.035,0.965,pstr,color='white',fontsize=50,
             va='top',ha='left', transform=ax.transAxes,
             bbox=dict(boxstyle="round,pad=0.0",fc='black', alpha=0.25))
+
+    ax.set_title(str(t), fontsize='x-large')
     #%% finalize image
     #ax.axis('off')
     #fg.tight_layout
 
-    #ax.set_ylim((500,1000))
     if outfn:
         print('writing {}'.format(outfn))
         fg.savefig(str(outfn),bbox_inches='tight',dpi=300)
+        close(fg)
 
 
 def angtxt(radput,oxy,txt,ax,wh0):
