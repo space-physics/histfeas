@@ -3,7 +3,7 @@
 creates sCMOS fiducials for TGARS 2015 Reconstruction of fine scale auroral Dyanmics paper figure
 The AVI reader accounts for the full annotated Matlab axes frame and indexes accordingly
 """
-from numpy import array
+from numpy import arange
 import cv2
 from matplotlib.pyplot import show
 #
@@ -19,12 +19,13 @@ cadence_sec = 0.02 # by inspection of video title
 xycrop=(0,0) # normally (0,0) for uncropped original video
 #%% zero-based indexing from upper left of image, magnetic zenith
 magzenith_xy = (1328,876)
-#half-width, half-height of the first oval
-# that is, 5 degreees elevation = wh0[1]
-wh0 = (252,234)
+#%% half-width, half-height of the first oval, that is, 5 degreees elevation = wh0[1]
+geozenith_xy = (1242,297) #geographic zenith
+wh0 = (1494-geozenith_xy[0], 531-geozenith_xy[1])
 
-axlim=None#(1000,1650,1200,550) #optional choose pixel indices to show (xmin,xmax, ymax,ymin)
-ringmult=(2.,4.,6.,8.) # magnetic zenith angle to label with rings
+axlim = (magzenith_xy[0]-500, magzenith_xy[0]+500,
+         magzenith_xy[1]+275, magzenith_xy[1]-275) #optional pixel indices to show (xmin,xmax, ymax,ymin)
+ringmult = arange(2,12,2,dtype=float) # magnetic zenith angle to label with rings
 # for first image only
 rings=True
 rays=False
