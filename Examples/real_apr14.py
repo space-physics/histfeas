@@ -8,7 +8,6 @@
 import logging
 logging.basicConfig(level=logging.WARNING)
 from tempfile import gettempdir
-from pathlib import Path
 from dateutil.parser import parse
 from sys import argv
 #
@@ -36,13 +35,13 @@ def hist_figure(xlsreg,makecomp):
 
 if __name__ == '__main__':
     from argparse import ArgumentParser
-    p = ArgumentParser(description='flaming figure plotter')
+    p = ArgumentParser()
     p.add_argument('ini',help='ini file to load')
     p.add_argument('--load',help='load without recomputing',action='store_true')
     p.add_argument('-m','--makeplot',help='plots to make (realvid png      fwd optim png h5)',default=[],nargs='+')
     p.add_argument('-v','--verbose',help='verbosity',action='count',default=0)
     p.add_argument('-f','--frames',help='time steps to use',type=int,nargs='+')
-    p.add_argument('-o','--outdir',help='output directory',default=Path(gettempdir()) / 'out/apr14T085430')
+    p.add_argument('-o','--outdir',help='output directory',default='out/2013-04-14')
     p.add_argument('-t','--treq',help='specific times requested',nargs='+')
     p = p.parse_args()
 
@@ -58,7 +57,7 @@ if __name__ == '__main__':
     sns.set(context='paper', style='whitegrid',font_scale=1.5,
         rc={'image.cmap': 'cubehelix_r'})
 
-    outdir = Path(p.outdir)
+    outdir = p.outdir
     timeInds=p.frames
 
     x1d = None
@@ -78,5 +77,4 @@ if __name__ == '__main__':
     h5list,inifn = findxlsh5(outdir)
     readresults(h5list,inifn,vlim,x1d,overrides,p.makeplot,p.verbose)
 
-    if 'show' in p.makeplot:
-        show()
+    show()
