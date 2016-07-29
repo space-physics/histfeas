@@ -17,9 +17,6 @@ from pymap3d.coordconv3d import aer2ecef
 from dascutils.readDASCfits import readDASC
 from themisasi.fov import mergefov
 
-verbose=0
-
-
 class Cam: #use this like an advanced version of Matlab struct
     """
     simple mode via try except attributeerror
@@ -31,7 +28,7 @@ class Cam: #use this like an advanced version of Matlab struct
             ci = cp['name'].split(',').index(name)
             self.usecam = sim.useCamBool[ci]
         except KeyError:
-            ci=0
+            ci=name
             self.usecam = True
 
         if not self.usecam and sim.realdata and name.lower().startswith('asi'):
@@ -377,7 +374,7 @@ class Cam: #use this like an advanced version of Matlab struct
         self.cutrow = cutrow
         self.cutcol = cutcol
 
-        if verbose>0:
+        if self.verbose>0:
             from matplotlib.pyplot import figure
             clr = ['b','r','g','m']
             ax=figure().gca()
@@ -422,7 +419,7 @@ class Cam: #use this like an advanced version of Matlab struct
 
             self.findLSQ(nearRow, nearCol)
 
-        if verbose>0:
+        if self.verbose>0:
             from matplotlib.pyplot import figure
             clr = ['b','r','g','m']
             ax = figure().gca()
@@ -439,6 +436,8 @@ def splitconf(conf,key,i=None,dtype=float,fallback=None,sep=','):
         pass
     elif isinstance(conf,dict):
         try:
+            return conf[key][i]
+        except TypeError:
             return conf[key]
         except KeyError:
             return
