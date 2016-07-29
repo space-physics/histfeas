@@ -1,4 +1,6 @@
 from . import Path
+from configparser import ConfigParser
+from six import string_types
 import logging
 from numpy import (linspace, fliplr, flipud, rot90, arange,
                    polyfit,polyval,rint,empty, isfinite, isclose,
@@ -19,11 +21,18 @@ verbose=0
 
 
 class Cam: #use this like an advanced version of Matlab struct
-    def __init__(self,sim,cp,name,zmax,makeplot,verbose=0):
+    """
+    simple mode via try except attributeerror
+    """
+    def __init__(self,sim,cp,name,zmax=None,makeplot=[],calfn=None,verbose=0):
         self.verbose = verbose
 
-        ci = cp['name'].split(',').index(name)
-        self.usecam = sim.useCamBool[ci]
+        try:
+            ci = cp['name'].split(',').index(name)
+            self.usecam = sim.useCamBool[ci]
+        except KeyError:
+            ci=0
+            self.usecam = True
 
         if not self.usecam and sim.realdata and name.lower().startswith('asi'):
             self.fn = list(Path(cp['fn'].split(',')[ci]).expanduser().glob('*.FITS'))
@@ -64,10 +73,12 @@ class Cam: #use this like an advanced version of Matlab struct
 #%%
         self.ncutpix = int(cp['nCutPix'].split(',')[ci])
 
-
-        self.Bincl =  splitconf(cp,'Bincl',ci)
-        self.Bdecl =  splitconf(cp,'Bdecl',ci)
-        self.Bepoch = splitconf(cp,'Bepoch',ci,parse)
+        try:
+            self.Bincl =  splitconf(cp,'Bincl',ci)
+            self.Bdecl =  splitconf(cp,'Bdecl',ci)
+            self.Bepoch = splitconf(cp,'Bepoch',ci,parse)
+        except KeyError:
+            self.Bincl=self.Bdecl=self.Bepoch=None
 
         try:
             self.Baz = 180. + self.Bdecl
@@ -89,21 +100,24 @@ class Cam: #use this like an advanced version of Matlab struct
 #%% check FOV and 1D cut sizes for sanity
         self.fovmaxlen = splitconf(cp,'FOVmaxLengthKM',ci,fallback=nan)
 
-        if self.fovmaxlen > 10e3:
+        if self.fovmaxlen is not None and self.fovmaxlen > 10e3:
             logging.warning('sanityCheck: Your FOV length seems excessive > 10000 km')
         if self.ncutpix > 4096:
             logging.warning('sanityCheck: Program execution time may be excessive due to large number of camera pixels')
-        if self.fovmaxlen < (1.5*zmax):
+        if self.fovmaxlen is not None and self.fovmaxlen < (1.5*zmax):
             logging.warning('sanityCheck: To avoid unexpected pixel/sky voxel intersection problems, make your candidate camera FOV at least 1.5 times longer than your maximum Z altitude.')
 
         self.boresightEl = splitconf(cp,'boresightElevDeg',ci)
         self.arbfov =      splitconf(cp,'FOVdeg',ci)
 
 #%% sky mapping
-        cal1Ddir = sim.rootdir/sim.cal1dpath
-        cal1Dname = cp['cal1Dname'].split(',')[ci]
-        if isinstance(cal1Ddir,Path) and isinstance(cal1Dname,str):
+        if calfn:
+            self.cal1Dfn = calfn
+        else:
+            cal1Ddir = sim.rootdir/sim.cal1dpath
+            cal1Dname = cp['cal1Dname'].split(',')[ci]
             self.cal1Dfn = (cal1Ddir / cal1Dname).expanduser()
+
 
         self.raymap = sim.raymap
         if not sim.realdata and self.raymap == 'arbitrary': #don't use realdata with arbitrary, doesn't make sense and causes flipped brightness data when loading--you've been warned!
@@ -421,6 +435,17 @@ class Cam: #use this like an advanced version of Matlab struct
             ax.set_ylim([0,self.az.shape[0]])
 
 def splitconf(conf,key,i=None,dtype=float,fallback=None,sep=','):
+    if isinstance(conf, ConfigParser):
+        pass
+    elif isinstance(conf,dict):
+        try:
+            return conf[key]
+        except KeyError:
+            return
+    else:
+        raise TypeError('expecting dict or configparseer')
+
+
     if i is not None:
         assert isinstance(i,(int,slice)),'single integer index only'
 
@@ -429,7 +454,7 @@ def splitconf(conf,key,i=None,dtype=float,fallback=None,sep=','):
             return splitconf(conf[key[0]],key[1:],i,dtype,fallback,sep)
         else:
             return splitconf(conf,key[0],i,dtype,fallback,sep)
-    elif isinstance(key,str):
+    elif isinstance(key,string_types):
         val = conf.get(key,fallback=fallback)
     else:
         raise TypeError('invalid key type {}'.format(type(key)))

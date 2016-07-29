@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 """
 -m realvid png   # plot simultaneous HST 2 cam + DASC all sky
 -m fwd optim png h5 # compute inversion based on optical intensity, save plots as png and result as hdf5 for quick replot
@@ -7,7 +7,6 @@
 """
 import logging
 logging.basicConfig(level=logging.WARNING)
-from tempfile import gettempdir
 from dateutil.parser import parse
 from sys import argv
 #
