@@ -299,7 +299,7 @@ def plotfwd(sim,cam,drn,xKM,xp,zKM,zp, ver,Phi0,fitp,Jxi,vlim,tInd,makeplot,odir
 #        plotRealImg(sim,cam,rawdata,tInd,makeplot,odir=odir)
 
     if doSubplots:
-        writeplots(fg,'fwd',T,makeplot,odir)
+        writeplots(fg,'fwd',T,odir)
 #%%
 def plotoptim(sim,cam,drn,dhat,bcomptxt,ver,Phi0,Jxi,
               vfit,Phifit,xKM,xp,zKM,zp,vlim,tInd,makeplot,odir,
@@ -362,7 +362,7 @@ def plotoptim(sim,cam,drn,dhat,bcomptxt,ver,Phi0,Jxi,
             axs[1,2].axis('off') #FIXME a bit case dependent
         except IndexError:
             pass
-        writeplots(fg,'est',T,makeplot,odir)
+        writeplots(fg,'est',T,odir)
 
 #%% ############################################################################
 def plotnoise(cam,T,figh,makeplot,prefix,odir):
@@ -388,7 +388,7 @@ def plotnoise(cam,T,figh,makeplot,prefix,odir):
              ax2.grid(True)
       ax2.legend(loc='best')
 
-      writeplots(fg,prefix,T,makeplot,odir)
+      writeplots(fg,prefix,T,odir)
 
 def plottphi0(Tm,Phi0,Jxi,Ek,zKM,vlim,sim,T,makeplot,prefix,odir):
 
@@ -414,7 +414,7 @@ def plottphi0(Tm,Phi0,Jxi,Ek,zKM,vlim,sim,T,makeplot,prefix,odir):
     ax.set_xlim(vlim[4:])
     ax.set_ylim(vlim[2:-2])
 
-    writeplots(fg,prefix,T,makeplot,odir)
+    writeplots(fg,prefix,T,odir)
 
 
 def ploteig1d(Ek,zKM,Tm,vlim,sim,T=None,makeplot=None,prefix=None,odir=None):
@@ -442,7 +442,7 @@ def ploteig1d(Ek,zKM,Tm,vlim,sim,T=None,makeplot=None,prefix=None,odir=None):
     ax.legend(loc='upper left',framealpha=0.5)
     #ax.autoscale(True,tight=True)
     ax.grid(True)
-    writeplots(fg,prefix,T,makeplot,odir)
+    writeplots(fg,prefix,T,odir)
 
 def plotPicard(A,b,cvar=None):
     from pyAIRtools.picard import picard
@@ -504,7 +504,7 @@ def plotJ1D(sim,PhiFwd,PhiInv,Ek,vlim,T,makeplot,prefix,titletxt,odir,
 
     if anno:    ax.legend(loc='lower left')
 
-    writeplots(fg,prefix,T,makeplot,odir)
+    writeplots(fg,prefix,T,odir)
 
     if 'h5' in makeplot:
         dumph5(prefix,T,odir,PhiFwd1d=PhiFwd,PhiInv1d=PhiInv,Ek=Ek)
@@ -584,7 +584,7 @@ def plotJ(sim,Jflux,x,xp,Ek,EKpcolor,vlim,xlim,T,makeplot,prefix,titletxt,figh,
             fg.subplots_adjust(top=0.85)
             _doJlbl(ax,titletxt)
 
-            writeplots(fg,prefix+p,T,makeplot,odir)
+            writeplots(fg,prefix+p,T,odir)
 
 #%% 3-D
     if '3d' in makeplot:
@@ -675,7 +675,7 @@ def plotVER1D(sim,pfwd,pinv,zKM,vlim,T,makeplot,prefix,titletxt,odir,
     ax.set_ylim(bottom=vlim[0],top=vlim[1])
     ax.set_xlim(vlim[4:6])
 
-    writeplots(fg,prefix,T,makeplot,odir,None)
+    writeplots(fg,prefix,T,odir)
 
     if 'h5' in makeplot: #a separate stanza
         dumph5(prefix,T,odir,pfwd1d=pfwd,pinv1d=pinv,z=zKM)
@@ -762,7 +762,7 @@ def plotVER(sim,ver,x,xp,z,zp,vlim,T,makeplot,prefix,titletxt,figh,
 
 
 
-            writeplots(fg,prefix+p,T,makeplot,odir)
+            writeplots(fg,prefix+p,T,odir)
     else:
         text(0,0,'Using Actual Data (ver=None)')
 
@@ -864,7 +864,7 @@ def plotBcompare(sim,braw,bfit,cam,prefix, vlim,tInd,figh,makeplot,odir,
         dumph5(prefix,T,odir,angle=[C.angle_deg for C in cam if C.usecam],braw=braw,bfit=bfit,
                ut1_unix=ut1_unix)
 
-    writeplots(fg,prefix,T,makeplot,odir)
+    writeplots(fg,prefix,T,odir)
 #%%
 def plotB(bpix,cam,vlim,T,figh,makeplot,labeltxt,odir,fg=None,ax1=None):
 
@@ -910,7 +910,7 @@ def plotB(bpix,cam,vlim,T,figh,makeplot,labeltxt,odir,fg=None,ax1=None):
                  #color=cord[c])
     doBlbl(ax1,sfmt[0],vlim,labeltxt,std) #b is never log
 
-    writeplots(fg,'b'+labeltxt[4:7],T,makeplot,odir)
+    writeplots(fg,'b'+labeltxt[4:7],T,odir)
 
 def doBlbl(axb,sfmt,vlim,labeltxt,noiselam):
     axb.legend(loc='upper left')
@@ -1123,7 +1123,7 @@ def getx0E0(Phifwd,Phifit,E,x,tInd,odir=None,makeplot=[]):
         except AttributeError:
             ca.text(0,0,'$\hat{\Phi} not used')
 
-        writeplots(fg,'gaussfitlin',tInd,makeplot,odir)
+        writeplots(fg,'gaussfitlin',tInd,odir)
 
     #Ghrow,Ghcol = np.unravel_index(gfit.argmax(axis=None),gfit.shape, order='C')
 
