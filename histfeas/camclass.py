@@ -111,9 +111,12 @@ class Cam: #use this like an advanced version of Matlab struct
         if calfn:
             self.cal1Dfn = calfn
         else:
-            cal1Ddir = sim.rootdir/sim.cal1dpath
-            cal1Dname = cp['cal1Dname'].split(',')[ci]
-            self.cal1Dfn = (cal1Ddir / cal1Dname).expanduser()
+            try:
+                cal1Ddir = sim.rootdir/sim.cal1dpath
+                cal1Dname = cp['cal1Dname'].split(',')[ci]
+                self.cal1Dfn = (cal1Ddir / cal1Dname).expanduser()
+            except AttributeError:
+                self.cal1Dfn = None
 
 
         self.raymap = sim.raymap
