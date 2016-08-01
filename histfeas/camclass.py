@@ -31,6 +31,8 @@ class Cam: #use this like an advanced version of Matlab struct
             ci=name
             self.usecam = True
 
+        self.cp = cp # in case you want custom options w/o clogging up camclass.py
+
         if not self.usecam and sim.realdata and name.lower().startswith('asi'):
             self.fn = list(Path(cp['fn'].split(',')[ci]).expanduser().glob('*.FITS'))
             self.name = name
