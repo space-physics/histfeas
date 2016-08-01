@@ -8,7 +8,7 @@ from datetime import datetime
 from dateutil.parser import parse
 #
 from transcarread.readionoinit import getaltgrid
-from .camclass import splitconf
+from histutils.camclass import splitconf
 
 class Sim:
 
