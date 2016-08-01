@@ -8,7 +8,7 @@ from six.moves.configparser import ConfigParser
 from shutil import copy2
 from geopy.distance import vincenty
 #
-from .camclass import Cam
+from histutils.camclass import Cam
 from .simclass import Sim
 from .arcclass import Arc
 
