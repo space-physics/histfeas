@@ -1,7 +1,6 @@
 """
 Michael Hirsch
 test results show this is ~5 times faster than nan*empty()
-GPLv3+
 """
 from numpy import empty,nan
 
