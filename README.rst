@@ -15,6 +15,8 @@ Feasibility study for auroral tomography
 :Author: Michael Hirsch
 :Date: June 2015
 
+This is a big program, contact me with any issues
+
 .. contents::
 
 .. image:: doc/montout.png
@@ -22,15 +24,10 @@ Feasibility study for auroral tomography
 
 Installation
 ------------
-go to the directory where you want to install this program under e.g. ~/code
-
-then, in Terminal copy and paste::
-
-   git clone --depth 1 https://github.com/scienceopen/histfeas
-   cd histfeas
+::
    python setup.py develop
 
-You can check that things are working OK by::
+self-test::
 
     python test/test.py
 
@@ -49,7 +46,7 @@ simulate flaming aurora with two cameras
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ::
 
-  python RunHistfeas.py in/2cam_flame.xlsx out/test_flame2/ -m fwd optim png show h5
+  python RunHistfeas.py in/2cam_flame.ini out/test_flame2/ -m fwd optim png show h5
 
 you can then look to the `Output Processing`_ section for how to load the HDF5 files
 you just produced in ``out/test_flame2``
@@ -61,13 +58,13 @@ reading real data and displaying a live video
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ::
 
-  python RunHistfeas.py in/apr14.xlsx out/apr14 -m realvid -a 0.1
+  python RunHistfeas.py in/apr14.ini out/apr14 -m realvid -a 0.1
 
 reading real data and saving the joint image frames to disk
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ::
 
-   python RunHistfeas.py in/apr14.xlsx out/apr14 -m realvid rawpng -a 0.1
+   python RunHistfeas.py in/apr14.ini out/apr14 -m realvid rawpng -a 0.1
 
 
 
@@ -79,9 +76,9 @@ plot eigenprofiles from 2013 JGR and current transcar sim
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ::
 
-   python RunHistfeas.py in/jgr2013_2cam.xlsx /tmp -m eig eig1d -p  -f 0 1 1
+   python RunHistfeas.py in/jgr2013_2cam.ini /tmp -m eig eig1d -p  -f 0 1 1
 
-   python RunHistfeas.py in/2cam_flame.xlsx /tmp -m eig eig1d -p --vlim 0 0 90 1000 1e-1 5e3 -f 0 1 1
+   python RunHistfeas.py in/2cam_flame.ini /tmp -m eig eig1d -p --vlim 0 0 90 1000 1e-1 5e3 -f 0 1 1
 
 Output selection (via -m command)
 ---------------------------------
