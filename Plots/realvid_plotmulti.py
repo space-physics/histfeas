@@ -4,7 +4,7 @@
 For a real video root directory, finds all the time results and makes multipage GIFs or TIFFs as you like from the PNGs
 if you have very many PNGs, you might like to use FFV1 in an .avi instead of .gif.
 """
-from pathlib import Path
+from histfeas import Path
 from sys import argv
 from wand.image import Image
 from wand.display import display
