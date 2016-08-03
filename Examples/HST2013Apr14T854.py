@@ -1,9 +1,9 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 """
 Load real data from HiST only
 Michael Hirsch
 """
-from pathlib import Path
+from histfeas import Path
 from dateutil.parser import parse
 from pandas import date_range
 from sys import argv
