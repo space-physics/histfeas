@@ -15,7 +15,7 @@ setup(name='histfeas',
 	  install_requires=['themisasi','histutils','lowtran','pymap3d','astrometry_azel',
 			'cvutils','gridaurora','transcarread','pyimagevideo','dascutils','pythonutils',
                         'gaussfitter',
-                        'Wand',
+                        'Wand','pathvalidate',
 		         'geopy','simplekml'],
 	  extras_require = {'tifffile':['tifffile']},
       dependency_links = [

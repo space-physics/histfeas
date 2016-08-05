@@ -37,7 +37,9 @@ def doSim(ParamFN,makeplot,timeInds,overrides,odir,x1d,vlim,animtime, cmd,verbos
     logging.basicConfig(level=30-verbose*10)
     #%% output directory
     odir.mkdir(parents=True,exist_ok=True)
+
     (odir/'cmd.log').write_text(' '.join(argv)) #store command for future log
+
 #%% Step 0) load data
     arc,sim,cam,Fwd = getParams(ParamFN, overrides,makeplot,odir)
 #%% setup loop
