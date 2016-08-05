@@ -29,11 +29,11 @@ Installation
 
 self-test::
 
-    python test/test.py
+    python tests/test.py
 
 Usage notes
 ------------
-if upon changing the ``in/*.xlsx`` files to make a new simulation, you get an error message
+if upon changing the ``in/*.ini`` files to make a new simulation, you get an error message
 including
 ``use --ell command line option to save new Ell file``
 rerun your simulation command, adding ``--ell`` to compute (one-time) the projection
