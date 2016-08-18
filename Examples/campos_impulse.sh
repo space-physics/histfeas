@@ -1,6 +1,6 @@
 #!/bin/bash
 set -u; set -e
-# iterates over camera positions, using the step/impulse DNF input.
+# iterates over camera positions, using the step/impulse differential number flux input.
 rdir=$1
 cam1=(0.5 1 1.5 2 2.5 3 3.5 4 5 6 7 8 9 10)
 cam0=0
