@@ -77,5 +77,5 @@ if __name__ == '__main__':
     Phi0,Phifit = readresults(h5list,regini)
 #%% check vs known result
     readCheck(Phi0,Phifit)
-    print('OK:  simulation registration case')
+    print('\nOK:  simulation registration case')
 #%% real data

@@ -10,8 +10,8 @@ logging.basicConfig(level=logging.WARNING)
 from dateutil.parser import parse
 from sys import argv
 #
-from pythonutils.ulimit_nofile import raise_nofile
-raise_nofile(4096) # ulimit -n 1024 will crash with OSError. This is a temporary setting extinguishing with Python session.
+#from pythonutils.ulimit_nofile import raise_nofile
+#raise_nofile(4096) # ulimit -n 1024 will crash with OSError. This is a temporary setting extinguishing with Python session.
 
 
 def hist_figure(xlsreg,makecomp):
