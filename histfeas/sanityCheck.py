@@ -2,7 +2,6 @@
 sanity check for HiST parameters
 Michael Hirsch
 """
-from . import Path
 import logging
 from six.moves.configparser import ConfigParser
 from shutil import copy2
@@ -12,25 +11,24 @@ from histutils.camclass import Cam
 from .simclass import Sim
 from .arcclass import Arc
 
-def getParams(inifn,overrides,makeplot,odir):
-    inifn = Path(inifn).expanduser()
-    if odir is not None:
-        copy2(str(inifn),str(odir))
+def getParams(P):
+    if P['outdir'] is not None:
+        copy2(str(P['ini']),str(P['outdir']))
 #%% read spreadsheet
     try:
         xl = ConfigParser(allow_no_value=True, inline_comment_prefixes=('#'), strict=True)
     except TypeError: #py27
         xl = ConfigParser(allow_no_value=True)
-    xl.read(str(inifn))
+    xl.read(str(P['ini']))
 #%% read arcs (if any)
     arc,ntimeslice = setupArc(xl)
     logging.info('# of observer time steps in spreadsheet: {}'.format(ntimeslice))
 #%% class with parameters and function
-    sim = Sim(xl,arc,ntimeslice,overrides,makeplot,odir)
+    sim = Sim(xl,arc,ntimeslice,P)
 #%% grid setup
     Fwd = sim.setupFwdXZ(xl)
 #%% setup cameras
-    cam = setupCam(sim,xl['cam'],Fwd['z'][-1],makeplot)
+    cam = setupCam(sim,xl['cam'],Fwd['z'][-1],P['makeplot'])
 
     if sim.realdata:
         #find the x-coordinate (along B-perp) of each camera (can't do this inside camclass.py)

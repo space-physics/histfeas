@@ -31,32 +31,32 @@ from .observeVolume import getEll,getObs #calls matplotlib
 from .FitVER import FitVERopt as FitVER #calls matplotlib
 from .plotsnew import goPlot #calls matplotlib
 
-def doSim(ParamFN,makeplot,timeInds,overrides,odir,x1d,vlim,animtime, cmd,verbose=0):
+def doSim(P):
+#%% housekeeping
     tic = time()
-    odir = Path(odir).expanduser()
-    logging.basicConfig(level=30-verbose*10)
+    logging.basicConfig(level=30-P['verbose']*10)
     #%% output directory
-    odir.mkdir(parents=True,exist_ok=True)
+    P['outdir'].mkdir(parents=True,exist_ok=True)
 
-    (odir/'cmd.log').write_text(' '.join(argv)) #store command for future log
+    (P['outdir']/'cmd.log').write_text(' '.join(argv)) #store command for future log
 
 #%% Step 0) load data
-    arc,sim,cam,Fwd = getParams(ParamFN, overrides,makeplot,odir)
+    arc,sim,cam,Fwd = getParams(P)
 #%% setup loop
     if sim.realdata:
         # can load enormous amount of data into rawdata, Ncam x Nframe x Ny x Nx (verify dim order?)
-        cam,rawdata,sim = getSimulData(sim,cam,makeplot,odir,verbose)
+        cam,rawdata,sim = getSimulData(sim,cam,P['outdir'],P['verbose'])
     else: #simulation
         rawdata = None
         if sim.raymap == 'astrometry':
-            cam = get1Dcut(cam,makeplot,odir,verbose)
-    timeInds = sim.maketind(timeInds)
+            cam = get1Dcut(cam,P['outdir'],P['verbose'])
+    timeInds = sim.maketind(P['timeinds'])
 #%% Step 1) get projection matrix
-    Lfwd,Fwd,cam = getEll(sim,cam,Fwd,makeplot,verbose)
+    Lfwd,Fwd,cam = getEll(sim,cam,Fwd,P)
 #%% load eigenprofiles from Transcar
-    Peig = getMp(sim,cam,Fwd['z'],makeplot)
+    Peig = getMp(sim,cam,Fwd['z'],P['makeplot'])
 #%% synthetic diff. num flux
-    Phi0all = getPhi0(sim,arc,Fwd['x'],Peig['Ek'], makeplot) # Nenergy x Nx x Ntime
+    Phi0all = getPhi0(sim,arc,Fwd['x'],Peig['Ek'], P['makeplot']) # Nenergy x Nx x Ntime
     print('{:.1f} sec to prepare for HiSTfeas loop'.format(time()-tic))
 #%%start looping for each time slice in keogram (just once if simulated)
     for ti in timeInds:
@@ -72,17 +72,17 @@ def doSim(ParamFN,makeplot,timeInds,overrides,odir,x1d,vlim,animtime, cmd,verbos
 #%% Step 1) Forward model
         Pfwd = getSimVER(Phi0, Peig, Fwd, sim, arc, ti) # Nz x Nx
 #%% Step 2) Observe Forward Model (create vector of observations)
-        bn = getObs(sim,cam,Lfwd,ti,Pfwd,makeplot,verbose) # Ncam*Npixel (1D vector)
+        bn = getObs(sim,cam,Lfwd,ti,Pfwd) # Ncam*Npixel (1D vector)
 #%% Step 3) fit constituent energies to our estimated vHat and reproject
-        Phi0r = initPhi(Phi0,Peig,Fwd,overrides)
-        Pfit,jfit,Tm,bfit = FitVER(Lfwd, bn, Phi0r, Peig, sim, cam,Fwd, ti, makeplot,verbose)
+        Phi0r = initPhi(Phi0,Peig,Fwd,P['overrides'])
+        Pfit,jfit,Tm,bfit = FitVER(Lfwd, bn, Phi0r, Peig, sim, cam,Fwd, ti, P)
 #%% plot results
         goPlot(sim,Fwd,cam,Lfwd,Tm,bn,bfit,Pfwd,Pfit,Peig,Phi0,
-                     jfit,rawdata,ti,makeplot,odir,x1d,vlim)
-        if animtime is not None:
+                     jfit,rawdata,ti,P)
+        if 'animtime' in P and P['animtime']:
             draw()
-            pause(animtime)
-        elif 'show' in makeplot:
+            pause(P['animtime'])
+        elif 'show' in P['makeplot']:
             show()
         else:
             close('all')

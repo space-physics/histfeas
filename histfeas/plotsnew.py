@@ -67,8 +67,8 @@ def placetxt(x,y,txt,ax):
             va='bottom',ha='left',
             bbox=dict(boxstyle="round,pad=0.0",fc='black', alpha=0.25))
 
-def goPlot(sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
-                            Phifit,rawdata,tInd,makeplot,odir,x1d,vlim):
+def goPlot(sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0, Phifit,rawdata,tInd,P):
+    makeplot = P['makeplot'];  odir = P['outdir'];  vlim = P['vlim']
 #%% nicer file naming
     T = tind2dt(cam,tInd)
 #%% convenience
@@ -85,11 +85,11 @@ def goPlot(sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0,
 #%% get xind
     try:
         try:
-            cx1d=x1d[tInd]
+            cx1d = P['x1d'][tInd]
         except IndexError: #single value of xInd
-            cx1d=x1d[0]
+            cx1d = P['x1d'][0]
         Jxi = find_nearest(xKM,cx1d)[0]
-        logging.info('1-D plots of Phi and P taken at index {}  x={}'.format(Jxi,x1d))
+        logging.info('1-D plots of Phi and P taken at index {}  x={}'.format(Jxi, P['x1d']))
     except TypeError:
         Jxi = None
 #%% eigenfunction

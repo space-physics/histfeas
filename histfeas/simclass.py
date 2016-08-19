@@ -12,18 +12,18 @@ from histutils.camclass import splitconf
 
 class Sim:
 
-    def __init__(self,sp,ap,ntimeslice,overrides,makeplot,odir):
+    def __init__(self,sp,ap,ntimeslice,P):
 #%% root directory not here
         try:
-            self.rootdir = Path(overrides['rootdir']).expanduser()
+            self.rootdir = Path(P['overrides']['rootdir']).expanduser()
         except (TypeError,KeyError):
-            self.rootdir = Path('')
+            self.rootdir = Path()
 #%% how many cameras in use, and which ones?
         self.camnames = sp['cam']['name'].split(',')
         self.useCamBool = fromstring(sp['cam']['useCam'],dtype=bool,sep=',')
 
         try:
-            usecamreq = asarray(overrides['cam'])
+            usecamreq = asarray(P['overrides']['cam'])
             if usecamreq[0] is not None: #override spreadsheet
                 logging.warning(' Overriding INI, using cameras: {}'.format(usecamreq))
                 for i,civ in enumerate(self.useCamBool): # this might be a silly indexing method, but works
@@ -37,7 +37,7 @@ class Sim:
             pass #normal case
 #%% camera position override check (work done in sanityCheck.setupCam)
         try:
-            self.camxreq = overrides['camx']
+            self.camxreq = P['overrides']['camx']
             if self.camxreq[0] and len(self.camxreq) != self.nCamUsed:
                 raise ValueError('must specify same number of x-loc and used cameras')
         except (TypeError,KeyError): #cam override not specified
@@ -49,38 +49,38 @@ class Sim:
         assert (nCutPix[self.useCamBool] == nCutPix[self.useCamBool][0]).all(),'all cameras must have same 1D cut length'
         self.ncutpix = nCutPix[self.useCamBool][0]
 
-        if 'realvid' in makeplot:
+        if 'realvid' in P['makeplot']:
             self.fovfn = sp.get('cams','fovfn',fallback=None)
 #%% manual override flux file
         try:
-            self.Jfwdh5 = overrides['Jfwd']
-            logging.info('* overriding J0 flux with file: {}'.format(overrides['Jfwd']))
+            self.Jfwdh5 = P['overrides']['Jfwd']
+            logging.info('* overriding J0 flux with file: {}'.format(P['overrides']['Jfwd']))
         except (KeyError,TypeError):
             self.Jfwdh5 = None
 #%% manual override filter
         try:
-            self.opticalfilter = overrides['filter'].lower()
-            logging.info('* overriding filter choice with:',overrides['filter'])
+            self.opticalfilter = P['overrides']['filter'].lower()
+            logging.info('* overriding filter choice with:',P['overrides']['filter'])
         except (KeyError,TypeError):
             self.opticalfilter = sp['transcar']['opticalFilter'].lower()
 #%% manual override minimum beam energy
         try:
-            self.minbeamev = float(overrides['minev'])
-            logging.info('* minimum beam energy set to: {}'.format(overrides['minev']))
+            self.minbeamev = float(P['overrides']['minev'])
+            logging.info('* minimum beam energy set to: {}'.format(P['overrides']['minev']))
         except (KeyError,TypeError): #use spreadsheet
             self.minbeamev = sp.getfloat('transcar','minbeamev',fallback=0)
 
 #%% fit method
         try:
-            self.optimfitmeth = overrides['fitm']
-            logging.info('* setting fit method to {}'.format(overrides['fitm']))
+            self.optimfitmeth = P['overrides']['fitm']
+            logging.info('* setting fit method to {}'.format(P['overrides']['fitm']))
         except (KeyError,TypeError):
             self.optimfitmeth = sp.get('recon','OptimFluxMethod',fallback='').lower()
 
         self.optimmaxiter = sp.getint('recon','OptimMaxiter',fallback=None)
 #%% force compute ell
         try:
-            if overrides and overrides['ell']:
+            if P['overrides'] and P['overrides']['ell']:
                 self.loadfwdL = False
             else:
                 self.loadfwdL = True
@@ -89,9 +89,9 @@ class Sim:
 #%% setup plotting
 #        self.plots = {}
 #
-#        if 'optim' in makeplot:
+#        if 'optim' in P['makeplot']:
 #            self.plots['optim'] = ('bnoise','best','pest','phiest','pest_1d','phiest_1d')
-#        if 'fwd' in makeplot:
+#        if 'fwd' in P['makeplot']:
 #            self.plots['fwd'] =   ('bnoise','bfwd','pfwd','phifwd','pfwd_1d','phifwd_1d')
 #%%how many synthetic arcs are we using
         self.nArc = len(ap) # number of dict entries
@@ -141,13 +141,13 @@ class Sim:
         self.cal1dpath = (self.rootdir/sp['cams']['cal1Ddir']).expanduser()
 
         try: #override
-            if overrides['treq'] is not None: #must be is not None for array case
-                if isinstance(overrides['treq'][0],(datetime,float,int)):
+            if P['overrides']['treq'] is not None: #must be is not None for array case
+                if isinstance(P['overrides']['treq'][0],(datetime,float,int)):
                     pass
-                elif isinstance(overrides['treq'][0],str):
-                    overrides['treq'] = [parse(t).timestamp() for t in overrides['treq']]
+                elif isinstance(P['overrides']['treq'][0],str):
+                    P['overrides']['treq'] = [parse(t).timestamp() for t in P['overrides']['treq']]
 
-                self.treqlist = overrides['treq']
+                self.treqlist = P['overrides']['treq']
 
             else:
                 self.startutc = parse(sp.get('cams','reqStartUT',fallback=None)) #not fallback=''

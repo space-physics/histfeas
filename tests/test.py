@@ -18,18 +18,15 @@ matplotlib.use('Agg') #fixes Travis NO DISPLAY bug
 #
 from histfeas.main_hist import doSim
 
-rootdir = Path(__file__).parents[1]
-
-def hist_registration(regh5,regXLS,odir):
+def hist_registration(P):
     """
     This creates output hdf5 files, the typical output of the program for offline analysis
     """
 
-    doSim(ParamFN=regXLS,
-          makeplot=['fwd','optim','h5'],
-          timeInds=None,
+    P['makeplot'] = ['fwd','optim','h5']
 
-          overrides = {'rootdir':rootdir},#,'ell':True}, #{'minev': minev,'filter':filt, 'fwdguess':fwdguess, 'fitm':fitm,'cam':cam,'camx':acx,'ell':ell,'Jfwd':influx},
+    doSim(P,
+          timeInds=None,
           odir = odir,
           x1d=None,
           vlim = {'p':[None]*6,'j':[None]*2,'b':[None]*2},
