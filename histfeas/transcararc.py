@@ -30,6 +30,8 @@ def getMp(sim,cam,zKM,makeplot):
     if not in1d(('fwd','optim'),makeplot).any():
         return
 #%% read from transcar sim
+    if cam[0].Bincl is None:
+        raise ValueError('need one notional Bincl value in .ini to get magnetic zenith boresight angle')
     Peigen,EKpcolor = getTranscar(sim,cam[0].alt_m/1000.,90-cam[0].Bincl)[:2]
     assert isinstance(Peigen,DataArray),'Did not get DataArray from getTranscar, aborting.'
     Ek = Peigen.energy_ev.values
