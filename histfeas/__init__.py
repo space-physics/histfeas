@@ -11,8 +11,6 @@ except (ImportError,AttributeError):
 def hist_figure(P):
     from histfeas.main_hist import doSim
 
-    P['overrides']['rootdir'] = Path(__file__).parents[1]
-
     P['makeplot'] =['fwd','optim','png','h5']
 
     print('running HiSTfeas program -- will write png and h5 to {}'.format(P['outdir']))
@@ -20,21 +18,26 @@ def hist_figure(P):
     doSim(P)
 
 
-def userinput(ini=None):
+def userinput(ini=None,outdir=None):
+    if ini:
+        ini = Path(ini)
+
+    if outdir is None:
+        outdir = mkdtemp(prefix=ini.stem,dir='out')
+
     from argparse import ArgumentParser
     p = ArgumentParser(description='flaming figure plotter')
-    p.add_argument('ini',nargs='?',default=ini)
+    p.add_argument('ini',help='.ini config file',nargs='?',default=ini)
+    p.add_argument('outdir',help='output directory',nargs='?',default = outdir)
     p.add_argument('--load',help='load without recomputing',action='store_true')
     p.add_argument('-m','--makeplot',help='plots to make',default=[],nargs='+')
     p.add_argument('-L','--ell',help='compute projection matrix',action='store_true')
     p.add_argument('-v','--verbose',help='verbosity',action='count',default=0)
     p.add_argument('-f','--frames',help='time steps to use',nargs='+',type=int)
-    p.add_argument('-o','--outdir',help='output directory',default = mkdtemp(dir='out'))
     p = p.parse_args()
 
     if not p.ini:
         raise RuntimeError('you must specify an .ini file')
-
 #%% must occur first
     import matplotlib
     matplotlib.use('Agg')
@@ -52,8 +55,11 @@ def userinput(ini=None):
      'ell':p.ell,
      'verbose':p.verbose,
      'outdir':Path(p.outdir).expanduser(),
+     'overrides': {},
      'cmd': ' '.join(argv),
     }
+
+    P['overrides']['rootdir'] = Path(__file__).parents[1]
 #%%
     if p.frames is None or len(p.frames) not in (2,3):
         itime = p.frames
