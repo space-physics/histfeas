@@ -8,8 +8,7 @@ from .plotsnew import writeplots,getx0E0,plotB
 from .nans import nans
 
 
-def analyseres(sim,cam,x,xp,Phifwd,Phifit,drn,dhat,vlim,x0true=None,E0true=None,
-               makeplot=[None], odir=None):
+def analyseres(sim,cam,x,xp,Phifwd,Phifit,drn,dhat,P,x0true=None,E0true=None):
     #not Phifit tests for None and []
     if Phifwd is None or not Phifit or Phifit[0]['x'] is None or x0true is None or E0true is None:
         return
@@ -34,7 +33,7 @@ def analyseres(sim,cam,x,xp,Phifwd,Phifit,drn,dhat,vlim,x0true=None,E0true=None,
 #%% back to work
     for i,jf in enumerate(Phifit):
         #note even if array is F_CONTIGUOUS, argmax is C-order!!
-        gx0[i,:],gE0[i,:] = getx0E0(Phifwd[...,i], jf['x'], jf['EK'],x,9999,odir,makeplot)
+        gx0[i,:],gE0[i,:] = getx0E0(Phifwd[...,i], jf['x'], jf['EK'],x,9999,P['outdir'],P['makeplot'])
 
 
         print('t={} gaussian 2-D fits for (x,E):\n'
@@ -44,27 +43,27 @@ def analyseres(sim,cam,x,xp,Phifwd,Phifit,drn,dhat,vlim,x0true=None,E0true=None,
                                                 gx0[i,0],  gE0[i,0],
                                                 gx0[i,1],  gE0[i,1]))
 
-        Eavgfwdx[i,:],Eavghatx[i,:] = avgcomp(Phifwd[...,i], jf['x'], jf['EK'],x,makeplot,odir)
+        Eavgfwdx[i,:],Eavghatx[i,:] = avgcomp(Phifwd[...,i], jf['x'], jf['EK'],x,P)
 
 #%% overall error
     gx0err = gx0[:,1] - x0true #-gx0[:,0]
     gE0err = gE0[:,1] - E0true #-gE0[:,0]
 #%% plots
-    #extplot(sim,cam,drn,dhat,vlim,makeplot,odir,verbose)
+    #extplot(sim,cam,drn,dhat,P)
 
 
-    doplot(x,Phifit,gE0,Eavgfwdx,Eavghatx, makeplot,odir)
+    doplot(x,Phifit,gE0,Eavgfwdx,Eavghatx,P)
 
-    plotgauss(x0true,gx0,gE0,gx0err,gE0err,makeplot,odir)
+    plotgauss(x0true,gx0,gE0,gx0err,gE0err,P)
 
 
-def doplot(x,Phifit,gE0,Eavgfwdx,Eavghatx, makeplot,odir):
+def doplot(x,Phifit,gE0,Eavgfwdx,Eavghatx, P):
 #    with open('cord.csv','r') as e:
 #        reader = csv.reader(e, delimiter=',', quoting = csv.QUOTE_NONE);
 #        cord = [[r.strip() for r in row] for row in reader][0]
 
     try:
-        if 'optim' in makeplot:
+        if 'optim' in P['makeplot']:
             try:
                 fg = figure()
                 ax = fg.gca()
@@ -73,12 +72,12 @@ def doplot(x,Phifit,gE0,Eavgfwdx,Eavghatx, makeplot,odir):
                 ax.set_ylabel('$||\hat{b} - b||_2$')
                 ax.set_title('Residual $b$')
                 ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-                writeplots(fg,'error_boptim',9999,makeplot,odir)
+                writeplots(fg,'error_boptim',9999,P['makeplot'],P['outdir'])
             except AttributeError:
                 close(fg)
                 pass
 
-        if 'fwd' in makeplot and Eavgfwdx:
+        if 'fwd' in P['makeplot'] and Eavgfwdx:
             fgf = figure()
             ax = fgf.gca()
             ax.semilogy(x,Eavgfwdx.T, marker='.')
@@ -86,9 +85,9 @@ def doplot(x,Phifit,gE0,Eavgfwdx,Eavghatx, makeplot,odir):
             ax.set_ylabel('Expected Value $\overline{E}$ [eV]')
             ax.set_title('Fwd model: Average Energy $\overline{E}$ vs $B_\perp$')
             ax.legend(['{:.0f} eV'.format(g) for g in gE0[:,0]],loc='best',fontsize=9)
-            writeplots(fgf,'Eavg_fwd',9999,makeplot,odir)
+            writeplots(fgf,'Eavg_fwd',9999,P['makeplot'],P['outdir'])
 
-        if 'optim' in makeplot and Eavghatx:
+        if 'optim' in P['makeplot'] and Eavghatx:
             fgo = figure()
             ax = fgo.gca()
             ax.semilogy(x,Eavghatx.T, marker='.')
@@ -96,24 +95,24 @@ def doplot(x,Phifit,gE0,Eavgfwdx,Eavghatx, makeplot,odir):
             ax.set_ylabel('Expected Value $\overline{E}$ [eV]')
             ax.set_title('ESTIMATED Average Energy $\overline{\hat{E}}$ vs $B_\perp$')
             ax.legend(['{:.0f} eV'.format(g) for g in gE0[:,0]],loc='best',fontsize=9)
-            writeplots(fgo,'Eavg_optim',9999,makeplot,odir)
+            writeplots(fgo,'Eavg_optim',9999,P['makeplot'],P['outdir'])
     except Exception as e:
         logging.info('skipping average energy plotting.   {}'.format(e))
 
-def extplot(sim,cam,drn,dhat,vlim,makeplot,odir):
+def extplot(sim,cam,drn,dhat,vlim,P):
 #%% brightness plot -- plotting ALL at once to show evolution of dispersive event!
     try:
-        if 'fwd' in makeplot and drn:
+        if 'fwd' in P['makeplot'] and drn:
             for i,b in enumerate(drn):
-                plotB(b,cam,vlim['b'],9999,19999,makeplot,'$bfwdall',odir)
+                plotB(b,cam,vlim['b'],9999,19999,P['makeplot'],'$bfwdall',P['outdir'])
     # reconstructed brightness plot
-        if 'optim' in makeplot and dhat is not None and len(dhat[0])>0:
+        if 'optim' in P['makeplot'] and dhat is not None and len(dhat[0])>0:
             for i,b in enumerate(dhat):
-                plotB(b,cam,vlim['b'],9999,29999,makeplot,'$bestall', odir)
+                plotB(b,cam,vlim['b'],9999,29999,P['makeplot'],'$bestall', P['outdir'])
     except Exception as e:
         logging.info('skipping plotting overall analysis plots of intensity.  {}'.format(e))
 
-def plotgauss(x0true,gx0,gE0,gx0err,gE0err,makeplot,odir):
+def plotgauss(x0true,gx0,gE0,gx0err,gE0err,P):
     fg,(axx,axE) = subplots(1,2,sharey=False)
     axx.stem(x0true,gx0err)
     axx.set_xlabel('$B_\perp$ [km]')
@@ -134,8 +133,8 @@ def plotgauss(x0true,gx0,gE0,gx0err,gE0err,makeplot,odir):
     print('E_0 gaussfit-Estimation-error (fit-true) =' + ' '.join(
                                           ['{:.1f}'.format(j) for j in gE0err]))
 
-    if 'h5' in makeplot and odir is not None:
-        fout = odir/'fit_results.h5'
+    if 'h5' in P['makeplot'] and P['outdir'] is not None:
+        fout = P['outdir']/'fit_results.h5'
         with h5py.File(str(fout),'w',libver='latest') as f:
             f['/tind'] = gx0err.index.values
 
@@ -145,7 +144,7 @@ def plotgauss(x0true,gx0,gE0,gx0err,gE0err,makeplot,odir):
             f['/gE0/err']=gE0err.values.astype(float)
             f['/gE0/fwdfit']=gE0
 
-def avgcomp(Phifwd,Phifit,Ek,x,makeplot,odir):
+def avgcomp(Phifwd,Phifit,Ek,x,P):
     nEnergy = Phifwd.shape[0]
 
     dE = empty(nEnergy)
@@ -164,7 +163,7 @@ def avgcomp(Phifwd,Phifit,Ek,x,makeplot,odir):
 
     #print('E_avg: {:0.1f}'.format(Eavgfwd1d))
     logging.info('E_avg: ',Eavgfwd[0]) #TODO how to pick
-    if 'eavg' in makeplot:
+    if 'eavg' in P['makeplot']:
         fg = figure()
         ax = fg.gca()
         #ax.loglog(Ek,jfwd1d,marker='.')
@@ -176,7 +175,7 @@ def avgcomp(Phifwd,Phifit,Ek,x,makeplot,odir):
         ax.set_xlabel('x [km]')
         ax.set_ylabel('diff. num. flux')
 
-        writeplots(fg,'Eavg_fwd1d',9999,makeplot,odir)
+        writeplots(fg,'Eavg_fwd1d',9999,P['makeplot'],P['outdir'])
 
     #%% average energy per x-location
     # formula is per JGR 2013 Dahlgren et al.

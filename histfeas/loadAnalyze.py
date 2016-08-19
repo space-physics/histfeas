@@ -4,6 +4,9 @@ To generate inputs for this program, run main_hist.py with
 -m h5
 option
 """
+from __future__ import division
+from six import integer_types
+import logging
 from . import Path
 import h5py
 from numpy import asarray,diff
@@ -15,7 +18,7 @@ from .sanityCheck import getParams
 from .plotsnew import plotoptim,plotfwd
 from .observeVolume import definecamind
 
-def readresults(h5list, inifn,vlim=(None,None),x1d=None,overrides=[],makeplot=[],verbose=0):
+def readresults(h5list, P):
     Phifwd =[]; Phidict =[]; dhat=[]; drn=[]; Pest=[]; Pfwd=[]; ut1_unix=[]
 #%%
     if not h5list:
@@ -69,7 +72,7 @@ def readresults(h5list, inifn,vlim=(None,None),x1d=None,overrides=[],makeplot=[]
     if Phifwd: #sim data
         Phifwd = asarray(Phifwd).transpose(1,2,0) #result: Nenergy x Nx x Ntime
 
-    arc,sim,cam,Fwd = getParams(inifn,overrides,makeplot,odir)
+    arc,sim,cam,Fwd = getParams(P)
     cam = definecamind(cam)
 #%% load original angles of camera
     ut1_unix = asarray(ut1_unix)
@@ -91,16 +94,21 @@ def readresults(h5list, inifn,vlim=(None,None),x1d=None,overrides=[],makeplot=[]
             x0true = (a.X0km[:-1] + 0.5*diff(a.X0km))
             E0true = (a.E0[:-1]   + 0.5*diff(a.E0))
 
-        analyseres(sim,cam,
-                   x, xp, Phifwd, Phidict, drn, dhat,
-                   vlim, x0true,E0true,makeplot, odir)
+        analyseres(sim,cam, x, xp, Phifwd, Phidict, drn, dhat,P, x0true,E0true)
 
 #%% plots
     for i in range(len(drn)): #for each time, do...
         try:
-            Jxi = find_nearest(x,x1d[i])[0]
+            if isinstance(P['x1d'],(float,integer_types)):
+                Jxi = find_nearest(x,P['x1d'])[0]
+            elif P['x1d'] is None:
+                Jxi = None
+            else:
+                Jxi = find_nearest(x,P['x1d'][i])[0]
         except TypeError:
             Jxi = None
+        except IndexError:
+            logging.error('no x1d specified for ti={}, using last value x0={:.2f} km'.format(i,x[Jxi]))
 
         try: #simulation
             pf = Pfwd[i]
@@ -108,17 +116,17 @@ def readresults(h5list, inifn,vlim=(None,None),x1d=None,overrides=[],makeplot=[]
         except IndexError: #realdata
             pf = None;  phif = None
 
-        if 'fwd' in makeplot:
+        if 'fwd' in P['makeplot']:
             plotfwd(sim,cam,drn[i],x,xp,z,zp,
-                    pf,phif,Phidict[i],Jxi,vlim,i,makeplot,odir,
-                    doSubplots=True,overrides=overrides)
+                    pf,phif,Phidict[i],Jxi,P['vlim'],i,P['makeplot'],P['outdir'],
+                    doSubplots=True,overrides=P['overrides'])
 
-        if 'optim' in makeplot:
+        if 'optim' in P['makeplot']:
             plotoptim(sim,cam,drn[i],dhat[i],'best',pf,phif,Jxi,
-                      Pest[i],Phidict[i],x,xp,z,zp,vlim,i,makeplot,odir,
-                      doSubplots=True,overrides=overrides)
+                      Pest[i],Phidict[i],x,xp,z,zp,P['vlim'],i,P['makeplot'],P['outdir'],
+                      doSubplots=True,overrides=P['overrides'])
 
-        if 'show' in makeplot:
+        if 'show' in P['makeplot']:
             show()
         else:
             close('all')
@@ -137,8 +145,12 @@ def findxlsh5(h5path):
     else:
         raise ValueError('no path or file at {}'.format(h5path))
 
-    if isinstance(inifn,(list,tuple)):
-        inifn = inifn[0]
+    if not inifn:
+        raise FileNotFoundError('no simulation ini found in {}'.format(h5path))
+
+    inifn = inifn[0]
+
+
 
     return h5list,inifn
 
