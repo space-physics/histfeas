@@ -1,7 +1,7 @@
 import logging
 from matplotlib.pyplot import figure,close,subplots
 from matplotlib.ticker import MaxNLocator#,ScalarFormatter# ,LogFormatterMathtext, #for 1e4 -> 1 x 10^4, applied DIRECTLY in format=
-from numpy import diff, empty,nan
+from numpy import diff, empty,nan,ndarray,arange
 import h5py
 #
 from .plotsnew import writeplots,getx0E0,plotB
@@ -113,6 +113,9 @@ def extplot(sim,cam,drn,dhat,vlim,P):
         logging.info('skipping plotting overall analysis plots of intensity.  {}'.format(e))
 
 def plotgauss(x0true,gx0,gE0,gx0err,gE0err,P):
+    assert isinstance(gx0err,ndarray)
+    assert isinstance(gE0err,ndarray)
+#%%
     fg,(axx,axE) = subplots(1,2,sharey=False)
     axx.stem(x0true,gx0err)
     axx.set_xlabel('$B_\perp$ [km]')
@@ -136,12 +139,12 @@ def plotgauss(x0true,gx0,gE0,gx0err,gE0err,P):
     if 'h5' in P['makeplot'] and P['outdir'] is not None:
         fout = P['outdir']/'fit_results.h5'
         with h5py.File(str(fout),'w',libver='latest') as f:
-            f['/tind'] = gx0err.index.values
+            f['/tind'] = arange(gx0err.size)
 
-            f['/gx0/err']=gx0err.values.astype(float)
-            f['/gx0/fwdfit']=gx0
+            f['/gx0/err'] = gx0err
+            f['/gx0/fwdfit'] = gx0
 
-            f['/gE0/err']=gE0err.values.astype(float)
+            f['/gE0/err'] = gE0err
             f['/gE0/fwdfit']=gE0
 
 def avgcomp(Phifwd,Phifit,Ek,x,P):
