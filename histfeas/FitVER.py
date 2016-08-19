@@ -11,8 +11,8 @@ from .transcararc import getColumnVER
 from .plotsnew import getx0E0
 
 
-def FitVERopt(L,bn,Phi0,MpDict,sim,cam,Fwd,tInd,makeplot,verbose):
-    if not in1d(('gaussian','optim'),makeplot).any():
+def FitVERopt(L,bn,Phi0,MpDict,sim,cam,Fwd,tInd,P):
+    if not in1d(('gaussian','optim'),P['makeplot']).any():
         return (None,)*4
 
     assert L.ndim==2
@@ -20,7 +20,7 @@ def FitVERopt(L,bn,Phi0,MpDict,sim,cam,Fwd,tInd,makeplot,verbose):
     assert Phi0.ndim==1 and Phi0.flags['F_CONTIGUOUS']==True
 
     vfit = {}; bfit = {}; Phifit = {'x':None} #in case optim not run
-    minverbose=bool(verbose)
+    minverbose=bool(P['verbose'])
 #%% scaling brightness
     """
     We could repeatedly downscale simulted brightness in loop, but that consumes a lot of CPU.
@@ -58,7 +58,7 @@ def FitVERopt(L,bn,Phi0,MpDict,sim,cam,Fwd,tInd,makeplot,verbose):
     http://stackoverflow.com/questions/23476152/dynamically-writing-the-objective-function-and-constraints-for-scipy-optimize-mi
     '''
 
-    if in1d(('gaussian','optim'),makeplot).any():
+    if in1d(('gaussian','optim'),P['makeplot']).any():
         maxiter = sim.optimmaxiter #it's already int
         sx = Fwd['sx']
 

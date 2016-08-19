@@ -8,7 +8,7 @@ from time import time
 from .nans import nans
 from .EllLineLength import EllLineLength
 
-def getObs(sim,cam,L,tDataInd,ver,makePlots,verbose):
+def getObs(sim,cam,L,tDataInd,ver):
     """
     real data: extract brightness vector from disk data
     simulation: create brightness from projection matrix and fwd model VER
@@ -61,7 +61,7 @@ def getObs(sim,cam,L,tDataInd,ver,makePlots,verbose):
 
     return bn
 
-def makeCamFOVpixelEnds(Fwd,sim,cam,makePlots,verbose):
+def makeCamFOVpixelEnds(Fwd,sim,cam,P):
 
     nCutPix = sim.ncutpix
 
@@ -121,11 +121,11 @@ def makeCamFOVpixelEnds(Fwd,sim,cam,makePlots,verbose):
     L = EllLineLength(Fwd,xFOVpixelEnds,zFOVpixelEnds,
                       [c.x_km for c in cam if c.usecam],
                       [c.alt_m/1000. for c in cam if c.usecam],
-                      nCutPix,sim,makePlots,verbose)
+                      nCutPix,sim,P['makeplot'],P['verbose'])
     print('computed L in {:0.1f}'.format(time()-tic) + ' seconds.')
     return L,Fwd,cam
 #%%
-def loadEll(sim,Fwd,cam,makeplots,verbose):
+def loadEll(sim,Fwd,cam,P):
     try:
       with h5py.File(str(sim.FwdLfn),'r',libver='latest') as fid:
         L = csc_matrix(fid['/L'])
@@ -158,11 +158,11 @@ def loadEll(sim,Fwd,cam,makeplots,verbose):
     except (FileNotFoundError,OSError) as e:
         logging.error('{} not found. Recomputing new Ell file. {}'.format(sim.FwdLfn,e))
         sim.loadfwdL = False
-        L,Fwd,cam = getEll(sim,cam,Fwd,makeplots,verbose)
+        L,Fwd,cam = getEll(sim,cam,Fwd,P)
     except AttributeError as e:
         logging.error('grid mismatch detected. use --ell command line option to save new Ell file. {}'.format(e))
 
-    if verbose>0: print('loadEll: Loaded "L,Fwd,Obs" data from: {}'.format(sim.FwdLfn))
+    print('loadEll: Loaded "L,Fwd,Obs" data from: {}'.format(sim.FwdLfn))
 
     return L,Fwd,cam
 
@@ -181,15 +181,15 @@ def mogrifyData(data,cam):
 
     return data
 
-def getEll(sim,cam,Fwd,makeplots,verbose):
+def getEll(sim,cam,Fwd,P):
 
     if not sim.loadfwdL:
         if sim.nCamUsed != sim.useCamBool.size:
             logging.warning('To make a fresh L matrix, you must enable all HiST Cameras')
 
-        L,Fwd,cam = makeCamFOVpixelEnds(Fwd,sim,cam,makeplots,verbose)
+        L,Fwd,cam = makeCamFOVpixelEnds(Fwd,sim,cam,P)
     else:
-        L,Fwd,cam = loadEll(sim,Fwd,cam,makeplots,verbose)
+        L,Fwd,cam = loadEll(sim,Fwd,cam,P)
 
     L = removeUnusedCamera(L,sim.useCamBool,sim.ncutpix)
     cam = definecamind(cam)
