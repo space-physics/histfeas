@@ -143,7 +143,7 @@ def findxlsh5(h5path):
         h5list = sorted(h5path.glob('dump*.h5'))
         inifn =  sorted(h5path.glob('*.ini'))
     else:
-        raise ValueError('no path or file at {}'.format(h5path))
+        raise FileNotFoundError('no path or file at {}'.format(h5path))
 
     if not inifn:
         raise FileNotFoundError('no simulation ini found in {}'.format(h5path))
