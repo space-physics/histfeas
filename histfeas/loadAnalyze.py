@@ -11,7 +11,7 @@ from numpy import asarray,diff
 from matplotlib.pyplot import show,close
 #
 from .analysehst import analyseres
-from .sanityCheck import getParams
+from . import getParams
 from .plotsnew import plotoptim,plotfwd
 from .observeVolume import definecamind
 

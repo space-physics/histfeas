@@ -12,7 +12,6 @@
 example: (fwd model only)
 python main_hist.py in/2cam_trans.xlsx /dev/shm/rev_trans2/ -m fwd png --vlim -0.5 3.5 90 350 1e9 1e10 --jlim 1e5 5e5 --blim 0 1e4 -f 0 120 20
 """
-from . import Path
 import logging
 from sys import argv
 from numpy import absolute,zeros,outer
@@ -24,7 +23,7 @@ from gridaurora.eFluxGen import maxwellian
 from histutils.simulFrame import getSimulData
 from histutils.get1Dcut import get1Dcut #we need cam.angle_deg for plotting
 #
-from .sanityCheck import getParams
+from . import getParams
 from .AuroraFwdModel import getSimVER
 from .transcararc import getMp,getPhi0,getpx #calls matplotlib
 from .observeVolume import getEll,getObs #calls matplotlib
