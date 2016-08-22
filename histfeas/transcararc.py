@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from numpy import (asfortranarray,atleast_3d, exp,sinc,pi,zeros, outer,in1d,
-                   isnan,log,logspace,arange,allclose,diff,atleast_1d,isfinite)
+                   isnan,log,logspace,arange,allclose,diff,atleast_1d,isfinite,repeat,append)
 import h5py
 from scipy.interpolate import interp1d
 import logging
@@ -82,36 +82,36 @@ def getPhi0(sim,arc,xKM,Ek,makeplots):
         Phi0 = None
     return Phi0
 
-def assemblePhi0(sim,arc,Ek,xKM):
+def assemblePhi0(sim,arcs,Ek,xKM):
     Phi0 = zeros((Ek.size,xKM.size,sim.nTimeSlice),order='F') #NOT empty, since we sum to build it!
 
-    for k,a in arc.items(): #iterate over arcs, using superposition
+    for k,a in arcs.items(): #iterate over arcs, using superposition
 #%% upsample to sim time steps
-        E0,Q0,Wbc,bl,bm,bh,Bm,Bhf, Wkm,X0 = upsampletime(a,sim)
+        arc = upsampletime(a,sim)
 
         if a.zshape == 'transcar':
-            phiz = fluxgen(Ek, E0,Q0,Wbc,bl,bm,bh,Bm,Bhf)[0] # Nenergy x Ntime
+            phiz = fluxgen(Ek, arc.E0,arc.Q0,arc.Wbc,arc.bl,arc.bm,arc.bh,arc.Bm0,arc.Bhf)[0] # Nenergy x Ntime
         elif a.zshape == 'flat':
             phiz = zeros((Ek.size, sim.nTimeSlice)) #zeros not empty or nan
-            for i,e in enumerate(E0):
+            for i,e in enumerate(arc.E0):
                 try:
-                    phiz[Ek<=e,i] = Q0[i]  # Nenergy x Ntime_sim
+                    phiz[Ek<=e,i] = arc.Q0[i]  # Nenergy x Ntime_sim
                 except ValueError:
                     pass
         elif a.zshape == 'impulse':
             phiz = zeros((Ek.size, sim.nTimeSlice)) #zeros not empty or nan
-            for i,e in enumerate(E0):
+            for i,e in enumerate(arc.E0):
                 try:
-                    phiz[find_nearest(Ek,e)[0],i] = Q0[i]  # Nenergy x Ntime_sim
+                    phiz[find_nearest(Ek,e)[0],i] = arc.Q0[i]  # Nenergy x Ntime_sim
                 except ValueError:
                     pass
         else:
             raise NotImplementedError('unknown zshape = {}'.format(a.zshape))
 #%% horizontal modulation
-        phix = getpx(xKM,Wkm,X0, a.xshape)
+        phix = getpx(xKM,arc.Wkm,arc.X0km, a.xshape)
 
         if a.zshape == 'transcar':
-            for i in range(sim.nTimeSlice):
+            for i in range(sim.nTimeSlice-1):
                 #unsmeared in time
                 phi0sim = zeros((Ek.size,xKM.size),order='F') #NOT empty, since we're summing!
                 for j in range(sim.timestepsperexp):
@@ -146,32 +146,24 @@ def upsampletime(arc,sim):
 
     #probably could be done with lambda
 
-    f = interp1d(arc.texp, arc.E0);     E0  = f(tsim)
-    if (~isfinite(E0)).any():
-        E0 = arc.E0[:-1]
+    for k in ('E0','Q0','Wbc','bl','bm','bh','Bm0','Bhf','Wkm','X0km'):
+        # FIXME more pythonic way perhaps
+        if arc.__dict__[k].size == 1:
+            arc.__dict__[k] = repeat(arc.__dict__[k][0], tsim.size)
+        else:
+            if arc.__dict__[k].size < arc.texp.size:
+                logging.warning('replicating last value of {} arc parameter'.format(k))
+                arc.__dict__[k] = append(arc.__dict__[k],repeat(arc.__dict__[k][-1],arc.texp.size-arc.__dict__[k].size))
+            elif arc.__dict__[k].size > arc.texp.size:
+                logging.warning('discarding last values of {} arc parameter'.format(k))
+                arc.__dict__[k] = arc.__dict__[k][:arc.texp.size]
 
-    f = interp1d(arc.texp, arc.Q0);     Q0  = f(tsim)
-    if (~isfinite(Q0)).any():
-        Q0 = arc.Q0[:-1]
+            f = interp1d(arc.texp, arc.__dict__[k])
+            arc.__dict__[k] = f(tsim)
 
-    f = interp1d(arc.texp, arc.Wbc);  Wbc = f(tsim)
-    f = interp1d(arc.texp, arc.bl);   bl  = f(tsim)
-    f = interp1d(arc.texp, arc.bm);   bm  = f(tsim)
-    f = interp1d(arc.texp, arc.bh);   bh  = f(tsim)
-    f = interp1d(arc.texp, arc.Bm0);  Bm  = f(tsim)
-    f = interp1d(arc.texp, arc.Bhf);  Bhf = f(tsim)
+    #logging.info('new E0 upsamp [eV]: {}'.format(arc.E0))
 
-    f = interp1d(arc.texp, arc.Wkm);    Wkm = f(tsim)
-    if (~isfinite(Wkm)).any():
-        Wkm = arc.Wkm[:-1]
-
-    f = interp1d(arc.texp, arc.X0km);   X0  = f(tsim)
-    if (~isfinite(X0)).any():
-        X0 = arc.X0km[:-1]
-
-    logging.info('new E0 upsamp [eV]: {}'.format(E0))
-
-    return E0,Q0,Wbc,bl,bm,bh,Bm,Bhf, Wkm, X0
+    return arc
 
 def getpx(xKM,Wkm,X0,xs):
     assert isinstance(xs,str)

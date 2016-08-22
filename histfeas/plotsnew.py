@@ -1080,7 +1080,7 @@ def dumph5(prefix,tInd,odir=None, **writevar): #used in other .py too
     with h5py.File(str(fn),'a',libver='latest') as H:
         for k,v in writevar.items():
             K = '/{}/{}'.format(prefix,k)
-            if H[K]: #allow for overwriting with different sized array
+            if K in H: #allow for overwriting with different sized array
                 del H[K]
 
             try:

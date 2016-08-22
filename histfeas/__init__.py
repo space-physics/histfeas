@@ -15,10 +15,11 @@ import logging
 from six.moves.configparser import ConfigParser
 from shutil import copy2
 from geopy.distance import vincenty
+from numpy import arange, fromstring
 #%%
 from histutils.camclass import Cam
 from .simclass import Sim
-from .arcclass import Arc
+from .arcclass import Arc,getntimes
 #%%
 def hist_figure(P):
     from .main_hist import doSim # KEEP in this function to avoid ImportError
@@ -94,7 +95,7 @@ def getParams(P):
     xl.read(str(P['ini']))
 #%% read arcs (if any)
     arc,ntimeslice = setupArc(xl)
-    logging.info('# of observer time steps in spreadsheet: {}'.format(ntimeslice))
+    logging.info('# of observer time steps in {}: {}'.format(P['ini'],ntimeslice))
 #%% class with parameters and function
     sim = Sim(xl,arc,ntimeslice,P)
 #%% grid setup
@@ -131,20 +132,16 @@ def setupArc(xl):
     arc = {}
     ntimeslice=None
 
-    #print(xl)
-
     for s in xl.sections(): # for py27
+        # TODO assert all arcs have same time length
         if s.startswith('arc'):
             if ntimeslice is not None and getntimes(xl[s]) != ntimeslice:
                 raise ValueError('for now, all Arcs must have same number of times (columns)')
-            ntimeslice = getntimes(xl[s]) # last time is blended with 2nd to last time
+            texp = getntimes(xl[s]['texp']) # last time is blended with 2nd to last time
 
-            arc[s] = Arc(xl[s])
+            arc[s] = Arc(xl[s], texp)
 
-    return arc, ntimeslice
-
-def getntimes(arc):
-    return len(arc['texp'].split(','))-1
+    return arc, texp.size
 
 def setupCam(sim,cp,zmax,makeplot):
     cam = []
