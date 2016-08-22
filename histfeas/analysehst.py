@@ -33,7 +33,7 @@ def analyseres(sim,cam,x,xp,Phifwd,Phifit,drn,dhat,P,x0true=None,E0true=None):
 #%% back to work
     for i,jf in enumerate(Phifit):
         #note even if array is F_CONTIGUOUS, argmax is C-order!!
-        gx0[i,:],gE0[i,:] = getx0E0(Phifwd[...,i], jf['x'], jf['EK'],x,9999,P['outdir'],P['makeplot'])
+        gx0[i,:],gE0[i,:] = getx0E0(Phifwd[...,i], jf['x'], jf['EK'],x,9999,P)
 
 
         print('t={} gaussian 2-D fits for (x,E):\n'
@@ -99,16 +99,16 @@ def doplot(x,Phifit,gE0,Eavgfwdx,Eavghatx, P):
     except Exception as e:
         logging.info('skipping average energy plotting.   {}'.format(e))
 
-def extplot(sim,cam,drn,dhat,vlim,P):
+def extplot(sim,cam,drn,dhat,P):
 #%% brightness plot -- plotting ALL at once to show evolution of dispersive event!
     try:
         if 'fwd' in P['makeplot'] and drn:
             for i,b in enumerate(drn):
-                plotB(b,cam,vlim['b'],9999,19999,P['makeplot'],'$bfwdall',P['outdir'])
+                plotB(b,cam,9999,19999,P,'$bfwdall')
     # reconstructed brightness plot
         if 'optim' in P['makeplot'] and dhat is not None and len(dhat[0])>0:
             for i,b in enumerate(dhat):
-                plotB(b,cam,vlim['b'],9999,29999,P['makeplot'],'$bestall', P['outdir'])
+                plotB(b,cam,9999,29999,P,'$bestall')
     except Exception as e:
         logging.info('skipping plotting overall analysis plots of intensity.  {}'.format(e))
 

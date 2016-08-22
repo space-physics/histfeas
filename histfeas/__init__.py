@@ -1,11 +1,15 @@
 from tempfile import mkdtemp
 from sys import argv
-
+#%%
 try:
     from pathlib import Path
     Path().expanduser()
 except (ImportError,AttributeError):
     from pathlib2 import Path
+#%% must occur first
+import matplotlib
+matplotlib.use('Agg')
+print(matplotlib.get_backend())
 #%%
 
 def hist_figure(P):
@@ -38,16 +42,11 @@ def userinput(ini=None,outdir=None):
 
     if not p.ini:
         raise RuntimeError('you must specify an .ini file')
-#%% must occur first
-    import matplotlib
-    matplotlib.use('Agg')
-    print(matplotlib.get_backend())
 #%% now the other matplotlib imports
     import seaborn as sns
     sns.color_palette("cubehelix")
     sns.set(context='paper', style='whitegrid',font_scale=2,
             rc={'image.cmap': 'cubehelix_r'})
-
 #%%
     P = {'ini':Path(p.ini).expanduser(),
      'load':p.load,
@@ -57,6 +56,10 @@ def userinput(ini=None,outdir=None):
      'outdir':Path(p.outdir).expanduser(),
      'overrides': {},
      'cmd': ' '.join(argv),
+     'vlim':{'p':(None,None), 'p1d': (None,None),
+             'j':(None,None), 'j1d': (None,None),
+             'b':(None,None),
+             'x':(None,None), 'z':(None,None)}
     }
 
     P['overrides']['rootdir'] = Path(__file__).parents[1]
@@ -69,6 +72,5 @@ def userinput(ini=None,outdir=None):
         itime = range(p.frames[0],p.frames[1],p.frames[2])
 
     P['timeinds'] = itime
-
 
     return P
