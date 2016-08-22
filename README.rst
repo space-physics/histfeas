@@ -155,6 +155,20 @@ to the simulation (for real data, we don't have this)
 
 Our IEEE TGARS article (in review) details the math and algorithm.
 
+Variables
+---------
+``P`` is a dictionary containing many command-line variable parameters that might not go in the .ini file
+or that are overridable by the command line.
+``P['vlim']`` is perhaps the most complex, it contains (affects plots only, not computations):
+
+p   VER 2-D intensity limits
+p1d VER 1-D intensity bounds
+j   Diff num flux 2-D limits
+j1d Diff num flux 1-D bounds
+b   brightness bounds
+x   spatial horizontal bounds
+z   spatial vertical bounds (along flux tube)
+
 
 Output Processing
 ------------------

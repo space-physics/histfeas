@@ -5,14 +5,11 @@ To generate inputs for this program, run main_hist.py with
 option
 """
 from __future__ import division
-from six import integer_types
-import logging
 from . import Path
 import h5py
 from numpy import asarray,diff
 from matplotlib.pyplot import show,close
 #
-from histutils.findnearest import find_nearest
 from .analysehst import analyseres
 from .sanityCheck import getParams
 from .plotsnew import plotoptim,plotfwd
@@ -58,7 +55,7 @@ def readresults(h5list, P):
 
                 try: #realdata
                     ut1_unix.append(f['/best/ut1_unix'].value)
-                except KeyError: #simultation, not real data
+                except KeyError: #simulation, not real data
                     pass
 
             except KeyError as e:
@@ -98,18 +95,6 @@ def readresults(h5list, P):
 
 #%% plots
     for i in range(len(drn)): #for each time, do...
-        try:
-            if isinstance(P['x1d'],(float,integer_types)):
-                Jxi = find_nearest(x,P['x1d'])[0]
-            elif P['x1d'] is None:
-                Jxi = None
-            else:
-                Jxi = find_nearest(x,P['x1d'][i])[0]
-        except TypeError:
-            Jxi = None
-        except IndexError:
-            logging.error('no x1d specified for ti={}, using last value x0={:.2f} km'.format(i,x[Jxi]))
-
         try: #simulation
             pf = Pfwd[i]
             phif = Phifwd[...,i]
@@ -117,14 +102,10 @@ def readresults(h5list, P):
             pf = None;  phif = None
 
         if 'fwd' in P['makeplot']:
-            plotfwd(sim,cam,drn[i],x,xp,z,zp,
-                    pf,phif,Phidict[i],Jxi,P['vlim'],i,P['makeplot'],P['outdir'],
-                    doSubplots=True,overrides=P['overrides'])
+            plotfwd(sim,cam,drn[i],x,xp,z,zp, pf,phif,Phidict[i],i,P,doSubplots=True)
 
         if 'optim' in P['makeplot']:
-            plotoptim(sim,cam,drn[i],dhat[i],'best',pf,phif,Jxi,
-                      Pest[i],Phidict[i],x,xp,z,zp,P['vlim'],i,P['makeplot'],P['outdir'],
-                      doSubplots=True,overrides=P['overrides'])
+            plotoptim(sim,cam,drn[i],dhat[i],'best',pf,phif, Pest[i],Phidict[i],x,xp,z,zp,i,P,doSubplots=True)
 
         if 'show' in P['makeplot']:
             show()

@@ -1,43 +1,15 @@
 #!/usr/bin/env python
 """
 Registration case for HiST program
-Michael Hirsch
-
-To generate registration.h5 (only when making a new type of sim or real) type
-python
 """
-from histfeas import Path
-from os import chdir
 from numpy.testing import assert_allclose
-from sys import argv
 import h5py
-from tempfile import gettempdir
 #
-import matplotlib
-matplotlib.use('Agg') #fixes Travis NO DISPLAY bug
-#
-from histfeas.main_hist import doSim
-
-def hist_registration(P):
-    """
-    This creates output hdf5 files, the typical output of the program for offline analysis
-    """
-
-    P['makeplot'] = ['fwd','optim','h5']
-
-    doSim(P,
-          timeInds=None,
-          odir = odir,
-          x1d=None,
-          vlim = {'p':[None]*6,'j':[None]*2,'b':[None]*2},
-          animtime=None,
-          cmd = ' '.join(argv),
-          verbose=0
-          )
+from histfeas import userinput, hist_figure, Path
 
 
-def readCheck(Phi0,Phifit):
-    with h5py.File(str(regh5),'r',libver='latest') as f:
+def readCheck(Phi0,Phifit,P):
+    with h5py.File(str(P['ini']),'r',libver='latest') as f:
         assert_allclose(f['/phifwd/phi'],Phi0[...,0])
         # noise makes inversion result differ uniquely each run
         xerrpct=(f['/phifwd/x0'] - Phifit[0]['gx0']) / f['/phifwd/x0'] * 100
@@ -57,22 +29,23 @@ def writeout(regh5):
         f['/phifwd/x0'] = 1.
 
 if __name__ == '__main__':
+#%% path hack
+# allows running from top or test directory
+    from os import chdir
+    root = Path(__file__).parent
+    chdir(str(root))
+#%%
     from histfeas.loadAnalyze import readresults,findxlsh5 #here for matplotlib import
 
-    chdir(str(rootdir)) # in case running from other than project root directory.
-#%% simulation only
-    tdir  = Path(__file__).parent
-    regh5 = tdir / 'registration.h5'
-    regini= tdir / 'registration.ini'
+    P = userinput(ini='../in/2cam_flame.ini',outdir='out/reg')
 
-    odir=gettempdir()
-#%% do inversion
-    hist_registration(regh5,regini,odir)
+    if not P['load']:
+        hist_figure(P)
 #%% find result HDF5
-    h5list,_ = findxlsh5(odir)
+    h5list,_ = findxlsh5(P['outdir'])
 #%% load result
-    Phi0,Phifit = readresults(h5list,regini)
+    Phi0,Phifit = readresults(h5list,P)
 #%% check vs known result
-    readCheck(Phi0,Phifit)
+    readCheck(Phi0,Phifit,P)
     print('\nOK:  simulation registration case')
 #%% real data
