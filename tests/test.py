@@ -8,8 +8,8 @@ import h5py
 from histfeas import userinput, hist_figure, Path
 
 
-def readCheck(Phi0,Phifit,P):
-    with h5py.File(str(P['ini']),'r',libver='latest') as f:
+def readCheck(Phi0,Phifit,reffn):
+    with h5py.File(str(reffn),'r',libver='latest') as f:
         assert_allclose(f['/phifwd/phi'],Phi0[...,0])
         # noise makes inversion result differ uniquely each run
         xerrpct=(f['/phifwd/x0'] - Phifit[0]['gx0']) / f['/phifwd/x0'] * 100
@@ -37,7 +37,7 @@ if __name__ == '__main__':
 #%%
     from histfeas.loadAnalyze import readresults,findxlsh5 #here for matplotlib import
 
-    P = userinput(ini='../in/2cam_flame.ini',outdir='out/reg')
+    P = userinput(ini='registration.ini',outdir='out/reg')
 
     if not P['load']:
         hist_figure(P)
@@ -46,6 +46,6 @@ if __name__ == '__main__':
 #%% load result
     Phi0,Phifit = readresults(h5list,P)
 #%% check vs known result
-    readCheck(Phi0,Phifit,P)
+    readCheck(Phi0,Phifit,'registration.h5')
     print('\nOK:  simulation registration case')
 #%% real data

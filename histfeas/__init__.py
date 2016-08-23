@@ -15,7 +15,7 @@ import logging
 from six.moves.configparser import ConfigParser
 from shutil import copy2
 from geopy.distance import vincenty
-from numpy import arange, fromstring
+#from numpy import arange, fromstring
 #%%
 from histutils.camclass import Cam
 from .simclass import Sim
