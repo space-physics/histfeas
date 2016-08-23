@@ -612,7 +612,11 @@ def plotVER1D(sim,pfwd,pinv,zKM,T,P,prefix='',titletxt='',fg=None,ax=None):
 
     for p,l in zip((pfwd,pinv),('$\mathbf{P}$','$\hat{\mathbf{P}}$')):
         if p is not None:
-            ax.semilogx(p,zKM,label=l)
+            try:
+                p[p==0] = 1e-30 #to avoid log(0)
+                ax.semilogx(p,zKM,label=l)
+            except ValueError as e:
+                logging.warning('{} in 1D VER plot. maybe <0 value snuck in.'.format(e))
 
     ax.legend(loc='upper right')
     ax.set_xlabel('Volume emission rate [photons cm$^{-3}$s$^{-1}$]')
