@@ -111,7 +111,7 @@ def assemblePhi0(sim,arcs,Ek,xKM):
         phix = getpx(xKM,arc.Wkm,arc.X0km, a.xshape)
 
         if a.zshape == 'transcar':
-            for i in range(sim.nTimeSlice-1):
+            for i in range(sim.nTimeSlice):
                 #unsmeared in time
                 phi0sim = zeros((Ek.size,xKM.size),order='F') #NOT empty, since we're summing!
                 for j in range(sim.timestepsperexp):

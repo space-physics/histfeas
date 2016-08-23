@@ -137,10 +137,11 @@ def optfun(phiinv,L,Tm,b_obs,nEnergy,sx):
     """this provides the quantity to minimize
     Phi0 is a vector b/c that's what minimize needs, reshape is low cost (but this many times?)
     """
-    pinv = Tm.dot(phiinv.reshape(nEnergy,sx,order='F'))
-    binv = L.dot(pinv.ravel(order='F'))
+   # pinv = Tm.dot(phiinv.reshape(nEnergy,sx,order='F'))
+   # binv = L.dot(pinv.ravel(order='F'))
 #        pinv = Tm @ phiinv.reshape(nEnergy,sx,order='F')
 #        binv = L  @ pinv.ravel(order='F')
+    binv = L.dot(Tm.dot(phiinv.reshape(nEnergy,sx,order='F')).ravel(order='F'))
 
     return norm(binv - b_obs, ord=2)
 
