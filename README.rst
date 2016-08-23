@@ -33,8 +33,7 @@ self-test::
 
 Usage notes
 ------------
-if upon changing the ``in/*.ini`` files to make a new simulation, you get an error message
-including
+if upon changing the ``in/*.ini`` files to make a new simulation, you get an error message including
 ``use --ell command line option to save new Ell file``
 rerun your simulation command, adding ``--ell`` to compute (one-time) the projection
 matrix for your new simulation geometry.
@@ -46,7 +45,7 @@ simulate flaming aurora with two cameras
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ::
 
-  python RunHistfeas.py in/2cam_flame.ini out/test_flame2/ -m fwd optim png show h5
+  python FigureMaker.py in/2cam_flame.ini out/test_flame2/ -m fwd optim png show h5
 
 you can then look to the `Output Processing`_ section for how to load the HDF5 files
 you just produced in ``out/test_flame2``
@@ -108,6 +107,29 @@ type of program output
 
 -m eig         plot eigenprofiles
 -m spectra     plot modeled auroral spectra modulated by the filter used.
+
+Auroral arc morphology
+----------------------
+the .ini files allow setting multiple arcs with [arc0] [arc1] and so on. 
+Parameters specified as single numbers are replicated for all times.
+Parameters specified as START,STOP,STEP triplets are expanded via ``numpy.arange()``
+
+zshape
+~~~~~~
+arc shape along flux tube "altitude"
+
+transcar    1-D electron penetration model
+impulse     a spot in altitude
+flat        cutoff above specified E0, uniform number flux below E0
+
+xshape
+~~~~~~
+arc shape laterally, B-perp
+
+gaussian    a typical choice, smeared with a Gaussian taper
+impulse     a spot laterally
+flat        "" ""    ""
+
 
 
 Time selection

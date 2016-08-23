@@ -31,11 +31,6 @@ def hist_figure(P):
 
 
 def userinput(ini=None,outdir=None):
-    if ini:
-        ini = Path(ini)
-
-    if outdir is None:
-        outdir = mkdtemp(prefix=ini.stem,dir='out')
 
     p = ArgumentParser(description='flaming figure plotter')
     p.add_argument('ini',help='.ini config file',nargs='?',default=ini)
@@ -60,7 +55,6 @@ def userinput(ini=None,outdir=None):
      'makeplot':p.makeplot,
      'ell':p.ell,
      'verbose':p.verbose,
-     'outdir':Path(p.outdir).expanduser(),
      'overrides': {},
      'cmd': ' '.join(argv),
      'vlim':{'p':(None,None), 'p1d': (None,None),
@@ -68,6 +62,12 @@ def userinput(ini=None,outdir=None):
              'b':(None,None),
              'x':(None,None), 'z':(None,None)}
     }
+
+    if not p.outdir:
+        p.outdir = mkdtemp(prefix=P['ini'].stem,dir='out')
+
+    P['outdir'] = Path(p.outdir).expanduser()
+
 
     P['overrides']['rootdir'] = Path(__file__).parents[1]
 #%%
