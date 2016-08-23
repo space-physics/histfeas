@@ -440,6 +440,7 @@ def plotJ1D(sim,PhiFwd,PhiInv,Ek,T,P,prefix,titletxt,fg=None,ax=None):
 
     for Phi,l in zip((PhiFwd,PhiInv),('$\Phi$','$\hat{{\Phi}}$')):
         if Phi is not None:
+            Phi[Phi==0] = 1e-30 #to avoid log(0)
             Phitmp = Phi.copy(); Phitmp[Ek<E0min]=0
             iE0est = Phitmp.argmax()
             E0est = Ek[iE0est]
