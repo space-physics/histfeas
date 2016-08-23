@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from numpy import outer, zeros_like,zeros,fromstring,arange,repeat
+from numpy import outer, zeros_like,zeros,arange,repeat,nan, empty
 #
 from gridaurora.chapman import chapman_profile
 from histutils.findnearest import find_nearest
@@ -15,15 +15,27 @@ class Arc():
         self.texp = texp
 
         for k in ('X0km','Pnorm','E0','Q0','Wbc','bl','bm','bh','Bm0','Bhf','Wkm'):
-            self.__dict__[k] = getntimes(xl[k],texp.size)
+            try:
+                self.__dict__[k] = getntimes(xl[k],texp.size)
+            except KeyError:
+                pass
 
 
-def getntimes(req,N=None):
+def getntimes(sreq,N=None):
     """
-    if 3 element req, see if it's a range spec. Otherwise, take literally
+    if 3 element req, see if it's a range spec.
+    if 1 element, stretch to all time
+    if empty elements, replace empties with nans
     """
-    req = fromstring(req,sep=',')
-    if len(req)==3 and abs(req[2]) < abs(req[1]):
+    lreq = sreq.split(',') #preserves blank entries, numpy.fromstring doesn't preserve
+    req = empty(len(lreq))
+    for i,r in enumerate(lreq): # list of strings
+        if len(r)==0: #empty string, passes 0
+            req[i] = nan
+        else:
+            req[i] = float(r)
+#%%
+    if len(req)==3 and req[2] != 0 and abs(req[2]) < abs(req[1]):
         print('assuming .ini specifying value range')
         v = arange(req[0], req[1]+req[2],req[2])
     elif len(req) == 1 and N is not None: #replicate for all times
@@ -45,7 +57,7 @@ def getver(x,z,Mp,Phi0, w,h,x0,z0,xshape,zshape,pmax):
     elif zshape == 'zero': #zeros, already set to zero
         return zeros((z.size,x.size))
     else:
-        raise TypeError('Unknown model type: {}'.format(zshape))
+        raise ValueError('Unknown z-model: {}'.format(zshape))
 
 def ChapmanArc(Wkm,H,X0,Z0,xKM,zKM,xshape, PC0=1):
     # chapman vert

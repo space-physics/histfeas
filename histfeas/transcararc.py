@@ -92,14 +92,14 @@ def assemblePhi0(sim,arcs,Ek,xKM):
         if a.zshape == 'transcar':
             phiz = fluxgen(Ek, arc.E0,arc.Q0,arc.Wbc,arc.bl,arc.bm,arc.bh,arc.Bm0,arc.Bhf)[0] # Nenergy x Ntime
         elif a.zshape == 'flat':
-            phiz = zeros((Ek.size, sim.nTimeSlice)) #zeros not empty or nan
+            phiz = zeros((Ek.size, arc.tsim.size)) #zeros not empty or nan
             for i,e in enumerate(arc.E0):
                 try:
                     phiz[Ek<=e,i] = arc.Q0[i]  # Nenergy x Ntime_sim
                 except ValueError:
                     pass
         elif a.zshape == 'impulse':
-            phiz = zeros((Ek.size, sim.nTimeSlice)) #zeros not empty or nan
+            phiz = zeros((Ek.size, arc.tsim.size)) #zeros not empty or nan
             for i,e in enumerate(arc.E0):
                 try:
                     phiz[find_nearest(Ek,e)[0],i] = arc.Q0[i]  # Nenergy x Ntime_sim
@@ -133,7 +133,7 @@ def upsampletime(arc,sim):
         logging.error('exposure time not matching spreadsheet arc time step')
     # make simulation time, also defined as seconds since Transcar tReq
     dtsim =sim.kineticsec/sim.timestepsperexp
-    tsim = arange(arc.texp[0],arc.texp[-1],dtsim)
+    arc.tsim = arange(arc.texp[0],arc.texp[-1],dtsim)
 
 # FUTURE
 #    #tsim is a finer time step than texp, the camera exposure
@@ -148,19 +148,23 @@ def upsampletime(arc,sim):
 
     for k in ('E0','Q0','Wbc','bl','bm','bh','Bm0','Bhf','Wkm','X0km'):
         # FIXME more pythonic way perhaps
-        if arc.__dict__[k].size == 1:
-            arc.__dict__[k] = repeat(arc.__dict__[k][0], tsim.size)
-        else:
-            if arc.__dict__[k].size < arc.texp.size:
-                logging.warning('replicating last value of {} arc parameter'.format(k))
-                arc.__dict__[k] = append(arc.__dict__[k],repeat(arc.__dict__[k][-1],arc.texp.size-arc.__dict__[k].size))
-            elif arc.__dict__[k].size > arc.texp.size:
-                logging.warning('discarding last values of {} arc parameter'.format(k))
-                arc.__dict__[k] = arc.__dict__[k][:arc.texp.size]
+        try:
+            if arc.__dict__[k].size == 1:
+                arc.__dict__[k] = repeat(arc.__dict__[k][0], arc.tsim.size)
+            else:
+                if arc.__dict__[k].size < arc.texp.size:
+                    logging.warning('replicating last value of {} arc parameter'.format(k))
+                    arc.__dict__[k] = append(arc.__dict__[k],repeat(arc.__dict__[k][-1],arc.texp.size-arc.__dict__[k].size))
+                elif arc.__dict__[k].size > arc.texp.size:
+                    logging.warning('discarding last values of {} arc parameter'.format(k))
+                    arc.__dict__[k] = arc.__dict__[k][:arc.texp.size]
 
-            f = interp1d(arc.texp, arc.__dict__[k])
-            arc.__dict__[k] = f(tsim)
+                f = interp1d(arc.texp, arc.__dict__[k])
+                arc.__dict__[k] = f(arc.tsim)
 
+                assert isfinite(arc.__dict__[k]).any(),'{} is all NaN. Maybe just set Pnorm=0 for this time if you do not want arc at this time.'.format(k)
+        except KeyError:
+            pass
     #logging.info('new E0 upsamp [eV]: {}'.format(arc.E0))
 
     return arc
