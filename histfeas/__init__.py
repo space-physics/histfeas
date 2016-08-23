@@ -141,7 +141,7 @@ def setupArc(xl):
 
             arc[s] = Arc(xl[s], texp)
 
-    return arc, texp.size
+    return arc, texp.size-1 # MUST be -1 to allow for range() compat and interp1() compat
 
 def setupCam(sim,cp,zmax,makeplot):
     cam = []
