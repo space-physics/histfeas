@@ -8,19 +8,24 @@ intended for use with in/ files including:
 *_trans.ini
 
 Flaming Aurora 2 cameras:
-python FigureMaker.py in/2cam_flame.ini out/2cam_flame
+python FigureMaker.py in/2cam_flame.ini
 
 Translating Aurora 2 cameras:
-python FigureMaker.py in/2cam_trans.ini out/2cam_trans
+python FigureMaker.py in/2cam_trans.ini
 
 Impulse Aurora (for testing):
-python FigureMaker.py in/2cam_impulse.ini out/2cam_impulse
+python FigureMaker.py in/2cam_impulse.ini
+
+Table of results for 2 and 3 cam:
+python FigureMaker.py in/table_flame{2,3}.py
 
 """
 from histfeas import userinput, hist_figure
 from histfeas.loadAnalyze import readresults,findxlsh5
 
 P = userinput()
+
+#P['x1d']= [3.7,3.7,6,6] table_flame
 
 P['x1d'] = 1.
 P['vlim'] = {'p':[5e7,8e8],  'p1d':(5e7,2e9),
