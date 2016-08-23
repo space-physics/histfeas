@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from numpy import outer, zeros_like,zeros,fromstring,arange
+from numpy import outer, zeros_like,zeros,fromstring,arange,repeat
 #
 from gridaurora.chapman import chapman_profile
 from histutils.findnearest import find_nearest
@@ -14,23 +14,11 @@ class Arc():
 
         self.texp = texp
 
-        self.X0km = getntimes(xl['x0km'])
-
-        self.Pnorm = fromstring(xl['Pnorm'],sep=',')
-
-        self.E0 = fromstring(xl['E0'],sep=',')
-        self.Q0 = fromstring(xl['Q0'],sep=',')
-        self.Wbc = fromstring(xl['Wbc'],sep=',')
-        self.bl = fromstring(xl['bl'],sep=',')
-        self.bm = fromstring(xl['bm'],sep=',')
-        self.bh = fromstring(xl['bh'],sep=',')
-        self.Bm0 = fromstring(xl['Bm0'],sep=',')
-        self.Bhf = fromstring(xl['Bhf'],sep=',')
+        for k in ('X0km','Pnorm','E0','Q0','Wbc','bl','bm','bh','Bm0','Bhf','Wkm'):
+            self.__dict__[k] = getntimes(xl[k],texp.size)
 
 
-        self.Wkm = fromstring(xl['Wkm'],sep=',')
-
-def getntimes(req):
+def getntimes(req,N=None):
     """
     if 3 element req, see if it's a range spec. Otherwise, take literally
     """
@@ -38,6 +26,8 @@ def getntimes(req):
     if len(req)==3 and abs(req[2]) < abs(req[1]):
         print('assuming .ini specifying value range')
         v = arange(req[0], req[1]+req[2],req[2])
+    elif len(req) == 1 and N is not None: #replicate for all times
+        v = repeat(req,N)
     else:
         v = req
 
