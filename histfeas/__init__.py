@@ -17,7 +17,7 @@ from shutil import copy2
 from geopy.distance import vincenty
 #from numpy import arange, fromstring
 #%%
-from histutils.camclass import Cam
+from histutils.camclass import Cam,splitconf
 from .simclass import Sim
 from .arcclass import Arc,getntimes
 #%%
@@ -57,10 +57,6 @@ def userinput(ini=None,outdir=None):
      'verbose':p.verbose,
      'overrides': {},
      'cmd': ' '.join(argv),
-     'vlim':{'p':(None,None), 'p1d': (None,None),
-             'j':(None,None), 'j1d': (None,None),
-             'b':(None,None),
-             'x':(None,None), 'z':(None,None)}
     }
 
     if not p.outdir:
@@ -93,6 +89,11 @@ def getParams(P):
     except TypeError: #py27
         xl = ConfigParser(allow_no_value=True)
     xl.read(str(P['ini']))
+#%% read plot parameters from ini
+    try:
+        P = plotstuffer(xl['plot'],P)
+    except KeyError:
+        P = plotstuffer(None,P)
 #%% read arcs (if any)
     arc,ntimeslice = setupArc(xl)
     logging.info('# of observer time steps in {}: {}'.format(P['ini'],ntimeslice))
@@ -122,7 +123,7 @@ def getParams(P):
     logging.info('fwd model voxels:\n'
           'B_perp: N={}   B_parallel: M={}'.format(Fwd['sx'],Fwd['sz']))
 #%% init variables
-    return arc,sim,cam,Fwd
+    return arc,sim,cam,Fwd,P
 
 def setupArc(xl):
     """
@@ -157,3 +158,17 @@ def setupCam(sim,cp,zmax,makeplot):
     assert len(cam)>0,'0 cams are configured, Nothing to do.'
 
     return cam
+
+def plotstuffer(sp,P):
+    """
+    these have no impact on simulation calculations, they are just plotting bounds
+    """
+    if 'vlim' not in P:
+        P['vlim'] = {}
+
+    P['x1d'] = splitconf(sp,'x1d')
+
+    for p in ('p','p1d','j','j1d','b','x','z'):
+        P['vlim'][p] = splitconf(sp,p,fallback=(None,None))
+
+    return P

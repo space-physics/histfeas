@@ -8,7 +8,6 @@ from datetime import datetime
 from dateutil.parser import parse
 #
 from transcarread.readionoinit import getaltgrid
-from histutils.camclass import splitconf
 
 class Sim:
 
@@ -97,8 +96,8 @@ class Sim:
         self.nArc = len(ap) # number of dict entries
         self.nTimeSlice = ntimeslice
 #%% transcar
-        self.lambminmax = (splitconf(sp,('sim','lambdamin')),
-                           splitconf(sp,('sim','lambdamax'))) #for plotting only
+#        self.lambminmax = (splitconf(sp,('sim','lambdamin')),
+#                           splitconf(sp,('sim','lambdamax'))) #for plotting only
 
         self.useztranscar = sp.getboolean('transcar','UseTCz',fallback=None)
         self.loadver      = sp.getboolean('transcar','loadVER',fallback=None)
@@ -168,7 +167,7 @@ class Sim:
         self.artlambda = sp.getfloat('recon','lambda',fallback=None)
         self.artstop =   sp.get('recon','stoprule',fallback=None)
         self.arttau =    sp.getfloat('recon','MDPtauDelta',fallback=None)
-
+#%%
     def setupFwdXZ(self,sp):
         Fwd = {}
         self.fwd_xlim = (sp.getfloat('fwd','XminKM'), sp.getfloat('fwd','XmaxKM'))
