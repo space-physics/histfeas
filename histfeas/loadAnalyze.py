@@ -69,7 +69,7 @@ def readresults(h5list, P):
     if Phifwd: #sim data
         Phifwd = asarray(Phifwd).transpose(1,2,0) #result: Nenergy x Nx x Ntime
 
-    arc,sim,cam,Fwd = getParams(P)
+    arc,sim,cam,Fwd,P = getParams(P)
     cam = definecamind(cam)
 #%% load original angles of camera
     ut1_unix = asarray(ut1_unix)
