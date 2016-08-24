@@ -40,7 +40,7 @@ def doSim(P):
     (P['outdir']/'cmd.log').write_text(' '.join(argv)) #store command for future log
 
 #%% Step 0) load data
-    arc,sim,cam,Fwd = getParams(P)
+    arc,sim,cam,Fwd,P = getParams(P)
 #%% setup loop
     if sim.realdata:
         # can load enormous amount of data into rawdata, Ncam x Nframe x Ny x Nx (verify dim order?)

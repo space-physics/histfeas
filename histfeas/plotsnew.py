@@ -1,7 +1,6 @@
 from . import Path
 from six import integer_types
 import logging
-from tempfile import gettempdir
 from numpy import (s_,array,empty,empty_like,isnan,asfortranarray,linspace,outer,
                    sin,cos,pi,ones_like,nan,unravel_index,meshgrid,logspace,
                    log10,spacing,atleast_2d,ndarray)
@@ -1100,7 +1099,7 @@ def dumph5(prefix,tInd,odir=None, **writevar): #used in other .py too
 def indone1d(x,P,i):
     assert isinstance(P,dict)
 #%% handle varied user input
-    if 'x1d' not in P:
+    if 'x1d' not in P or P['x1d'] is None:
         return
 
     if isinstance(P['x1d'],(float,integer_types)):

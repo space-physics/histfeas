@@ -27,11 +27,6 @@ P = userinput()
 
 #P['x1d']= [3.7,3.7,6,6] table_flame
 
-P['x1d'] = 1.
-P['vlim'] = {'p':[5e7,8e8],  'p1d':(5e7,2e9),
-             'j':[1e3,1.1e5],'j1d':(1e3,8e5),
-             'b':[0,1.5e3],
-             'x':(-1.5,4.5), 'z':(90,300)}
 #%% compute
 if not P['load']:
     hist_figure(P)
