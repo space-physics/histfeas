@@ -217,7 +217,6 @@ class Sim:
                           sp['cams']['RayAngleMapping'],
                           sp.getfloat('fwd','XcellKM'), sp.getfloat('fwd','XminKM'),
                           sp.getfloat('fwd','XmaxKM'),
-                          sp['sim']['EllIs'].lower(),
                           sp.getboolean('transcar','UseTCz')]
 
         if not self.useztranscar: #FIXME maybe we should always consider these for best safety
