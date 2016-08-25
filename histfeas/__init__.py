@@ -23,10 +23,7 @@ from .arcclass import Arc,getntimes
 #%%
 def hist_figure(P):
     from .main_hist import doSim # KEEP in this function to avoid ImportError
-    P['makeplot'] =['fwd','optim','png','h5']
-
     print('running HiSTfeas program -- will write png and h5 to {}'.format(P['outdir']))
-
     doSim(P)
 
 
@@ -36,7 +33,7 @@ def userinput(ini=None,outdir=None):
     p.add_argument('ini',help='.ini config file',nargs='?',default=ini)
     p.add_argument('outdir',help='output directory',nargs='?',default = outdir)
     p.add_argument('--load',help='load without recomputing',action='store_true')
-    p.add_argument('-m','--makeplot',help='plots to make',default=[],nargs='+')
+    p.add_argument('-m','--makeplot',help='plots to make',default=['realvid','fwd','optim','png','h5'],nargs='+')
     p.add_argument('-L','--ell',help='compute projection matrix',action='store_true')
     p.add_argument('-v','--verbose',help='verbosity',action='count',default=0)
     p.add_argument('-f','--frames',help='time steps to use',nargs='+',type=int)

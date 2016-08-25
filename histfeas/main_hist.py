@@ -31,6 +31,7 @@ from .FitVER import FitVERopt as FitVER #calls matplotlib
 from .plotsnew import goPlot #calls matplotlib
 
 def doSim(P):
+    print('')
 #%% housekeeping
     tic = time()
     logging.basicConfig(level=30-P['verbose']*10)
