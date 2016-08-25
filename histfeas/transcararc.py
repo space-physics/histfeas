@@ -27,8 +27,8 @@ def getColumnVER(zgrid,zTranscar,Peig,Phi0):
 #   return Tm @ Phi0
 
 def getMp(sim,cam,zKM,makeplot):
-    if not set(('fwd','optim')).isdisjoint(makeplot):
-        return
+    if set(('fwd','optim')).isdisjoint(makeplot):
+        return {'Mp':None,'ztc':None,'Ek':None,'EKpcolor':None}
 #%% read from transcar sim
     if cam[0].Bincl is None:
         raise ValueError('need one notional Bincl value in .ini to get magnetic zenith boresight angle')

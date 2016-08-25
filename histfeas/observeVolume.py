@@ -194,6 +194,8 @@ def getEll(sim,cam,Fwd,P):
     L = removeUnusedCamera(L,sim.useCamBool,sim.ncutpix)
     cam = definecamind(cam)
 
+    assert 'x' in Fwd and Fwd['x'] is not None,'problem loading or computing grid'
+
     return L,Fwd,cam
 
 def removeUnusedCamera(L,useCamBool,ncutpix):
