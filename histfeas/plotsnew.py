@@ -252,28 +252,27 @@ def plotfwd(sim,cam,drn,xKM,xp,zKM,zp, ver,Phi0,fitp,tInd, P,doSubplots=True):
 
         fg.suptitle(ttxt) #FIXME here we just use the fastest camera, cam 0 apriori
         fg.subplots_adjust(top=0.9) # FIXME http://matplotlib.org/faq/howto_faq.html
-
     else:
-        fg=None
         axs = array([(None,)*nrow,(None,)*ncol])
 
-    plotB(drn,cam,T,P,1500,'$B_{fwd',fg,axs[0,0])
+    plotB(drn,cam,T,P,'$B_{fwd',fg,axs[0,0])
 
     if not sim.realdata:
         # Forward model VER
-        plotVER(sim,ver,xKM,xp,zKM,zp,T,P,'pfwd','$\mathbf{P}$ volume emission rate',1813,fg,axs[0,1])
+        plotVER(sim,ver,xKM,xp,zKM,zp,T,P,'pfwd','$\mathbf{P}$ volume emission rate',axs[0,1])
 
 #       print('max |diff(phifwd)| = ' + str(np.abs(np.diff(phiInit, n=1, axis=0)).max()))
         plotJ(sim,Phi0,xKM,xp,fitp['EK'],fitp['EKpcolor'],
-              T,P,'phifwd', '$\Phi_{{top}}$ diff. number flux',  1900,fg,axs[0,2])
+              T,P,'phifwd', '$\Phi_{{top}}$ diff. number flux', axs[0,2])
 
 
         if not 'optim' in P['makeplot'] and Jxi is not None:
-            plotVER1D(sim,ver[:,Jxi],None,zKM,T,P,'pfwd1d', '$\mathbf{{P}}$ at $B_\perp$={:0.2f}  [km]'.format(xKM[Jxi]), fg,axs[1,0])
+            plotVER1D(sim,ver[:,Jxi],None,zKM,T,P,'pfwd1d', '$\mathbf{{P}}$ at $B_\perp$={:0.2f}  [km]'.format(xKM[Jxi]),
+                      axs[1,0])
 
         if not 'optim' in P['makeplot'] and Jxi is not None:
             plotJ1D(sim,Phi0[:,Jxi],None,fitp['EK'],T,P,'phifwd1d',
-                 'Differential Number flux at $B_\perp$={:0.2f} [km]'.format(xKM[Jxi]), fg,axs[1,1])
+                 'Differential Number flux at $B_\perp$={:0.2f} [km]'.format(xKM[Jxi]), axs[1,1])
 #    else: #realdata
 #        plotRealImg(sim,cam,rawdata,tInd,makeplot,odir=odir)
 
@@ -302,16 +301,15 @@ def plotoptim(sim,cam,drn,dhat,bcomptxt,ver,Phi0,vfit,Phifit,xKM,xp,zKM,zp,tInd,
         fg.suptitle(ttxt,fontsize='x-large') #FIXME here we just use the fastest camera, cam 0 apriori
         fg.subplots_adjust(top=0.95) # FIXME http://matplotlib.org/faq/howto_faq.html
     else:
-        fg=None
         axs = array([(None,)*3,(None,)*3])
 
 
-    plotBcompare(sim,drn,dhat,cam,'best',tInd,P,1501,fg,axs[0,0])
+    plotBcompare(sim,drn,dhat,cam,'best',tInd,P,axs[0,0])
 
-    plotVER(sim,vfit,xKM,xp,zKM,zp,T,P,'pest','$\hat{\mathbf{P}}$ volume emission rate', 1815,fg,axs[0,1])
+    plotVER(sim,vfit,xKM,xp,zKM,zp,T,P,'pest','$\hat{\mathbf{P}}$ volume emission rate', axs[0,1])
 #%% flux
     plotJ(sim, Phifit['x'],xKM,xp, Phifit['EK'], Phifit['EKpcolor'],
-          T, P,'phiest', '$\hat{\mathbf{\phi}}_{top}$ diff. number flux', 1901,fg,axs[0,2])
+          T, P,'phiest', '$\hat{\mathbf{\phi}}_{top}$ diff. number flux',axs[0,2])
           #'Neval = {:d}'.format(fitp.nfev)
 
 
@@ -319,10 +317,11 @@ def plotoptim(sim,cam,drn,dhat,bcomptxt,ver,Phi0,vfit,Phifit,xKM,xp,zKM,zp,tInd,
 
     if Jxi is not None:
         plotVER1D(sim,ver[:,Jxi],vfit[:,Jxi],zKM,T, P,'pest1d',
-                  '$\hat{{\mathbf{{P}}}}$ volume emission rate at $B_\perp$={:0.2f} [km]'.format(xKM[Jxi]), fg,axs[1,0])
+                  '$\hat{{\mathbf{{P}}}}$ volume emission rate at $B_\perp$={:0.2f} [km]'.format(xKM[Jxi]),
+                  axs[1,0])
 
         plotJ1D(sim,Phi0[:,Jxi], Phifit['x'][:,Jxi], Phifit['EK'],T,P,'phiest1d',
-        ('$\hat{{\phi}}_{{top}}$ diff. number flux at $B_\perp$={:0.2f} [km]'.format(xKM[Jxi])),fg,axs[1,1])
+        ('$\hat{{\phi}}_{{top}}$ diff. number flux at $B_\perp$={:0.2f} [km]'.format(xKM[Jxi])),axs[1,1])
 
 #http://stackoverflow.com/questions/10035446/how-can-i-make-a-blank-subplot-in-matplotlib
 #http://stackoverflow.com/questions/2176424/hiding-axis-text-in-matplotlib-plots
@@ -335,10 +334,9 @@ def plotoptim(sim,cam,drn,dhat,bcomptxt,ver,Phi0,vfit,Phifit,xKM,xp,zKM,zp,tInd,
         writeplots(fg,'est',T,P['outdir'])
 
 #%% ############################################################################
-def plotnoise(cam,T,figh,P,prefix):
+def plotnoise(cam,T,P,prefix):
     assert isinstance(P,dict)
-    figure(figh).clf()
-    fg = figure(figh)
+    fg = figure()
     ax = fg.add_subplot(211)
 
     for C in cam:
@@ -429,13 +427,11 @@ def plotPicard(A,b,cvar=None):
         [U,s,V] = svd(A,full_matrices=False,compute_uv=1) #V is not used!
     picard(asfortranarray(U), s, b)
 
-def plotJ1D(sim,PhiFwd,PhiInv,Ek,T,P,prefix,titletxt,fg=None,ax=None):
+def plotJ1D(sim,PhiFwd,PhiInv,Ek,T,P,prefix,titletxt,ax=None):
     assert isinstance(P,dict)
     anno = False
 
-    if fg is None and ax is None:
-        fg = figure()
-        ax = fg.gca()
+    fg,ax = fighandler(ax)
 
     for Phi,l in zip((PhiFwd,PhiInv),('$\Phi$','$\hat{{\Phi}}$')):
         if Phi is not None:
@@ -476,7 +472,7 @@ def plotJ1D(sim,PhiFwd,PhiInv,Ek,T,P,prefix,titletxt,fg=None,ax=None):
 
     dumph5(prefix,T,P['outdir'],PhiFwd1d=PhiFwd,PhiInv1d=PhiInv,Ek=Ek)
 #%%
-def plotJ(sim,Jflux,x,xp,Ek,EKpcolor,T,P,prefix,titletxt,figh,fg=None,ax=None):
+def plotJ(sim,Jflux,x,xp,Ek,EKpcolor,T,P,prefix,titletxt,ax=None):
     assert isinstance(P,dict)
 
     cnorm,sfmt = logfmt(P)
@@ -502,10 +498,7 @@ def plotJ(sim,Jflux,x,xp,Ek,EKpcolor,T,P,prefix,titletxt,figh,fg=None,ax=None):
             py.plot(dfg, filename='{}_{}_{}'.format(P['outdir'],prefix,T),auto_open=False)
         else:
 
-            if fg is None and ax is None:
-                figure(figh).clf()
-                fg = figure(figh)
-                ax = fg.gca()
+            fg,ax = fighandler(ax)
 
             if pstyle == 'pcolor':
                 hc = ax.pcolormesh(xp,EKpcolor,Jflux,edgecolors='none',
@@ -603,12 +596,10 @@ def getmin(vs,vu):
     else:
         return vs
 
-def plotVER1D(sim,pfwd,pinv,zKM,T,P,prefix='',titletxt='',fg=None,ax=None):
+def plotVER1D(sim,pfwd,pinv,zKM,T,P,prefix='',titletxt='',ax=None):
     assert isinstance(P,dict)
 
-    if fg is None and ax is None:
-        fg = figure()
-        ax = fg.gca()
+    fg,ax = fighandler(ax)
 
     for p,l in zip((pfwd,pinv),('$\mathbf{P}$','$\hat{\mathbf{P}}$')):
         if p is not None:
@@ -639,7 +630,7 @@ def plotVER1D(sim,pfwd,pinv,zKM,T,P,prefix='',titletxt='',fg=None,ax=None):
 
     dumph5(prefix,T,P['outdir'],pfwd1d=pfwd,pinv1d=pinv,z=zKM)
 #%%
-def plotVER(sim,ver,x,xp,z,zp,T,P,prefix='',titletxt='',figh=None,fg=None,ax=None):
+def plotVER(sim,ver,x,xp,z,zp,T,P,prefix='',titletxt='',ax=None):
     assert isinstance(P,dict)
 
     cnorm,sfmt = logfmt(P)
@@ -667,10 +658,7 @@ def plotVER(sim,ver,x,xp,z,zp,T,P,prefix='',titletxt='',figh=None,fg=None,ax=Non
             #print(plot_url)
           else:
 
-            if fg is None and ax is None:
-                figure(figh).clf()
-                fg = figure(figh)
-                ax = fg.gca()
+            fg,ax = fighandler(ax)
 
             if pstyle=='pcolor':
                 hc = ax.pcolormesh(xp,zp,ver,edgecolors='none',
@@ -722,26 +710,23 @@ def plotVER(sim,ver,x,xp,z,zp,T,P,prefix='',titletxt='',figh=None,fg=None,ax=Non
 
     dumph5(prefix,T, P['outdir'],p=ver,x=x,xp=xp,z=z,zp=zp)
 #%%
-def plotBcompare(sim,braw,bfit,cam,prefix, tInd,P, figh, fg=None,ax1=None):
+def plotBcompare(sim,braw,bfit,cam,prefix, tInd,P, ax=None):
     assert isinstance(P,dict)
     T = tind2dt(cam,tInd)
 
     dosubtract = False
 
-    if fg is None and ax1 is None:
-        figure(figh).clf()
-        fg = figure(figh)
-        ax1 = fg.gca()
+    fg,ax = fighandler(ax)
 #%% plot raw
     cnorm,sfmt = logfmt(P,(-3,3))
-    ax1.get_yaxis().set_major_formatter(sfmt[0]) #only need lin
+    ax.get_yaxis().set_major_formatter(sfmt[0]) #only need lin
 
 #    ax1.yaxis.get_offset_text().set_size(afs)
-    ax1.tick_params(axis='both', which='both', direction='out')
+    ax.tick_params(axis='both', which='both', direction='out')
 
     for C in cam:
         if C.usecam:
-            ax1.plot(C.angle_deg,braw[C.ind],
+            ax.plot(C.angle_deg,braw[C.ind],
                  label=('$\mathbf{{B}}_{}$'.format(C.name)),)
                  #color=cord[icm])#)
 #%% plot fit
@@ -749,13 +734,13 @@ def plotBcompare(sim,braw,bfit,cam,prefix, tInd,P, figh, fg=None,ax1=None):
     maxfit = bfit.max(); maxraw = braw.max()
     if 10*maxraw > maxfit > 0.1*maxraw:
         singax = True
-        ax2 = ax1
-        ax1.set_ylabel('$\mathbf{B}$ [photons sr$^{-1}$ s$^{-1}$]')
+        ax2 = ax
+        ax.set_ylabel('$\mathbf{B}$ [photons sr$^{-1}$ s$^{-1}$]')
     else:
         singax = False
-        ax2 = ax1.twinx()
+        ax2 = ax.twinx()
         ax2.get_yaxis().set_major_formatter(sfmt[0]) #only need lin
-        ax1.set_ylabel('$\mathbf{B}$ [photons sr$^{-1}$ s$^{-1}$]')
+        ax.set_ylabel('$\mathbf{B}$ [photons sr$^{-1}$ s$^{-1}$]')
         ax2.set_ylabel('$\mathbf{\hat{B}}$ [photons sr$^{-1}$ s$^{-1}$]')
 #%% now plot each camera
     for C in cam:
@@ -765,23 +750,23 @@ def plotBcompare(sim,braw,bfit,cam,prefix, tInd,P, figh, fg=None,ax1=None):
                  #color=cord[icm]))
 
     if singax:
-        ax1.legend(loc='lower left')
+        ax.legend(loc='lower left')
     else:
         '''
         legend for twinx http://stackoverflow.com/questions/5484922/secondary-axis-with-twinx-how-to-add-to-legend
         '''
-        h1, l1 = ax1.get_legend_handles_labels()
+        h1, l1 = ax.get_legend_handles_labels()
         h2, l2 = ax2.get_legend_handles_labels()
-        ax1.legend(h1+h2, l1+l2, loc='upper right')
+        ax.legend(h1+h2, l1+l2, loc='upper right')
 
-    ax1.set_title('$\mathbf{B}$ ground-observed intensity')
+    ax.set_title('$\mathbf{B}$ ground-observed intensity')
 
-    ax1.set_xlabel('local view angle [deg.]')
-    ax1.xaxis.set_major_locator(MultipleLocator(1))
+    ax.set_xlabel('local view angle [deg.]')
+    ax.xaxis.set_major_locator(MultipleLocator(1))
 
-    ax1.grid(True)
-    ax1.autoscale(True,tight=True)
-    ax1.set_ylim(P['vlim']['b']) #must come AFTER autoscale!
+    ax.grid(True)
+    ax.autoscale(True,tight=True)
+    ax.set_ylim(P['vlim']['b']) #must come AFTER autoscale!
 #%% do more detailed comparison
     if dosubtract:
         bias=[]
@@ -810,15 +795,12 @@ def plotBcompare(sim,braw,bfit,cam,prefix, tInd,P, figh, fg=None,ax1=None):
 
     writeplots(fg,prefix,T,P['outdir'])
 #%%
-def plotB(bpix,cam,T,P,figh=None,labeltxt='',fg=None,ax1=None):
+def plotB(bpix,cam,T,P,labeltxt='',ax=None):
     assert isinstance(P,dict)
 
     cnorm,sfmt = logfmt(P)
 
-    if fg is None and ax1 is None:
-        figure(figh).clf()
-        fg = figure(figh)
-        ax1 = fg.gca()
+    fg,ax = fighandler(ax)
 
     std = []
 #%% do we need twinax? Let's find out if they're within factor of 10
@@ -829,13 +811,13 @@ def plotB(bpix,cam,T,P,figh=None,labeltxt='',fg=None,ax1=None):
 #    maxraw = thiscammax.max(); minmaxraw = thiscammax.min()
 #    if 10*maxraw > minmaxraw > 0.1*maxraw:
 #        singax = True
-#        ax2 = ax1
-#        ax1.set_ylabel('$b$ Data Numbers')
+#        ax2 = ax
+#        ax.set_ylabel('$b$ Data Numbers')
 #    else:
 #        singax = False
-#        ax2 = ax1.twinx()
+#        ax2 = ax.twinx()
 #        ax2.get_yaxis().set_major_formatter(sfmt)
-#        ax1.set_ylabel('$b_{raw}$ data numbers')
+#        ax.set_ylabel('$b_{raw}$ data numbers')
 #        ax2.set_ylabel( fittxt + ' Data Numbers')
 #%% make plot
     for C in cam:
@@ -843,12 +825,12 @@ def plotB(bpix,cam,T,P,figh=None,labeltxt='',fg=None,ax1=None):
             if hasattr(C,'noiselam'):
                 std.append('{:0.1e}'.format(C.noiselam))
 
-            ax1.plot(C.angle_deg,  bpix[C.ind],
+            ax.plot(C.angle_deg,  bpix[C.ind],
                  label = labeltxt + ',' +str(C.name) + '}$'
                  )
                  #marker='.',
                  #color=cord[c])
-    doBlbl(ax1,sfmt[0],P['vlim']['b'],labeltxt,std) #b is never log
+    doBlbl(ax,sfmt[0],P['vlim']['b'],labeltxt,std) #b is never log
 
     writeplots(fg,'b'+labeltxt[4:7],T,P['outdir'])
 
@@ -893,10 +875,10 @@ def allLinePlot(simfilelist):
         ax = figure(ti).gca()
         ax.plot(Ek,Jme[:,:,ti])
 #%%
-def planview3(cam,xKM,zKM,P,figh):
+def planview3(cam,xKM,zKM,P):
     assert isinstance(P,dict)
     from pymap3d import aer2ecef, geodetic2ecef
-    fg = figure(figh)#; fg.clf()
+    fg = figure()#; fg.clf()
     ax = fg.gca(projection='3d')
     az = 106.444916022 #TODO arbitrary should be from real camera pointing
     srange = 500e3 #[m]
@@ -1117,3 +1099,16 @@ def indone1d(x,P,i):
     logging.info('1-D plots of Phi and P taken at index {}  x={}'.format(Jxi, P['x1d']))
 
     return Jxi
+
+def fighandler(ax):
+    """
+    subplot: ax=Axes  <-- do nothing
+    newfig:  ax=None   <--create new figure
+    """
+    if ax is None: #new figure, create axes
+        fg = figure()
+        ax = fg.gca()
+    else:
+        fg = None # disables savefig, for existing subplots
+
+    return fg,ax

@@ -104,11 +104,11 @@ def extplot(sim,cam,drn,dhat,P):
     try:
         if 'fwd' in P['makeplot'] and drn:
             for i,b in enumerate(drn):
-                plotB(b,cam,9999,19999,P,'$bfwdall')
+                plotB(b,cam,9999,P,'$bfwdall')
     # reconstructed brightness plot
         if 'optim' in P['makeplot'] and dhat is not None and len(dhat[0])>0:
             for i,b in enumerate(dhat):
-                plotB(b,cam,9999,29999,P,'$bestall')
+                plotB(b,cam,9999,P,'$bestall')
     except Exception as e:
         logging.info('skipping plotting overall analysis plots of intensity.  {}'.format(e))
 
