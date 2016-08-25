@@ -59,6 +59,9 @@ def userinput(ini=None,outdir=None):
      'cmd': ' '.join(argv),
     }
 
+    if not P['ini'].suffix:
+        P['ini'] = P['ini'].with_suffix('.ini')
+
     if not p.outdir:
         p.outdir = mkdtemp(prefix=P['ini'].stem,dir='out')
 
@@ -85,9 +88,10 @@ def getParams(P):
         copy2(str(P['ini']),str(P['outdir']))
 #%% read .ini
     try:
-        xl = ConfigParser(allow_no_value=True, inline_comment_prefixes=('#'), strict=True)
+        xl = ConfigParser(allow_no_value=True, empty_lines_in_values=False,
+                          inline_comment_prefixes=('#'), strict=True)
     except TypeError: #py27
-        xl = ConfigParser(allow_no_value=True)
+        xl = ConfigParser(allow_no_value=True, empty_lines_in_values=False)
     xl.read(str(P['ini']))
 #%% read plot parameters from ini
     try:
@@ -112,7 +116,7 @@ def getParams(P):
                 C.x_km = vincenty((cam[0].lat,cam[0].lon),(C.lat,C.lon)).kilometers
 
     #store x,z in sim
-    ellname=sim.getEllHash(xl, [C.x_km for C in cam],[C.alt_m/1000. for C in cam])
+    ellname=sim.getEllHash(xl, [C.x_km for C in cam if C.usecam],[C.alt_m/1000. for C in cam if C.usecam])
     #will try to load this and compute if needed. Will be copied to output directory too.
     sim.FwdLfn = sim.rootdir/'precompute' / ellname
 
@@ -134,15 +138,16 @@ def setupArc(xl):
     ntimeslice=None
 
     for s in xl.sections(): # for py27
-        # TODO assert all arcs have same time length
         if s.startswith('arc'):
             if ntimeslice is not None and getntimes(xl[s]) != ntimeslice:
                 raise ValueError('for now, all Arcs must have same number of times (columns)')
             texp = getntimes(xl[s]['texp']) # last time is blended with 2nd to last time
+            # TODO assert all arcs have same time length
+            ntimeslice = texp.size-1  # MUST be -1 to allow for range() compat and interp1() compat
 
             arc[s] = Arc(xl[s], texp)
 
-    return arc, texp.size-1 # MUST be -1 to allow for range() compat and interp1() compat
+    return arc, ntimeslice
 
 def setupCam(sim,cp,zmax,makeplot):
     cam = []
