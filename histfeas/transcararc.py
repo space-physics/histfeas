@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from numpy import (asfortranarray,atleast_3d, exp,sinc,pi,zeros, outer,in1d,
+from numpy import (asfortranarray,atleast_3d, exp,sinc,pi,zeros, outer,
                    isnan,log,logspace,arange,allclose,diff,atleast_1d,isfinite,repeat,append)
 import h5py
 from scipy.interpolate import interp1d
@@ -27,7 +27,7 @@ def getColumnVER(zgrid,zTranscar,Peig,Phi0):
 #   return Tm @ Phi0
 
 def getMp(sim,cam,zKM,makeplot):
-    if not in1d(('fwd','optim'),makeplot).any():
+    if not set(('fwd','optim')).isdisjoint(makeplot):
         return
 #%% read from transcar sim
     if cam[0].Bincl is None:
@@ -70,6 +70,8 @@ def downsampleEnergy(Ek,EKpcolor,Mp,downsamp):
 
 def getPhi0(sim,arc,xKM,Ek,makeplots):
     #%% get flux
+    Phi0 = None
+
     if not sim.realdata:
         if sim.Jfwdh5 is not None:
             print('Loading sim. input diff. number flux from {}'.format(sim.Jfwdh5))
@@ -78,8 +80,8 @@ def getPhi0(sim,arc,xKM,Ek,makeplots):
         else:
             Phi0 = assemblePhi0(sim,arc,Ek,xKM)
         assert xKM.size == Phi0.shape[1]
-    else:
-        Phi0 = None
+
+
     return Phi0
 
 def assemblePhi0(sim,arcs,Ek,xKM):

@@ -9,6 +9,8 @@ from dateutil.parser import parse
 #
 from transcarread.readionoinit import getaltgrid
 
+DPI=72
+
 class Sim:
 
     def __init__(self,sp,ap,ntimeslice,P):
@@ -50,6 +52,12 @@ class Sim:
 
         if 'realvid' in P['makeplot']:
             self.fovfn = sp.get('cams','fovfn',fallback=None)
+
+#%%
+        try:
+            self.dpi = P['dpi']
+        except KeyError:
+            self.dpi = DPI
 #%% manual override flux file
         try:
             self.Jfwdh5 = P['overrides']['Jfwd']

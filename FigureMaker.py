@@ -24,9 +24,6 @@ from histfeas import userinput, hist_figure
 from histfeas.loadAnalyze import readresults,findxlsh5
 
 P = userinput()
-
-#P['x1d']= [3.7,3.7,6,6] table_flame
-
 #%% compute
 if not P['load']:
     hist_figure(P)
