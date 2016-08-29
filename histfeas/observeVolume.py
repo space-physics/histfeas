@@ -192,6 +192,7 @@ def getEll(sim,cam,Fwd,P):
         L,Fwd,cam = loadEll(sim,Fwd,cam,P)
 
     L = removeUnusedCamera(L,sim.useCamBool,sim.ncutpix)
+    
     cam = definecamind(cam)
 
     assert 'x' in Fwd and Fwd['x'] is not None,'problem loading or computing grid'
@@ -199,14 +200,34 @@ def getEll(sim,cam,Fwd,P):
     return L,Fwd,cam
 
 def removeUnusedCamera(L,useCamBool,ncutpix):
-    ''' remove unused cameras (rows of L) '''
+    ''' 
+    remove unused cameras (rows of L) 
+    we DO NOT trim out non-intersecting rows of used cameras--that's why the matrix is sparse,
+    no computational impact or extra bookkeeping.
+    '''
     arow = ones(ncutpix,bool)
     grow = outer(arow,useCamBool).ravel(order='F')
+
     return L[grow,:]
 
 def definecamind(cam):
-    ''' store indices of b vector corresponding to each camera (in case some cameras not used) '''
-    for i,C in enumerate(cam):
+    """
+    store indices of b vector corresponding to each camera (in case some cameras not used) 
+    even if we didn't eliminate them, they wouldn't be used in computation (that's what L sparse matrix is for)
+    
+    NOTE: at this time, we don't discard unused rows of L since L is sparse and we'd have to be really careful about
+    keeping indexing consistent--sparse matrices avoid this extra record-keeping
+    
+    C.ind for each camera are the rows of L corresponding to that camera -- even if all entries are 0 in that row.
+
+    --------------
+    we do NOT use enumerate in order to account for prior function deleting unused cameras in the middle.
+    e.g. cam0,2 used, cam1 not used
+    """
+    i = 0
+    for C in cam:
         if C.usecam:
             C.ind = slice(i*C.ncutpix, (i+1)*C.ncutpix)
+            i+=1
+            
     return cam
