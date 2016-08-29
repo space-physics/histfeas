@@ -298,7 +298,7 @@ def plotoptim(sim,cam,drn,dhat,bcomptxt,ver,Phi0,vfit,Phifit,xKM,xp,zKM,zp,tInd,
         fg,axs = subplots(nrow,3,figsize=(21,nrow*7.5))
         axs = atleast_2d(axs)
 
-        fg.suptitle(ttxt,fontsize='x-large') #FIXME here we just use the fastest camera, cam 0 apriori
+        fg.suptitle(ttxt) #FIXME here we just use the fastest camera, cam 0 apriori
         fg.subplots_adjust(top=0.95) # FIXME http://matplotlib.org/faq/howto_faq.html
     else:
         axs = array([(None,)*3,(None,)*3])
@@ -536,8 +536,7 @@ def plotJ(sim,Jflux,x,xp,Ek,EKpcolor,T,P,prefix,titletxt,ax=None):
 
             ax.grid(True,which='both')
 
-            fg.subplots_adjust(top=0.85)
-            _doJlbl(ax,titletxt)
+            _doJlbl(fg,ax,titletxt)
 
             writeplots(fg,prefix+p,T,P['outdir'])
 
@@ -552,7 +551,13 @@ def plotJ(sim,Jflux,x,xp,Ek,EKpcolor,T,P,prefix,titletxt,ax=None):
 
     dumph5(prefix,T,P['outdir'],phi=Jflux,xp=xp,Ek=Ek,EKpcolor=EKpcolor)
 
-def _doJlbl(ax,titletxt):
+def _doJlbl(fg,ax,titletxt):
+
+    if not fg:
+        fg = ax.figure
+    
+    fg.subplots_adjust(top=0.85)
+        
     ax.set_ylabel('Energy [eV]')
     ax.set_xlabel('$B_\perp$ [km]')
     ax.set_title(titletxt)

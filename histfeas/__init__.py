@@ -85,8 +85,9 @@ def getParams(P):
         copy2(str(P['ini']),str(P['outdir']))
 #%% read .ini
     try:
+        # note python2 only allows ';' inline comments, can't be changed in python2(?)
         xl = ConfigParser(allow_no_value=True, empty_lines_in_values=False,
-                          inline_comment_prefixes=('#'), strict=True)
+                          inline_comment_prefixes=(';'), strict=True)
     except TypeError: #py27
         xl = ConfigParser(allow_no_value=True, empty_lines_in_values=False)
     xl.read(str(P['ini']))
