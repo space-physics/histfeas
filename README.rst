@@ -23,26 +23,33 @@ This is a big program, contact me with any issues
     :alt: montage of output
 
 Installation
-------------
+============
 ::
-   python setup.py develop
+
+    python setup.py develop
 
 self-test::
 
     python tests/test.py
 
-Usage notes
-------------
-if upon changing the ``in/*.ini`` files to make a new simulation, you get an error message including
-``use --ell command line option to save new Ell file``
-rerun your simulation command, adding ``--ell`` to compute (one-time) the projection
-matrix for your new simulation geometry.
+
+Quick Start
+===========
+Running a simulation::
+
+    python FigureMaker.py in/my.ini out/myout  # omitting 2nd argument autonames output
+    
+Loading a previously-run simulation (changing plot clim for example)::
+
+    python FigureMaker.py --load out/myout
+
+
 
 Simulation Examples
--------------------
+===================
 
 simulate flaming aurora with two cameras
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+----------------------------------------
 ::
 
   python FigureMaker.py in/2cam_flame.ini out/test_flame2/ -m fwd optim png show h5
@@ -51,16 +58,16 @@ you can then look to the `Output Processing`_ section for how to load the HDF5 f
 you just produced in ``out/test_flame2``
 
 Real Data Examples
-------------------
+==================
 
 reading real data and displaying a live video
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+---------------------------------------------
 ::
 
   python RunHistfeas.py in/apr14.ini out/apr14 -m realvid -a 0.1
 
 reading real data and saving the joint image frames to disk
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-----------------------------------------------------------
 ::
 
    python RunHistfeas.py in/apr14.ini out/apr14 -m realvid rawpng -a 0.1
@@ -69,10 +76,10 @@ reading real data and saving the joint image frames to disk
 
 
 Utility Examples
-----------------
+================
 
 plot eigenprofiles from 2013 JGR and current transcar sim
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+----------------------------------------------------------
 ::
 
    python RunHistfeas.py in/jgr2013_2cam.ini /tmp -m eig eig1d -p  -f 0 1 1
@@ -86,36 +93,40 @@ type of program output
 
 *Almost all of these* ``-m`` *options can be combined in various ways desired by the user*
 
-**Simulation selection**
+Simulation selection
+~~~~~~~~~~~~~~~~~~~~
 
 -m fwd      run foward model
 -m optim    run optimization to estimate input quantities
 
 
-**Graphics selection**
+Graphics selection
+~~~~~~~~~~~~~~~~~~
 
 -m h5       dumps HDF5 files of the quantities selected in -m
 -m eps      saves figures as eps
 -m png      saves figures as png
 
-**real data only**
+real data only
+~~~~~~~~~~~~~~
 
 -m realvid      both cameras in one figure
 -m singleraw    each camera images individually, without axes (for powerpoint,posters, etc.)
 
-**excitation rates plots**
+excitation rates plots
+~~~~~~~~~~~~~~~~~~~~~~
 
 -m eig         plot eigenprofiles
 -m spectra     plot modeled auroral spectra modulated by the filter used.
 
 Auroral arc morphology
-----------------------
+======================
 the .ini files allow setting multiple arcs with [arc0] [arc1] and so on. 
 Parameters specified as single numbers are replicated for all times.
 Parameters specified as START,STOP,STEP triplets are expanded via ``numpy.arange()``
 
 zshape
-~~~~~~
+------
 arc shape along flux tube "altitude"
 
 transcar    1-D electron penetration model
@@ -123,7 +134,7 @@ impulse     a spot in altitude
 flat        cutoff above specified E0, uniform number flux below E0
 
 xshape
-~~~~~~
+------
 arc shape laterally, B-perp
 
 gaussian    a typical choice, smeared with a Gaussian taper
@@ -133,7 +144,7 @@ flat        "" ""    ""
 
 
 Time selection
---------------
+==============
 
 The simulation configuration in the in/\*.xlsx file may be very large. Maybe you want to pick
 only a few times to run.
@@ -142,14 +153,14 @@ Example: to use only the first time step, use option ``-f 0 1 1`` which works li
 ``range()`` in selecting times from the spreadsheet Arc* tab.
 
 Note on simulation time
-~~~~~~~~~~~~~~~~~~~~~~~
+-----------------------
 
 The simulation time currently runs 10x faster than the columns in the in/\*.xlsx
 under the Arc\* tabs. You should normally have the times of the Arc\* .xlsx columns
 evenly spaced. If not, you can skip over the jump times by taking say every other time.
 
 plot limit selection
---------------------
+====================
 You may want to select fixed limits for your plots instead of the default autoscaling, particularly when
 comparing a time series of plots.
 
@@ -162,7 +173,7 @@ plot selection  description
 ====================================================  ===========
 
 Plot explanation
------------------
+================
 The plots you see under your out/ direction (assuming you used ``-m png`` or ``-m eps`` or the like)
 follow this naming convention
 
@@ -178,7 +189,7 @@ to the simulation (for real data, we don't have this)
 Our IEEE TGARS article (in review) details the math and algorithm.
 
 Variables
----------
+=========
 ``P`` is a dictionary containing many command-line variable parameters that might not go in the .ini file
 or that are overridable by the command line.
 ``P['vlim']`` is perhaps the most complex, it contains (affects plots only, not computations):
@@ -193,7 +204,7 @@ z   spatial vertical bounds (along flux tube)
 
 
 Output Processing
-------------------
+=================
 HDF5 is the primary output along with PNGs of selected plots.
 Some of the 1-D variables are duplicated because we don't know a-priori simulation parts will be run--disk space use is trivial, so we have left this alone.
 
@@ -202,7 +213,8 @@ The naming of the variables follows `Plot explanation`_
 For Python, we have the hollow function ``loadAnalyze.py`` which loads the HDF5 data to call
 the same ``analysehst.py`` that's used by the simulation online--good coding practice.
 
-**Example of offline output processing**
+Example of offline output processing
+------------------------------------
 
 ::
 
@@ -211,14 +223,14 @@ the same ``analysehst.py`` that's used by the simulation online--good coding pra
 
 
 Calibration
--------------
+===========
 
 1. ``rawDMCreader.py``  accesses the raw camera data and averages the selected frames and writes the average as a FITS file
 2. The second line moves this FITS file to the user-selected calibration directory
 3. The third line uses my wrapper and post-processing based on Astrometry.net to make an HDF5 file of the mapping from each pixel to sky coordinates (ra/dec and az/el).
 
-**cam0**
-
+cam0
+~~~~~
 ::
 
    ./histutils/rawDMCreader.py -i ~/HSTdata/DataField/2013-04-14/HST0/2013-04-14T07-00-CamSer7196_frames_363000-1-369200.DMCdata -f 0 10 1 --avg --fits
