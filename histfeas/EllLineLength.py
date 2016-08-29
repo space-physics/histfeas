@@ -42,11 +42,10 @@ from cvutils.lineClipping import cohensutherland
  pixels from bottom to top, left to right, for each pixel of each camera. it finds the
  line length "ell" for each element of L. This is how we implement the line integral.
 '''
+SPARSE      = True
+plotEachRay = False
 
-def EllLineLength(Fwd,xFOVpixelEnds,zFOVpixelEnds,allCamXkm,allCamZkm,Np,sim,makePlots,dbglvl):
-    plotEachRay=False
-    writeRays = False #write pixel rays to hdf5 for viewing
-
+def EllLineLength(Fwd,xFOVpixelEnds,zFOVpixelEnds,allCamXkm,allCamZkm,Np,sim,makeplot):
 #%% convenience variables (easier to type)
     sx =  Fwd['sx']
     sz =  Fwd['sz']
@@ -57,47 +56,41 @@ def EllLineLength(Fwd,xFOVpixelEnds,zFOVpixelEnds,allCamXkm,allCamZkm,Np,sim,mak
     assert xpc.size == sx + 1
     assert zpc.size == sz + 1
 #%% preallocation
-#This goes OUTSIDE all loops!
-    if dbglvl>0:
-        print('EllLineLength: Number of 1D pixels in cut: ',Np)
-        print('x: {}'.format(Fwd['x']))
-        print('xpc: {}'.format(xpc))
-        print('z: {}'.format(Fwd['z']))
-        print('zpc: {}'.format(zpc))
+    logging.debug('EllLineLength: Number of 1D pixels in cut: ',Np)
+    logging.debug('x: {}'.format(Fwd['x']))
+    logging.debug('xpc: {}'.format(xpc))
+    logging.debug('z: {}'.format(Fwd['z']))
+    logging.debug('zpc: {}'.format(zpc))
 
     xzplot = None
-    L = goCalcEll(maxNell,nCam,Np,sz,sx,xpc,zpc,xFOVpixelEnds,zFOVpixelEnds,
-                          allCamXkm,allCamZkm,plotEachRay,dbglvl)
-
-    #%% write results to HDF5 file
-    doSaveEll(L,Fwd,sim,xFOVpixelEnds,zFOVpixelEnds,writeRays)
-
-    if 'ell' in makePlots and plotEachRay and xzplot:
-        plotEll(nCam,xFOVpixelEnds,zFOVpixelEnds,allCamXkm,allCamZkm,Np,xpc,zpc,
-                sz,sx,xzplot,sim.FwdLfn,plotEachRay,makePlots,
-                (None,None,None,None,None,None))
+#%% do the big computation    
+    L = goCalcEll(maxNell,nCam,Np,sz,sx,xpc,zpc,xFOVpixelEnds,zFOVpixelEnds,allCamXkm,allCamZkm)
+#%% write results to HDF5 file
+    doSaveEll(L,Fwd,sim,xFOVpixelEnds,zFOVpixelEnds)
+#%% optional plot
+    plotEll(nCam,xFOVpixelEnds,zFOVpixelEnds,allCamXkm,allCamZkm,Np,xpc,zpc,
+                sz,sx,xzplot,sim.FwdLfn,plotEachRay,makeplot,(None,)*6)
+#%% to CSC sparse, if built as DOK sparse                
     if issparse(L):
         L = L.tocsc()
     return L
 
-def goCalcEll(maxNell,nCam,Np,sz,sx,xpc,zpc,xFOVpixelEnds,zFOVpixelEnds,
-                xCam,zCam,plotEachRay,dbglvl=0):
-    usesparse=True
-    if usesparse:
+def goCalcEll(maxNell,nCam,Np,sz,sx,xpc,zpc,xFOVpixelEnds,zFOVpixelEnds,xCam,zCam):
+
+    if SPARSE:
         L = dok_matrix(( Np*nCam,sz*sx),dtype=float) #sparse
     else:
         L = zeros( ( Np*nCam,sz*sx),dtype=float ,order='F') #dense
 
 
     print('Dimensions of L:',L.shape,' sz=',sz, '  sx=',sx )
-
+#%% preallocation: outside loops
     Lcol =   empty(maxNell, dtype=int) #we'll truncate this to actual length at end
     tmpEll = empty(maxNell, dtype=float) #we'll truncate this to actual length at end
     xzplot = [] #we'll append to this
 
     L = loopEll(Np,sz,sx,xpc,zpc,xFOVpixelEnds,zFOVpixelEnds,
-                             xCam,zCam,nCam,plotEachRay,
-                             L,Lcol,tmpEll,xzplot) #numba
+                             xCam,zCam,nCam, L,Lcol,tmpEll,xzplot) #numba
 
     if usesparse:
         return L.tocsc()
@@ -105,13 +98,14 @@ def goCalcEll(maxNell,nCam,Np,sz,sx,xpc,zpc,xFOVpixelEnds,zFOVpixelEnds,
         return L
 
 #@jit(['float64[:,:](int64,int64,int64,float64[:],float64[:],float64[:,:],float64[:,:],float64[:],float64[:],int64[:],bool_,float64[:,:],int64[:],float64[:],float64[:])'])
-def loopEll(Np,sz,sx,xpc,zpc,xFOVpixelEnds,zFOVpixelEnds,
-             xCam,zCam,nCam,plotEachRay,L,Lcol,tmpEll,xzplot):
+def loopEll(Np,sz,sx,xpc,zpc,xFOVpixelEnds,zFOVpixelEnds, xCam,zCam,nCam,L,Lcol,tmpEll,xzplot):
 #%%let's compute intersections!!
     #FIXME assumes all cameras have same # of pixels
     inttot = 0
 
-    ''' We MUST have all cameras enabled for this computation (as verified in observeVolume)'''
+    ''' 
+    We MUST have all cameras enabled for this computation (as verified in observeVolume)
+    '''
 #    try:
     for iCam in range(nCam):
         xfov = xFOVpixelEnds[:,iCam]; zfov = zFOVpixelEnds[:,iCam]
@@ -119,9 +113,10 @@ def loopEll(Np,sz,sx,xpc,zpc,xFOVpixelEnds,zFOVpixelEnds,
             nHitsThisPixelRay = 0
             for xInd in range(sx):
                 for zInd in range(sz):
-                    '''get the vertices of the intersection between voxel and pixel
+                    '''
+                    get the vertices of the intersection between voxel and pixel
                     for the kth pixel FOV, find the intersection with each sky polygon
-                     '''
+                    '''
                     x1, y1, x2, y2 = cohensutherland(
                              xpc[xInd], zpc[zInd + 1],
                               xpc[xInd + 1], zpc[zInd],
@@ -141,11 +136,11 @@ def loopEll(Np,sz,sx,xpc,zpc,xFOVpixelEnds,zFOVpixelEnds,
                 print('Camera #{}: {:0.0f}% complete, found {} intersections.'.format(iCam,1.0*k/Np*100,inttot))
 
 #    except IndexError:
-#        exit('**** ERROR on iCam='+str(iCam)+', k=' +str(k)+', xInd='+str(xInd)+', zInd='+str(zInd)+' *****')
+#        raise IndexError('iCam {} k {} xInd {} zInd {}'.format(iCam,k,xInd,zInd)))
     print('Total number of intersections found:',inttot)
     return L#,xzplot
 
-def doSaveEll(L,Fwd,sim,xFOVpixelEnds,zFOVpixelEnds,writeRays):
+def doSaveEll(L,Fwd,sim,xFOVpixelEnds,zFOVpixelEnds):
     print('writing {}'.format(sim.FwdLfn))
     if issparse(L):
         L = L.todense()
@@ -164,11 +159,14 @@ def doSaveEll(L,Fwd,sim,xFOVpixelEnds,zFOVpixelEnds,writeRays):
     try:
         copy2(str(sim.FwdLfn), str(sim.cal1dpath))
     except SameFileError:
-        logging.critical('could not copy ell file over itself {}'.format(sim.cal1dpath))
+        logging.warning('did not copy ell file from {} to {}'.format(sim.FwdLfn, sim.cal1dpath))
 
 
 def plotEll(nCam,xFOVpixelEnds,zFOVpixelEnds,xCam,zCam,Np,xpc,zpc,sz,sx,
             xzplot,EllFN,plotEachRay,makeplot,vlim):
+
+    if not 'ell' in makeplot:
+        return
 
     from matplotlib.pyplot import figure, draw, pause
     from matplotlib.ticker import MultipleLocator

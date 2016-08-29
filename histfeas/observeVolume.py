@@ -69,7 +69,7 @@ def makeCamFOVpixelEnds(Fwd,sim,cam,P):
     # order='F' not needed here because we don't reshape or ravel this variable
     xFOVpixelEnds = empty((nCutPix, sim.nCamUsed),dtype=float)
     zFOVpixelEnds = empty_like(xFOVpixelEnds)
-#%% (1) define the three x,y points defining each 2D pixel cone
+#%% (1) define the two x,y points defining each pixel line of sight in the 2-D simulation grid
     for C in cam:
         '''LINE LENGTH
          here we have 2 vertices per angle instead of 3 (line instead of polygon)
