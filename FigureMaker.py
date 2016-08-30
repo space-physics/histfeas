@@ -28,5 +28,5 @@ P = userinput()
 if not P['load']:
     hist_figure(P)
 #%% load
-h5list,xlsfn = findxlsh5(P['outdir'])
-readresults(h5list,P)
+flist,P = findxlsh5(P)
+readresults(flist,P)

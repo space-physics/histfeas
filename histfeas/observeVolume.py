@@ -1,5 +1,8 @@
+#!/usr/bin/env python
 import logging
-from numpy import empty,empty_like,isnan,sin,cos,radians,append,diff,ones,outer
+from six import integer_types
+from numpy import (empty,empty_like,isnan,sin,cos,radians,append,diff,ones,outer,
+                   unique,ndarray,int64)
 import numpy as np #need this here
 from scipy.sparse import csc_matrix
 import h5py
@@ -192,16 +195,16 @@ def getEll(sim,cam,Fwd,P):
         L,Fwd,cam = loadEll(sim,Fwd,cam,P)
 
     L = removeUnusedCamera(L,sim.useCamBool,sim.ncutpix)
-    
-    cam = definecamind(cam)
+
+    cam = definecamind(cam,L)
 
     assert 'x' in Fwd and Fwd['x'] is not None,'problem loading or computing grid'
 
     return L,Fwd,cam
 
 def removeUnusedCamera(L,useCamBool,ncutpix):
-    ''' 
-    remove unused cameras (rows of L) 
+    '''
+    remove unused cameras (rows of L)
     we DO NOT trim out non-intersecting rows of used cameras--that's why the matrix is sparse,
     no computational impact or extra bookkeeping.
     '''
@@ -210,24 +213,46 @@ def removeUnusedCamera(L,useCamBool,ncutpix):
 
     return L[grow,:]
 
-def definecamind(cam):
+def definecamind(cam,L):
     """
-    store indices of b vector corresponding to each camera (in case some cameras not used) 
+    store indices of b vector corresponding to each camera (in case some cameras not used)
     even if we didn't eliminate them, they wouldn't be used in computation (that's what L sparse matrix is for)
-    
+
     NOTE: at this time, we don't discard unused rows of L since L is sparse and we'd have to be really careful about
     keeping indexing consistent--sparse matrices avoid this extra record-keeping
-    
+
     C.ind for each camera are the rows of L corresponding to that camera -- even if all entries are 0 in that row.
 
     --------------
     we do NOT use enumerate in order to account for prior function deleting unused cameras in the middle.
     e.g. cam0,2 used, cam1 not used
     """
+    #TODO assumes all C.ncutpix are equal
     i = 0
     for C in cam:
         if C.usecam:
-            C.ind = slice(i*C.ncutpix, (i+1)*C.ncutpix)
+            """
+            memory is cheap; use:
+            * C.ind slice() for indexing (most commonly used)
+            * C.Lind slice() for plotting indexing (plotsnew.py) -- indicates pixels that intersected grid i.e. that were used in inversion
+            * c.Lcind slice() for each camera -- shifted slice() of C.Lind since can't do math on slice()
+            """
+            C.ind =   slice(i*C.ncutpix, (i+1)*C.ncutpix)
+            """
+            i*ncutpix + unique() is needed since we can't compute in advance (uneven numbers of hits)
+            """
+            C.Lind  = ind2slice(i*C.ncutpix + unique(L[C.ind,:].nonzero()[0])) # for braw, best
+            C.Lcind = ind2slice(              unique(L[C.ind,:].nonzero()[0])) # for this camera angle_deg
             i+=1
-            
+
     return cam
+
+def ind2slice(ind):
+    """
+    converts list of SEQUENTIAL integers to slice. for indexing speed gains.
+    """
+    assert isinstance(ind,(tuple,list,ndarray)),'what else would you like to slice by?'
+    assert isinstance(ind[0],(integer_types,int64)),'only integers are permissable for indexing'
+    assert (diff(ind)==1).all(),'only sequential integers for now. Other uniform steps are possible with slight modification'
+
+    return slice(ind[0],ind[-1])

@@ -70,7 +70,7 @@ def placetxt(x,y,txt,ax):
             va='bottom',ha='left',
             bbox=dict(boxstyle="round,pad=0.0",fc='black', alpha=0.25))
 
-def goPlot(sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0, Phifit,rawdata,tInd,P):
+def goPlot(sim,Fwd,cam,Lfwd,Tm,drn,dhat,ver,vfit,Peig,Phi0, Phifit,rawdata,tInd,P):
     makeplot = P['makeplot']
 #%% nicer file naming
     T = tind2dt(cam,tInd)
@@ -137,15 +137,14 @@ def goPlot(sim,Fwd,cam,L,Tm,drn,dhat,ver,vfit,Peig,Phi0, Phifit,rawdata,tInd,P):
                 xp,zp,sz,sx, xzplot,sim.FwdLfn,plotEachRay, makeplot,P['vlim']['p'])
 #%% Picard plots
     if 'picardL' in makeplot:
-        plotPicard(L,drn,'L')
+        plotPicard(Lfwd,drn,'L')
     if 'picardLT' in makeplot:
         LxColInd = s_[Jxi*sz:(Jxi+1)*sz] #faster than fancy indexing
-        Lx = L[:,LxColInd] #ellipses here doesn't work
+        Lx = Lfwd[:,LxColInd] #ellipses here doesn't work
 #        LT = Lx @ Tm
         LT = Lx.dot(Tm)
         plotPicard(LT,drn,'LT')
 #%% 1-D slice plots
-
     if 'bartrecon' in makeplot:
         plotBcompare(sim,drn,dhat['artrecon'],cam,sim.nCamUsed,'bART',tInd,P)
 #%% error plots
@@ -235,7 +234,7 @@ def tind2dt(cam,tind):
     except (AttributeError,OSError):#simdata  #OSError thrown when nan fed into utcfromtimestamp
         return str(tind)
 #%%
-def plotfwd(sim,cam,drn,xKM,xp,zKM,zp, ver,Phi0,fitp,tInd, P,doSubplots=True):
+def plotfwd(sim,cam,drn,xKM,xp,zKM,zp, ver,Phi0,fitp,tInd,  P,doSubplots=True):
     assert isinstance(P,dict)
     Jxi = indone1d(xKM,P,tInd)
 #%% number of subplot rows
@@ -555,9 +554,9 @@ def _doJlbl(fg,ax,titletxt):
 
     if not fg:
         fg = ax.figure
-    
+
     fg.subplots_adjust(top=0.85)
-        
+
     ax.set_ylabel('Energy [eV]')
     ax.set_xlabel('$B_\perp$ [km]')
     ax.set_title(titletxt)
@@ -715,7 +714,7 @@ def plotVER(sim,ver,x,xp,z,zp,T,P,prefix='',titletxt='',ax=None):
 
     dumph5(prefix,T, P['outdir'],p=ver,x=x,xp=xp,z=z,zp=zp)
 #%%
-def plotBcompare(sim,braw,bfit,cam,prefix, tInd,P, ax=None):
+def plotBcompare(sim,braw,bfit,cam,prefix, tInd, P, ax=None):
     assert isinstance(P,dict)
     T = tind2dt(cam,tInd)
 
@@ -731,7 +730,8 @@ def plotBcompare(sim,braw,bfit,cam,prefix, tInd,P, ax=None):
 
     for C in cam:
         if C.usecam:
-            ax.plot(C.angle_deg,braw[C.ind],
+            # find pixels that were used from this camera
+            ax.plot(C.angle_deg[C.Lcind], braw[C.Lind],
                  label=('$\mathbf{{B}}_{}$'.format(C.name)),)
                  #color=cord[icm])#)
 #%% plot fit
@@ -750,7 +750,7 @@ def plotBcompare(sim,braw,bfit,cam,prefix, tInd,P, ax=None):
 #%% now plot each camera
     for C in cam:
         if C.usecam:
-            ax2.plot(C.angle_deg,bfit[C.ind],
+            ax2.plot(C.angle_deg[C.Lcind],bfit[C.Lind],
                  label='$\hat{{\mathbf{{B}}}}_{}$'.format(C.name))
                  #color=cord[icm]))
 
@@ -778,8 +778,8 @@ def plotBcompare(sim,braw,bfit,cam,prefix, tInd,P, ax=None):
         ax3 =figure().gca()
         for C in cam:
             if C.usecam:
-                bias.append(bfit[C.ind].max() - braw[C.ind].max())
-                ax3.plot(C.angle_deg,braw[C.ind] - (bfit[C.ind]))#-bias[iCam]))
+                bias.append(bfit[C.Lind].max() - braw[C.Lind].max())
+                ax3.plot(C.angle_deg[C.Lcind],braw[C.Lind] - (bfit[C.Lind]))#-bias[iCam]))
 
         ax3.set_title('error $\mathbf{{B}}_{{fwd}} - B_{{est}}, bias={}'.format(bias))
         #  $t_i=' + str(tInd) + '$'
@@ -830,7 +830,7 @@ def plotB(bpix,cam,T,P,labeltxt='',ax=None):
             if hasattr(C,'noiselam'):
                 std.append('{:0.1e}'.format(C.noiselam))
 
-            ax.plot(C.angle_deg,  bpix[C.ind],
+            ax.plot(C.angle_deg[C.Lcind],  bpix[C.Lind],
                  label = labeltxt + ',' +str(C.name) + '}$'
                  )
                  #marker='.',

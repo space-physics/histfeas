@@ -13,7 +13,7 @@ from argparse import ArgumentParser
 from sys import argv
 import logging
 from six.moves.configparser import ConfigParser
-from shutil import copy2
+from shutil import copy2,SameFileError
 from geopy.distance import vincenty
 #from numpy import arange, fromstring
 #%%
@@ -56,11 +56,17 @@ def userinput(ini=None,outdir=None):
      'cmd': ' '.join(argv),
     }
 
-    if not P['ini'].suffix:
-        P['ini'] = P['ini'].with_suffix('.ini')
 
-    if not p.outdir:
+    if not p.load and not p.outdir:
         p.outdir = mkdtemp(prefix=P['ini'].stem,dir='out')
+
+    if p.load and not p.outdir:
+        if P['ini'].is_file():
+            p.outdir = P['ini'].parent
+        elif P['ini'].is_dir():
+            p.outdir = P['ini']
+        else:
+            raise FileNotFoundError('nothing found at {}'.format(P['ini']))
 
     P['outdir'] = Path(p.outdir).expanduser()
 
@@ -82,7 +88,10 @@ def userinput(ini=None,outdir=None):
 
 def getParams(P):
     if P['outdir'] is not None:
-        copy2(str(P['ini']),str(P['outdir']))
+        try:
+            copy2(str(P['ini']),str(P['outdir']))
+        except SameFileError: # loading the result
+            pass
 #%% read .ini
     try:
         # note python2 only allows ';' inline comments, can't be changed in python2(?)
