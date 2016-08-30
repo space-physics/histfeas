@@ -5,7 +5,6 @@ To generate inputs for this program, run main_hist.py with
 option
 """
 from __future__ import division
-from . import Path
 import h5py
 from numpy import asarray,diff
 from matplotlib.pyplot import show,close
@@ -60,8 +59,8 @@ def readresults(h5list, P):
 
             except KeyError as e:
                 raise KeyError('It seems that data inversion did not complete? Or at least it was not written  {}'.format(e))
-#%%
 
+#%% read sim parameters
     odir = h5.parent / 'reader'
     print('writing output to {}'.format(odir))
     odir.mkdir(parents=True,exist_ok=True)
@@ -70,7 +69,11 @@ def readresults(h5list, P):
         Phifwd = asarray(Phifwd).transpose(1,2,0) #result: Nenergy x Nx x Ntime
 
     arc,sim,cam,Fwd,P = getParams(P)
-    cam = definecamind(cam)
+#%% load L
+    with h5py.File(str(sim.FwdLfn),'r', libver='latest') as f:
+        Lfwd = f['L'].value
+
+    cam = definecamind(cam,Lfwd)
 #%% load original angles of camera
     ut1_unix = asarray(ut1_unix)
     for i,C in enumerate(cam):
@@ -114,26 +117,24 @@ def readresults(h5list, P):
 
     return Phifwd, Phidict
 
-def findxlsh5(h5path):
-    h5path = Path(h5path).expanduser()
+def findxlsh5(P):
 
-    if h5path.is_file():
-        h5list = [h5path]
-        inifn = sorted(h5path.parent.glob('*.ini'))
-    elif h5path.is_dir():
-        h5list = sorted(h5path.glob('dump*.h5'))
-        inifn =  sorted(h5path.glob('*.ini'))
+    if P['outdir'].is_file():
+        flist = [P['outdir']]
+        inifn = sorted(P['outdir'].parent.glob('*.ini'))
+    elif P['outdir'].is_dir():
+        flist = sorted(P['outdir'].glob('dump*.h5'))
+        inifn =  sorted(P['outdir'].glob('*.ini'))
     else:
-        raise FileNotFoundError('no path or file at {}'.format(h5path))
+        raise FileNotFoundError('no path or file at {}'.format(P['outdir']))
 
     if not inifn:
-        raise FileNotFoundError('no simulation ini found in {}'.format(h5path))
+        raise FileNotFoundError('no simulation ini found in {}'.format(P['outdir']))
 
-    inifn = inifn[0]
+    if P['ini'].is_dir():
+        P['ini'] = inifn[0]
 
-
-
-    return h5list,inifn
+    return flist,P
 
 if __name__ == '__main__':
     from argparse import ArgumentParser

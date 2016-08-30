@@ -42,7 +42,7 @@ if __name__ == '__main__':
     if not P['load']:
         hist_figure(P)
 #%% find result HDF5
-    h5list,_ = findxlsh5(P['outdir'])
+    h5list,P = findxlsh5(P)
 #%% load result
     Phi0,Phifit = readresults(h5list,P)
 #%% check vs known result
