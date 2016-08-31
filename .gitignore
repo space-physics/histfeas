@@ -1,4 +1,5 @@
-Plots/*.png
+*.png
+*.gif
 *.kml
 *.pov-state
 povray/*.png
