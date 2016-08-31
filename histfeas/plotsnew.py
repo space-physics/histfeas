@@ -109,7 +109,6 @@ def goPlot(sim,Fwd,cam,Lfwd,Tm,drn,dhat,ver,vfit,Peig,Phi0, Phifit,rawdata,tInd,
 
     if 'singleraw' in makeplot and rawdata is not None:
         plotPlainImg(sim,cam,rawdata,tInd,P['outdir'])
-
 #%% scatter plot of LOS
     if 'kml' in makeplot or 'kmlrays' in makeplot:
         planviewkml(cam,xKM,zKM,P,5289)
