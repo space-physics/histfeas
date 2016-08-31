@@ -2,7 +2,7 @@
 import logging
 from six import integer_types
 from numpy import (empty,empty_like,isnan,sin,cos,radians,append,diff,ones,outer,
-                   unique,ndarray,int64)
+                   unique,ndarray,int64,int32)
 import numpy as np #need this here
 from scipy.sparse import csc_matrix
 import h5py
@@ -241,8 +241,11 @@ def definecamind(cam,L):
             """
             i*ncutpix + unique() is needed since we can't compute in advance (uneven numbers of hits)
             """
-            C.Lind  = ind2slice(i*C.ncutpix + unique(L[C.ind,:].nonzero()[0])) # for braw, best
-            C.Lcind = ind2slice(              unique(L[C.ind,:].nonzero()[0])) # for this camera angle_deg
+            Lcind = unique(L[C.ind,:].nonzero()[0])
+            C.Lcind = ind2slice(              Lcind) # for this camera angle_deg
+
+            C.Lind  = ind2slice(i*C.ncutpix + Lcind) # for braw, best
+
             i+=1
 
     return cam
@@ -252,7 +255,7 @@ def ind2slice(ind):
     converts list of SEQUENTIAL integers to slice. for indexing speed gains.
     """
     assert isinstance(ind,(tuple,list,ndarray)),'what else would you like to slice by?'
-    assert isinstance(ind[0],(integer_types,int64)),'only integers are permissable for indexing'
+    assert isinstance(ind[0],(integer_types,int32,int64)),'only integers are permissable for indexing'  #numpy.nonzero outputs int32 sometmies even on Linux Py3.5
     assert (diff(ind)==1).all(),'only sequential integers for now. Other uniform steps are possible with slight modification'
 
     return slice(ind[0],ind[-1])
