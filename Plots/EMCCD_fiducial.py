@@ -3,6 +3,7 @@
 creates EMCCD fiducials for TGARS 2015 Reconstruction of fine scale auroral Dyanmics paper figure
 """
 from numpy import array,rot90
+from scipy.ndimage import imread
 from matplotlib.pyplot import show
 #
 from histfeas import Path
