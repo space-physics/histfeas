@@ -22,7 +22,7 @@ def pngsmash(rdir,impat,fpat,outfn):
     ilist = sorted(rdir.glob(impat))
     flist = sorted(rdir.glob(fpat))
 
-    assert len(ilist)==len(flist), 'unequal {} and fglob {} lengths: {}  {}'.format(ilist,flist,len(ilist),len(flist))
+    assert len(ilist)==len(flist), 'unequal len() {} & {}    {} != {}'.format(ilist,flist,len(ilist),len(flist))
 
     with Image() as anim:
         for i,f in zip(ilist,flist):

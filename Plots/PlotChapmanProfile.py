@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 """
 simple plot of Chapman profile
 Michael Hirsch

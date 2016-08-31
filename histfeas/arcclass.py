@@ -61,7 +61,7 @@ def getver(x,z,Mp,Phi0, w,h,x0,z0,xshape,zshape,pmax):
 
 def ChapmanArc(Wkm,H,X0,Z0,xKM,zKM,xshape, PC0=1):
     # chapman vert
-    pz = PC0 * chapman_profile(Z0,zKM)
+    pz = PC0 * chapman_profile(Z0,zKM,H)
     # horizontal model
     px = getpx(xKM,Wkm,X0,xshape)
     # 2D model output
