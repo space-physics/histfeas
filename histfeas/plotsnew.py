@@ -244,12 +244,13 @@ def plotfwd(sim,cam,drn,xKM,xp,zKM,zp, ver,Phi0,fitp,tInd,  P,doSubplots=True):
     T = tind2dt(cam,tInd)
 
     if doSubplots:
-        ttxt = T + "\n x_cam {}   {}".format(getcamx(cam),P['gitrev'])
+        ttxt = T + "\n x_cam {}".format(getcamx(cam))
         fg,axs = subplots(nrow,ncol,figsize=(ncol*7.5,nrow*7.5))
         axs = atleast_2d(axs)
 
         fg.suptitle(ttxt) #FIXME here we just use the fastest camera, cam 0 apriori
         fg.subplots_adjust(top=0.9) # FIXME http://matplotlib.org/faq/howto_faq.html
+        fg.text(1.,1.,'git: '+P['gitrev'],ha='right',va='top',rotation='vertical')
     else:
         axs = array([(None,)*nrow,(None,)*ncol])
 
@@ -292,12 +293,13 @@ def plotoptim(sim,cam,drn,dhat,bcomptxt,ver,Phi0,vfit,Phifit,xKM,xp,zKM,zp,tInd,
         vfit = vfit['optim']
 
     if doSubplots:
-        ttxt = T + "\n x_cam {}   {}".format(getcamx(cam),P['gitrev'])
+        ttxt = T + "\n x_cam {}".format(getcamx(cam))
         fg,axs = subplots(nrow,3,figsize=(21,nrow*7.5))
         axs = atleast_2d(axs)
 
         fg.suptitle(ttxt) #FIXME here we just use the fastest camera, cam 0 apriori
-        fg.subplots_adjust(top=0.95) # FIXME http://matplotlib.org/faq/howto_faq.html
+        #fg.subplots_adjust(top=0.95) # FIXME http://matplotlib.org/faq/howto_faq.html
+        fg.text(1.,1.,'git: '+P['gitrev'],ha='right',va='top',rotation='vertical')
     else:
         axs = array([(None,)*3,(None,)*3])
 
@@ -329,6 +331,7 @@ def plotoptim(sim,cam,drn,dhat,bcomptxt,ver,Phi0,vfit,Phifit,xKM,xp,zKM,zp,tInd,
             axs[1,2].axis('off') #FIXME a bit case dependent
         except IndexError:
             pass
+        fg.tight_layout(rect=(0,0,1,0.95))
         writeplots(fg,'est',T,P['outdir'])
 
 def getcamx(cam):
@@ -709,10 +712,9 @@ def plotVER(sim,ver,x,xp,z,zp,T,P,prefix='',titletxt='',ax=None):
             ax.set_ylabel('$B_\parallel$ [km]')
 
             ax.set_xlim(P['vlim']['x'])
+            #print(P['vlim']['z'])
             ax.set_ylim(P['vlim']['z'])
             ax.set_title(titletxt)
-
-
 
             writeplots(fg,prefix+p,T,P['outdir'])
     else:
