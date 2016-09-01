@@ -61,10 +61,6 @@ def readresults(h5list, P):
                 raise KeyError('It seems that data inversion did not complete? Or at least it was not written  {}'.format(e))
 
 #%% read sim parameters
-    odir = h5.parent / 'reader'
-    print('writing output to {}'.format(odir))
-    odir.mkdir(parents=True,exist_ok=True)
-
     if Phifwd: #sim data
         Phifwd = asarray(Phifwd).transpose(1,2,0) #result: Nenergy x Nx x Ntime
 
@@ -97,23 +93,24 @@ def readresults(h5list, P):
         analyseres(sim,cam, x, xp, Phifwd, Phidict, drn, dhat,P, x0true,E0true)
 
 #%% plots
-    for i in range(len(drn)): #for each time, do...
-        try: #simulation
-            pf = Pfwd[i]
-            phif = Phifwd[...,i]
-        except IndexError: #realdata
-            pf = None;  phif = None
+    if P['load']:
+        for i in range(len(drn)): #for each time, do...
+            try: #simulation
+                pf = Pfwd[i]
+                phif = Phifwd[...,i]
+            except IndexError: #realdata
+                pf = None;  phif = None
 
-        if 'fwd' in P['makeplot']:
-            plotfwd(sim,cam,drn[i],x,xp,z,zp, pf,phif,Phidict[i],i,P,doSubplots=True)
+            if 'fwd' in P['makeplot']:
+                plotfwd(sim,cam,drn[i],x,xp,z,zp, pf,phif,Phidict[i],i,P,doSubplots=True)
 
-        if 'optim' in P['makeplot']:
-            plotoptim(sim,cam,drn[i],dhat[i],'best',pf,phif, Pest[i],Phidict[i],x,xp,z,zp,i,P,doSubplots=True)
+            if 'optim' in P['makeplot']:
+                plotoptim(sim,cam,drn[i],dhat[i],'best',pf,phif, Pest[i],Phidict[i],x,xp,z,zp,i,P,doSubplots=True)
 
-        if 'show' in P['makeplot']:
-            show()
-        else:
-            close('all')
+            if 'show' in P['makeplot']:
+                show()
+            else:
+                close('all')
 
     return Phifwd, Phidict
 

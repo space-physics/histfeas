@@ -1,3 +1,4 @@
+import subprocess,os
 import matplotlib
 matplotlib.use('Agg')
 print(matplotlib.get_backend())
@@ -54,13 +55,14 @@ def userinput(ini=None,outdir=None):
      'verbose':p.verbose,
      'overrides': {},
      'cmd': ' '.join(argv),
+     'gitrev': subprocess.check_output(['git','rev-parse','--short','HEAD']).decode('utf8').strip('\n')
     }
 
-
+#%% directory handling
     if not p.load and not p.outdir:
         p.outdir = mkdtemp(prefix=P['ini'].stem,dir='out')
 
-    if p.load and not p.outdir:
+    if P['load'] and not p.outdir:
         if P['ini'].is_file():
             p.outdir = P['ini'].parent
         elif P['ini'].is_dir():
@@ -69,8 +71,8 @@ def userinput(ini=None,outdir=None):
             raise FileNotFoundError('nothing found at {}'.format(P['ini']))
 
     P['outdir'] = Path(p.outdir).expanduser()
-
-
+    P['outdir'].mkdir(parents=True,exist_ok=True)
+#%%
     P['overrides']['rootdir'] = Path(__file__).parents[1]
 #%%
     if p.frames is None or len(p.frames) not in (2,3):
@@ -87,11 +89,16 @@ def userinput(ini=None,outdir=None):
 
 
 def getParams(P):
-    if P['outdir'] is not None:
-        try:
-            copy2(str(P['ini']),str(P['outdir']))
-        except SameFileError: # loading the result
+#%% first copy .ini file readonly to output dir for future reference
+    if P['outdir'] is not None and not P['load']:  #running new simulation
+        try: # so we can overwrite existing file when user wants to reuse output directory
+            os.chmod(str(P['outdir']/P['ini'].name), 0o644)
+        except FileNotFoundError:
             pass
+
+        copy2(str(P['ini']),str(P['outdir']))
+      # make the copied-to-output-directory .ini file readonly to help avoid mistakes when loading and replotting
+        os.chmod(str(P['outdir']/P['ini'].name), 0o444)
 #%% read .ini
     try:
         # note python2 only allows ';' inline comments, can't be changed in python2(?)
@@ -175,12 +182,13 @@ def plotstuffer(sp,P):
     """
     these have no impact on simulation calculations, they are just plotting bounds
     """
+    P['x1d'] = splitconf(sp,'x1d')
+
     if 'vlim' not in P:
         P['vlim'] = {}
-
-    P['x1d'] = splitconf(sp,'x1d')
 
     for p in ('p','p1d','j','j1d','b','x','z'):
         P['vlim'][p] = splitconf(sp,p,fallback=(None,None))
 
+    #print(P['vlim'])
     return P
