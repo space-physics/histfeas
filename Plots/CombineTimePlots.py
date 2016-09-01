@@ -12,12 +12,21 @@ a good way to combine two figures into one, even by grabbing axes.
 
 Recommendation was to do this--create PNGs and smash together in post-processing.
 """
-from histfeas import Path
+from pathlib import Path
 from wand.image import Image
+from tempfile import NamedTemporaryFile
+import subprocess
+#from wand.exceptions import WandError
 #from wand.display import display
+
+MINHEIGHT = 500  # each element of canvas will be scaled up to at least this height--avoids widely disparate image sizes
 
 def pngsmash(rdir,impat,fpat,outfn):
     rdir = Path(rdir).expanduser()
+    outfn = Path(outfn).expanduser()
+
+    if not outfn.suffix:
+        raise ValueError('you must specify a suffix e.g.  .gif to the output filename so that Wand knows what format to write')
 
     ilist = sorted(rdir.glob(impat))
     flist = sorted(rdir.glob(fpat))
@@ -26,14 +35,29 @@ def pngsmash(rdir,impat,fpat,outfn):
 
     with Image() as anim:
         for i,f in zip(ilist,flist):
-           with Image(filename=str(i)) as I, Image(filename=str(f)) as F, Image() as J:
-               J.blank(max(I.width,F.width), I.height + F.height)
-               J.composite(F,0,0)
-               J.composite(I,0,F.height)
-               anim.sequence.append(J)
+            with Image(filename=str(i)) as I, Image(filename=str(f)) as F, Image() as J:
+#%% enforce minimum height (aspect-preserving scale increase if needed)
+                for im in (I,F):
+                    if im.height<MINHEIGHT:
+                        im.transform(resize='x' + str(MINHEIGHT))
+#%% compose composite canvas
+                J.blank(max(I.width,F.width), I.height + F.height)  # blank canvas on which to place images
+                J.composite(F,0,0)        # add data to canvas
+                J.composite(I,0,F.height) # add video frame to canvas
+                anim.sequence.append(J)
 
-        print('writing {}'.format(outfn))
-        anim.save(filename=outfn)
+        if outfn.suffix=='.gif':
+            print('writing {}'.format(outfn))
+            anim.save(filename=str(outfn))
+        elif outfn.suffix in ('.avi','.mp4','.ogv','.webm'):
+            with NamedTemporaryFile(suffix='.gif') as f:  # forcing .gif temp since it's what Wand can handle
+                print('using tempfile {}'.format(f.name))
+                anim.save(filename=f.name) #the handle didn't work for some reason
+                print('writing {}'.format(outfn))
+                # NOTE: -c:v ffv
+                subprocess.call(['ffmpeg','-i',f.name,'-c:v','ffv1',str(outfn)])
+
+
 
 if __name__ == '__main__':
     from argparse import ArgumentParser
