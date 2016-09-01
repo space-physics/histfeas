@@ -14,6 +14,7 @@ python main_hist.py in/2cam_trans.xlsx /dev/shm/rev_trans2/ -m fwd png --vlim -0
 """
 import logging
 from sys import argv
+import subprocess
 from numpy import absolute,zeros,outer
 from numpy.random import normal
 from time import time
@@ -39,6 +40,7 @@ def doSim(P):
     P['outdir'].mkdir(parents=True,exist_ok=True)
 
     (P['outdir']/'cmd.log').write_text(' '.join(argv)) #store command for future log
+    P['gitrev'] = subprocess.check_output(['git','rev-parse','--short','HEAD']).decode('utf8').strip('\n')
 
 #%% Step 0) load data
     arc,sim,cam,Fwd,P = getParams(P)
