@@ -63,14 +63,14 @@ def EllLineLength(Fwd,xFOVpixelEnds,zFOVpixelEnds,allCamXkm,allCamZkm,Np,sim,mak
     logging.debug('zpc: {}'.format(zpc))
 
     xzplot = None
-#%% do the big computation    
+#%% do the big computation
     L = goCalcEll(maxNell,nCam,Np,sz,sx,xpc,zpc,xFOVpixelEnds,zFOVpixelEnds,allCamXkm,allCamZkm)
 #%% write results to HDF5 file
     doSaveEll(L,Fwd,sim,xFOVpixelEnds,zFOVpixelEnds)
 #%% optional plot
     plotEll(nCam,xFOVpixelEnds,zFOVpixelEnds,allCamXkm,allCamZkm,Np,xpc,zpc,
                 sz,sx,xzplot,sim.FwdLfn,plotEachRay,makeplot,(None,)*6)
-#%% to CSC sparse, if built as DOK sparse                
+#%% to CSC sparse, if built as DOK sparse
     if issparse(L):
         L = L.tocsc()
     return L
@@ -92,7 +92,7 @@ def goCalcEll(maxNell,nCam,Np,sz,sx,xpc,zpc,xFOVpixelEnds,zFOVpixelEnds,xCam,zCa
     L = loopEll(Np,sz,sx,xpc,zpc,xFOVpixelEnds,zFOVpixelEnds,
                              xCam,zCam,nCam, L,Lcol,tmpEll,xzplot) #numba
 
-    if usesparse:
+    if SPARSE:
         return L.tocsc()
     else:
         return L
@@ -103,7 +103,7 @@ def loopEll(Np,sz,sx,xpc,zpc,xFOVpixelEnds,zFOVpixelEnds, xCam,zCam,nCam,L,Lcol,
     #FIXME assumes all cameras have same # of pixels
     inttot = 0
 
-    ''' 
+    '''
     We MUST have all cameras enabled for this computation (as verified in observeVolume)
     '''
 #    try:

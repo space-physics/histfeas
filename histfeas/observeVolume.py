@@ -122,9 +122,8 @@ def makeCamFOVpixelEnds(Fwd,sim,cam,P):
     tic = time()
     #used .values for future use of Numba
     L = EllLineLength(Fwd,xFOVpixelEnds,zFOVpixelEnds,
-                      [c.x_km for c in cam if c.usecam],
-                      [c.alt_m/1000. for c in cam if c.usecam],
-                      nCutPix,sim,P['makeplot'],P['verbose'])
+                      [c.x_km for c in cam if c.usecam], [c.alt_m/1000. for c in cam if c.usecam],
+                      nCutPix, sim, P['makeplot'])
     print('computed L in {:0.1f}'.format(time()-tic) + ' seconds.')
     return L,Fwd,cam
 #%%
