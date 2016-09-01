@@ -244,7 +244,7 @@ def plotfwd(sim,cam,drn,xKM,xp,zKM,zp, ver,Phi0,fitp,tInd,  P,doSubplots=True):
     T = tind2dt(cam,tInd)
 
     if doSubplots:
-        ttxt = T + "\n x_cam " + str(['{:.2f}'.format(c.x_km) for c in cam if c.usecam])
+        ttxt = T + "\n x_cam {}   {}".format(getcamx(cam),P['gitrev'])
         fg,axs = subplots(nrow,ncol,figsize=(ncol*7.5,nrow*7.5))
         axs = atleast_2d(axs)
 
@@ -292,7 +292,7 @@ def plotoptim(sim,cam,drn,dhat,bcomptxt,ver,Phi0,vfit,Phifit,xKM,xp,zKM,zp,tInd,
         vfit = vfit['optim']
 
     if doSubplots:
-        ttxt = T + "\n x_cam " + str(['{:.2f}'.format(c.x_km) for c in cam if c.usecam])
+        ttxt = T + "\n x_cam {}   {}".format(getcamx(cam),P['gitrev'])
         fg,axs = subplots(nrow,3,figsize=(21,nrow*7.5))
         axs = atleast_2d(axs)
 
@@ -331,7 +331,14 @@ def plotoptim(sim,cam,drn,dhat,bcomptxt,ver,Phi0,vfit,Phifit,xKM,xp,zKM,zp,tInd,
             pass
         writeplots(fg,'est',T,P['outdir'])
 
-#%% ############################################################################
+def getcamx(cam):
+    """
+    convenience function
+    returns all camera x position in km as list of formatted string
+    """
+    return ['{:.2f}'.format(c.x_km) for c in cam if c.usecam]
+
+#%%
 def plotnoise(cam,T,P,prefix):
     assert isinstance(P,dict)
     fg = figure()
