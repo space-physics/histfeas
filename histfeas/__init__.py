@@ -14,7 +14,7 @@ from argparse import ArgumentParser
 from sys import argv
 import logging
 from six.moves.configparser import ConfigParser
-from shutil import copy2,SameFileError
+from shutil import copy2
 from geopy.distance import vincenty
 #from numpy import arange, fromstring
 #%%
