@@ -121,15 +121,12 @@ class Sim:
         self.transcarconfig = sp['transcar']['simconfig']
 
         self.minflux= sp.getfloat('recon','minflux',fallback=0.)
-
-        self.reacreq = ()
-        if sp.getboolean('transcar','metastable',fallback=None): self.reacreq += 'metastable',
-        if sp.getboolean('transcar','atomic',fallback=None): self.reacreq += 'atomic',
-        if sp.getboolean('transcar','N21NG',fallback=None): self.reacreq += 'n21ng',
-        if sp.getboolean('transcar','N2meinel',fallback=None): self.reacreq += 'n2meinel',
-        if sp.getboolean('transcar','N22PG',fallback=None): self.reacreq += 'n22pg',
-        if sp.getboolean('transcar','N21PG',fallback=None): self.reacreq += 'n21pg',
-
+#%% reactions
+        self.reacreq = []
+        for r in ('metastable','atomic','n21ng','n2meinel','n22pg','n21pg'):
+            if sp.getboolean('transcar',r,fallback=None):
+                self.reacreq.append(r)
+#%%
         self.realdata = sp.getboolean('sim','realdata',fallback=None)
         if self.realdata:
             self.realdatapath = Path(sp['cams']['ActualDataDir']).expanduser()

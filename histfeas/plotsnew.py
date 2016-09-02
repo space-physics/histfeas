@@ -250,7 +250,7 @@ def plotfwd(sim,cam,drn,xKM,xp,zKM,zp, ver,Phi0,fitp,tInd,  P,doSubplots=True):
 
         fg.suptitle(ttxt) #FIXME here we just use the fastest camera, cam 0 apriori
         fg.subplots_adjust(top=0.9) # FIXME http://matplotlib.org/faq/howto_faq.html
-        fg.text(1.,1.,'git: '+P['gitrev'],ha='right',va='top',rotation='vertical')
+        fg.text(1.,1., plotstamp(sim,P), ha='right',va='top',rotation='vertical',size='small')
     else:
         axs = array([(None,)*nrow,(None,)*ncol])
 
@@ -277,7 +277,12 @@ def plotfwd(sim,cam,drn,xKM,xp,zKM,zp, ver,Phi0,fitp,tInd,  P,doSubplots=True):
 
     if doSubplots:
         writeplots(fg,'fwd',T,P['outdir'])
-#%%
+
+def plotstamp(sim,P):
+    return '{} iterations: {}   git: {}'.format(sim.optimfitmeth,
+                                                sim.optimmaxiter,
+                                                P['gitrev'])
+
 def plotoptim(sim,cam,drn,dhat,bcomptxt,ver,Phi0,vfit,Phifit,xKM,xp,zKM,zp,tInd,P, doSubplots=True):
     assert isinstance(P,dict)
     Jxi = indone1d(xKM,P,tInd)
@@ -299,7 +304,7 @@ def plotoptim(sim,cam,drn,dhat,bcomptxt,ver,Phi0,vfit,Phifit,xKM,xp,zKM,zp,tInd,
 
         fg.suptitle(ttxt) #FIXME here we just use the fastest camera, cam 0 apriori
         #fg.subplots_adjust(top=0.95) # FIXME http://matplotlib.org/faq/howto_faq.html
-        fg.text(1.,1.,'git: '+P['gitrev'],ha='right',va='top',rotation='vertical')
+        fg.text(1.,1., plotstamp(sim,P), ha='right',va='top',rotation='vertical')
     else:
         axs = array([(None,)*3,(None,)*3])
 
