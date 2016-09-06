@@ -98,7 +98,7 @@ both.playFrames = true; %playback data like movie
 %-----------------------
 both.doFeatureTrack = false; %not yet working
 %---------------------
-both.manualPeaks = false; % you manually click the pairs of points--cool!
+both.manualPeaks = true; % you manually click the pairs of points--cool!
 both.plotClickLive = false; % make windows showing LLA results of target as you click
 both.doWriteManualPeaksPNG = false; %make a PNG showing where you clicked superimposed on the image
 both.ManualPeakspngDir = 'out';
