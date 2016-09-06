@@ -14,13 +14,13 @@ switch event.Key
     case {'leftarrow','downarrow'},   t = t-1; 
     case 'pagedown',    t = t-1/cam1.kineticSec;
     case 'pageup',      t=t+1/cam1.kineticSec;
-    case anyMovingKey, %if exists, update clicked cursor data
+    case anyMovingKey %if exists, update clicked cursor data
         if both.manualPeaks
         set(cam1.hmPk,'xdata',HST1pix(t,1),'ydata',HST1pix(t,2)) %update cursor location
         set(cam2.hmPk,'xdata',HST2pix(t,1),'ydata',HST2pix(t,2)) %update cursor location
         end
     case {'x','q','escape'}, close(hFig), return
-    case '',           %t=t+1; %first run, handles t-1 of doFeatureTrack
+    case ''          %t=t+1; %first run, handles t-1 of doFeatureTrack
          if both.fbok, decay440(), end
     case 'space', manualPeaks(cam1,cam2,both,t,hFig)
     otherwise, return
@@ -94,7 +94,7 @@ Targout = getappdata(hFig,'Targout'); %target data
 TargAlt = getappdata(hFig,'TargAlt'); % estimated Target altitude [m]
 
             axes(cam1.pbAx) %set current axis to HST1
-            display('Click in left HST1 pane, or press <Enter> to reuse existing point')
+            disp('Click in left HST1 pane, or press <Enter> to reuse existing point')
             if both.fbok, singSine(1200), end
             [cam1.newCursX,cam1.newCursY] = ginput(1);
             if ~isempty(cam1.newCursX) && gca == cam1.pbAx %user clicked new point in correct axes
