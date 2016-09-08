@@ -18,7 +18,8 @@ from shutil import copy2
 from geopy.distance import vincenty
 #from numpy import arange, fromstring
 #%%
-from histutils.camclass import Cam,splitconf
+from histutils.camclass import Cam
+from histutils import splitconf
 from .simclass import Sim
 from .arcclass import Arc,getntimes
 #%%
@@ -120,7 +121,7 @@ def getParams(P):
 #%% grid setup
     Fwd = sim.setupFwdXZ(xl)
 #%% setup cameras
-    cam = setupCam(sim,xl['cam'],Fwd['z'][-1],P['makeplot'])
+    cam = setupCam(sim,xl['cam'],Fwd['z'][-1],P)
 
     if sim.realdata:
         #find the x-coordinate (along B-perp) of each camera (can't do this inside camclass.py)
@@ -163,16 +164,16 @@ def setupArc(xl):
 
     return arc, ntimeslice
 
-def setupCam(sim,cp,zmax,makeplot):
+def setupCam(sim,cp,zmax,P):
     cam = []
 
     if sim.camxreq[0] is not None:
         logging.warning('overriding camera x-loc with {}'.format(sim.camxreq))
         for C,cx in zip(sim.camnames,sim.camxreq): #enumerate as in general camera 0 may not be used
-            cam.append(Cam(sim, cp, C, zmax,makeplot))
+            cam.append(Cam(sim, cp, C, zmax, P['makeplot'], verbose=P['verbose']))
     else:
         for C in sim.camnames:
-            cam.append(Cam(sim, cp, C, zmax,makeplot))
+            cam.append(Cam(sim, cp, C, zmax, P['makeplot'], verbose=P['verbose']))
 
     assert len(cam)>0,'0 cams are configured, Nothing to do.'
 

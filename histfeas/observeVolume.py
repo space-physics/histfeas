@@ -24,7 +24,8 @@ def getObs(sim,cam,L,tDataInd,ver):
     if sim.realdata:
         bn = empty(nCutPix * sim.nCamUsed,dtype=float,order='F') #FIXME assumes all cuts same length AND that cam 0 is used
         for C in cam:
-            if not C.usecam: continue
+            if not C.usecam:
+                continue
             """
              remember that we put "d" in lexigraphical form,
              "d" is a column-major vector, such that if our 1D cut is N pixels,
