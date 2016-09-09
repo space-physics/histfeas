@@ -3,7 +3,7 @@ import logging
 from geopy.distance import vincenty as vdist
 from matplotlib.pyplot import figure,clf
 #
-from pymap3d.coordconv3d import aer2geodetic#, aer2ecef
+from pymap3d import aer2geodetic
 
 def planviewkml(cam,xKM,zKM,makeplot,figh,odir):
     """
