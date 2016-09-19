@@ -183,7 +183,15 @@ to the simulation (for real data, we don't have this)
 
 ``bfwd`` and ``best`` camera optical intensity due to simulated / estimated flux respectively
 
-Our IEEE TGARS article (in review) details the math and algorithm.
+Our IEEE TGARS article (Dec 2015) details the math and algorithm.
+
+Parallel Processing
+===================
+The program processes all time steps serially into a single output directory. 
+Other parameters including: simulated camera location, inversion method, and inversion iteration are iterated externally to the HiST program.
+You can use GNU Parallel, or more simply, the methods show in `Examples/` using pure Python parallelism. 
+They will run in parallel on a PC or high performance computing cluster, outputting to uniquely named directories.
+The results are collected and analyzed by the same scripts.
 
 Variables
 =========
