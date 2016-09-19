@@ -36,15 +36,13 @@ class Sim:
                 assert np.all(where(self.useCamBool)[0] == usecamreq) #not .all() in case of different length
         except (TypeError,KeyError):
             pass #normal case
-#%% camera position override check (work done in sanityCheck.setupCam)
-        try:
-            self.camxreq = P['overrides']['camx']
-            if self.camxreq[0] and len(self.camxreq) != self.nCamUsed:
-                raise ValueError('must specify same number of x-loc and used cameras')
-        except (TypeError,KeyError): #cam override not specified
-            self.camxreq = [None]
-#%%
+
         self.nCamUsed = self.useCamBool.sum() #result is an int
+#%% camera position override check (work done in sanityCheck.setupCam)
+        self.camxreq = P['overrides']['camx']
+        if self.camxreq is not None:
+            assert len(self.camxreq) == self.nCamUsed, 'must specify same number of x-loc and used cameras'
+        #%%
 
         nCutPix = fromstring(sp['cam']['nCutPix'],dtype=int,sep=',') #FIXME someday allow different # of pixels..
         assert (nCutPix[self.useCamBool] == nCutPix[self.useCamBool][0]).all(),'all cameras must have same 1D cut length'
