@@ -34,7 +34,10 @@ def userinput(ini=None,outdir=None):
     p = ArgumentParser(description='flaming figure plotter')
     p.add_argument('ini',help='.ini config file',nargs='?',default=ini)
     p.add_argument('outdir',help='output directory',nargs='?',default = outdir)
+
     p.add_argument('-g','--fwdguess',help='feed minimizer fwd answer. true | randn stddev |',nargs='+')
+    p.add_argument('--cx',help='override cam positions (must specify all)',nargs='+',type=float)
+
     p.add_argument('--load',help='load without recomputing',action='store_true')
     p.add_argument('-m','--makeplot',help='plots to make',default=['realvid','optim','png'],nargs='+')
     p.add_argument('-L','--ell',help='compute projection matrix',action='store_true')
@@ -76,8 +79,9 @@ def userinput(ini=None,outdir=None):
     P['outdir'].mkdir(parents=True,exist_ok=True)
 #%%
     P['overrides']['rootdir'] = Path(__file__).parents[1]
-    
+
     P['overrides']['fwdguess'] = p.fwdguess
+    P['overrides']['camx'] = p.cx
 #%%
     if p.frames is None or len(p.frames) not in (2,3):
         itime = p.frames
@@ -170,15 +174,17 @@ def setupArc(xl):
 def setupCam(sim,cp,zmax,P):
     cam = []
 
-    if sim.camxreq[0] is not None:
+    if sim.camxreq is not None:
         logging.warning('overriding camera x-loc with {}'.format(sim.camxreq))
         for C,cx in zip(sim.camnames,sim.camxreq): #enumerate as in general camera 0 may not be used
-            cam.append(Cam(sim, cp, C, zmax, P['makeplot'], verbose=P['verbose']))
+            cam.append(Cam(sim, cp, C, zmax, xreq=cx,
+                           makeplot=P['makeplot'], verbose=P['verbose']))
     else:
         for C in sim.camnames:
-            cam.append(Cam(sim, cp, C, zmax, P['makeplot'], verbose=P['verbose']))
+            cam.append(Cam(sim, cp, C, zmax,
+                           makeplot=P['makeplot'], verbose=P['verbose']))
 
-    assert len(cam)>0,'0 cams are configured, Nothing to do.'
+    assert len(cam)>0,'0 cameras are configured, Nothing to do.'
 
     return cam
 
