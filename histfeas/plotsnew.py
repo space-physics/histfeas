@@ -160,7 +160,7 @@ def goPlot(sim,Fwd,cam,Lfwd,Tm,drn,dhat,ver,vfit,Peig,Phi0, Phifit,rawdata,tInd,
                #'($x_0$,$E_0$)=(' +'{:0.2f}'.format(x0) + ',' + '{:0.0f}'.format(E0) + ') [km,eV]')
 #%% Forward model plots
     if not sim.realdata and ('fwd' in makeplot or 'optim' in makeplot):
-        plotnoise(cam,T,253,P,'bnoise')
+        plotnoise(cam,T,P,'bnoise')
 
     if 'fwd' in makeplot:
         plotfwd(sim,cam,drn,xKM,xp,zKM,zp, ver,Phi0, Phifit,tInd,P)
@@ -349,9 +349,9 @@ def getcamx(cam):
 #%%
 def plotnoise(cam,T,P,prefix):
     assert isinstance(P,dict)
-    fg = figure()
-    ax = fg.add_subplot(211)
-
+    fg,axs = subplots(2,1,sharex=True)
+    
+    ax=axs[0]
     for C in cam:
         if C.usecam:
            ax.plot(C.dnoise, label=C.name)
@@ -360,15 +360,16 @@ def plotnoise(cam,T,P,prefix):
            ax.grid(True)
     ax.legend(loc='best')
 
-    ax2 = fg.add_subplot(212)
+    ax = axs[1]
     for C in cam:
         if C.usecam:
-           ax2.plot(C.noisy, label=C.name)
-           ax2.set_ylabel('amplitude')
-           ax2.set_xlabel('pixel number')
-           ax2.set_title('Noisy data')
-           ax2.grid(True)
-    ax2.legend(loc='best')
+           ax.plot(C.noisy, label=C.name)
+           ax.set_ylabel('amplitude')
+           ax.set_xlabel('pixel number')
+           ax.set_title('Noisy data')
+           ax.grid(True)
+    ax.legend(loc='best')
+    ax.autoscale(True,'x',True)
 
     writeplots(fg,prefix,T,P['outdir'])
 
