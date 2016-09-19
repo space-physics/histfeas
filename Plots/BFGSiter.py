@@ -2,7 +2,6 @@
 from pathlib import Path
 from wand.image import Image
 
-
 def bfgsiterplot(plist,pfn,ofn):
     with Image() as anim:
         for p in plist:
@@ -13,8 +12,6 @@ def bfgsiterplot(plist,pfn,ofn):
         print('saving {}'.format(ofn))         
         anim.save(filename=str(ofn))
 
-
-
 def findplots(path,pat,pfn):
     path = Path(path).expanduser()
     plist = sorted(path.glob(pat+'*'))
@@ -23,7 +20,6 @@ def findplots(path,pat,pfn):
     print('{} files found in {}'.format(len(plist),path))
 
     return plist
-
 
 if __name__ == '__main__':
     path = '../out'
