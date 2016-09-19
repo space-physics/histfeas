@@ -37,6 +37,8 @@ def userinput(ini=None,outdir=None):
 
     p.add_argument('-g','--fwdguess',help='feed minimizer fwd answer. true | randn stddev |',nargs='+')
     p.add_argument('--cx',help='override cam positions (must specify all)',nargs='+',type=float)
+    p.add_argument('--iter',help='number of data inversion iterations',type=int)
+    p.add_argument('--fitm',help='fit method')
 
     p.add_argument('--load',help='load without recomputing',action='store_true')
     p.add_argument('-m','--makeplot',help='plots to make',default=['realvid','optim','png'],nargs='+')
@@ -82,6 +84,8 @@ def userinput(ini=None,outdir=None):
 
     P['overrides']['fwdguess'] = p.fwdguess
     P['overrides']['camx'] = p.cx
+    P['overrides']['fitm'] = p.fitm
+    P['overrides']['niter'] = p.iter
 #%%
     if p.frames is None or len(p.frames) not in (2,3):
         itime = p.frames
