@@ -354,20 +354,23 @@ def plotnoise(cam,T,P,prefix):
     ax=axs[0]
     for C in cam:
         if C.usecam:
-           ax.plot(C.dnoise, label=C.name)
-           ax.set_ylabel('amplitude')
-           ax.set_title('Noise that was injected into raw intensity data')
-           ax.grid(True)
+            if not hasattr(C,'dnoise'): #noiseless sim
+                return
+                
+            ax.plot(C.dnoise, label=C.name)
+            ax.set_ylabel('amplitude')
+            ax.set_title('Noise that was injected into raw intensity data')
+            ax.grid(True)
     ax.legend(loc='best')
 
     ax = axs[1]
     for C in cam:
         if C.usecam:
-           ax.plot(C.noisy, label=C.name)
-           ax.set_ylabel('amplitude')
-           ax.set_xlabel('pixel number')
-           ax.set_title('Noisy data')
-           ax.grid(True)
+            ax.plot(C.noisy, label=C.name)
+            ax.set_ylabel('amplitude')
+            ax.set_xlabel('pixel number')
+            ax.set_title('Noisy data')
+            ax.grid(True)
     ax.legend(loc='best')
     ax.autoscale(True,'x',True)
 
