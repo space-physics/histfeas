@@ -76,16 +76,16 @@ class Sim:
             self.minbeamev = sp.getfloat('transcar','minbeamev',fallback=0)
 
 #%% fit method
-        try:
-            self.optimfitmeth = P['overrides']['fitm']
-            logging.info('* setting fit method to {}'.format(P['overrides']['fitm']))
-        except (KeyError,TypeError):
+        self.optimfitmeth = P['overrides']['fitm']
+        if self.optimfitmeth is None:
             self.optimfitmeth = sp.get('recon','OptimFluxMethod',fallback='').lower()
 
-        self.optimmaxiter = sp.getint('recon','OptimMaxiter',fallback=None)
+        self.optimmaxiter = P['overrides']['niter']
+        if self.optimmaxiter is None:
+            self.optimmaxiter = sp.getint('recon','OptimMaxiter',fallback=None)
 #%% force compute ell
         try:
-            if P['overrides'] and P['overrides']['ell']:
+            if P['overrides']['ell']:
                 self.loadfwdL = False
             else:
                 self.loadfwdL = True
