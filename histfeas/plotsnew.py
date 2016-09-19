@@ -321,11 +321,19 @@ def plotoptim(sim,cam,drn,dhat,bcomptxt,ver,Phi0,vfit,Phifit,xKM,xp,zKM,zp,tInd,
     dumph5('phiest',T,P['outdir'],gx0=Phifit['gx0'],gE0=Phifit['gE0'])
 
     if Jxi is not None:
-        plotVER1D(sim,ver[:,Jxi],vfit[:,Jxi],zKM,T, P,'pest1d',
+        if ver is not None:
+            vfwd1d = ver[:,Jxi]
+        else:
+            vfwd1d = None
+        plotVER1D(sim,vfwd1d,vfit[:,Jxi],zKM,T, P,'pest1d',
                   '$\hat{{\mathbf{{P}}}}$ volume emission rate at $B_\perp$={:0.2f} [km]'.format(xKM[Jxi]),
                   axs[1,0])
 
-        plotJ1D(sim,Phi0[:,Jxi], Phifit['x'][:,Jxi], Phifit['EK'],T,P,'phiest1d',
+        if Phi0 is not None:
+            phifwd1d = Phi0[:,Jxi]
+        else:
+            phifwd1d = None
+        plotJ1D(sim,phifwd1d, Phifit['x'][:,Jxi], Phifit['EK'],T,P,'phiest1d',
         ('$\hat{{\phi}}_{{top}}$ diff. number flux at $B_\perp$={:0.2f} [km]'.format(xKM[Jxi])),axs[1,1])
 
 #http://stackoverflow.com/questions/10035446/how-can-i-make-a-blank-subplot-in-matplotlib
@@ -350,13 +358,13 @@ def getcamx(cam):
 def plotnoise(cam,T,P,prefix):
     assert isinstance(P,dict)
     fg,axs = subplots(2,1,sharex=True)
-    
+
     ax=axs[0]
     for C in cam:
         if C.usecam:
             if not hasattr(C,'dnoise'): #noiseless sim
                 return
-                
+
             ax.plot(C.dnoise, label=C.name)
             ax.set_ylabel('amplitude')
             ax.set_title('Noise that was injected into raw intensity data')
@@ -1087,6 +1095,9 @@ def dumph5(prefix,tInd,odir=None, **writevar): #used in other .py too
     logging.info('dumping {} to {}'.format(prefix, fn))
     with h5py.File(str(fn),'a',libver='latest') as H:
         for k,v in writevar.items():
+            if v is None:
+                continue
+
             K = '/{}/{}'.format(prefix,k)
             if K in H: #allow for overwriting with different sized array
                 del H[K]
