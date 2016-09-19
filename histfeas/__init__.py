@@ -34,6 +34,7 @@ def userinput(ini=None,outdir=None):
     p = ArgumentParser(description='flaming figure plotter')
     p.add_argument('ini',help='.ini config file',nargs='?',default=ini)
     p.add_argument('outdir',help='output directory',nargs='?',default = outdir)
+    p.add_argument('-g','--fwdguess',help='feed minimizer fwd answer. true | randn stddev |',nargs='+')
     p.add_argument('--load',help='load without recomputing',action='store_true')
     p.add_argument('-m','--makeplot',help='plots to make',default=['realvid','optim','png'],nargs='+')
     p.add_argument('-L','--ell',help='compute projection matrix',action='store_true')
@@ -75,6 +76,8 @@ def userinput(ini=None,outdir=None):
     P['outdir'].mkdir(parents=True,exist_ok=True)
 #%%
     P['overrides']['rootdir'] = Path(__file__).parents[1]
+    
+    P['overrides']['fwdguess'] = p.fwdguess
 #%%
     if p.frames is None or len(p.frames) not in (2,3):
         itime = p.frames
