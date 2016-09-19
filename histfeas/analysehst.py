@@ -32,18 +32,22 @@ def analyseres(sim,cam,x,xp,Phifwd,Phifit,drn,dhat,P,x0true=None,E0true=None):
 
 #%% back to work
     for i,jf in enumerate(Phifit):
+        if not Phifwd:
+            phif = None
+        else:
+            phif = Phifwd[...,i]
         #note even if array is F_CONTIGUOUS, argmax is C-order!!
-        gx0[i,:],gE0[i,:] = getx0E0(Phifwd[...,i], jf['x'], jf['EK'],x,9999,P)
+        gx0[i,:],gE0[i,:] = getx0E0(phif, jf['x'], jf['EK'],x,9999,P)
 
 
         print('t={} gaussian 2-D fits for (x,E):\n'
               ' Fwdtrue: {:.2f} {:.0f}\n'
-              ' Fwdfit: {:.2f} {:.0f}\n'
-              ' Optim: {:.2f} {:.0f}\n'.format(i, x0true[i], E0true[i],
+              ' Fwdfit:  {:.2f} {:.0f}\n'
+              ' Optim:   {:.2f} {:.0f}\n'.format(i, x0true[i], E0true[i],
                                                 gx0[i,0],  gE0[i,0],
                                                 gx0[i,1],  gE0[i,1]))
 
-        Eavgfwdx[i,:],Eavghatx[i,:] = avgcomp(Phifwd[...,i], jf['x'], jf['EK'],x,P)
+        Eavgfwdx[i,:],Eavghatx[i,:] = avgcomp(phif, jf['x'], jf['EK'],x,P)
 
 #%% overall error
     gx0err = gx0[:,1] - x0true #-gx0[:,0]
@@ -148,6 +152,9 @@ def plotgauss(x0true,gx0,gE0,gx0err,gE0err,P):
             f['/gE0/fwdfit']=gE0
 
 def avgcomp(Phifwd,Phifit,Ek,x,P):
+    if Phifwd is None:
+        return nan,nan
+
     nEnergy = Phifwd.shape[0]
 
     dE = empty(nEnergy)

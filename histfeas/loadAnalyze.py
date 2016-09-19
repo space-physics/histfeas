@@ -58,7 +58,7 @@ def readresults(h5list, P):
                     pass
 
             except KeyError as e:
-                raise KeyError('It seems that data inversion did not complete? Or at least it was not written  {}'.format(e))
+                raise KeyError('It seems that data inversion did not complete?\nOr at least it was not written\n  {}'.format(e))
 
 #%% read sim parameters
     if Phifwd: #sim data
