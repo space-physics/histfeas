@@ -8,3 +8,5 @@ pandas
 xarray
 matplotlib
 seaborn
+astropy
+# leave astropy in here for gaussfitter
