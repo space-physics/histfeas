@@ -32,7 +32,7 @@ def analyseres(sim,cam,x,xp,Phifwd,Phifit,drn,dhat,P,x0true=None,E0true=None):
 
 #%% back to work
     for i,jf in enumerate(Phifit):
-        if not Phifwd:
+        if Phifwd is None:
             phif = None
         else:
             phif = Phifwd[...,i]
