@@ -134,12 +134,8 @@ def getParams(P):
 #%% setup cameras
     cam = setupCam(sim,xl['cam'],Fwd['z'][-1],P)
 
-    if sim.realdata:
-        #find the x-coordinate (along B-perp) of each camera (can't do this inside camclass.py)
-        cam[0].x_km = 0 # NOTE arbitrarily picks the first camera x=0km
-        for C in cam[1:]:
-            if C.usecam:
-                C.x_km = vincenty((cam[0].lat,cam[0].lon),(C.lat,C.lon)).kilometers
+    if cam[0].x_km is None: #defined simulated camera location in lat/lon
+        cam = cam0dist(cam)
 
     #store x,z in sim
     ellname=sim.getEllHash(xl, [C.x_km for C in cam if C.usecam],[C.alt_m/1000. for C in cam if C.usecam])
@@ -155,6 +151,17 @@ def getParams(P):
 #%% init variables
     return arc,sim,cam,Fwd,P
 
+def cam0dist(cam):
+    """
+    find the x-coordinate (along B-perp) of each camera (can't do this inside camclass.py)
+    """
+    cam[0].x_km = 0. # NOTE arbitrarily picks the first camera x=0km
+    for C in cam[1:]:
+        if C.usecam:
+            C.x_km = vincenty((cam[0].lat,cam[0].lon),(C.lat,C.lon)).kilometers
+
+    return cam
+
 def setupArc(xl):
     """
     in the .ini file, sections [arc] using csv for each arc
@@ -165,8 +172,7 @@ def setupArc(xl):
 
     for s in xl.sections(): # for py27
         if s.startswith('arc'):
-            print('configuring {}'.format(s))
-
+            logging.debug('configuring {}'.format(s))
             texp = getntimes(xl[s]['texp']) # last time is blended with 2nd to last time
             if ntimeslice is not None:
                 assert len(texp) == ntimeslice+1, 'for now, all Arcs must have same number of times (columns)'
