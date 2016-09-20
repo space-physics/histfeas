@@ -32,7 +32,7 @@ def analyseres(sim,cam,x,xp,Phifwd,Phifit,drn,dhat,P,x0true=None,E0true=None):
 
 #%% back to work
     for i,jf in enumerate(Phifit):
-        if Phifwd is None:
+        if Phifwd is None or len(Phifwd)==0:  #"not Phifwd" is not appropriate due to ndarray
             phif = None
         else:
             phif = Phifwd[...,i]
