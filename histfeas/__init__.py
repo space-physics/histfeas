@@ -165,9 +165,12 @@ def setupArc(xl):
 
     for s in xl.sections(): # for py27
         if s.startswith('arc'):
-            if ntimeslice is not None and getntimes(xl[s]) != ntimeslice:
-                raise ValueError('for now, all Arcs must have same number of times (columns)')
+            print('configuring {}'.format(s))
+
             texp = getntimes(xl[s]['texp']) # last time is blended with 2nd to last time
+            if ntimeslice is not None:
+                assert len(texp) == ntimeslice+1, 'for now, all Arcs must have same number of times (columns)'
+
             # TODO assert all arcs have same time length
             ntimeslice = texp.size-1  # MUST be -1 to allow for range() compat and interp1() compat
 
