@@ -120,9 +120,9 @@ def getParams(P):
         xl = ConfigParser(allow_no_value=True, empty_lines_in_values=False)
     xl.read(str(P['ini']))
 #%% read plot parameters from ini
-    try:
+    if 'plot' in xl:
         P = plotstuffer(xl['plot'],P)
-    except KeyError:
+    else:
         P = plotstuffer(None,P)
 #%% read arcs (if any)
     arc,ntimeslice = setupArc(xl)
@@ -205,7 +205,7 @@ def plotstuffer(sp,P):
     """
     these have no impact on simulation calculations, they are just plotting bounds
     """
-    P['x1d'] = splitconf(sp,'x1d')
+    P['x1d'] = list(map(float,sp['x1d'].split(',')))
 
     if 'vlim' not in P:
         P['vlim'] = {}
