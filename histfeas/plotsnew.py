@@ -185,7 +185,7 @@ def goPlot(sim,Fwd,cam,Lfwd,Tm,drn,dhat,ver,vfit,Peig,Phi0, Phifit,rawdata,tInd,
              T,P,'jme', '$\Phi_{maxent}$ diff. number flux')
 
     if 'phimaxent1d' in makeplot and Jxi is not None:
-        xlbl = ['{:0.2f}'.format(x) for x in xKM]
+        xlbl = ['{:0.2f}'.format(x) for x in xKM[Jxi]]
         plotJ1D(sim, Phifit['maxent'][:,Jxi], Phifit['EK'],xlbl,T,P,'jme_1D',
                 'Differential Number flux at $B_\perp$={} [km]'.format(xlbl))
     if 'bmaxent' in makeplot:
@@ -194,7 +194,7 @@ def goPlot(sim,Fwd,cam,Lfwd,Tm,drn,dhat,ver,vfit,Peig,Phi0, Phifit,rawdata,tInd,
         plotVER(sim,vfit['maxent'],xKM,xp,zKM,zp,T,P,'maxent',
               '$\hat{v}_{maxent}$ from maximum entropy regularization',  1811)
     if 'pmaxent1d' in makeplot and Jxi is not None:
-        xlbl = ['{:0.2f}'.format(x) for x in xKM]
+        xlbl = ['{:0.2f}'.format(x) for x in xKM[Jxi]]
         plotVER1D(sim,vfit['maxent'][:,Jxi],zKM,xlbl,T,P,'vermaxent_1D', '$p_{optim,maxent}$  $B_\perp$={} [km]'.format(xlbl))
         if 'pfwd1d' in makeplot:
             try:
@@ -268,7 +268,7 @@ def plotfwd(sim,cam,drn,xKM,xp,zKM,zp, ver,Phi0,fitp,tInd,  P,doSubplots=True):
 
 
         if not 'optim' in P['makeplot'] and Jxi is not None:
-            xlbl = ['{:0.2f}'.format(x) for x in xKM]
+            xlbl = ['{:0.2f}'.format(x) for x in xKM[Jxi]]
 
             plotVER1D(sim,ver[:,Jxi],None,zKM,xlbl,T,P,'pfwd1d',
                       '$\mathbf{{P}}$ at $B_\perp$={} [km]'.format(xlbl),
