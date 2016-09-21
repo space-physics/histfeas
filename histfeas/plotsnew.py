@@ -345,7 +345,7 @@ def plotoptim(sim,cam,drn,dhat,bcomptxt,ver,Phi0,vfit,Phifit,xKM,xp,zKM,zp,tInd,
         except IndexError:
             pass
         fg.tight_layout(rect=(0,0,1,0.95))
-        writeplots(fg,'est',T,P['outdir'])
+        writeplots(fg,'est',T,P['outdir'],fmt='.svg')
 
 def getcamx(cam):
     """
@@ -823,7 +823,7 @@ def plotBcompare(sim,braw,bfit,cam,prefix, tInd, P, ax=None):
 
     dumph5(prefix,T,P['outdir'],angle=[C.angle_deg for C in cam if C.usecam],braw=braw,bfit=bfit, ut1_unix=ut1_unix)
 
-    writeplots(fg,prefix,T,P['outdir'])
+    writeplots(fg,prefix,T,P['outdir'],fmt='.eps')
 #%%
 def plotB(bpix,cam,T,P,labeltxt='',ax=None):
     assert isinstance(P,dict)
