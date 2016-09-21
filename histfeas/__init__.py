@@ -41,7 +41,7 @@ def userinput(ini=None,outdir=None):
     p.add_argument('--fitm',help='fit method')
 
     p.add_argument('--load',help='load without recomputing',action='store_true')
-    p.add_argument('-m','--makeplot',help='plots to make',default=['realvid','optim','png'],nargs='+')
+    p.add_argument('-m','--makeplot',help='plots to make',default=['realvid','fwd','optim'],nargs='+')
     p.add_argument('-L','--ell',help='compute projection matrix',action='store_true')
     p.add_argument('-v','--verbose',help='verbosity',action='count',default=0)
     p.add_argument('-f','--frames',help='time steps to use',nargs='+',type=int)
