@@ -255,7 +255,7 @@ def plotfwd(sim,cam,drn,xKM,xp,zKM,zp, ver,Phi0,fitp,tInd,  P,doSubplots=True):
     else:
         axs = array([(None,)*nrow,(None,)*ncol])
 
-    plotB(drn,cam,T,P,'$B_{fwd',fg,axs[0,0])
+    plotB(drn,cam,T,P,'$B_{fwd',axs[0,0])
 
     if not sim.realdata:
         # Forward model VER
@@ -313,12 +313,16 @@ def plotoptim(sim,cam,drn,dhat,bcomptxt,ver,Phi0,vfit,Phifit,xKM,xp,zKM,zp,tInd,
         axs = array([(None,)*3,(None,)*3])
 
 
-    #plotBcompare(sim,drn,dhat,cam,'best',tInd,P,axs[0,0])
+    plotBcompare(sim,drn,dhat,cam,'best',tInd,P,axs[0,0])
 
-   # plotVER(sim,vfit,xKM,xp,zKM,zp,T,P,'pest','$\hat{\mathbf{P}}$ volume emission rate', axs[0,1])
+    plotVER(sim,vfit,xKM,xp,zKM,zp,T,P,'pest','$\hat{\mathbf{P}}$ volume emission rate', axs[0,1])
 #%% flux
-  #  plotJ(sim, Phifit['x'],xKM,xp, Phifit['EK'], Phifit['EKpcolor'], T, P,'phiest', '$\hat{\mathbf{\phi}}_{top}$ diff. number flux',axs[0,2])
-          #'Neval = {:d}'.format(fitp.nfev)
+    jtxt = '$\hat{\mathbf{\phi}}_{top}$ diff. number flux.'
+    if P['verbose']:
+        jtxt+=' Neval={}'.format(Phifit['nfev'])
+
+    plotJ(sim, Phifit['x'],xKM,xp, Phifit['EK'], Phifit['EKpcolor'], T, P,'phiest', jtxt,axs[0,2])
+
 
 
     dumph5('phiest',T,P['outdir'],gx0=Phifit['gx0'],gE0=Phifit['gE0'])
@@ -890,7 +894,7 @@ def plotB(bpix,cam,T,P,labeltxt='',ax=None):
 #%% make plot
     for C in cam:
         if C.usecam:
-            if hasattr(C,'noiselam'):
+            if C.noiselam is not None:
                 std.append('{:0.1e}'.format(C.noiselam))
 
             ax.plot(C.angle_deg[C.Lcind],  bpix[C.Lind],

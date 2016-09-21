@@ -122,7 +122,7 @@ def FitVERopt(L,bn,Phi0,MpDict,sim,cam,Fwd,tInd,P):
         # don't remove the two lines above (ek,ekpcolor)
 #%% gaussian fit
         #print('max |diff(phi)| = ' + str(np.abs(np.diff(fitp.x, n=1, axis=0)).max()))
-        gx0,gE0 = getx0E0(None,Phifit['x'],Phifit['EK'],Fwd['x'],tInd,P)
+        gx0,gE0 = getx0E0(None,Phifit['x'],Phifit['EK'],Fwd['x'],tInd,P,sim.minenergy)
 
         if isfinite([gx0[0],gE0[0]]).all():
             print('Model input: (B_\perp,E_0) = ({:.2f}, {:.0f})'.format(gx0[0],gE0[0]))
