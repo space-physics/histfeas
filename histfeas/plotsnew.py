@@ -41,7 +41,6 @@ dxmax=1.
 dxmin=0.5
 pstyle='contour'
 
-E0min=500 #eV
 phi1dmax = 5e5
 
 #%%
@@ -168,7 +167,7 @@ def goPlot(sim,Fwd,cam,Lfwd,Tm,drn,dhat,ver,vfit,Peig,Phi0, Phifit,rawdata,tInd,
     if 'gaussian' in makeplot and 'fwd' in makeplot:
         plotBcompare(sim,drn,dhat['gaussian'],cam,sim.nCamUsed,'bgaussfit',tInd, P)
 
-        gx0,gE0 = getx0E0(None,Phifit['gaussian'], Phifit['EK'],xKM,tInd,P)
+        gx0,gE0 = getx0E0(None,Phifit['gaussian'], Phifit['EK'],xKM,tInd,P,sim.minenergy)
 #'Neval = {:d}'.format(fitp.nfev)
         plotJ(sim,Phifit['gaussian'], xKM,xp, Phifit['EK'], Phifit['EKpcolor'],
               T, P,'jgaussian', '$\hat{\phi}_{gaussian,optim}$ diff. number flux')
@@ -467,7 +466,7 @@ def plotJ1D(sim,PhiFwd,PhiInv,Ek,xlbl,T,P,prefix,titletxt,ax=None):
     lfwd = '$\Phi|x=$'
     linv = '$\hat{\Phi}|x=$'
 
-    for i,(Phi,l) in enumerate(zip((PhiFwd,PhiInv),(lfwd,linv))):
+    for Phi,l in zip((PhiFwd,PhiInv),(lfwd,linv)):
         if Phi is not None:
             assert Phi.ndim in (1,2)
             Phi[Phi==0] = 1e-30 #to avoid log(0)
@@ -475,23 +474,16 @@ def plotJ1D(sim,PhiFwd,PhiInv,Ek,xlbl,T,P,prefix,titletxt,ax=None):
             try:
                 if Phi.ndim==1:
                      ax.loglogx(Ek,Phi,marker='.',label=l+str(xlbl[0])) # xlbl[0], not .item()
+                     if P['verbose']:
+                            labelpeakE(Phi,Ek,sim.minenergy,ax)
                 else:
                     assert Phi.shape[1] == len(xlbl)
                     for i in range(Phi.shape[1]):
                         ax.loglog(Ek,Phi[:,i], marker='.', label=l+str(xlbl[i]))
 
-                if P['verbose']:
-                    Phitmp = Phi[:,i].copy()
-                    Phitmp[Ek<E0min]=0
-                    iE0est = Phitmp.argmax()
-                    E0est = Ek[iE0est]
+                        if P['verbose']:
+                            labelpeakE(Phi[:,i],Ek,sim.minenergy,ax)
 
-                    ax.axvline(E0est,linestyle='--',color='red')
-                    ax.annotate(('$\hatE_0$={:0.0f}'.format(E0est) + ' eV'),
-                             xy=(E0est,Phi[iE0est]),
-                             xytext=(E0est*0.75, Phi[iE0est]*0.2),
-                             ha='right', va='top',
-                             arrowprops={'facecolor':'red', 'shrink':0.2, 'headwidth':8, 'width':2},)
             except ValueError as e:
                 logging.error('could not plot Jfwd1D due to non-positive value(s) in Jflux, t= {}   {}'
                      '\n did you pick the correct --x1d ?   {}'.format(T,titletxt,e))
@@ -514,6 +506,22 @@ def plotJ1D(sim,PhiFwd,PhiInv,Ek,xlbl,T,P,prefix,titletxt,ax=None):
     writeplots(fg,prefix,T,P['outdir'])
 
     dumph5(prefix,T,P['outdir'],PhiFwd1d=PhiFwd,PhiInv1d=PhiInv,Ek=Ek)
+#%%
+def labelpeakE(Phi,Ek,E0min,ax):
+    assert Phi.ndim==1
+
+    Phitmp = Phi.copy()
+    Phitmp[Ek<E0min]=0
+    iE0est = Phitmp.argmax()
+    E0est = Ek[iE0est]
+
+    ax.axvline(E0est,linestyle='--',color='red')
+    ax.annotate(('$\hatE_0$={:0.0f}'.format(E0est) + ' eV'),
+                 xy=(E0est,Phi[iE0est]),
+                 xytext=(E0est*0.75, Phi[iE0est]*0.2),
+                 ha='right', va='top',
+                 arrowprops={'facecolor':'red', 'shrink':0.2, 'headwidth':8, 'width':2},)
+
 #%%
 def plotJ(sim,Jflux,x,xp,Ek,EKpcolor,T,P,prefix,titletxt,ax=None):
     assert isinstance(P,dict)
@@ -969,7 +977,7 @@ def planview3(cam,xKM,zKM,P):
     ax.plot_surface(x, y, z,  rstride=4, cstride=4, color='g')
 
 #%% gaussian fit
-def getx0E0(Phifwd,Phifit,E,x,tInd,P):
+def getx0E0(Phifwd,Phifit,E,x,tInd,P,E0min):
     assert isinstance(P,dict),'function arguments: out of order?'
 
     Npts = 200

@@ -37,7 +37,7 @@ def analyseres(sim,cam,x,xp,Phifwd,Phifit,drn,dhat,P,x0true=None,E0true=None):
         else:
             phif = Phifwd[...,i]
         #note even if array is F_CONTIGUOUS, argmax is C-order!!
-        gx0[i,:],gE0[i,:] = getx0E0(phif, jf['x'], jf['EK'],x,9999,P)
+        gx0[i,:],gE0[i,:] = getx0E0(phif, jf['x'], jf['EK'],x,None,P,sim.minenergy)
 
 
         print('t={} gaussian 2-D fits for (x,E):\n'

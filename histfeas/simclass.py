@@ -118,7 +118,8 @@ class Sim:
         self.reactionfn =   (self.rootdir/sp['transcar']['reactionParam']).expanduser()
         self.transcarconfig = sp['transcar']['simconfig']
 
-        self.minflux= sp.getfloat('recon','minflux',fallback=0.)
+        self.minflux   = sp.getfloat('recon','minflux',fallback=0.)
+        self.minenergy = sp.getfloat('recon','minenergy',fallback=0.)
 #%% reactions
         self.reacreq = []
         for r in ('metastable','atomic','n21ng','n2meinel','n22pg','n21pg'):
