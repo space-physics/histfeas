@@ -185,15 +185,17 @@ def goPlot(sim,Fwd,cam,Lfwd,Tm,drn,dhat,ver,vfit,Peig,Phi0, Phifit,rawdata,tInd,
              T,P,'jme', '$\Phi_{maxent}$ diff. number flux')
 
     if 'phimaxent1d' in makeplot and Jxi is not None:
-        plotJ1D(sim, Phifit['maxent'][:,Jxi], Phifit['EK'],T,P,'jme_1D',
-                'Differential Number flux at $B_\perp$={:0.2f} [km]'.format(xKM[Jxi]))
+        xlbl = ['{:0.2f}'.format(x) for x in xKM]
+        plotJ1D(sim, Phifit['maxent'][:,Jxi], Phifit['EK'],xlbl,T,P,'jme_1D',
+                'Differential Number flux at $B_\perp$={} [km]'.format(xlbl))
     if 'bmaxent' in makeplot:
         plotBcompare(sim,drn,dhat['fit_maxent'],cam,sim.nCamUsed,'bmaxent',tInd,P)
     if 'pmaxent' in makeplot:
         plotVER(sim,vfit['maxent'],xKM,xp,zKM,zp,T,P,'maxent',
               '$\hat{v}_{maxent}$ from maximum entropy regularization',  1811)
     if 'pmaxent1d' in makeplot and Jxi is not None:
-        plotVER1D(sim,vfit['maxent'][:,Jxi],zKM,T,P,'vermaxent_1D', '$p_{optim,maxent}$  $B_\perp$={:0.2f} [km]'.format(xKM[Jxi]))
+        xlbl = ['{:0.2f}'.format(x) for x in xKM]
+        plotVER1D(sim,vfit['maxent'][:,Jxi],zKM,xlbl,T,P,'vermaxent_1D', '$p_{optim,maxent}$  $B_\perp$={} [km]'.format(xlbl))
         if 'pfwd1d' in makeplot:
             try:
                 cax = figure().gca()
@@ -266,12 +268,15 @@ def plotfwd(sim,cam,drn,xKM,xp,zKM,zp, ver,Phi0,fitp,tInd,  P,doSubplots=True):
 
 
         if not 'optim' in P['makeplot'] and Jxi is not None:
-            plotVER1D(sim,ver[:,Jxi],None,zKM,T,P,'pfwd1d', '$\mathbf{{P}}$ at $B_\perp$={:0.2f}  [km]'.format(xKM[Jxi]),
+            xlbl = ['{:0.2f}'.format(x) for x in xKM]
+
+            plotVER1D(sim,ver[:,Jxi],None,zKM,xlbl,T,P,'pfwd1d',
+                      '$\mathbf{{P}}$ at $B_\perp$={} [km]'.format(xlbl),
                       axs[1,0])
 
-        if not 'optim' in P['makeplot'] and Jxi is not None:
-            plotJ1D(sim,Phi0[:,Jxi],None,fitp['EK'],T,P,'phifwd1d',
-                 'Differential Number flux at $B_\perp$={:0.2f} [km]'.format(xKM[Jxi]), axs[1,1])
+            plotJ1D(sim,Phi0[:,Jxi],None,fitp['EK'],xlbl,P,'phifwd1d',
+                    'Differential Number flux at $B_\perp$={} [km]'.format(xlbl),
+                     axs[1,1])
 #    else: #realdata
 #        plotRealImg(sim,cam,rawdata,tInd,makeplot,odir=odir)
 
@@ -309,32 +314,34 @@ def plotoptim(sim,cam,drn,dhat,bcomptxt,ver,Phi0,vfit,Phifit,xKM,xp,zKM,zp,tInd,
         axs = array([(None,)*3,(None,)*3])
 
 
-    plotBcompare(sim,drn,dhat,cam,'best',tInd,P,axs[0,0])
+    #plotBcompare(sim,drn,dhat,cam,'best',tInd,P,axs[0,0])
 
-    plotVER(sim,vfit,xKM,xp,zKM,zp,T,P,'pest','$\hat{\mathbf{P}}$ volume emission rate', axs[0,1])
+   # plotVER(sim,vfit,xKM,xp,zKM,zp,T,P,'pest','$\hat{\mathbf{P}}$ volume emission rate', axs[0,1])
 #%% flux
-    plotJ(sim, Phifit['x'],xKM,xp, Phifit['EK'], Phifit['EKpcolor'],
-          T, P,'phiest', '$\hat{\mathbf{\phi}}_{top}$ diff. number flux',axs[0,2])
+  #  plotJ(sim, Phifit['x'],xKM,xp, Phifit['EK'], Phifit['EKpcolor'], T, P,'phiest', '$\hat{\mathbf{\phi}}_{top}$ diff. number flux',axs[0,2])
           #'Neval = {:d}'.format(fitp.nfev)
 
 
     dumph5('phiest',T,P['outdir'],gx0=Phifit['gx0'],gE0=Phifit['gE0'])
 
     if Jxi is not None:
+        xlbl = ['{:0.2f}'.format(x) for x in xKM[Jxi]]
+
         if ver is not None:
             vfwd1d = ver[:,Jxi]
         else:
             vfwd1d = None
-        plotVER1D(sim,vfwd1d,vfit[:,Jxi],zKM,T, P,'pest1d',
-                  '$\hat{{\mathbf{{P}}}}$ volume emission rate at $B_\perp$={:0.2f} [km]'.format(xKM[Jxi]),
+        plotVER1D(sim,vfwd1d,vfit[:,Jxi],zKM,xlbl,T, P,'pest1d',
+                  '$\hat{\mathbf{P}}$ volume emission rate at '+'$B_\perp$={} [km]'.format(xlbl),
                   axs[1,0])
 
         if Phi0 is not None:
             phifwd1d = Phi0[:,Jxi]
         else:
             phifwd1d = None
-        plotJ1D(sim,phifwd1d, Phifit['x'][:,Jxi], Phifit['EK'],T,P,'phiest1d',
-        ('$\hat{{\phi}}_{{top}}$ diff. number flux at $B_\perp$={:0.2f} [km]'.format(xKM[Jxi])),axs[1,1])
+        plotJ1D(sim,phifwd1d, Phifit['x'][:,Jxi], Phifit['EK'],xlbl,T,P,'phiest1d',
+                '$\hat{\phi}_{top}$ diff. number flux at '+'$B_\perp$={} [km]'.format(xlbl),
+                axs[1,1])
 
 #http://stackoverflow.com/questions/10035446/how-can-i-make-a-blank-subplot-in-matplotlib
 #http://stackoverflow.com/questions/2176424/hiding-axis-text-in-matplotlib-plots
@@ -452,23 +459,33 @@ def plotPicard(A,b,cvar=None):
         [U,s,V] = svd(A,full_matrices=False,compute_uv=1) #V is not used!
     picard(asfortranarray(U), s, b)
 
-def plotJ1D(sim,PhiFwd,PhiInv,Ek,T,P,prefix,titletxt,ax=None):
+def plotJ1D(sim,PhiFwd,PhiInv,Ek,xlbl,T,P,prefix,titletxt,ax=None):
     assert isinstance(P,dict)
-    anno = False
 
     fg,ax = fighandler(ax)
 
-    for Phi,l in zip((PhiFwd,PhiInv),('$\Phi$','$\hat{{\Phi}}$')):
+    lfwd = '$\Phi|x=$'
+    linv = '$\hat{\Phi}|x=$'
+
+    for i,(Phi,l) in enumerate(zip((PhiFwd,PhiInv),(lfwd,linv))):
         if Phi is not None:
+            assert Phi.ndim in (1,2)
             Phi[Phi==0] = 1e-30 #to avoid log(0)
-            Phitmp = Phi.copy(); Phitmp[Ek<E0min]=0
-            iE0est = Phitmp.argmax()
-            E0est = Ek[iE0est]
 
             try:
-                ax.loglog(Ek,Phi,marker='.',
-                          label= l)#+ ', {:0.0f} eV'.format(E0est))
-                if anno:
+                if Phi.ndim==1:
+                     ax.loglogx(Ek,Phi,marker='.',label=l+str(xlbl[0])) # xlbl[0], not .item()
+                else:
+                    assert Phi.shape[1] == len(xlbl)
+                    for i in range(Phi.shape[1]):
+                        ax.loglog(Ek,Phi[:,i], marker='.', label=l+str(xlbl[i]))
+
+                if P['verbose']:
+                    Phitmp = Phi[:,i].copy()
+                    Phitmp[Ek<E0min]=0
+                    iE0est = Phitmp.argmax()
+                    E0est = Ek[iE0est]
+
                     ax.axvline(E0est,linestyle='--',color='red')
                     ax.annotate(('$\hatE_0$={:0.0f}'.format(E0est) + ' eV'),
                              xy=(E0est,Phi[iE0est]),
@@ -491,7 +508,8 @@ def plotJ1D(sim,PhiFwd,PhiInv,Ek,T,P,prefix,titletxt,ax=None):
 
     ax.tick_params(axis='both', which='both')
 
-    if anno:    ax.legend(loc='lower left')
+    if P['verbose']:
+        ax.legend(loc='lower left')
 
     writeplots(fg,prefix,T,P['outdir'])
 
@@ -626,18 +644,32 @@ def getmin(vs,vu):
     else:
         return vs
 
-def plotVER1D(sim,pfwd,pinv,zKM,T,P,prefix='',titletxt='',ax=None):
+def plotVER1D(sim,pfwd,pinv,zKM,xlbl,T,P,prefix='',titletxt='',ax=None):
     assert isinstance(P,dict)
 
     fg,ax = fighandler(ax)
 
-    for p,l in zip((pfwd,pinv),('$\mathbf{P}$','$\hat{\mathbf{P}}$')):
+    lfwd = '$\mathbf{P}|x=$'
+    linv = '$\hat{\mathbf{P}}|x=$'
+
+    for p,l in zip((pfwd,pinv),(lfwd,linv)):
         if p is not None:
+            assert p.ndim in (1,2)
+
             try:
                 p[p==0] = 1e-30 #to avoid log(0)
-                ax.semilogx(p,zKM,label=l)
+                """
+                list comprehension goofed up escapes, what a mess.
+                """
+                if p.ndim==1:
+                     ax.semilogx(p,zKM,label=l+str(xlbl[0])) # xlbl[0], not .item()
+                else:
+                    assert p.shape[1] == len(xlbl)
+                    for i in range(p.shape[1]):
+                        ax.semilogx(p[:,i], zKM, label=l+str(xlbl[i]))
+
             except ValueError as e:
-                logging.warning('{} in 1D VER plot. maybe <0 value snuck in.'.format(e))
+                logging.warning('{} in 1D VER plot. maybe negative value snuck in.'.format(e))
 
     ax.legend(loc='upper right')
     ax.set_xlabel('Volume emission rate [photons cm$^{-3}$s$^{-1}$]')
@@ -685,9 +717,7 @@ def plotVER(sim,ver,x,xp,z,zp,T,P,prefix='',titletxt='',ax=None):
             dfg = Figure(data=dpy,layout=dlay)
 
             py.plot(dfg, filename='{}_{}_{}'.format(P['outdir'],prefix,T), auto_open=False)
-            #print(plot_url)
           else:
-
             fg,ax = fighandler(ax)
 
             if pstyle=='pcolor':
@@ -940,7 +970,7 @@ def planview3(cam,xKM,zKM,P):
 
 #%% gaussian fit
 def getx0E0(Phifwd,Phifit,E,x,tInd,P):
-    assert isinstance(P,dict)
+    assert isinstance(P,dict),'function arguments: out of order?'
 
     Npts = 200
     Nptsfits = (Npts//40, Npts//20)  #(nEnergyToUse+-, nXtouse+-)
@@ -1112,24 +1142,27 @@ def dumph5(prefix,tInd,odir=None, **writevar): #used in other .py too
 
 
 def indone1d(x,P,i):
-    assert isinstance(P,dict)
+    assert isinstance(P,dict),'function arguments: out of order?'
 #%% handle varied user input
     if 'x1d' not in P or P['x1d'] is None:
         return
 
-    if isinstance(P['x1d'],(float,integer_types)):
+    if isinstance(P['x1d'],(float,integer_types,list,tuple,ndarray)):
         c = P['x1d']
     elif len(P['x1d']) == 1:
-        c = P['x1d'][0]
-    else:
-        try:
-            c = P['x1d'][i]
+        c = P['x1d'].item()
+    elif isinstance(P['x1d'],dict):
+        try: # FIXME future didn't implement distinction in configparse code yet
+            c = P['x1d']['time'][i]
         except IndexError:
             logging.error('used last value of x1d: {} km'.format(c))
-            c = P['x1d'][-1]
+            c = P['x1d']['time'][-1]
+    else:
+        logging.warning('unknown intent for "x1d" {}'.format(P['x1d']))
+        return
 #%%
     Jxi = find_nearest(x,c)[0]
-    logging.info('1-D plots of Phi and P taken at index {}  x={}'.format(Jxi, P['x1d']))
+    logging.info('1-D plots of Phi and P taken at index {}  x={} km'.format(Jxi, P['x1d']))
 
     return Jxi
 

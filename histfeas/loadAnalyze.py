@@ -76,17 +76,20 @@ def readresults(h5list, P):
         if C.usecam:
             C.angle_deg = angle_deg[i,:]
             C.tKeo = ut1_unix[:,i]
-#%% load args if they exist
+#%% load arcs if they exist
     for k,a in arc.items():
         """
-        TODO: assumes all are same distance apart (zero accel)
+        TODO: assumes for all time steps arc is same distance apart (zero accel)
         NOTE: Assumption is that arc is moving smoothly with zero acceleration,
         so that mean position for each time step is = x[:-1] + 0.5*diff(x) as below.
         """
         if a.zshape in ('flat','impulse'):
             x0true = a.X0km[:-1]
             E0true = a.E0[:-1]
-        else:
+        else: # moving or stationary
+            """
+            if arc is stationary, a.X0km,a.E0 are identical and diff() is 0 so it's OK as is
+            """
             x0true = (a.X0km[:-1] + 0.5*diff(a.X0km))
             E0true = (a.E0[:-1]   + 0.5*diff(a.E0))
 

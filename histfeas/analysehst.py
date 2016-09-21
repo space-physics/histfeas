@@ -102,46 +102,53 @@ def doplot(x,Phifit,gE0,Eavgfwdx,Eavghatx, P):
             writeplots(fgo,'Eavg_optim',9999,P['makeplot'],P['outdir'])
     except Exception as e:
         logging.info('skipping average energy plotting.   {}'.format(e))
-
+#%%
 def extplot(sim,cam,drn,dhat,P):
-#%% brightness plot -- plotting ALL at once to show evolution of dispersive event!
+    """
+    brightness plot -- plotting ALL at once to show evolution of dispersive event!
+    """
     try:
         if 'fwd' in P['makeplot'] and drn:
             for i,b in enumerate(drn):
                 plotB(b,cam,9999,P,'$bfwdall')
-    # reconstructed brightness plot
+#%% reconstructed brightness plot
         if 'optim' in P['makeplot'] and dhat is not None and len(dhat[0])>0:
             for i,b in enumerate(dhat):
                 plotB(b,cam,9999,P,'$bestall')
     except Exception as e:
         logging.info('skipping plotting overall analysis plots of intensity.  {}'.format(e))
-
+#%%
 def plotgauss(x0true,gx0,gE0,gx0err,gE0err,P):
     assert isinstance(gx0err,ndarray)
     assert isinstance(gE0err,ndarray)
 #%%
-    fg,(axx,axE) = subplots(1,2,sharey=False)
-    axx.stem(x0true,gx0err)
-    axx.set_xlabel('$B_\perp$ [km]')
-    axx.set_ylabel('$\hat{B}_{\perp,0}$ error [km]')
-    axx.set_title('$\hat{B}_{\perp,0}$ error vs. time & position')
-    axx.set_ylim(-0.5,0.5)
-    axx.set_xlim(-7,7) #[km]
+    fg,axs = subplots(1,2,sharey=False)
+    fg.suptitle('Estimation Error')
 
-    axE.stem(x0true,gE0err)
-    axE.set_xlabel('$B_\perp$ [km]')
-    axE.set_ylabel('$\hat{E}_0$ error [km]',labelpad=-0.5)
-    axE.set_title('$\hat{E}_0$ error vs. time & position')
-    axE.set_ylim(-200,200)
-    axE.set_xlim(-7,7) #[km]
+    ax = axs[0]
+    ax.stem(x0true,gx0err)
+    ax.set_xlabel('$B_\perp$ [km]')
+    ax.set_ylabel('$\hat{B}_{\perp,0}$ error [km]')
+    ax.set_title('$\hat{B}_{\perp,0}$ error')
+    ax.set_ylim(-0.5,0.5)
+    ax.set_xlim(-7,7) #[km]
 
+    ax = axs[1]
+    ax.stem(x0true,gE0err)
+    ax.set_xlabel('$B_\perp$ [km]')
+    ax.set_ylabel('$\hat{E}_0$ error [km]',labelpad=-0.5)
+    ax.set_title('$\hat{E}_0$ error')
+    ax.set_ylim(-200,200)
+    ax.set_xlim(-7,7) #[km]
+#%%
     print('B_\perp,0 gaussfit-Estimation-error (fit-true) =' + ' '.join(
                                           ['{:.2f}'.format(h) for h in gx0err]))
     print('E_0 gaussfit-Estimation-error (fit-true) =' + ' '.join(
                                           ['{:.1f}'.format(j) for j in gE0err]))
 
-    if 'h5' in P['makeplot'] and P['outdir'] is not None:
+    if P['outdir'] is not None:
         fout = P['outdir']/'fit_results.h5'
+        print('writing {}'.format(fout))
         with h5py.File(str(fout),'w',libver='latest') as f:
             f['/tind'] = arange(gx0err.size)
 
@@ -151,6 +158,8 @@ def plotgauss(x0true,gx0,gE0,gx0err,gE0err,P):
             f['/gE0/err'] = gE0err
             f['/gE0/fwdfit']=gE0
 
+    writeplots(fg,'gaussfit',None,P['outdir'])
+#%%
 def avgcomp(Phifwd,Phifit,Ek,x,P):
     if Phifwd is None:
         return nan,nan
