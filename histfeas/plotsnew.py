@@ -273,7 +273,7 @@ def plotfwd(sim,cam,drn,xKM,xp,zKM,zp, ver,Phi0,fitp,tInd,  P,doSubplots=True):
                       '$\mathbf{{P}}$ at $B_\perp$={} [km]'.format(xlbl),
                       axs[1,0])
 
-            plotJ1D(sim,Phi0[:,Jxi],None,fitp['EK'],xlbl,P,'phifwd1d',
+            plotJ1D(sim,Phi0[:,Jxi],None,fitp['EK'],xlbl,T,P,'phifwd1d',
                     'Differential Number flux at $B_\perp$={} [km]'.format(xlbl),
                      axs[1,1])
 #    else: #realdata

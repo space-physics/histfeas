@@ -12,14 +12,13 @@ from .plotsnew import getx0E0
 
 
 def FitVERopt(L,bn,Phi0,MpDict,sim,cam,Fwd,tInd,P):
-    if set(('gaussian','optim')).isdisjoint(P['makeplot']):
-        return (None,)*4
-
     assert L.ndim==2
     assert bn.ndim==1   and bn.flags['F_CONTIGUOUS']==True
     assert Phi0.ndim==1 and Phi0.flags['F_CONTIGUOUS']==True
 
-    vfit = {}; bfit = {}; Phifit = {'x':None} #in case optim not run
+    Mp,zTranscar,EK,EKpcolor = MpDict['Mp'],MpDict['ztc'],MpDict['Ek'],MpDict['EKpcolor']
+
+    vfit = {}; bfit = {}; Phifit = {'x':None, 'EK':EK, 'EKpcolor': EKpcolor} #in case optim not run - don't remove
     minverbose=bool(P['verbose'])
 #%% scaling brightness
     """
@@ -33,8 +32,6 @@ def FitVERopt(L,bn,Phi0,MpDict,sim,cam,Fwd,tInd,P):
     for s,c in zip(bscale,cInd):
         bnu[c] = bn[c] * s #DONT use 1/intens2dn --that's wrong for real data case!
 #%%
-    Mp,zTranscar,EK,EKpcolor = MpDict['Mp'],MpDict['ztc'],MpDict['Ek'],MpDict['EKpcolor']
-
     if sim.useztranscar:
         Tm = Mp
     else: #interpolate A to be on the same altitude grid as b
@@ -45,13 +42,6 @@ def FitVERopt(L,bn,Phi0,MpDict,sim,cam,Fwd,tInd,P):
     sz,nEnergy = Tm.shape
     assert sz == Fwd['sz']
     assert Tm.flags['F_CONTIGUOUS'] is True
-
-    '''
-    in case optim not run
-    '''
-    Phifit['x'] = None #don't remove this
-    Phifit['EK'] = EK
-    Phifit['EKpcolor'] = EKpcolor
 #%% optimization
     '''
     Note: Only SLSQP and COBYA allow constraints (Not L-BFGS-B)
