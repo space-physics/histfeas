@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import logging
-from numpy import absolute,asfortranarray,diff,ones,inf,empty_like,isfinite,in1d
+from numpy import absolute,asfortranarray,diff,ones,inf,empty_like,isfinite
 from scipy.optimize import minimize
 from scipy.interpolate import interp1d
 from numpy.linalg import norm
@@ -12,7 +12,7 @@ from .plotsnew import getx0E0
 
 
 def FitVERopt(L,bn,Phi0,MpDict,sim,cam,Fwd,tInd,P):
-    if not in1d(('gaussian','optim'),P['makeplot']).any():
+    if set(('gaussian','optim')).isdisjoint(P['makeplot']):
         return (None,)*4
 
     assert L.ndim==2
@@ -46,10 +46,12 @@ def FitVERopt(L,bn,Phi0,MpDict,sim,cam,Fwd,tInd,P):
     assert sz == Fwd['sz']
     assert Tm.flags['F_CONTIGUOUS'] is True
 
-#    '''in case optim not run '''
-#    Phifit['x'] = None #don't remove this
-#    Phifit['EK'] = EK
-#    Phifit['EKpcolor'] = EKpcolor
+    '''
+    in case optim not run
+    '''
+    Phifit['x'] = None #don't remove this
+    Phifit['EK'] = EK
+    Phifit['EKpcolor'] = EKpcolor
 #%% optimization
     '''
     Note: Only SLSQP and COBYA allow constraints (Not L-BFGS-B)
@@ -58,7 +60,7 @@ def FitVERopt(L,bn,Phi0,MpDict,sim,cam,Fwd,tInd,P):
     http://stackoverflow.com/questions/23476152/dynamically-writing-the-objective-function-and-constraints-for-scipy-optimize-mi
     '''
 
-    if in1d(('gaussian','optim'),P['makeplot']).any():
+    if not set(('gaussian','optim')).isdisjoint(P['makeplot']):
         maxiter = sim.optimmaxiter #it's already int
         sx = Fwd['sx']
 
