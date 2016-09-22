@@ -205,7 +205,8 @@ def plotstuffer(sp,P):
     """
     these have no impact on simulation calculations, they are just plotting bounds
     """
-    P['x1d'] = list(map(float,sp['x1d'].split(',')))
+    if sp is not None:
+        P['x1d'] = list(map(float,sp['x1d'].split(',')))
 
     if 'vlim' not in P:
         P['vlim'] = {}
