@@ -280,7 +280,8 @@ def plotfwd(sim,cam,drn,xKM,xp,zKM,zp, ver,Phi0,fitp,tInd,  P,doSubplots=True):
 #        plotRealImg(sim,cam,rawdata,tInd,makeplot,odir=odir)
 
     if doSubplots:
-        writeplots(fg,'fwd',T,P['outdir'])
+        closetight(fg,axs)
+        writeplots(fg,'fwd',T,P['outdir'], fmt='.svg')
 
 def plotstamp(sim,P):
     return '{} iterations: {}   git: {}'.format(sim.optimfitmeth,
@@ -350,12 +351,22 @@ def plotoptim(sim,cam,drn,dhat,bcomptxt,ver,Phi0,vfit,Phifit,xKM,xp,zKM,zp,tInd,
 #http://stackoverflow.com/questions/2176424/hiding-axis-text-in-matplotlib-plots
 
     if doSubplots:
-        try:
-            axs[1,2].axis('off') #FIXME a bit case dependent
-        except IndexError:
-            pass
-        fg.tight_layout(rect=(0,0,1,0.95))
+        closetight(fg,axs)
         writeplots(fg,'est',T,P['outdir'],fmt='.svg')
+
+def closetight(fg,axs):
+    """
+    detect which axes have children unused
+    """
+    try:
+        #axs[1,2].axis('off') # a bit case dependent
+        for a in axs.ravel():
+            if len(a.get_children())==10: # FIXME is this always true?
+                a.axis('off')
+    except IndexError:
+        pass
+    fg.tight_layout(rect=(0,0,1,0.95))
+
 
 def getcamx(cam):
     """
