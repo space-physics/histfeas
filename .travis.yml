@@ -16,6 +16,9 @@ matrix:
   include:
     - os: osx
       env: pyv=3.5
+      before_install:
+        - brew update
+        - brew install gcc
 
     - os: linux
       env: pyv=3.5
