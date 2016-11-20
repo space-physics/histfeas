@@ -35,7 +35,7 @@ Quick Start
 Running a simulation::
 
     python FigureMaker.py in/my.ini out/myout  # omitting 2nd argument autonames output
-    
+
 Loading a previously-run simulation (changing plot clim for example)::
 
     python FigureMaker.py --load out/myout
@@ -118,7 +118,7 @@ excitation rates plots
 
 Auroral arc morphology
 ======================
-the .ini files allow setting multiple arcs with [arc0] [arc1] and so on. 
+the .ini files allow setting multiple arcs with [arc0] [arc1] and so on.
 Parameters specified as single numbers are replicated for all times.
 Parameters specified as START,STOP,STEP triplets are expanded via ``numpy.arange()``
 
@@ -187,9 +187,9 @@ Our IEEE TGARS article (Dec 2015) details the math and algorithm.
 
 Parallel Processing
 ===================
-The program processes all time steps serially into a single output directory. 
+The program processes all time steps serially into a single output directory.
 Other parameters including: simulated camera location, inversion method, and inversion iteration are iterated externally to the HiST program.
-You can use GNU Parallel, or more simply, the methods show in `Examples/` using pure Python parallelism. 
+You can use GNU Parallel, or more simply, the methods show in `Examples/` using pure Python parallelism.
 They will run in parallel on a PC or high performance computing cluster, outputting to uniquely named directories.
 The results are collected and analyzed by the same scripts.
 
@@ -234,15 +234,14 @@ Calibration
 2. The second line moves this FITS file to the user-selected calibration directory
 3. The third line uses my wrapper and post-processing based on Astrometry.net to make an HDF5 file of the mapping from each pixel to sky coordinates (ra/dec and az/el).
 
-cam0
-~~~~~
+**cam0**
 ::
 
    ./histutils/rawDMCreader.py -i ~/HSTdata/DataField/2013-04-14/HST0/2013-04-14T07-00-CamSer7196_frames_363000-1-369200.DMCdata -f 0 10 1 --avg --fits
-   
+
 
    mv ~/HSTdata/DataField/2013-04-14/HST1/2013-04-14T07-00-CamSer7196_frames_363000-1-369200_mean_frames.fits ~/HST/calibration/hst0cal.fits
-   
+
    ./astrometry/fits2azel.py -i ~/HST/calibration/hst0cal.fits --h5 -c 65.1186367 -147.432975 -t 2013-04-14T08:54:00Z --png
 
 
@@ -251,9 +250,9 @@ cam0
 ::
 
    ./histutils/rawDMCreader.py -i ~/HSTdata/DataField/2013-04-14/HST1/2013-04-14T07-00-CamSer1387_frames_205111-1-208621.DMCdata -f 0 10 1 --avg --fits
-   
+
    mv ~/HSTdata/DataField/2013-04-14/HST1/2013-04-14T07-00-CamSer1387_frames_205111-1-208621_mean_frames.fits ~/HST/calibration/hst1cal.fits
-   
+
    ./astrometry/fits2azel.py -i ~/HST/calibration/hst1cal.fits --h5 -c 65.12657 -147.496908333 -t 2013-04-14T08:54:00Z --png
 
 
