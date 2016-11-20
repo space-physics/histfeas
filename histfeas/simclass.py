@@ -159,7 +159,7 @@ class Sim:
             try:
                 self.startutc = parse(sp.get('cams','reqStartUT',fallback=None))
                 self.stoputc =  parse(sp.get('cams','reqStopUT', fallback=None))
-            except (KeyError,ValueError,AttributeError):
+            except (KeyError,ValueError,AttributeError,TypeError):
                 pass
 
 
