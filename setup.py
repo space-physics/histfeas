@@ -1,7 +1,7 @@
 #!/usr/bin/env python
+from pathlib import Path
 import subprocess
 from setuptools import setup
-from os import chdir
 
 try:
     subprocess.call(['conda','install','--yes','--file','requirements.txt'])
@@ -9,29 +9,31 @@ except Exception as e:
     pass
 #%%
 # FIXME: trick is to have them in order from no prereq to full prereq
-for p in ['https://github.com/scienceopen/themisasi',
-          'https://github.com/scienceopen/histutils',
-        'https://github.com/scienceopen/lowtran',
+for p in [
+        'https://github.com/scienceopen/pybashutils'
+        'https://github.com/scienceopen/pyimagevideo',
         'https://github.com/scienceopen/pymap3d',
-        'https://github.com/scienceopen/astrometry_azel',
+          'https://github.com/scienceopen/lowtran',
         'https://github.com/scienceopen/CVutils',
+        'https://github.com/scienceopen/astrometry_azel',
+          'https://github.com/scienceopen/histutils',
+          'https://github.com/scienceopen/dmcutils',
+          'https://github.com/scienceopen/themisasi',
         'https://github.com/scienceopen/gridaurora',
         'https://github.com/scienceopen/transcarread',
         'https://github.com/scienceopen/gaussfitter',
-        'https://github.com/scienceopen/pyimagevideo',
-        'https://github.com/scienceopen/dascutils',
-        'https://github.com/scienceopen/pybashutils']:
+        'https://github.com/scienceopen/dascutils',]:
 
-    chdir('..')
-    p.rstrip('/')
-    subprocess.call(['git','clone', p])
+    cwd = Path('..') / p.split('/')[-1]
+    print('\n {} \n'.format(cwd))
 
-    chdir(p.split('/')[-1])
-    subprocess.call(['git','pull']) #in case it was already installed
+    if not cwd.is_dir():
+        subprocess.run(['git','clone', p],cwd='..')
 
-    subprocess.call(['python','setup.py','develop']) #FIXME is there an API to do this?
+    subprocess.call(['git','pull'], cwd=str(cwd)) #in case it was already installed
 
-chdir('../histfeas')
+    subprocess.call(['python','setup.py','develop'], cwd=str(cwd)) #FIXME is there an API to do this?
+
 #%%
 setup(name='histfeas',
       packages=['histfeas'],
@@ -42,4 +44,5 @@ setup(name='histfeas',
 	  extras_require = {'tifffile':['tifffile']},
       dependency_links = [ ],
 	  )
+
 
