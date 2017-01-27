@@ -68,5 +68,4 @@ if __name__ == '__main__':
     else: #normal
         doSim(P)
 
-    if 'show' in makeplot:
-        show()
+    show()

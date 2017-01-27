@@ -102,5 +102,5 @@ def initPhi(Phi0,Peig,Fwd,overrides):
     except (KeyError,TypeError):
         try:
             return zeros(Fwd['sx']*Peig['Mp'].shape[1]) #ones() is NOT appropriate -- must be tapered down for higher energy beams to keep physically plausible.
-        except TypeError: # no fwd or optim
+        except (AttributeError, TypeError): # no fwd or optim
             pass
