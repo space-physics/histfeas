@@ -1,12 +1,14 @@
 #!/usr/bin/env python
+import subprocess # need for git
 from pathlib import Path
-import subprocess
 from setuptools import setup
 
 try:
-    subprocess.call(['conda','install','--yes','--file','requirements.txt'])
+    import conda.cli
+    conda.cli.main('install','--file','requirements.txt')
 except Exception as e:
-    pass
+    print(e)
+
 #%%
 # FIXME: trick is to have them in order from no prereq to full prereq
 for p in [

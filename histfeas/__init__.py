@@ -1,19 +1,14 @@
+from pathlib import Path
 import subprocess,os
 import matplotlib
 matplotlib.use('Agg')
 print(matplotlib.get_backend())
 #%%
-try:
-    from pathlib import Path
-    Path().expanduser()
-except (ImportError,AttributeError):
-    from pathlib2 import Path
-#%%
 from tempfile import mkdtemp
 from argparse import ArgumentParser
 from sys import argv
 import logging
-from six.moves.configparser import ConfigParser
+from configparser import ConfigParser
 from shutil import copy2
 from geopy.distance import vincenty
 #from numpy import arange, fromstring

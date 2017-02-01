@@ -1,11 +1,10 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 """
 generates circular markings of az/el on videos
  montage anno_flame10061*.png -trim -tile 4x1 -geometry +1+0  out.png
 """
 from __future__ import division
-from six import PY2
-from . import Path
+from pathlib import Path
 from matplotlib.patches import Ellipse
 from matplotlib.pyplot import figure, Axes,close
 import matplotlib
@@ -20,8 +19,6 @@ from GeoData.plotting import plotazelscale
 
 RINGCALDEG = 5.
 DPI = 75
-
-if PY2: FileNotFoundError = OSError
 
 def ccdfid(imgfn,calfn):
     imgfn = Path(imgfn).expanduser()

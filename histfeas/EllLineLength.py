@@ -1,15 +1,10 @@
-from six import PY2
 import logging
 import h5py
 #from numba import jit
 #from numbapro import vectorize
 from numpy import empty,ones,ravel_multi_index,hypot,zeros,in1d,array
 from scipy.sparse import dok_matrix,issparse
-from shutil import copy2
-if PY2:
-    SameFileError=OSError
-else:
-    from shutil import SameFileError
+from shutil import copy2,SameFileError
 # local
 from cvutils.lineClipping import cohensutherland
 

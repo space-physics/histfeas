@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 import logging
-from six import integer_types
 from numpy import (empty,empty_like,isnan,sin,cos,radians,append,diff,ones,outer,
                    unique,ndarray,int64,int32)
 import numpy as np #need this here
@@ -255,7 +254,7 @@ def ind2slice(ind):
     converts list of SEQUENTIAL integers to slice. for indexing speed gains.
     """
     assert isinstance(ind,(tuple,list,ndarray)),'what else would you like to slice by?'
-    assert isinstance(ind[0],(integer_types,int32,int64)),'only integers are permissable for indexing'  #numpy.nonzero outputs int32 sometmies even on Linux Py3.5
+    assert isinstance(ind[0],(int,int32,int64)),'only integers are permissable for indexing'  #numpy.nonzero outputs int32 sometmies even on Linux Py3.5
     assert (diff(ind)==1).all(),'only sequential integers for now. Other uniform steps are possible with slight modification'
 
     return slice(ind[0],ind[-1])

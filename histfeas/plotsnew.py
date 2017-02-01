@@ -1,5 +1,4 @@
-from . import Path
-from six import integer_types
+from pathlib import Path
 import logging
 from numpy import (s_,array,empty,empty_like,isnan,asfortranarray,linspace,outer,
                    sin,cos,pi,ones_like,nan,unravel_index,meshgrid,logspace,
@@ -1170,7 +1169,7 @@ def indone1d(x,P,i):
     if 'x1d' not in P or P['x1d'] is None:
         return
 
-    if isinstance(P['x1d'],(float,integer_types,list,tuple,ndarray)):
+    if isinstance(P['x1d'],(float,int,list,tuple,ndarray)):
         c = P['x1d']
     elif len(P['x1d']) == 1:
         c = P['x1d'].item()

@@ -3,10 +3,8 @@
 Example command line interfacer for HIST feasibility
 Michael Hirsch
 """
-from __future__ import division,absolute_import
 import logging
 from signal import signal,SIGINT #for Ctrl C
-from os.path import expanduser
 from numpy import arange
 import matplotlib as mpl
 from matplotlib.pyplot import show
@@ -58,8 +56,8 @@ if __name__ == '__main__':
         print('saving profile results to ' + proffn)
         cProfile.run('doSim(P)',proffn)
         pstats.Stats(proffn).sort_stats('time','cumulative').print_stats(50)
-        #binpath = expanduser('~/profile/')
-        #sysCall = [binpath + 'gprof2dot.py','-f','pstats',profFN,'|','dot','-Tpng','-o','output.png']
+        #binpath = Path('~/profile/').expanduser()
+        #sysCall = [str(binpath / 'gprof2dot.py'),'-f','pstats',profFN,'|','dot','-Tpng','-o','output.png']
         #print(sysCall)
         #po = Popen(sysCall, stdout=PIPE, cwd=binpath, shell=False)
         #so,serr = po.communicate() #timeout is incompatible with Python 2.

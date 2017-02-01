@@ -2,10 +2,11 @@
 """
 Registration case for HiST program
 """
+from pathlib import Path
 from numpy.testing import assert_allclose
 import h5py
 #
-from histfeas import userinput, hist_figure, Path
+from histfeas import userinput, hist_figure
 
 
 def readCheck(Phi0,Phifit,reffn):
