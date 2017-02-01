@@ -6,7 +6,7 @@ from numpy import array,rot90
 from scipy.ndimage import imread
 from matplotlib.pyplot import show
 #
-from histfeas import Path
+from pathlib import Path
 from histfeas.fiducial import fiducial
 #%% EMCCD Figure
 path = '~/data/2007-03/optical'

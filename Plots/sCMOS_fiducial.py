@@ -8,7 +8,7 @@ import cv2
 from matplotlib.pyplot import show
 #
 from cvutils.getaviprop import getaviprop
-from histfeas import Path
+from pathlib import Path
 from histfeas.fiducial import fiducial
 #%% sCMOS Figure
 path = '~/data/2011-03-01/optical'

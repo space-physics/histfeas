@@ -5,7 +5,7 @@ iterates over number of data inversion iterations, using the single splitting ar
 import multiprocessing
 import concurrent.futures
 import subprocess
-from histfeas import Path
+from pathlib import Path
 
 load=False
 

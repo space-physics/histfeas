@@ -5,7 +5,7 @@ iterates over camera positions, using the step/impulse differential number flux 
 import multiprocessing
 import concurrent.futures
 import subprocess
-from histfeas import Path
+from pathlib import Path
 
 rdir = 'out'
 ini = '../in/2cam_split.ini'

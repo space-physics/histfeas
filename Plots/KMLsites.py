@@ -5,7 +5,7 @@ script to write instrument locations to KML for repeatable, extensible plots in 
 from itertools import combinations
 import simplekml
 #
-from histfeas import Path
+from pathlib import Path
 from histfeas.io import campoint,KMLline
 
 kmlfn = 'cam.kml'
