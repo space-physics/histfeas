@@ -8,13 +8,15 @@ try:
     conda.cli.main('install','--file','requirements.txt')
 except Exception as e:
     print(e)
+    import pip
+    pip.main(['install','-r','requirements.txt'])
+
 
 #%%
 # FIXME: trick is to have them in order from no prereq to full prereq
 for p in [
         'https://github.com/scienceopen/pybashutils'
         'https://github.com/scienceopen/pyimagevideo',
-        'https://github.com/scienceopen/pymap3d',
           'https://github.com/scienceopen/lowtran',
         'https://github.com/scienceopen/CVutils',
         'https://github.com/scienceopen/astrometry_azel',
@@ -39,12 +41,9 @@ for p in [
 #%%
 setup(name='histfeas',
       packages=['histfeas'],
-	  description='Feasibility study for HiST auroral tomography system',
-	  author='Michael Hirsch',
-	  url='https://github.com/scienceopen/histfeas',
-	  install_requires=['Wand','pathvalidate','geopy','simplekml'],
+	  install_requires=['Wand','pathvalidate','geopy','simplekml',
+                        'pymap3d'],
 	  extras_require = {'tifffile':['tifffile']},
-      dependency_links = [ ],
 	  )
 
 
