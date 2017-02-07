@@ -44,7 +44,13 @@ setup(name='histfeas',
 	  url='https://github.com/scienceopen/histfeas',
 	  install_requires=['Wand','pathvalidate','geopy','simplekml'],
 	  extras_require = {'tifffile':['tifffile']},
-      dependency_links = [ ],
+      classifiers=[
+      'Intended Audience :: Science/Research',
+      'Development Status :: 4 - Beta',
+      'License :: OSI Approved :: MIT License',
+      'Topic :: Scientific/Engineering :: Atmospheric Science',
+      'Programming Language :: Python :: 3.6',
+      ],
 	  )
 
 
