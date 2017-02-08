@@ -8,7 +8,7 @@ from xarray import DataArray
 #
 from gridaurora.eFluxGen import fluxgen
 from gridaurora.arcexcite import getTranscar
-from histutils.findnearest import find_nearest
+from sciencedates import find_nearest
 
 def getColumnVER(zgrid,zTranscar,Peig,Phi0):
     assert Phi0.shape[0] == Peig.shape[1]

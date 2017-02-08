@@ -2,7 +2,7 @@
 from numpy import outer, zeros_like,zeros,arange,repeat,nan, empty
 #
 from gridaurora.chapman import chapman_profile
-from histutils.findnearest import find_nearest
+from sciencedates import find_nearest
 from .transcararc import getpx
 
 

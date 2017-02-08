@@ -45,7 +45,7 @@ setup(name='histfeas',
 	  author='Michael Hirsch',
 	  url='https://github.com/scienceopen/histfeas',
 	  install_requires=['Wand','pathvalidate','geopy','simplekml',
-                      'pymap3d'],
+                      'pymap3d','sciencedates'],
 	  extras_require = {'tifffile':['tifffile']},
       classifiers=[
       'Intended Audience :: Science/Research',

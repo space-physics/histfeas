@@ -25,7 +25,7 @@ try:
 except Exception as e:
     gaussfitter = None
 #
-from histutils.findnearest import find_nearest
+from sciencedates import find_nearest
 from histutils.plotsimul import plotRealImg,plotPlainImg
 from gridaurora.opticalmod import plotOptMod
 from gridaurora.plots import ploteigver,writeplots,nametime
