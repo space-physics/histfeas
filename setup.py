@@ -18,9 +18,6 @@ for p in [
         'https://github.com/scienceopen/pybashutils'
         'https://github.com/scienceopen/pyimagevideo',
           'https://github.com/scienceopen/lowtran',
-        'https://github.com/scienceopen/CVutils',
-        'https://github.com/scienceopen/astrometry_azel',
-          'https://github.com/scienceopen/histutils',
           'https://github.com/scienceopen/dmcutils',
           'https://github.com/scienceopen/themisasi',
         'https://github.com/scienceopen/gridaurora',
@@ -45,7 +42,7 @@ setup(name='histfeas',
 	  author='Michael Hirsch',
 	  url='https://github.com/scienceopen/histfeas',
 	  install_requires=['Wand','pathvalidate','geopy','simplekml',
-                      'pymap3d','sciencedates'],
+                      'pymap3d','sciencedates','histutils','astrometry_azel','morecvutils'],
 	  extras_require = {'tifffile':['tifffile']},
       classifiers=[
       'Intended Audience :: Science/Research',

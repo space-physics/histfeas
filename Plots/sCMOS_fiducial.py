@@ -7,7 +7,7 @@ from numpy import arange,datetime64,timedelta64
 import cv2
 from matplotlib.pyplot import show
 #
-from cvutils.getaviprop import getaviprop
+from morecvutils.getaviprop import getaviprop
 from pathlib import Path
 from histfeas.fiducial import fiducial
 #%% sCMOS Figure
