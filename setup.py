@@ -3,24 +3,17 @@ import subprocess # need for git
 from pathlib import Path
 from setuptools import setup
 
-try:
-    import conda.cli
-    conda.cli.main('install','--file','requirements.txt')
-except Exception as e:
-    print(e)
-    import pip
-    pip.main(['install','-r','requirements.txt'])
-
+req = ['Wand','pathvalidate','geopy','simplekml',
+        'pymap3d','sciencedates','histutils','astrometry_azel',
+       'nose','numpy','h5py','scipy','pandas','xarray','matplotlib','seaborn','astropy']
 
 #%%
 # FIXME: trick is to have them in order from no prereq to full prereq
 for p in [
-        'https://github.com/scienceopen/pybashutils'
+        'https://github.com/scienceopen/pybashutils',
         'https://github.com/scienceopen/pyimagevideo',
           'https://github.com/scienceopen/lowtran',
         'https://github.com/scienceopen/CVutils',
-        'https://github.com/scienceopen/astrometry_azel',
-          'https://github.com/scienceopen/histutils',
           'https://github.com/scienceopen/dmcutils',
           'https://github.com/scienceopen/themisasi',
         'https://github.com/scienceopen/gridaurora',
@@ -44,8 +37,7 @@ setup(name='histfeas',
 	  description='Feasibility study for HiST auroral tomography system',
 	  author='Michael Hirsch',
 	  url='https://github.com/scienceopen/histfeas',
-	  install_requires=['Wand','pathvalidate','geopy','simplekml',
-                      'pymap3d','sciencedates'],
+	  install_requires=req,
 	  extras_require = {'tifffile':['tifffile']},
       classifiers=[
       'Intended Audience :: Science/Research',
