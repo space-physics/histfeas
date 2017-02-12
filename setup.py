@@ -3,13 +3,10 @@ import subprocess # need for git
 from pathlib import Path
 from setuptools import setup
 
-try:
-    import conda.cli
-    conda.cli.main('install','--file','requirements.txt')
-except Exception as e:
-    print(e)
-    import pip
-    pip.main(['install','-r','requirements.txt'])
+req = ['Wand','pathvalidate','geopy','simplekml',
+                      'pymap3d','sciencedates','histutils','astrometry_azel','morecvutils','gridaurora',
+       'nose','numpy','h5py','scipy','pandas','xarray','matplotlib','seaborn','astropy']
+# leave astropy in here for gaussfitter
 
 
 #%%
@@ -20,7 +17,6 @@ for p in [
           'https://github.com/scienceopen/lowtran',
           'https://github.com/scienceopen/dmcutils',
           'https://github.com/scienceopen/themisasi',
-        'https://github.com/scienceopen/gridaurora',
         'https://github.com/scienceopen/transcarread',
         'https://github.com/scienceopen/gaussfitter',
         'https://github.com/scienceopen/dascutils',]:
@@ -41,8 +37,7 @@ setup(name='histfeas',
 	  description='Feasibility study for HiST auroral tomography system',
 	  author='Michael Hirsch',
 	  url='https://github.com/scienceopen/histfeas',
-	  install_requires=['Wand','pathvalidate','geopy','simplekml',
-                      'pymap3d','sciencedates','histutils','astrometry_azel','morecvutils'],
+	  install_requires=req,
 	  extras_require = {'tifffile':['tifffile']},
       classifiers=[
       'Intended Audience :: Science/Research',
