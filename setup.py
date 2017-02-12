@@ -4,19 +4,18 @@ from pathlib import Path
 from setuptools import setup
 
 req = ['Wand','pathvalidate','geopy','simplekml',
-        'pymap3d','sciencedates','histutils','astrometry_azel',
+       'pymap3d','sciencedates','histutils','astrometry_azel','morecvutils','gridaurora',
        'nose','numpy','h5py','scipy','pandas','xarray','matplotlib','seaborn','astropy']
+# leave astropy in here for gaussfitter
+
 
 #%%
 # FIXME: trick is to have them in order from no prereq to full prereq
 for p in [
         'https://github.com/scienceopen/pybashutils',
         'https://github.com/scienceopen/pyimagevideo',
-          'https://github.com/scienceopen/lowtran',
-        'https://github.com/scienceopen/CVutils',
-          'https://github.com/scienceopen/dmcutils',
+          'https://github.com/scienceopen/lowtran',          'https://github.com/scienceopen/dmcutils',
           'https://github.com/scienceopen/themisasi',
-        'https://github.com/scienceopen/gridaurora',
         'https://github.com/scienceopen/transcarread',
         'https://github.com/scienceopen/gaussfitter',
         'https://github.com/scienceopen/dascutils',]:
