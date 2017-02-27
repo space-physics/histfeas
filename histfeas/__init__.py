@@ -107,12 +107,10 @@ def getParams(P):
       # make the copied-to-output-directory .ini file readonly to help avoid mistakes when loading and replotting
         os.chmod(str(P['outdir']/P['ini'].name), 0o444)
 #%% read .ini
-    try:
-        # note python2 only allows ';' inline comments, can't be changed in python2(?)
-        xl = ConfigParser(allow_no_value=True, empty_lines_in_values=False,
-                          inline_comment_prefixes=(';'), strict=True)
-    except TypeError: #py27
-        xl = ConfigParser(allow_no_value=True, empty_lines_in_values=False)
+    # note python2 only allows ';' inline comments, can't be changed in python2(?)
+    xl = ConfigParser(allow_no_value=True, empty_lines_in_values=False,
+                      inline_comment_prefixes=(';'), strict=True)
+
     xl.read(str(P['ini']))
 #%% read plot parameters from ini
     if 'plot' in xl:
@@ -121,7 +119,7 @@ def getParams(P):
         P = plotstuffer(None,P)
 #%% read arcs (if any)
     arc,ntimeslice = setupArc(xl)
-    logging.info('# of observer time steps in {}: {}'.format(P['ini'],ntimeslice))
+    logging.info(f'# of observer time steps in {P["ini"]}: {ntimeslice}')
 #%% class with parameters and function
     sim = Sim(xl,arc,ntimeslice,P)
 #%% grid setup
@@ -183,7 +181,7 @@ def setupCam(sim,cp,zmax,P):
     cam = []
 
     if sim.camxreq is not None:
-        logging.warning('overriding camera x-loc with {}'.format(sim.camxreq))
+        logging.warning(f'overriding camera x-loc with {sim.camxreq}')
         for C,cx in zip(sim.camnames,sim.camxreq): #enumerate as in general camera 0 may not be used
             cam.append(Cam(sim, cp, C, zmax, xreq=cx,
                            makeplot=P['makeplot'], verbose=P['verbose']))
