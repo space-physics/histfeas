@@ -17,7 +17,7 @@ from .nans import nans
 try:
     import plotly.plotly as py
     from plotly.graph_objs import Data,Figure,XAxis,YAxis,Contour, Layout
-except:
+except ImportError:
     plotly=None
 #
 try:
