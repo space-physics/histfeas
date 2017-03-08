@@ -15,10 +15,10 @@ cam0 = 0 # km
 Ncpu=multiprocessing.cpu_count()//2  # //2 makes one thread per CPU for 2 thread Intel Hyperthreading
 rdir = Path(rdir).expanduser()
 
-print('using {} CPU'.format(Ncpu))
+print(f'using {Ncpu} CPU')
 
 def runhist(cx1):
-    cmd = ['../FigureMaker.py', ini, str(rdir/'cam1_{}'.format(cx1)),
+    cmd = ['../FigureMaker.py', ini, str(rdir/f'cam1_{cx1}'),
                       '--cx',str(cam0),str(cx1)]
     print(' '.join(cmd))
     subprocess.run(cmd)

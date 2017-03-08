@@ -10,7 +10,7 @@ from sys import argv
 import logging
 from configparser import ConfigParser
 from shutil import copy2
-from geopy.distance import vincenty
+from pymap3d.vdist import vdist
 #from numpy import arange, fromstring
 #%%
 from histutils.camclass import Cam
@@ -18,9 +18,10 @@ from histutils import splitconf
 from .simclass import Sim
 from .arcclass import Arc,getntimes
 #%%
+
 def hist_figure(P):
     from .main_hist import doSim # KEEP in this function to avoid ImportError
-    print('running HiSTfeas program -- will write png and h5 to {}'.format(P['outdir']))
+    print(f'running HiSTfeas program -- will write png and h5 to {P["outdir"]}')
     doSim(P)
 
 
@@ -151,7 +152,7 @@ def cam0dist(cam):
     cam[0].x_km = 0. # NOTE arbitrarily picks the first camera x=0km
     for C in cam[1:]:
         if C.usecam:
-            C.x_km = vincenty((cam[0].lat,cam[0].lon),(C.lat,C.lon)).kilometers
+            C.x_km = vdist(cam[0].lat,cam[0].lon,C.lat,C.lon)[0]/1e3
 
     return cam
 
@@ -163,7 +164,7 @@ def setupArc(xl):
     arc = {}
     ntimeslice=None
 
-    for s in xl.sections(): # for py27
+    for s in xl:
         if s.startswith('arc'):
             logging.debug('configuring {}'.format(s))
             texp = getntimes(xl[s]['texp']) # last time is blended with 2nd to last time

@@ -9,7 +9,7 @@ def bfgsiterplot(plist,pfn,ofn):
             with Image(filename=str(fn)) as I:
                 anim.sequence.append(I)
 
-        print('saving {}'.format(ofn))         
+        print(f'saving {ofn}')         
         anim.save(filename=str(ofn))
 
 def findplots(path,pat,pfn):
@@ -17,7 +17,7 @@ def findplots(path,pat,pfn):
     plist = sorted(path.glob(pat+'*'))
     plist = [p for p in plist if p.is_dir()]# and (p/pfn).is_file()] # take only directories
 
-    print('{} files found in {}'.format(len(plist),path))
+    print(f'{len(plist)} files found in {path}')
 
     return plist
 

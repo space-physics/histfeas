@@ -4,7 +4,7 @@ from pathlib import Path
 from setuptools import setup
 
 req = ['Wand','pathvalidate','geopy','simplekml',
-       'pymap3d','sciencedates','histutils','astrometry_azel','morecvutils','gridaurora',
+       'pymap3d','sciencedates','histutils','astrometry_azel','morecvutils','gridaurora','lowtran',
        'nose','numpy','h5py','scipy','pandas','xarray','matplotlib','seaborn','astropy']
 # leave astropy in here for gaussfitter
 
@@ -14,14 +14,14 @@ req = ['Wand','pathvalidate','geopy','simplekml',
 for p in [
         'https://github.com/scienceopen/pybashutils',
         'https://github.com/scienceopen/pyimagevideo',
-          'https://github.com/scienceopen/lowtran',          'https://github.com/scienceopen/dmcutils',
+         'https://github.com/scienceopen/dmcutils',
           'https://github.com/scienceopen/themisasi',
         'https://github.com/scienceopen/transcarread',
         'https://github.com/scienceopen/gaussfitter',
         'https://github.com/scienceopen/dascutils',]:
 
     cwd = Path('..') / p.split('/')[-1]
-    print('\n {} \n'.format(cwd))
+    print(f'\n {cwd} \n')
 
     if not cwd.is_dir():
         subprocess.run(['git','clone', p],cwd='..')
@@ -34,7 +34,7 @@ for p in [
 setup(name='histfeas',
       packages=['histfeas'],
 	  description='Feasibility study for HiST auroral tomography system',
-	  author='Michael Hirsch',
+	  author='Michael Hirsch, Ph.D.',
 	  url='https://github.com/scienceopen/histfeas',
 	  install_requires=req,
 	  extras_require = {'tifffile':['tifffile']},

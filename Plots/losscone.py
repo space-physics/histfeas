@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+"""
+Loss cone angles vs. L-shell
+"""
 from matplotlib.pyplot import figure,show
 from numpy import arange,arcsin,degrees
 import seaborn as sns

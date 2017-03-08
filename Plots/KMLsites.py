@@ -29,5 +29,5 @@ for name,latlon in sites.items():
 for c in combinations(sites.values(),2):  # 2 since pairs of sites to draw lines
     kml = KMLline(kml,c)
 
-print('saving {}'.format(kmlfn))
+print(f'saving {kmlfn}')
 kml.save(str(kmlfn))
