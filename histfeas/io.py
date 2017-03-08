@@ -1,9 +1,9 @@
 import simplekml
 import logging
-from geopy.distance import vincenty as vdist
 from matplotlib.pyplot import figure,clf
 #
 from pymap3d import aer2geodetic
+from pymap3d.vdist import vdist
 
 def planviewkml(cam,xKM,zKM,makeplot,figh,odir):
     """
@@ -103,7 +103,7 @@ def KMLline(kml,lla):
     """
     assert len(lla[0]) in (2,3),'lla must be 2 or 3 length vector lat,lon,(alt)'
 
-    dist_km = vdist(lla[0][:2],lla[1][:2]).km
+    dist_km = vdist(lla[0][0],lla[0][1], lla[1][0],lla[1][1])[0] / 1e3
 
     ls = kml.newlinestring(name='{:.1f} km'.format(dist_km),
                            coords=(lla[0][::-1], lla[1][::-1]))
