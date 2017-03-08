@@ -244,7 +244,7 @@ def plotfwd(sim,cam,drn,xKM,xp,zKM,zp, ver,Phi0,fitp,tInd,  P,doSubplots=True):
     T = tind2dt(cam,tInd)
 
     if doSubplots:
-        ttxt = T + "\n x_cam {}".format(getcamx(cam))
+        ttxt = T + f"\n x_cam {getcamx(cam)}"
         fg,axs = subplots(nrow,ncol,figsize=(ncol*7.5,nrow*7.5))
         axs = atleast_2d(axs)
 
@@ -283,9 +283,7 @@ def plotfwd(sim,cam,drn,xKM,xp,zKM,zp, ver,Phi0,fitp,tInd,  P,doSubplots=True):
         writeplots(fg,'fwd',T,P['outdir'], fmt='.svg')
 
 def plotstamp(sim,P):
-    return '{} iterations: {}   git: {}'.format(sim.optimfitmeth,
-                                                sim.optimmaxiter,
-                                                P['gitrev'])
+    return f'{sim.optimfitmeth} iterations: {sim.optimmaxiter,}   git: {P["gitrev"]}'
 
 def plotoptim(sim,cam,drn,dhat,bcomptxt,ver,Phi0,vfit,Phifit,xKM,xp,zKM,zp,tInd,P, doSubplots=True):
     assert isinstance(P,dict)
@@ -302,7 +300,7 @@ def plotoptim(sim,cam,drn,dhat,bcomptxt,ver,Phi0,vfit,Phifit,xKM,xp,zKM,zp,tInd,
         vfit = vfit['optim']
 
     if doSubplots:
-        ttxt = T + "\n x_cam {}".format(getcamx(cam))
+        ttxt = T + f"\n x_cam {getcamx(cam)}"
         fg,axs = subplots(nrow,3,figsize=(21,nrow*7.5))
         axs = atleast_2d(axs)
 
@@ -319,23 +317,24 @@ def plotoptim(sim,cam,drn,dhat,bcomptxt,ver,Phi0,vfit,Phifit,xKM,xp,zKM,zp,tInd,
 #%% flux
     jtxt = '$\hat{\mathbf{\phi}}_{top}$ diff. number flux.'
     if P['verbose']:
-        jtxt+=' Neval={}'.format(Phifit['nfev'])
+        jtxt += f' Neval={Phifit["nfev"]}'
 
     plotJ(sim, Phifit['x'],xKM,xp, Phifit['EK'], Phifit['EKpcolor'], T, P,'phiest', jtxt,axs[0,2])
 
 
 
-    dumph5('phiest',T,P['outdir'],gx0=Phifit['gx0'],gE0=Phifit['gE0'])
+    dumph5('phiest',T, P['outdir'], gx0=Phifit['gx0'], gE0=Phifit['gE0'])
 
     if Jxi is not None:
-        xlbl = ['{:0.2f}'.format(x) for x in xKM[Jxi]]
+        # NOTE: double bracket xKM[[Jxi]] makes iterable for singleton case
+        xlbl = [f'{x:0.2f}' for x in xKM[[Jxi]]] 
 
         if ver is not None:
             vfwd1d = ver[:,Jxi]
         else:
             vfwd1d = None
         plotVER1D(sim,vfwd1d,vfit[:,Jxi],zKM,xlbl,T, P,'pest1d',
-                  '$\hat{\mathbf{P}}$ volume emission rate at '+'$B_\perp$={} [km]'.format(xlbl),
+                  '$\hat{\mathbf{P}}$ volume emission rate at '+f'$B_\perp$={xlbl} [km]',
                   axs[1,0])
 
         if Phi0 is not None:
@@ -487,7 +486,7 @@ def plotJ1D(sim,PhiFwd,PhiInv,Ek,xlbl,T,P,prefix,titletxt,ax=None):
 
             try:
                 if Phi.ndim==1:
-                     ax.loglogx(Ek,Phi,marker='.',label=l+str(xlbl[0])) # xlbl[0], not .item()
+                     ax.loglog(Ek,Phi,marker='.',label=l+str(xlbl[0])) # xlbl[0], not .item()
                      if P['verbose']:
                             labelpeakE(Phi,Ek,sim.minenergy,ax)
                 else:
@@ -1139,12 +1138,12 @@ def dumph5(prefix,tInd,odir=None, **writevar): #used in other .py too
     if prefix is None or odir is None:
         return
 
-    fn = Path(odir).expanduser()/('dump' + nametime(tInd) +'.h5')
+    fn = Path(odir).expanduser() / (f'dump {nametime(tInd)}.h5')
 
     if not fn.is_file():
-        print('creating {}'.format(fn))
+        print(f'creating {fn}')
 
-    logging.info('dumping {} to {}'.format(prefix, fn))
+    logging.info(f'dumping {prefix} to {fn}')
     with h5py.File(str(fn),'a',libver='latest') as H:
         for k,v in writevar.items():
             if v is None:
@@ -1160,7 +1159,7 @@ def dumph5(prefix,tInd,odir=None, **writevar): #used in other .py too
                 else:
                     H[K] = v
             except Exception as e:
-                logging.error('failed to write {} {}.  {}'.format(fn,K,e))
+                logging.error(f'failed to write {fn} {K}.  {e}')
 
 
 def indone1d(x,P,i):
@@ -1177,14 +1176,17 @@ def indone1d(x,P,i):
         try: # FIXME future didn't implement distinction in configparse code yet
             c = P['x1d']['time'][i]
         except IndexError:
-            logging.error('used last value of x1d: {} km'.format(c))
+            logging.error(f'used last value of x1d: {c} km')
             c = P['x1d']['time'][-1]
     else:
-        logging.warning('unknown intent for "x1d" {}'.format(P['x1d']))
+        logging.warning(f'unknown intent for "x1d" {P["x1d"]}')
         return
 #%%
+    """
+    Note: Jxi can be a scalar OR vector!
+    """
     Jxi = find_nearest(x,c)[0]
-    logging.info('1-D plots of Phi and P taken at index {}  x={} km'.format(Jxi, P['x1d']))
+    print(f'1-D plots of Phi and P taken at index {Jxi}  x={P["x1d"]} km')
 
     return Jxi
 
