@@ -19,6 +19,8 @@ class Sim:
             self.rootdir = Path(P['overrides']['rootdir']).expanduser()
         except (TypeError,KeyError):
             self.rootdir = Path()
+            logging.error(f'fallback to root path {self.rootdir}')
+
 #%% how many cameras in use, and which ones?
         self.camnames = sp['cam']['name'].split(',')
         self.useCamBool = fromstring(sp['cam']['useCam'],dtype=bool,sep=',')
