@@ -12,7 +12,7 @@ from .plotsnew import getx0E0
 
 
 def FitVERopt(L,bn,Phi0,MpDict,sim,cam,Fwd,tInd,P):
-    if Phi0 is None:
+    if Phi0 is None or not sim.optimfitmeth:
         return (None,)*4
 
     assert L.ndim==2
@@ -77,7 +77,7 @@ def FitVERopt(L,bn,Phi0,MpDict,sim,cam,Fwd,tInd,P):
         elif sim.optimfitmeth =='cobyla':
             optimopt = {'maxiter':maxiter,'disp':minverbose,'rhobeg':1e1,'tol':1} #10
         else:
-            raise TypeError('unknown minimization method: {}'.format(sim.optimfitmeth))
+            raise TypeError(f'unknown minimization method: {sim.optimfitmeth}')
 
         tic = time()
         #

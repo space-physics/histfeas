@@ -286,7 +286,7 @@ def plotfwd(sim,cam,drn,xKM,xp,zKM,zp, ver,Phi0,fitp,tInd,  P,doSubplots=True):
 def plotstamp(sim,P):
     return f'{sim.optimfitmeth} iterations: {sim.optimmaxiter,}   git: {P["gitrev"]}'
 
-def plotoptim(sim,cam,drn,dhat,bcomptxt,ver,Phi0,vfit,Phifit,xKM,xp,zKM,zp,tInd,P, doSubplots=True):
+def plotoptim(sim,cam,drn,dhat,bcomptxt,ver, Phi0,vfit,Phifit,xKM,xp,zKM,zp,tInd,P, doSubplots=True):
     assert isinstance(P,dict)
     Jxi = indone1d(xKM,P,tInd)
 #%% always 3 columns in subplot
@@ -320,11 +320,10 @@ def plotoptim(sim,cam,drn,dhat,bcomptxt,ver,Phi0,vfit,Phifit,xKM,xp,zKM,zp,tInd,
     if P['verbose']:
         jtxt += f' Neval={Phifit["nfev"]}'
 
-    plotJ(sim, Phifit['x'],xKM,xp, Phifit['EK'], Phifit['EKpcolor'], T, P,'phiest', jtxt,axs[0,2])
+    if Phifit is not None:
+        plotJ(sim, Phifit['x'],xKM,xp, Phifit['EK'], Phifit['EKpcolor'], T, P,'phiest', jtxt,axs[0,2])
 
-
-
-    dumph5('phiest',T, P['outdir'], gx0=Phifit['gx0'], gE0=Phifit['gE0'])
+        dumph5('phiest',T, P['outdir'], gx0=Phifit['gx0'], gE0=Phifit['gE0'])
 
     if Jxi is not None:
         # NOTE: double bracket xKM[[Jxi]] makes iterable for singleton case
@@ -342,7 +341,9 @@ def plotoptim(sim,cam,drn,dhat,bcomptxt,ver,Phi0,vfit,Phifit,xKM,xp,zKM,zp,tInd,
             phifwd1d = Phi0[:,Jxi]
         else:
             phifwd1d = None
-        plotJ1D(sim,phifwd1d, Phifit['x'][:,Jxi], Phifit['EK'],xlbl,T,P,'phiest1d',
+
+        if Phifit is not None:
+            plotJ1D(sim,phifwd1d, Phifit['x'][:,Jxi], Phifit['EK'], xlbl,T,P,'phiest1d',
                 '$\hat{\phi}_{top}$ diff. number flux at '+'$B_\perp$={} [km]'.format(xlbl),
                 axs[1,1])
 
@@ -804,6 +805,7 @@ def plotBcompare(sim,braw,bfit,cam,prefix, tInd, P, ax=None):
 
 #    ax1.yaxis.get_offset_text().set_size(afs)
     ax.tick_params(axis='both', which='both', direction='out')
+    ax.set_ylabel('$\mathbf{B}$ [photons sr$^{-1}$ s$^{-1}$]')
 
     for C in cam:
         if C.usecam:
@@ -813,23 +815,23 @@ def plotBcompare(sim,braw,bfit,cam,prefix, tInd, P, ax=None):
                  #color=cord[icm])#)
 #%% plot fit
     # do we need twinax? Let's find out if they're within factor of 10
-    maxfit = bfit.max(); maxraw = braw.max()
-    if 10*maxraw > maxfit > 0.1*maxraw:
-        singax = True
-        ax2 = ax
-        ax.set_ylabel('$\mathbf{B}$ [photons sr$^{-1}$ s$^{-1}$]')
-    else:
-        singax = False
-        ax2 = ax.twinx()
-        ax2.get_yaxis().set_major_formatter(sfmt[0]) #only need lin
-        ax.set_ylabel('$\mathbf{B}$ [photons sr$^{-1}$ s$^{-1}$]')
-        ax2.set_ylabel('$\mathbf{\hat{B}}$ [photons sr$^{-1}$ s$^{-1}$]')
+    singax = True
+    if bfit is not None:
+        maxfit = bfit.max(); maxraw = braw.max()
+        if 10*maxraw > maxfit > 0.1*maxraw:
+            ax2 = ax
+        else:
+            singax = False
+            ax2 = ax.twinx()
+            ax2.get_yaxis().set_major_formatter(sfmt[0]) #only need lin
+            ax2.set_ylabel('$\mathbf{\hat{B}}$ [photons sr$^{-1}$ s$^{-1}$]')
+
 #%% now plot each camera
-    for C in cam:
-        if C.usecam:
-            ax2.plot(C.angle_deg[C.Lcind],bfit[C.Lind],
-                 label='$\hat{{\mathbf{{B}}}}_{}$'.format(C.name))
-                 #color=cord[icm]))
+        for C in cam:
+            if C.usecam:
+                ax2.plot(C.angle_deg[C.Lcind],bfit[C.Lind],
+                     label='$\hat{{\mathbf{{B}}}}_{}$'.format(C.name))
+                     #color=cord[icm]))
 
     if singax:
         ax.legend(loc='lower left')
@@ -847,10 +849,10 @@ def plotBcompare(sim,braw,bfit,cam,prefix, tInd, P, ax=None):
     ax.xaxis.set_major_locator(MultipleLocator(1))
 
     ax.grid(True)
-    ax.autoscale(True,tight=True)
-    ax.set_ylim(P['vlim']['b']) #must come AFTER autoscale!
+    ax.autoscale(True,axis='x',tight=True)
+    ax.set_ylim(P['vlim']['b']) # after autoscale
 #%% do more detailed comparison
-    if dosubtract:
+    if dosubtract and bfit is not None:
         bias=[]
         ax3 =figure().gca()
         for C in cam:
@@ -873,7 +875,7 @@ def plotBcompare(sim,braw,bfit,cam,prefix, tInd, P, ax=None):
     else:
         ut1_unix=nans(len(cam))
 
-    dumph5(prefix,T,P['outdir'],angle=[C.angle_deg for C in cam if C.usecam],braw=braw,bfit=bfit, ut1_unix=ut1_unix)
+    dumph5(prefix,T,P['outdir'],angle=[C.angle_deg for C in cam if C.usecam], braw=braw,bfit=bfit, ut1_unix=ut1_unix)
 
     writeplots(fg,prefix,T,P['outdir'],fmt='.eps')
 #%%

@@ -19,8 +19,10 @@ Impulse Aurora (for testing):
 Table of results for 2 and 3 cam:
 ./FigureMaker.py in/table_flame{2,3}.ini
 
-REAL actual camera data:
-./FigureMaker.py
+REAL actual camera data (just dump synchroinzed frames:
+./FigureMaker.py -m realvid in/apr14T085454
+
+-m optim  reconstruct only 
 """
 from histfeas import userinput, hist_figure
 from histfeas.loadAnalyze import readresults,findxlsh5
