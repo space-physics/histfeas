@@ -199,8 +199,8 @@ def plotstuffer(sp,P):
     """
     these have no impact on simulation calculations, they are just plotting bounds
     """
-    if sp is not None:
-        P['x1d'] = list(map(float,sp['x1d'].split(',')))
+    if sp is not None and 'x1d' in sp:
+        P['x1d'] = splitconf(sp,'x1d')
 
     if 'vlim' not in P:
         P['vlim'] = {}

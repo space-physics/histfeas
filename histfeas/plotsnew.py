@@ -125,10 +125,11 @@ def goPlot(sim,Fwd,cam,Lfwd,Tm,drn,dhat,ver,vfit,Peig,Phi0, Phifit,rawdata,tInd,
         xCam = empty(sim.nCamUsed,dtype=float)
         zCam = empty_like(xCam)
         for i,C in enumerate(cam):
-            xFOVpixelEnds[:,i] = C.xFOVpixelEnds
-            zFOVpixelEnds[:,i] = C.zFOVpixelEnds
-            xCam[i] = C.x_km
-            zCam[i] = C.alt_m / 1000.
+            if C.usecam:
+                xFOVpixelEnds[:,i] = C.xFOVpixelEnds
+                zFOVpixelEnds[:,i] = C.zFOVpixelEnds
+                xCam[i] = C.x_km
+                zCam[i] = C.alt_m / 1000.
         #we kept plotEll in EllLineLength.py for plotEachRay case :(
         plotEll(sim.nCamUsed,xFOVpixelEnds,zFOVpixelEnds,xCam,zCam,nCutPix,
                 xp,zp,sz,sx, xzplot,sim.FwdLfn,plotEachRay, makeplot,P['vlim']['p'])
@@ -371,7 +372,7 @@ def getcamx(cam):
     convenience function
     returns all camera x position in km as list of formatted string
     """
-    return ['{:.2f}'.format(c.x_km) for c in cam if c.usecam]
+    return [f'{c.x_km:.2f}' for c in cam if c.usecam]
 
 #%%
 def plotnoise(cam,T,P,prefix):
