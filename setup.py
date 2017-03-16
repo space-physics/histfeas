@@ -12,13 +12,13 @@ req = ['Wand','pathvalidate','geopy','simplekml',
 #%%
 # FIXME: trick is to have them in order from no prereq to full prereq
 for p in [
-        'https://github.com/scienceopen/pybashutils',
-        'https://github.com/scienceopen/pyimagevideo',
-         'https://github.com/scienceopen/dmcutils',
-          'https://github.com/scienceopen/themisasi',
-        'https://github.com/scienceopen/transcarread',
-        'https://github.com/scienceopen/gaussfitter',
-        'https://github.com/scienceopen/dascutils',]:
+        'https://github.com/scivision/pybashutils',
+        'https://github.com/scivision/pyimagevideo',
+         'https://github.com/scivision/dmcutils',
+          'https://github.com/scivision/themisasi',
+        'https://github.com/scivision/transcarread',
+        'https://github.com/scivision/gaussfitter',
+        'https://github.com/scivision/dascutils',]:
 
     cwd = Path('..') / p.split('/')[-1]
     print(f'\n {cwd} \n')
@@ -35,7 +35,7 @@ setup(name='histfeas',
       packages=['histfeas'],
 	  description='Feasibility study for HiST auroral tomography system',
 	  author='Michael Hirsch, Ph.D.',
-	  url='https://github.com/scienceopen/histfeas',
+	  url='https://github.com/scivision/histfeas',
 	  install_requires=req,
 	  extras_require = {'tifffile':['tifffile']},
       classifiers=[
