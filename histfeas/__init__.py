@@ -10,7 +10,7 @@ from sys import argv
 import logging
 from configparser import ConfigParser
 from shutil import copy2
-from pymap3d.vdist import vdist
+from pymap3d.vincenty import vdist
 #from numpy import arange, fromstring
 #%%
 from histutils.camclass import Cam
