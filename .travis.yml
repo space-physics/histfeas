@@ -3,11 +3,14 @@ language: python
 python:
   - 3.6
 
+os:
+  - linux
+
 notifications:
-    email: false
+  email: false
 
 git:
-    depth: 3
+  depth: 3
 
 addons:
   apt:
@@ -23,14 +26,14 @@ before_install:
         wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh;
       fi
 
-install:    
+install:
     - bash miniconda.sh -b -p $HOME/miniconda
     - export PATH=$HOME/miniconda/bin:$PATH
     - hash -r
     
     - conda config --set always_yes yes --set changeps1 no
     - conda update -q conda
-    - conda create -n test python=$PYTHON_TRAVIS_VERSION
+    - conda create -n test python=$TRAVIS_PYTHON_VERSION
     - source activate test
     - pip -q install coveralls
 
@@ -39,4 +42,3 @@ install:
 script: coverage run tests/test.py -v
 
 after_success: coveralls
-
