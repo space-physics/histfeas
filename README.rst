@@ -1,8 +1,8 @@
-.. image:: https://travis-ci.org/scienceopen/histfeas.svg?branch=master
-    :target: https://travis-ci.org/scienceopen/histfeas
+.. image:: https://travis-ci.org/scivision/histfeas.svg?branch=master
+    :target: https://travis-ci.org/scivision/histfeas
 
-.. image:: https://coveralls.io/repos/scienceopen/histfeas/badge.svg?branch=master&service=github
-    :target: https://coveralls.io/github/scienceopen/histfeas?branch=master
+.. image:: https://coveralls.io/repos/scivision/histfeas/badge.svg?branch=master&service=github
+    :target: https://coveralls.io/github/scivision/histfeas?branch=master
 
 ================
 hist-feasibility

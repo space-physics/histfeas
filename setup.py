@@ -1,11 +1,21 @@
 #!/usr/bin/env python
+req=['nose','numpy','h5py','scipy','pandas','xarray','matplotlib', 'seaborn', 'astropy']
+pipreq= ['Wand','pathvalidate','geopy','simplekml',
+'pymap3d','sciencedates','histutils','astrometry_azel','morecvutils','gridaurora','lowtran',
+]
+
+import pip
+try:
+    import conda.cli
+    conda.cli.main('install',*req)
+except Exception as e:
+    pip.main(['install'] +req)
+pip.main(['install'] + pipreq)
+
 import subprocess # need for git
 from pathlib import Path
 from setuptools import setup
-
-req = ['Wand','pathvalidate','geopy','simplekml',
-       'pymap3d','sciencedates','histutils','astrometry_azel','morecvutils','gridaurora','lowtran',
-       'nose','numpy','h5py','scipy','pandas','xarray','matplotlib','seaborn','astropy']
+      
 # leave astropy in here for gaussfitter
 
 
@@ -36,7 +46,6 @@ setup(name='histfeas',
 	  description='Feasibility study for HiST auroral tomography system',
 	  author='Michael Hirsch, Ph.D.',
 	  url='https://github.com/scivision/histfeas',
-	  install_requires=req,
 	  extras_require = {'tifffile':['tifffile']},
       classifiers=[
       'Intended Audience :: Science/Research',
