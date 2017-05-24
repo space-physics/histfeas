@@ -7,7 +7,7 @@ import numpy as np # needed for all
 from datetime import datetime
 from dateutil.parser import parse
 #
-from transcarread.readionoinit import getaltgrid
+from transcarread import getaltgrid
 
 DPI=72
 
