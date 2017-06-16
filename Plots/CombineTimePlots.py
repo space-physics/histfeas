@@ -47,15 +47,15 @@ def pngsmash(rdir,impat,fpat,outfn):
                 anim.sequence.append(J)
 
         if outfn.suffix=='.gif':
-            print('writing {}'.format(outfn))
+            print('writing',outfn)
             anim.save(filename=str(outfn))
         elif outfn.suffix in ('.avi','.mp4','.ogv','.webm'):
             with NamedTemporaryFile(suffix='.gif') as f:  # forcing .gif temp since it's what Wand can handle
-                print('using tempfile {}'.format(f.name))
+                print('using tempfile', f.name)
                 anim.save(filename=f.name) #the handle didn't work for some reason
-                print('writing {}'.format(outfn))
+                print('writing', outfn)
                 # NOTE: -c:v ffv
-                subprocess.call(['ffmpeg','-i',f.name,'-c:v','ffv1',str(outfn)])
+                subprocess.call(['ffmpeg','-i',f.name,'-c:v','ffv1',outfn])
 
 
 
