@@ -1,11 +1,13 @@
 language: generic
+fast_finish: true
 
 os:
   - linux
   - osx
-
+  
 env: 
-  - TRAVIS_PYTHON_VERSION=3.6
+  - FC=gfortran
+
 
 notifications:
   email: false
@@ -25,18 +27,18 @@ before_install:
         wget https://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -O miniconda.sh;
         brew update;
         brew install gcc;
-      else 
+      else
         wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
       fi
 
     - bash miniconda.sh -b -p $HOME/miniconda
     - export PATH=$HOME/miniconda/bin:$PATH
     - hash -r
-    
+
     - conda config --set always_yes yes --set changeps1 no
     - conda update -q conda
-    - conda create -n test python=$TRAVIS_PYTHON_VERSION
-    - source activate test
+#    - conda create -n test python=$TRAVIS_PYTHON_VERSION
+#    - source activate test
     - pip -q install coveralls
 
 install:
@@ -45,3 +47,4 @@ install:
 script: coverage run tests/test.py -v
 
 after_success: coveralls
+
