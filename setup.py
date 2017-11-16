@@ -1,17 +1,10 @@
 #!/usr/bin/env python
-req=['nose','numpy','h5py','scipy','pandas','xarray','matplotlib', 'seaborn', 'astropy']
-pipreq= ['Wand','pathvalidate','geopy','simplekml',
-'pymap3d','sciencedates','histutils','astrometry_azel','morecvutils','gridaurora','lowtran',
+req=['nose','numpy','h5py','scipy','pandas','xarray','matplotlib', 'seaborn', 'astropy',
+     'Wand','pathvalidate','geopy','simplekml',
+     'pymap3d','sciencedates','histutils','astrometry_azel', 'morecvutils', 'gridaurora', 'lowtran',
 ]
 
-import pip
-try:
-    import conda.cli
-    conda.cli.main('install',*req)
-except Exception as e:
-    pip.main(['install'] +req)
-pip.main(['install'] + pipreq)
-
+# %%
 import subprocess # need for git
 from pathlib import Path
 from setuptools import setup
@@ -36,9 +29,9 @@ for p in [
     if not cwd.is_dir():
         subprocess.run(['git','clone', p],cwd='..')
 
-    subprocess.call(['git','pull'], cwd=str(cwd)) #in case it was already installed
+    subprocess.call(['git','pull'], cwd=cwd) #in case it was already installed
 
-    subprocess.call(['python','setup.py','develop'], cwd=str(cwd)) #FIXME is there an API to do this?
+    subprocess.call(['python','setup.py','develop'], cwd=cwd) #FIXME is there an API to do this?
 
 #%%
 setup(name='histfeas',
@@ -46,7 +39,7 @@ setup(name='histfeas',
 	  description='Feasibility study for HiST auroral tomography system',
 	  author='Michael Hirsch, Ph.D.',
 	  url='https://github.com/scivision/histfeas',
-	  extras_require = {'tifffile':['tifffile']},
+	  extras_require = {'tiff':['tifffile']},
       classifiers=[
       'Intended Audience :: Science/Research',
       'Development Status :: 4 - Beta',
@@ -54,6 +47,8 @@ setup(name='histfeas',
       'Topic :: Scientific/Engineering :: Atmospheric Science',
       'Programming Language :: Python :: 3.6',
       ],
+      python_requires='>=3.6',
+      install_requires=req,
 	  )
 
 
