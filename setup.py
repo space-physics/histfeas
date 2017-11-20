@@ -7,7 +7,7 @@ req=['nose','numpy','h5py','scipy','pandas','xarray','matplotlib', 'seaborn', 'a
 # %%
 import subprocess # need for git
 from pathlib import Path
-from setuptools import setup
+from setuptools import setup,find_packages
       
 # leave astropy in here for gaussfitter
 
@@ -35,7 +35,7 @@ for p in [
 
 #%%
 setup(name='histfeas',
-      packages=['histfeas'],
+      packages=find_packages(),
 	  description='Feasibility study for HiST auroral tomography system',
 	  author='Michael Hirsch, Ph.D.',
 	  url='https://github.com/scivision/histfeas',
