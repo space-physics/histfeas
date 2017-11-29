@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from numpy import (asfortranarray,atleast_3d, exp,sinc,pi,zeros, outer,
-                   isnan,log,logspace,arange,allclose,diff,atleast_1d,isfinite,repeat,append)
+ isnan,log,logspace,arange,allclose,diff,atleast_1d,isfinite,repeat,append)
 import h5py
 from scipy.interpolate import interp1d
 import logging
@@ -180,7 +180,7 @@ def getpx(xKM,Wkm,X0,xs):
         px = exp(-((xKM-X0[:,None])/Wkm[:,None])**2) #(original idea JLS)
 #%%
     elif xs =='rect':
-    #ir = where(xs=='rect')[0]
+    #ir = xs=='rect'
     #for i in ir:
         for i in range(X0.size):
             #find leftmost and rightmost indices of rect. phantom
@@ -193,7 +193,7 @@ def getpx(xKM,Wkm,X0,xs):
 #%%
     else:
         px[:,find_nearest(xKM,X0)] = 1.
-#    jn = where(xs=='none')
+#    jn = xs=='none'
 #    for j in jn:
 #        px[j,find_nearest(xKM,X0[j])[0]] = 1.
 

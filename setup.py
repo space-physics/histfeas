@@ -1,8 +1,9 @@
 #!/usr/bin/env python
-req=['nose','numpy','h5py','scipy','pandas','xarray','matplotlib', 'seaborn', 'astropy',
+install_requires=['numpy','h5py','scipy','pandas','xarray','matplotlib', 'seaborn', 'astropy',
      'Wand','pathvalidate','geopy','simplekml',
      'pymap3d','sciencedates','histutils','astrometry_azel', 'morecvutils', 'gridaurora', 'lowtran',
 ]
+tests_require=['nose','coverall']
 
 # %%
 import subprocess # need for git
@@ -49,6 +50,8 @@ setup(name='histfeas',
       ],
       python_requires='>=3.6',
       install_requires=req,
+      tests_requires=tests_require,
+      extras_require={'test':tests_require},
 	  )
 
 

@@ -2,7 +2,7 @@
 from pathlib import Path
 import logging
 from hashlib import md5
-from numpy import asarray,where,arange,isfinite,ceil,hypot,atleast_1d,fromstring
+from numpy import asarray,arange,isfinite,ceil,hypot,atleast_1d,fromstring
 import numpy as np # needed for all
 from datetime import datetime
 from dateutil.parser import parse
@@ -35,7 +35,7 @@ class Sim:
                     else:
                         self.useCamBool[i] = False
             if usecamreq[0] is not None:
-                assert np.all(where(self.useCamBool)[0] == usecamreq) #not .all() in case of different length
+                assert np.all(self.useCamBool == usecamreq) #not .all() in case of different length
         except (TypeError,KeyError):
             pass #normal case
 

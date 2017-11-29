@@ -6,7 +6,10 @@ python:
 
 os:
   - linux
-  
+
+dist: trusty
+group: edge
+
 notifications:
   email: false
 
@@ -19,12 +22,8 @@ addons:
       - gfortran
       - gcc
 
-before_install:
-  - pip -q install coveralls
-
-install: python setup.py develop
+install: pip install -e .[tests]
 
 script: coverage run tests/test.py -v
 
 after_success: coveralls
-
