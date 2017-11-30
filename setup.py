@@ -3,7 +3,7 @@ install_requires=['numpy','h5py','scipy','pandas','xarray','matplotlib', 'seabor
      'Wand','pathvalidate','geopy','simplekml',
      'pymap3d','sciencedates','histutils','astrometry_azel', 'morecvutils', 'gridaurora', 'lowtran',
 ]
-tests_require=['nose','coverall']
+tests_require=['nose','coveralls']
 
 # %%
 import subprocess # need for git
@@ -40,7 +40,8 @@ setup(name='histfeas',
 	  description='Feasibility study for HiST auroral tomography system',
 	  author='Michael Hirsch, Ph.D.',
 	  url='https://github.com/scivision/histfeas',
-	  extras_require = {'tiff':['tifffile']},
+	  extras_require = {'tiff':['tifffile'],
+                        'tests':tests_require},
       classifiers=[
       'Intended Audience :: Science/Research',
       'Development Status :: 4 - Beta',
@@ -50,8 +51,7 @@ setup(name='histfeas',
       ],
       python_requires='>=3.6',
       install_requires=req,
-      tests_requires=tests_require,
-      extras_require={'test':tests_require},
+      tests_require=tests_require,
 	  )
 
 
