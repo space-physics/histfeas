@@ -50,7 +50,7 @@ setup(name='histfeas',
       'Programming Language :: Python :: 3.6',
       ],
       python_requires='>=3.6',
-      install_requires=req,
+      install_requires=install_requires,
       tests_require=tests_require,
 	  )
 
