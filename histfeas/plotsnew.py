@@ -223,14 +223,12 @@ def goPlot(sim,Fwd,cam,Lfwd,Tm,drn,dhat,ver,vfit,Peig,Phi0, Phifit,rawdata,tInd,
         plotBcompare(sim,drn,dhat['fit_art'],cam,sim.nCamUsed,'bart',tInd, P)
 
 def tind2dt(cam,tind):
-    tfmt = '%Y-%m-%dT%H:%M:%S.%f'
-
     #NOTE: the [:-3] is arbitrary to keep 3 digits right of the decimal.
 
     try: #first run
-        return datetime.utcfromtimestamp(cam[0].tKeo[tind]).strftime(tfmt)[:-3]
+        return datetime.utcfromtimestamp(cam[0].tKeo[tind]).isoformat()[:-3]
     except IndexError: #loading data
-        return datetime.utcfromtimestamp(cam[0].tKeo).strftime(tfmt)[:-3]
+        return datetime.utcfromtimestamp(cam[0].tKeo).isoformat()[:-3]
     except (AttributeError,OSError):#simdata  #OSError thrown when nan fed into utcfromtimestamp
         return str(tind)
 #%%
