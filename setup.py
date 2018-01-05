@@ -9,10 +9,8 @@ tests_require=['nose','coveralls']
 import subprocess # need for git
 from pathlib import Path
 from setuptools import setup,find_packages
-      
+
 # leave astropy in here for gaussfitter
-
-
 #%%
 # FIXME: trick is to have them in order from no prereq to full prereq
 for p in [
@@ -28,11 +26,11 @@ for p in [
     print(f'\n {cwd} \n')
 
     if not cwd.is_dir():
-        subprocess.run(['git','clone', p],cwd='..')
+        subprocess.check_call(['git','clone', p],cwd='..')
 
-    subprocess.call(['git','pull'], cwd=cwd) #in case it was already installed
+    subprocess.check_call(['git','pull'], cwd=cwd) #in case it was already installed
 
-    subprocess.call(['python','setup.py','develop'], cwd=cwd) #FIXME is there an API to do this?
+    subprocess.check_call(['python','-m','pip','install','-e','.'], cwd=cwd)
 
 #%%
 setup(name='histfeas',
@@ -41,6 +39,7 @@ setup(name='histfeas',
 	  author='Michael Hirsch, Ph.D.',
 	  url='https://github.com/scivision/histfeas',
 	  extras_require = {'tiff':['tifffile'],
+                        'maps':['cartopy',],
                         'tests':tests_require},
       classifiers=[
       'Intended Audience :: Science/Research',
