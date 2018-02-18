@@ -3,7 +3,6 @@
 generates circular markings of az/el on videos
  montage anno_flame10061*.png -trim -tile 4x1 -geometry +1+0  out.png
 """
-from __future__ import division
 from pathlib import Path
 from matplotlib.patches import Ellipse
 from matplotlib.pyplot import figure, Axes,close
@@ -11,7 +10,7 @@ import matplotlib
 matplotlib.rcParams.update({'font.family':'sans-serif',
                            'font.sans-serif':'Arial',
                            'text.usetex':True})
-from scipy.misc import imread
+import imageio
 from scipy.io import loadmat
 from numpy import array,cos,sin,radians,ndarray
 #
@@ -26,7 +25,7 @@ def ccdfid(imgfn,calfn):
 #%% load cal data
     cal = loadmat(str(calfn))
 #%%
-    opt = imread(str(imgfn))
+    opt = imageio.imread(str(imgfn))
     plotazelscale(opt,cal['az'],cal['el'])
 
 def fiducial(img,xcrop,ycrop,outfn,rings,rays,t,pstr,oxyfull,wh0, ringmult,axlim=None):

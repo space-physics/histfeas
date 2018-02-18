@@ -3,7 +3,7 @@
 creates EMCCD fiducials for TGARS 2015 Reconstruction of fine scale auroral Dyanmics paper figure
 """
 from numpy import array,rot90
-from scipy.ndimage import imread
+import imageio
 from matplotlib.pyplot import show
 #
 from pathlib import Path
@@ -32,7 +32,7 @@ for f,ring,ray,p in zip(ccdflist,rings,rays,pstr):
     outfn = path/('anno_' + f)
 
     try:
-        img = imread(str(imgfn))
+        img = imageio.imread(str(imgfn))
         img = rot90(img,-1)
     except FileNotFoundError:
         continue
