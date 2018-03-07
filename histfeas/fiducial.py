@@ -94,7 +94,7 @@ def fiducial(img,xcrop,ycrop,outfn,rings,rays,t,pstr,oxyfull,wh0, ringmult,axlim
 
     if outfn:
         print('writing {}'.format(outfn))
-        fg.savefig(str(outfn),bbox_inches='tight',dpi=DPI)
+        fg.savefig(outfn,bbox_inches='tight',dpi=DPI)
         close(fg)
 
 

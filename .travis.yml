@@ -7,11 +7,7 @@ python:
 os:
   - linux
 
-dist: trusty
-group: edge
-
-notifications:
-  email: false
+group: travis_latest
 
 git:
   depth: 3
@@ -22,8 +18,10 @@ addons:
       - gfortran
       - gcc
 
-install: python -m pip install -e .[tests]
+install: pip -q install -e .[tests]
 
-script: coverage run tests/test.py -v
+script: 
+  - pytest
+  - coverage run tests/test_all.py -v
 
 after_success: coveralls

@@ -3,7 +3,7 @@ install_requires=['numpy','h5py','scipy','pandas','xarray','matplotlib', 'seabor
      'Wand','pathvalidate','geopy','simplekml',
      'pymap3d','sciencedates','histutils','astrometry_azel', 'morecvutils', 'gridaurora', 'lowtran',
 ]
-tests_require=['nose','coveralls']
+tests_require=['pytest','nose','coveralls']
 
 # %%
 import subprocess # need for git
