@@ -1,11 +1,28 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 """
 Plots first recorded auroral conjugate plausible geometry.
 
 Willis 1996 http://adsabs.harvard.edu/abs/1996QJRAS..37..733W
+
+FIXME: add geomagnetic coordinates for 1770
+
+Chinese font: apt install fonts-wqy-zenhei
 """
 import numpy as np
 import cartopy
+#
+import matplotlib as mpl
+font_name = "WenQuanYi Zen Hei"
+mpl.rcParams['font.family']=font_name
+#
+import matplotlib.font_manager as mfm
+ch_font = mfm.FontProperties(fname="/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc")
+#
+from matplotlib import font_manager
+fontP = font_manager.FontProperties()
+fontP.set_family('WenQuanYi Zen Hei')
+#
 from matplotlib.pyplot import show,figure
 #
 from pymap3d import geodetic2aer
@@ -14,8 +31,8 @@ PROJ = cartopy.crs.PlateCarree()  # arbitrary
 
 def main():
 # %% from paper
-    sitella = np.array([[-10.5, 122.8],
-                        [ 40.1, 117.4]])
+    sitella = {'HMS Endeavour':[-10.45, 122.82],
+               '冀县 Ji-zhou':[ 40.1, 117.4]}
 
     Narclla = np.array([[41,118],
                         [41.5,123.5],
@@ -28,9 +45,9 @@ def main():
                         [-25,  129.5]
                      ])
 # %% simple calculations for presumable LOS
-    archeight = 300e3 # m, assumed
+    archeight = 350e3 # m, assumed
     aer = geodetic2aer(Sarclla[1,0], Sarclla[1,1], archeight,
-                       sitella[0,0], sitella[0,1], 0.)
+                       *sitella['HMS Endeavour'], 0.)
     print(f'aurora elevation angle (deg)  {aer[1]:.1f}')
 # %%
     ax= figure().gca(projection=PROJ)
@@ -42,10 +59,12 @@ def main():
     ax.set_extent((90,160,-40,45))
 
     #%% sites
-    for lla in sitella:
-        ax.plot(lla[1], lla[0],'o',
+    for o,lla in sitella.items():
+        ax.plot(*lla[::-1],'o',
                 color='limegreen',markersize=12,
                 transform=PROJ)
+        ax.annotate(o, xy=lla[::-1], xytext = (3, 3), textcoords = 'offset points',
+                    ha='right',fontproperties=fontP)
     #%% aurora
     ax.plot(Narclla[:,1], Narclla[:,0],
            color='firebrick',linewidth=2,
@@ -55,7 +74,8 @@ def main():
             color='firebrick',linewidth=2,
             transform=PROJ)
 
-    ax.set_title('First Conjugate Auroral Observation 1770 CE')
+    ax.set_title('First Conjugate Auroral Observation 1770 CE',
+                 fontproperties=fontP)
 
 if __name__ == '__main__':
 
