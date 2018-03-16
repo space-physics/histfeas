@@ -12,16 +12,16 @@ Chinese font: apt install fonts-wqy-zenhei
 import numpy as np
 import cartopy
 #
-import matplotlib as mpl
-font_name = "WenQuanYi Zen Hei"
-mpl.rcParams['font.family']=font_name
+#import matplotlib as mpl
+#font_name = "WenQuanYi Zen Hei"
+#mpl.rcParams['font.family']=font_name
 #
-import matplotlib.font_manager as mfm
-ch_font = mfm.FontProperties(fname="/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc")
+#import matplotlib.font_manager as mfm
+#ch_font = mfm.FontProperties(fname="/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc")
 #
-from matplotlib import font_manager
-fontP = font_manager.FontProperties()
-fontP.set_family('WenQuanYi Zen Hei')
+#from matplotlib import font_manager
+#fontP = font_manager.FontProperties()
+#fontP.set_family('WenQuanYi Zen Hei')
 #
 from matplotlib.pyplot import show,figure
 #
@@ -64,7 +64,8 @@ def main():
                 color='limegreen',markersize=12,
                 transform=PROJ)
         ax.annotate(o, xy=lla[::-1], xytext = (3, 3), textcoords = 'offset points',
-                    ha='right',fontproperties=fontP)
+                    ha='right',
+                    family='WenQuanYi Wen Hei')
     #%% aurora
     ax.plot(Narclla[:,1], Narclla[:,0],
            color='firebrick',linewidth=2,
@@ -74,8 +75,8 @@ def main():
             color='firebrick',linewidth=2,
             transform=PROJ)
 
-    ax.set_title('First Conjugate Auroral Observation 1770 CE',
-                 fontproperties=fontP)
+    ax.set_title('First Conjugate Auroral Observation 1770 CE')
+                 #fontproperties=fontP)
 
 if __name__ == '__main__':
 
