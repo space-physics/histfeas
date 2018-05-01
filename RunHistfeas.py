@@ -3,12 +3,10 @@
 Example command line interfacer for HIST feasibility
 Michael Hirsch
 """
-import logging
+
 from signal import signal,SIGINT #for Ctrl C
-from numpy import arange
 import matplotlib as mpl
 from matplotlib.pyplot import show
-from sys import argv
 #
 from histfeas import userinput
 from histfeas.main_hist import doSim
