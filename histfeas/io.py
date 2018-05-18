@@ -1,4 +1,8 @@
-import simplekml
+try:
+    import simplekml
+except ImportError:
+    pass
+
 import logging
 from matplotlib.pyplot import figure,clf
 #

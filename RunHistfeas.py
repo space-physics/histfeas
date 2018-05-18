@@ -4,20 +4,17 @@ Example command line interfacer for HIST feasibility
 Michael Hirsch
 """
 
-from signal import signal,SIGINT #for Ctrl C
 import matplotlib as mpl
 from matplotlib.pyplot import show
 #
 from histfeas import userinput
 from histfeas.main_hist import doSim
 
-def signal_handler(signal, frame):
-    exit('\n *** Aborting program as per user pressed Ctrl+C ! \n')
+print('matplotlib backend:',mpl.get_backend(),' version', mpl.__version__)
 
 if __name__ == '__main__':
-   # from argparse import ArgumentParser
-
-    signal(SIGINT, signal_handler) #allows friendly ctrl-c interrupt
+    import signal
+    signal.signal(signal.SIGINT, signal.SIG_DFL)
 
     #p = ArgumentParser(description='analyzes HST data and makes simulations')
    # p.add_argument('infile',help='.xls filename with simulation parameters')
@@ -43,25 +40,6 @@ if __name__ == '__main__':
 #    p = p.parse_args()
 
     P = userinput()
-#%% plot setup
-    print(('matplotlib backend / version: ' + mpl.get_backend() +'  ' + mpl.__version__  ))
-
-
-    if False: #devel debug
-        #from subprocess import Popen, PIPE
-        import cProfile,pstats
-        proffn = 'hstprofstats.pstats'
-        print('saving profile results to ' + proffn)
-        cProfile.run('doSim(P)',proffn)
-        pstats.Stats(proffn).sort_stats('time','cumulative').print_stats(50)
-        #binpath = Path('~/profile/').expanduser()
-        #sysCall = [str(binpath / 'gprof2dot.py'),'-f','pstats',profFN,'|','dot','-Tpng','-o','output.png']
-        #print(sysCall)
-        #po = Popen(sysCall, stdout=PIPE, cwd=binpath, shell=False)
-        #so,serr = po.communicate() #timeout is incompatible with Python 2.
-        #print(so.decode('utf8'))
-
-    else: #normal
-        doSim(P)
+    doSim(P)
 
     show()
