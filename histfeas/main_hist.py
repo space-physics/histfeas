@@ -23,7 +23,7 @@ from gridaurora.eFluxGen import maxwellian
 from histutils.simulFrame import getSimulData
 from histutils.get1Dcut import get1Dcut #we need cam.angle_deg for plotting
 #
-from . import getParams, ASIparams
+from . import getParams
 from .AuroraFwdModel import getSimVER
 from .transcararc import getMp,getPhi0,getpx #calls matplotlib
 from .observeVolume import getEll,getObs #calls matplotlib
@@ -52,7 +52,7 @@ def doSim(P):
     Peig = getMp(sim,cam,Fwd['z'],P['makeplot'])
 #%% synthetic diff. num flux
     Phi0all = getPhi0(sim,arc,Fwd['x'],Peig['Ek'], P['makeplot']) # Nenergy x Nx x Ntime
-    print(f'{time()-tic):.1f} sec to prepare for HiSTfeas loop')
+    print(f'{time()-tic:.1f} sec to prepare for HiSTfeas loop')
 #%%start looping for each time slice in keogram (just once if simulated)
     for ti in timeInds:
         logging.info('entering time {}'.format(ti))

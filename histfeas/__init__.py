@@ -1,9 +1,6 @@
 from pathlib import Path
 import subprocess,os
-import matplotlib
 import stat
-matplotlib.use('Agg')
-print(matplotlib.get_backend())
 #%%
 from tempfile import mkdtemp
 from argparse import ArgumentParser
@@ -45,12 +42,7 @@ def userinput(ini:Path=None, outdir:Path=None) -> dict:
     p = p.parse_args()
 
     if not p.ini:
-        raise RuntimeError('you must specify an .ini file')
-#%% now the other matplotlib imports
-    import seaborn as sns
-    sns.color_palette("cubehelix")
-    sns.set(context='paper', style='whitegrid',font_scale=2,
-            rc={'image.cmap': 'cubehelix_r'})
+        raise FileNotFoundError('you must specify an .ini file')
 #%%
     P = {'ini':Path(p.ini).expanduser(),
      'load':p.load,

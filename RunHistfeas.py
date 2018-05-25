@@ -3,14 +3,18 @@
 Example command line interfacer for HIST feasibility
 Michael Hirsch
 """
-
-import matplotlib as mpl
+import matplotlib
+matplotlib.use('Agg')
+print(matplotlib.get_backend())
 from matplotlib.pyplot import show
+import seaborn as sns
+sns.color_palette("cubehelix")
+sns.set(context='paper', style='whitegrid',font_scale=2,
+        rc={'image.cmap': 'cubehelix_r'})
 #
 from histfeas import userinput
 from histfeas.main_hist import doSim
 
-print('matplotlib backend:',mpl.get_backend(),' version', mpl.__version__)
 
 if __name__ == '__main__':
     import signal
