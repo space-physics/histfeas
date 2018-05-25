@@ -96,7 +96,7 @@ def userinput(ini:Path=None, outdir:Path=None) -> dict:
     return P
 
 
-def getParams(P):
+def getParams(P:dict):
 #%% first copy .ini file readonly to output dir for future reference
     if P['outdir'] is not None and not P['load']:  #running new simulation
         try: # so we can overwrite existing file when user wants to reuse output directory
@@ -112,11 +112,6 @@ def getParams(P):
                       inline_comment_prefixes=(';'), strict=True)
 
     xl.read(P['ini'])
-#%% read plot parameters from ini
-    if 'plot' in xl:
-        P = plotstuffer(xl['plot'],P)
-    else:
-        P = plotstuffer(None,P)
 #%% read arcs (if any)
     arc,ntimeslice = setupArc(xl)
     logging.info(f'# of observer time steps in {P["ini"]}: {ntimeslice}')
