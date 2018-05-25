@@ -2,7 +2,6 @@
 from pathlib import Path
 import logging
 from hashlib import md5
-from numpy import asarray,arange,isfinite,ceil,hypot,atleast_1d,fromstring
 import numpy as np # needed for all
 from datetime import datetime
 from dateutil.parser import parse
@@ -13,7 +12,7 @@ DPI=72
 
 class Sim:
 
-    def __init__(self,sp,ap,ntimeslice,P):
+    def __init__(self,sp, ap:dict, P:dict):
 #%% root directory not here
         try:
             self.rootdir = Path(P['overrides']['rootdir']).expanduser()
@@ -23,10 +22,10 @@ class Sim:
 
 #%% how many cameras in use, and which ones?
         self.camnames = sp['cam']['name'].split(',')
-        self.useCamBool = fromstring(sp['cam']['useCam'],dtype=bool,sep=',')
+        self.useCamBool = np.fromstring(sp['cam']['useCam'],dtype=bool,sep=',')
 
         try:
-            usecamreq = asarray(P['overrides']['cam'])
+            usecamreq = np.asarray(P['overrides']['cam'])
             if usecamreq[0] is not None: #override spreadsheet
                 logging.warning(' Overriding INI, using cameras: {}'.format(usecamreq))
                 for i,civ in enumerate(self.useCamBool): # this might be a silly indexing method, but works
@@ -44,9 +43,8 @@ class Sim:
         self.camxreq = P['overrides']['camx']
         if self.camxreq is not None:
             assert len(self.camxreq) == self.nCamUsed, 'must specify same number of x-loc and used cameras'
-        #%%
-
-        nCutPix = fromstring(sp['cam']['nCutPix'],dtype=int,sep=',') #FIXME someday allow different # of pixels..
+# %% 1-D pixel cuts
+        nCutPix = np.fromstring(sp['cam']['nCutPix'],dtype=int,sep=',') #FIXME someday allow different # of pixels..
         assert (nCutPix[self.useCamBool] == nCutPix[self.useCamBool][0]).all(),'all cameras must have same 1D cut length'
         self.ncutpix = nCutPix[self.useCamBool][0]
 
@@ -61,19 +59,19 @@ class Sim:
 #%% manual override flux file
         try:
             self.Jfwdh5 = P['overrides']['Jfwd']
-            logging.info('* overriding J0 flux with file: {}'.format(P['overrides']['Jfwd']))
+            logging.warning(f"overriding J0 flux with file: {P['overrides']['Jfwd']}")
         except (KeyError,TypeError):
             self.Jfwdh5 = None
 #%% manual override filter
         try:
             self.opticalfilter = P['overrides']['filter'].lower()
-            logging.info('* overriding filter choice with:',P['overrides']['filter'])
+            logging.warning('overriding filter choice with:',P['overrides']['filter'])
         except (KeyError,TypeError):
             self.opticalfilter = sp['transcar']['opticalFilter'].lower()
 #%% manual override minimum beam energy
         try:
             self.minbeamev = float(P['overrides']['minev'])
-            logging.info('* minimum beam energy set to: {}'.format(P['overrides']['minev']))
+            logging.warning(f"minimum beam energy set to: {P['overrides']['minev']}")
         except (KeyError,TypeError): #use spreadsheet
             self.minbeamev = sp.getfloat('transcar','minbeamev',fallback=0)
 
@@ -102,7 +100,7 @@ class Sim:
 #            self.plots['fwd'] =   ('bnoise','bfwd','pfwd','phifwd','pfwd_1d','phifwd_1d')
 #%%how many synthetic arcs are we using
         self.nArc = len(ap) # number of dict entries
-        self.nTimeSlice = ntimeslice
+        self.nTimeSlice = ap['ntimeslice']
 #%% transcar
 #        self.lambminmax = (splitconf(sp,('sim','lambdamin')),
 #                           splitconf(sp,('sim','lambdamax'))) #for plotting only
@@ -198,7 +196,7 @@ class Sim:
         #maximum number of grid elements in a ray! This number is arrived at 'graphically'
         #by considering the number of cells touched by a ray at a 45 deg. angle at the
         # corner of a square cell block
-        Fwd['maxNell'] = ( 2*ceil( hypot( Fwd['sx'], Fwd['sz'] ) ) - 1 ).astype(int)
+        Fwd['maxNell'] = ( 2*np.ceil(np.hypot(Fwd['sx'], Fwd['sz'])) - 1 ).astype(int)
 
         if Fwd['sx'] * Fwd['sz'] > 10e6:
             logging.warning('Fwd Grid size seems excessive at more than 10 million cells')
@@ -210,16 +208,16 @@ class Sim:
             raise ValueError('zero frame indices were specified to process')
 
         if timeInds is None:
-            timeInds = arange(self.nTimeSlice) #NOT range!
+            timeInds = np.arange(self.nTimeSlice) #NOT range!
 
-        timeInds = atleast_1d(timeInds) #necessary for next indexing step
+        timeInds = np.atleast_1d(timeInds) #necessary for next indexing step
 
         return timeInds[timeInds<self.nTimeSlice] #(it's <, not <=) slice off commond line requests beyond number of frames
 
     def getEllHash(self,sp,x,z):
         EllCritParams =  [x, z,
-                          fromstring(sp['cam']['nCutPix'],dtype=int,sep=','),
-                          fromstring(sp['cam']['FOVmaxLengthKM'],dtype=float,sep=','),
+                          np.fromstring(sp['cam']['nCutPix'],dtype=int,sep=','),
+                          np.fromstring(sp['cam']['FOVmaxLengthKM'],dtype=float,sep=','),
                           sp['cams']['RayAngleMapping'],
                           sp.getfloat('fwd','XcellKM'), sp.getfloat('fwd','XminKM'),
                           sp.getfloat('fwd','XmaxKM'),
@@ -230,8 +228,8 @@ class Sim:
                                   sp.getfloat('fwd','ZminKM'), sp.getfloat('fwd','ZmaxKM') ])
 
         if self.raymap == 'arbitrary':
-            EllCritParams.extend([fromstring(sp['cam']['boresightElevDeg'],dtype=float,sep=','),
-                                  fromstring(sp['cam']['FOVdeg'],dtype=float,sep=',')])
+            EllCritParams.extend([np.fromstring(sp['cam']['boresightElevDeg'],dtype=float,sep=','),
+                                  np.fromstring(sp['cam']['FOVdeg'],dtype=float,sep=',')])
 
         # get a long string from a mix of numbers and strings
         EllTxt = ''.join([str(n) for n in EllCritParams]) #so fast!
@@ -243,13 +241,13 @@ class Sim:
 def makexzgrid(xLim,zLim,dxKM,dzKM):
     # setup grid
     #it's arange, not range()
-    xKM = arange(xLim[0], xLim[1] + dxKM, dxKM, dtype=float) #horizontal sample locations
+    xKM = np.arange(xLim[0], xLim[1] + dxKM, dxKM, dtype=float) #horizontal sample locations
 
     if xKM[-1]>xLim[1]:
         xKM = xKM[:-1] #discard last element that was > xLim[1]
 
-    if zLim and isfinite(zLim).all() and dzKM and isfinite(dzKM):
-        zKM = arange(zLim[0], zLim[1] + dxKM, dzKM, dtype=float) #vert sample locations
+    if zLim and np.isfinite(zLim).all() and dzKM and np.isfinite(dzKM):
+        zKM = np.arange(zLim[0], zLim[1] + dxKM, dzKM, dtype=float) #vert sample locations
         if zKM[-1]>zLim[1]:
             zKM = zKM[:-1] #discard last element that was > xLim[1]
     else:

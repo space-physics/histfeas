@@ -1,15 +1,14 @@
 from pathlib import Path
 import subprocess,os
 import stat
-#%%
 from tempfile import mkdtemp
 from argparse import ArgumentParser
 from sys import argv
 import logging
 from configparser import ConfigParser
 from shutil import copy2
+from typing import Tuple
 from pymap3d.vincenty import vdist
-#from numpy import arange, fromstring
 #%%
 from histutils.camclass import Cam
 from histutils import splitconf
@@ -110,10 +109,10 @@ def getParams(P:dict):
     else:
         P = plotstuffer(None,P)
 #%% read arcs (if any)
-    arc,ntimeslice = setupArc(xl)
-    logging.info(f'# of observer time steps in {P["ini"]}: {ntimeslice}')
+    arc = setupArc(xl)
+    logging.info(f'# of observer time steps in {P["ini"]}: {arc["ntimeslice"]}')
 #%% class with parameters and function
-    sim = Sim(xl,arc,ntimeslice,P)
+    sim = Sim(xl,arc,P)
 #%% grid setup
     Fwd = sim.setupFwdXZ(xl)
 #%% setup cameras
@@ -150,7 +149,7 @@ def cam0dist(cam):
     return cam
 
 
-def setupArc(xl):
+def setupArc(xl) -> dict:
     """
     in the .ini file, sections [arc] using csv for each arc
     will create synthetic auroral arcs
@@ -159,18 +158,22 @@ def setupArc(xl):
     ntimeslice=None
 
     for s in xl:
-        if s.startswith('arc'):
-            logging.debug(f'configuring {s}')
-            texp = getntimes(xl[s]['texp']) # last time is blended with 2nd to last time
-            if ntimeslice is not None:
-                assert len(texp) == ntimeslice+1, 'for now, all Arcs must have same number of times (columns)'
+        if not s.startswith('arc'):
+            continue
 
-            # TODO assert all arcs have same time length
-            ntimeslice = texp.size-1  # MUST be -1 to allow for range() compat and interp1() compat
+        logging.debug(f'configuring {s}')
+        texp = getntimes(xl[s]['texp']) # last time is blended with 2nd to last time
+        if ntimeslice is not None:
+            assert len(texp) == ntimeslice+1, 'for now, all Arcs must have same number of times (columns)'
 
-            arc[s] = Arc(xl[s], texp)
+        # TODO assert all arcs have same time length
+        ntimeslice = texp.size-1  # MUST be -1 to allow for range() compat and interp1() compat
 
-    return arc, ntimeslice
+        arc[s] = Arc(xl[s], texp)
+
+    arc['ntimeslice'] = ntimeslice
+
+    return arc
 
 
 def setupCam(sim,cp,zmax,P):
@@ -191,7 +194,7 @@ def setupCam(sim,cp,zmax,P):
     return cam
 
 
-def plotstuffer(sp,P):
+def plotstuffer(sp, P:dict) -> dict:
     """
     these have no impact on simulation calculations, they are just plotting bounds
     """
