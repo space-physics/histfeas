@@ -112,6 +112,11 @@ def getParams(P:dict):
                       inline_comment_prefixes=(';'), strict=True)
 
     xl.read(P['ini'])
+# %% read plot parameters from ini
+    if 'plot' in xl:
+        P = plotstuffer(xl['plot'],P)
+    else:
+        P = plotstuffer(None,P)
 #%% read arcs (if any)
     arc,ntimeslice = setupArc(xl)
     logging.info(f'# of observer time steps in {P["ini"]}: {ntimeslice}')
