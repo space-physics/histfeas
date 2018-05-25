@@ -128,6 +128,7 @@ def FitVERopt(L,bn,Phi0,MpDict,sim,cam,Fwd,tInd,P):
 
     return vfit,Phifit,Tm,bfit
 
+
 def optfun(phiinv,L,Tm,b_obs,nEnergy,sx):
     """this provides the quantity to minimize
     Phi0 is a vector b/c that's what minimize needs, reshape is low cost (but this many times?)
@@ -139,6 +140,7 @@ def optfun(phiinv,L,Tm,b_obs,nEnergy,sx):
     binv = L.dot(Tm.dot(phiinv.reshape(nEnergy,sx,order='F')).ravel(order='F'))
 
     return norm(binv - b_obs, ord=2)
+
 
 def difffun(jfit,nEnergy=33,sx=109):
     '''used only for slsqp method'''

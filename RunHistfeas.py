@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 """
 Example command line interfacer for HIST feasibility
 Michael Hirsch

@@ -1,6 +1,7 @@
 from pathlib import Path
 import subprocess,os
 import matplotlib
+import stat
 matplotlib.use('Agg')
 print(matplotlib.get_backend())
 #%%
@@ -25,7 +26,7 @@ def hist_figure(P):
     doSim(P)
 
 
-def userinput(ini=None,outdir=None):
+def userinput(ini:Path=None, outdir:Path=None) -> dict:
 
     p = ArgumentParser(description='flaming figure plotter')
     p.add_argument('ini',help='.ini config file',nargs='?',default=ini)
@@ -95,24 +96,22 @@ def userinput(ini=None,outdir=None):
     return P
 
 
-
 def getParams(P):
 #%% first copy .ini file readonly to output dir for future reference
     if P['outdir'] is not None and not P['load']:  #running new simulation
         try: # so we can overwrite existing file when user wants to reuse output directory
-            os.chmod(str(P['outdir']/P['ini'].name), 0o644)
+            os.chmod(P['outdir']/P['ini'].name, stat.S_IROTH+stat.S_IRUSR+stat.S_IRGRP+stat.S_IWUSR)
         except FileNotFoundError:
             pass
 
-        copy2(str(P['ini']),str(P['outdir']))
+        copy2(P['ini'], P['outdir'])
       # make the copied-to-output-directory .ini file readonly to help avoid mistakes when loading and replotting
-        os.chmod(str(P['outdir']/P['ini'].name), 0o444)
+        os.chmod(P['outdir'] / P['ini'].name, stat.S_IROTH+stat.S_IRUSR+stat.S_IRGRP)
 #%% read .ini
-    # note python2 only allows ';' inline comments, can't be changed in python2(?)
     xl = ConfigParser(allow_no_value=True, empty_lines_in_values=False,
                       inline_comment_prefixes=(';'), strict=True)
 
-    xl.read(str(P['ini']))
+    xl.read(P['ini'])
 #%% read plot parameters from ini
     if 'plot' in xl:
         P = plotstuffer(xl['plot'],P)
@@ -132,7 +131,8 @@ def getParams(P):
         cam = cam0dist(cam)
 
     #store x,z in sim
-    ellname=sim.getEllHash(xl, [C.x_km for C in cam if C.usecam],[C.alt_m/1000. for C in cam if C.usecam])
+    ellname=sim.getEllHash(xl, [C.x_km for C in cam if C.usecam],
+                               [C.alt_m/1000. for C in cam if C.usecam])
     #will try to load this and compute if needed. Will be copied to output directory too.
     sim.FwdLfn = sim.rootdir/'precompute' / ellname
 
@@ -141,9 +141,10 @@ def getParams(P):
 
 
     logging.info('fwd model voxels:\n'
-          'B_perp: N={}   B_parallel: M={}'.format(Fwd['sx'],Fwd['sz']))
+          f'B_perp: N={Fwd["sx"]}   B_parallel: M={Fwd["sz"]}')
 #%% init variables
     return arc,sim,cam,Fwd,P
+
 
 def cam0dist(cam):
     """
@@ -152,9 +153,10 @@ def cam0dist(cam):
     cam[0].x_km = 0. # NOTE arbitrarily picks the first camera x=0km
     for C in cam[1:]:
         if C.usecam:
-            C.x_km = vdist(cam[0].lat,cam[0].lon,C.lat,C.lon)[0]/1e3
+            C.x_km = vdist(cam[0].lat,cam[0].lon,C.lat,C.lon)[0] / 1e3
 
     return cam
+
 
 def setupArc(xl):
     """
@@ -166,7 +168,7 @@ def setupArc(xl):
 
     for s in xl:
         if s.startswith('arc'):
-            logging.debug('configuring {}'.format(s))
+            logging.debug(f'configuring {s}')
             texp = getntimes(xl[s]['texp']) # last time is blended with 2nd to last time
             if ntimeslice is not None:
                 assert len(texp) == ntimeslice+1, 'for now, all Arcs must have same number of times (columns)'
@@ -177,6 +179,7 @@ def setupArc(xl):
             arc[s] = Arc(xl[s], texp)
 
     return arc, ntimeslice
+
 
 def setupCam(sim,cp,zmax,P):
     cam = []
@@ -194,6 +197,7 @@ def setupCam(sim,cp,zmax,P):
     assert len(cam)>0,'0 cameras are configured, Nothing to do.'
 
     return cam
+
 
 def plotstuffer(sp,P):
     """
