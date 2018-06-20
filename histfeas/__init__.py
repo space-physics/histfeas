@@ -7,7 +7,6 @@ from sys import argv
 import logging
 from configparser import ConfigParser
 from shutil import copy2
-from typing import Tuple
 from pymap3d.vincenty import vdist
 #%%
 from histutils.camclass import Cam
@@ -116,7 +115,7 @@ def getParams(P:dict):
 #%% grid setup
     Fwd = sim.setupFwdXZ(xl)
 #%% setup cameras
-    cam = setupCam(sim,xl['cam'],Fwd['z'][-1],P)
+    cam = setupCam(sim, xl['cam'], Fwd['z'][-1], P)
 
     if cam[0].x_km is None: #defined simulated camera location in lat/lon
         cam = cam0dist(cam)
@@ -176,7 +175,7 @@ def setupArc(xl) -> dict:
     return arc
 
 
-def setupCam(sim,cp,zmax,P):
+def setupCam(sim, cp, zmax:float, P:dict):
     cam = []
 
     if sim.camxreq is not None:

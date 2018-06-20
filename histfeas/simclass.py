@@ -172,7 +172,7 @@ class Sim:
         self.artstop =   sp.get('recon','stoprule',fallback=None)
         self.arttau =    sp.getfloat('recon','MDPtauDelta',fallback=None)
 #%%
-    def setupFwdXZ(self,sp):
+    def setupFwdXZ(self, sp) -> dict:
         Fwd = {}
         self.fwd_xlim = (sp.getfloat('fwd','XminKM'), sp.getfloat('fwd','XmaxKM'))
         self.fwd_zlim = (sp.getfloat('fwd','ZminKM'), sp.getfloat('fwd','ZmaxKM'))
@@ -190,18 +190,19 @@ class Sim:
             raise ValueError('You must specify zmax zmin zcell when not using transcar altitudes in XLS')
 
         assert Fwd['x'].ndim == Fwd['z'].ndim ==1
-        Fwd['sx'] = Fwd['x'].size #this is a vector
-        Fwd['sz'] = Fwd['z'].size #this is a vector
+        sx = Fwd['x'].size #this is a vector
+        sz = Fwd['z'].size #this is a vector
 
         #maximum number of grid elements in a ray! This number is arrived at 'graphically'
         #by considering the number of cells touched by a ray at a 45 deg. angle at the
         # corner of a square cell block
-        Fwd['maxNell'] = ( 2*np.ceil(np.hypot(Fwd['sx'], Fwd['sz'])) - 1 ).astype(int)
+        Fwd['maxNell'] = ( 2*np.ceil(np.hypot(sx, sz)) - 1 ).astype(int)
 
-        if Fwd['sx'] * Fwd['sz'] > 10e6:
+        if sx * sz > 10e6:
             logging.warning('Fwd Grid size seems excessive at more than 10 million cells')
 
         return Fwd
+
 
     def maketind(self,timeInds):
         if self.nTimeSlice == 0:
@@ -213,6 +214,7 @@ class Sim:
         timeInds = np.atleast_1d(timeInds) #necessary for next indexing step
 
         return timeInds[timeInds<self.nTimeSlice] #(it's <, not <=) slice off commond line requests beyond number of frames
+
 
     def getEllHash(self,sp,x,z):
         EllCritParams =  [x, z,
