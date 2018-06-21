@@ -22,15 +22,15 @@ Table of results for 2 and 3 cam:
 REAL actual camera data (just dump synchroinzed frames:
 ./FigureMaker.py -m realvid in/apr14T085454
 
--m optim  reconstruct only 
+-m optim  reconstruct only
 """
 from histfeas import userinput, hist_figure
-from histfeas.loadAnalyze import readresults,findxlsh5
+from histfeas.loadAnalyze import readresults, findxlsh5
 
 P = userinput()
-#%% compute
+# %% compute
 if not P['load']:
     hist_figure(P)
-#%% load
-flist,P = findxlsh5(P)
-readresults(flist,P)
+# %% load
+flist, P = findxlsh5(P)
+readresults(flist, P)

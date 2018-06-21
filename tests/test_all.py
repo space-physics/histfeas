@@ -8,6 +8,7 @@ import h5py
 #
 from histfeas import userinput, hist_figure
 
+
 def test_main():
     # %% path hack
     # allows running from top or test directory
@@ -44,7 +45,6 @@ def test_main():
 
             print(xmsg)
             print(Emsg)
-
 
     def test_writeHDF5(regh5):
         with h5py.File(str(regh5), 'a', libver='latest') as f:

@@ -9,4 +9,3 @@ from skimage.draw import circle
 rad = 4
 
 print(disk(rad))
-

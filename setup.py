@@ -1,6 +1,4 @@
 #!/usr/bin/env python
-import subprocess  # need for git
-from pathlib import Path
 from setuptools import setup, find_packages
 
 install_requires = ['numpy', 'h5py', 'scipy', 'pandas', 'xarray', 'matplotlib', 'seaborn', 'astropy',
