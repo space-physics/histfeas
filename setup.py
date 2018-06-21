@@ -1,37 +1,16 @@
 #!/usr/bin/env python
-install_requires = ['numpy', 'h5py', 'scipy', 'pandas', 'xarray', 'matplotlib', 'seaborn', 'astropy',
-                    'Wand', 'pathvalidate', 'geopy', 'simplekml',
-                    'pymap3d', 'sciencedates', 'histutils', 'astrometry_azel', 'morecvutils', 'gridaurora', 'lowtran',
-                    ]
-tests_require = ['pytest', 'nose', 'coveralls']
-
-# %%
 import subprocess  # need for git
 from pathlib import Path
 from setuptools import setup, find_packages
 
-# leave astropy in here for gaussfitter
-# %%
-# FIXME: trick is to have them in order from no prereq to full prereq
-for p in [
-        'https://github.com/scivision/pybashutils',
-        'https://github.com/scivision/pyimagevideo',
-    'https://github.com/scivision/dmcutils',
-    'https://github.com/scivision/themisasi',
-        'https://github.com/scivision/transcarread',
-        'https://github.com/scivision/gaussfitter',
-        'https://github.com/scivision/dascutils', ]:
+install_requires = ['numpy', 'h5py', 'scipy', 'pandas', 'xarray', 'matplotlib', 'seaborn', 'astropy',
+                    'Wand', 'pathvalidate', 'geopy', 'simplekml',
+                    'pymap3d', 'sciencedates', 'histutils', 'astrometry_azel', 'morecvutils', 'gridaurora', 'lowtran',
+                    'dascutils', 'transcarread', 'themisasi', 'pyimagevideo',
+                    'pybashutils', 'dmcutils',
+                    ]
+tests_require = ['pytest', 'nose', 'coveralls']
 
-    cwd = Path('..') / p.split('/')[-1]
-    print(f'\n {cwd} \n')
-
-    if not cwd.is_dir():
-        subprocess.check_call(['git', 'clone', p], cwd='..')
-
-    subprocess.check_call(['git', 'pull'], cwd=cwd)
-
-    subprocess.check_call(
-        ['python', '-m', 'pip', 'install', '-e', '.'], cwd=cwd)
 
 # %%
 setup(name='histfeas',
@@ -43,7 +22,8 @@ setup(name='histfeas',
       author='Michael Hirsch, Ph.D.',
       url='https://github.com/scivision/histfeas',
           extras_require={'tiff': ['tifffile'],
-                          'maps': ['cartopy', ],
+                          'maps': ['cartopy'],
+                          'fit': ['gaussfitter'],
                           'tests': tests_require},
       classifiers=[
           'Intended Audience :: Science/Research',
