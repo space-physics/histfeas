@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 from numpy import outer, zeros_like, zeros, arange, repeat, nan, empty
-#
-from gridaurora.chapman import chapman_profile
-from sciencedates import find_nearest
+from gridaurora import chapman_profile
 from .transcararc import getpx
 
 
@@ -21,7 +19,7 @@ class Arc():
                 pass
 
 
-def getntimes(sreq, N=None):
+def getntimes(sreq: str, N: int=None):
     """
     if 3 element req, see if it's a range spec.
     if 1 element, stretch to all time
@@ -61,7 +59,7 @@ def getver(x, z, Mp, Phi0, w, h, x0, z0, xshape, zshape, pmax):
         raise ValueError('Unknown z-model: {}'.format(zshape))
 
 
-def ChapmanArc(Wkm, H, X0, Z0, xKM, zKM, xshape, PC0=1):
+def ChapmanArc(Wkm, H, X0, Z0, xKM, zKM, xshape, PC0: float=1):
     # chapman vert
     pz = PC0 * chapman_profile(Z0, zKM, H)
     # horizontal model
@@ -71,10 +69,11 @@ def ChapmanArc(Wkm, H, X0, Z0, xKM, zKM, xshape, PC0=1):
     return outer(pz, px)
 
 
-def RectArc(Wkm, Hkm, X0, Z0, xKM, zKM, xshape, PC0=1):
+def RectArc(Wkm, Hkm, X0, Z0, xKM, zKM, xshape, PC0: float=1):
 
     # find lower and upper indices of rect. phantom
-    PCind = (find_nearest(zKM, Z0-Hkm/2)[0], find_nearest(zKM, Z0+Hkm/2)[0])
+    PCind = (abs(zKM - Z0-Hkm/2).argmin(), 
+             abs(zKM - Z0+Hkm/2).argmin())
     # initialize vertical vector
     pz = zeros_like(zKM)
     pz[PCind[0]:PCind[1]+1] = PC0
