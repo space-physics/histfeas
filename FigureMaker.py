@@ -27,10 +27,16 @@ REAL actual camera data (just dump synchroinzed frames:
 from histfeas import userinput, hist_figure
 from histfeas.loadAnalyze import readresults, findxlsh5
 
-P = userinput()
-# %% compute
-if not P['load']:
-    hist_figure(P)
-# %% load
-flist, P = findxlsh5(P)
-readresults(flist, P)
+
+def main():
+    P = userinput()
+    # %% compute
+    if not P['load']:
+        hist_figure(P)
+    # %% load
+    flist, P = findxlsh5(P)
+    readresults(flist, P)
+
+
+if __name__ == '__main__':
+    main()

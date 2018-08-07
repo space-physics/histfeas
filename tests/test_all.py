@@ -5,7 +5,7 @@ Registration case for HiST program
 from pathlib import Path
 from numpy.testing import assert_allclose
 import h5py
-#
+import pytest
 from histfeas import userinput, hist_figure
 
 
@@ -47,10 +47,10 @@ def test_main():
             print(Emsg)
 
     def test_writeHDF5(regh5):
-        with h5py.File(str(regh5), 'a', libver='latest') as f:
+        with h5py.File(regh5, 'a') as f:
             f['/phifwd/E0'] = 7500.
             f['/phifwd/x0'] = 1.
 
 
 if __name__ == '__main__':
-    pytest.main()
+    pytest.main(['-x', __file__])

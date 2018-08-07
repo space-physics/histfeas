@@ -32,7 +32,7 @@ from gridaurora.plots import ploteigver, writeplots, nametime
 from .io import planviewkml
 # %% plot globals
 longtitle = False
-#pcmcmap = get_cmap('jet')
+# pcmcmap = get_cmap('jet')
 # pcmcmap.set_under('white')
 dymaj = 100
 dymin = 25
@@ -77,7 +77,7 @@ def goPlot(sim, Fwd, cam, Lfwd, Tm, drn, dhat, ver, vfit, Peig, Phi0, Phifit, ra
 # %% nicer file naming
     T = tind2dt(cam, tInd)
 # %% convenience
-    #cord = ['b','g','k','r','m','y']
+    # cord = ['b','g','k','r','m','y']
     xKM = Fwd['x']
     zKM = Fwd['z']
     xp = Fwd['xPixCorn']
@@ -93,7 +93,7 @@ def goPlot(sim, Fwd, cam, Lfwd, Tm, drn, dhat, ver, vfit, Peig, Phi0, Phifit, ra
     if 'eig' in makeplot:
         ploteigver(Phifit['EKpcolor'], zKM, Tm, sim, T, P, 'peig')
 
-       # FIXME this is temporary hack until Peigen is passed to hist-feasibility as DataFrame
+        # FIXME this is temporary hack until Peigen is passed to hist-feasibility as DataFrame
         Peigen = DataArray(data=Peig['Mp'],
                            coords=[zKM, Phifit['EK']], dims=['alt_km', 'energy_ev'])
         plotOptMod(None, Peigen)
@@ -172,7 +172,7 @@ def goPlot(sim, Fwd, cam, Lfwd, Tm, drn, dhat, ver, vfit, Peig, Phi0, Phifit, ra
         plotBcompare(sim, drn, dhat['gaussian'], cam, sim.nCamUsed, 'bgaussfit', tInd, P)
 
         gx0, gE0 = getx0E0(None, Phifit['gaussian'], Phifit['EK'], xKM, tInd, P, sim.minenergy)
-#'Neval = {:d}'.format(fitp.nfev)
+        # 'Neval = {:d}'.format(fitp.nfev)
         plotJ(sim, Phifit['gaussian'], xKM, xp, Phifit['EK'], Phifit['EKpcolor'],
               T, P, 'jgaussian', '$\hat{\phi}_{gaussian,optim}$ diff. number flux')
 
@@ -222,7 +222,7 @@ def goPlot(sim, Fwd, cam, Lfwd, Tm, drn, dhat, ver, vfit, Peig, Phi0, Phifit, ra
         plotJ(sim, Phifit['art'], xKM, xp, Phifit['EK'], Phifit['EKpcolor'],
               T, P, 'jart', '$\hat{\Phi}_{art}$ J from Kaczmarz ART on LT and b')
     if 'vart' in makeplot:
-        assert isnan(vfit['art']).any() == False
+        assert not isnan(vfit['art']).any()
         plotVER(sim, vfit['art'], xKM, xp, zKM, zp, T, P, 'vart', '$\hat{P}_{art}$ from ART estimation of $J$', 1812)
     if 'bart' in makeplot:
         plotBcompare(sim, drn, dhat['fit_art'], cam, sim.nCamUsed, 'bart', tInd, P)
@@ -271,7 +271,7 @@ def plotfwd(sim, cam, drn, xKM, xp, zKM, zp, ver, Phi0, fitp, tInd,  P, doSubplo
         plotJ(sim, Phi0, xKM, xp, fitp['EK'], fitp['EKpcolor'],
               T, P, 'phifwd', '$\Phi_{{top}}$ diff. number flux', axs[0, 2])
 
-        if not 'optim' in P['makeplot'] and Jxi is not None:
+        if 'optim' not in P['makeplot'] and Jxi is not None:
             xlbl = ['{:0.2f}'.format(x) for x in xKM[Jxi]]
 
             plotVER1D(sim, ver[:, Jxi], None, zKM, xlbl, T, P, 'pfwd1d',
@@ -565,7 +565,7 @@ def plotJ(sim, Jflux, x, xp, Ek, EKpcolor, T, P, prefix, titletxt, ax=None):
     for c, s, v, p in zip(cnorm, sfmt, vlow, pre):
         # determine lowest level to plot
         vmin = getmin(v, P['vlim']['j'][0])
-        #print('using phi plot limits ({:.1e},  {:.1e})'.format(vmin,vlim[1]))
+        # print('using phi plot limits ({:.1e},  {:.1e})'.format(vmin,vlim[1]))
         vmax = P['vlim']['j'][1] if P['vlim']['j'] is not None else Jflux.max()
 
         if 'plotly' in P['makeplot']:
@@ -607,13 +607,13 @@ def plotJ(sim, Jflux, x, xp, Ek, EKpcolor, T, P, prefix, titletxt, ax=None):
             cbar = colorbar(hc, ax=ax, format=s)
             cbar.set_label('[cm$^{-2}$s$^{-1}$eV$^{-1}$]')
             # now let's fix the exponent label on the colorbar
- #           cbar.ax.yaxis.get_offset_text().set_size(afs)
+            # cbar.ax.yaxis.get_offset_text().set_size(afs)
             cbar.ax.yaxis.get_offset_text().set_position((2, 10))
             if pstyle == 'contour':
                 cbar.add_lines(hc)
 
             ax.set_yscale('log')
-            #print('phi xlim {}'.format(xlim))
+            # print('phi xlim {}'.format(xlim))
             ax.set_xlim(P['vlim']['x'])
 
             ax.grid(True, which='both')
@@ -663,10 +663,10 @@ def plotJ3(x, EKpcolor, Jflux, plt3):
         from mayavi import mlab
         mlab.figure()
         # this .axes command not working
-        #axm = mlab.axes(xlabel='x [km]',ylabel='Beam Energy [eV]',x_axis_visibility=True, y_axis_visibility=True)
+        # axm = mlab.axes(xlabel='x [km]',ylabel='Beam Energy [eV]',x_axis_visibility=True, y_axis_visibility=True)
 
-        #mobj = mlab.mesh(e,x,Jflux, representation='wireframe')
-        #mobj.actor.actor.scale = [1,0.0001,1]
+        # mobj = mlab.mesh(e,x,Jflux, representation='wireframe')
+        # mobj.actor.actor.scale = [1,0.0001,1]
         # http://docs.enthought.com/mayavi/mayavi/auto/mlab_helper_functions.html#mayavi.mlab.mesh
         # surf is preferred over mesh in this case
 
@@ -959,7 +959,7 @@ def doBlbl(axb, sfmt, vlim, labeltxt, noiselam):
     axb.xaxis.set_minor_locator(MultipleLocator(dxmin))
     axb.tick_params(axis='both', which='both', direction='out')
 
-    #sfmt.set_powerlimits((-6, 6))
+    # sfmt.set_powerlimits((-6, 6))
     axb.yaxis.set_major_formatter(sfmt)
 
     axb.set_ylabel(labeltxt + '}$ [photons sr$^{-1}$ s$^{-1}$]')  # yes the }$ is appropriate
@@ -1104,7 +1104,7 @@ def getx0E0(Phifwd, Phifit, E, x, tInd, P, E0min):
             hb = ca.pcolormesh(x, Elin, cPhifwd)
             fg.colorbar(hb, ax=ca)
             ca.set_title('$\Phi$ fwd precip. intensity')
-            #ca.set_xlabel('$B_\perp$ [km]')
+            # ca.set_xlabel('$B_\perp$ [km]')
             ca.set_ylabel('Beam Energy [eV]')
             ca.set_yscale('log')
             ca.autoscale(True, tight=True)
@@ -1170,7 +1170,7 @@ def getx0E0(Phifwd, Phifit, E, x, tInd, P, E0min):
 
         writeplots(fg, 'gaussfitlin', tInd, P['outdir'])
 
-    #Ghrow,Ghcol = np.unravel_index(gfit.argmax(axis=None),gfit.shape, order='C')
+        # Ghrow,Ghcol = np.unravel_index(gfit.argmax(axis=None),gfit.shape, order='C')
 
     return gx0, gE0  # , x[pkcol], Elin[pkrow]
 # %% write hdf5

@@ -16,7 +16,7 @@ from histfeas import userinput  # noqa: E402
 from histfeas.main_hist import doSim  # noqa: E402
 
 
-if __name__ == '__main__':
+def main():
     import signal
     signal.signal(signal.SIGINT, signal.SIG_DFL)
 
@@ -24,3 +24,7 @@ if __name__ == '__main__':
     doSim(P)
 
     show()
+
+
+if __name__ == '__main__':
+    main()

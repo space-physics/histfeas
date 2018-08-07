@@ -72,7 +72,7 @@ def ChapmanArc(Wkm, H, X0, Z0, xKM, zKM, xshape, PC0: float=1):
 def RectArc(Wkm, Hkm, X0, Z0, xKM, zKM, xshape, PC0: float=1):
 
     # find lower and upper indices of rect. phantom
-    PCind = (abs(zKM - Z0-Hkm/2).argmin(), 
+    PCind = (abs(zKM - Z0-Hkm/2).argmin(),
              abs(zKM - Z0+Hkm/2).argmin())
     # initialize vertical vector
     pz = zeros_like(zKM)
