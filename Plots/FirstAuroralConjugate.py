@@ -11,7 +11,8 @@ Chinese font: apt install fonts-wqy-zenhei
 """
 import numpy as np
 import cartopy
-
+from pymap3d import geodetic2aer
+from matplotlib.pyplot import show, figure
 """
 things that didn't work for Chinese font
 
@@ -26,9 +27,7 @@ things that didn't work for Chinese font
 #fontP = font_manager.FontProperties()
 #fontP.set_family('WenQuanYi Zen Hei')
 #
-from matplotlib.pyplot import show, figure
-#
-from pymap3d import geodetic2aer
+
 """
 PROJ = cartopy.crs.PlateCarree()  # arbitrary
 
