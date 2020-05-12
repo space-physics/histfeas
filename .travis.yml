@@ -1,27 +1,8 @@
 language: python
-fast_finish: true
-
-python:
-  - 3.6
-
-os:
-  - linux
-
 group: travis_latest
 
-git:
-  depth: 3
+install: pip install -e .[tests,lint]
 
-addons:
-  apt:
-    packages:
-      - gfortran
-      - gcc
-
-install: pip -q install -e .[tests]
-
-script: 
+script:
+  - flake8
   - pytest
-  - coverage run tests/test_all.py -v
-
-after_success: coveralls

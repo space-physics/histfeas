@@ -25,12 +25,12 @@ REAL actual camera data (just dump synchroinzed frames:
 -m optim  reconstruct only 
 """
 from histfeas import userinput, hist_figure
-from histfeas.loadAnalyze import readresults,findxlsh5
+from histfeas.loadAnalyze import readresults, findxlsh5
 
 P = userinput()
 #%% compute
-if not P['load']:
+if not P["load"]:
     hist_figure(P)
 #%% load
-flist,P = findxlsh5(P)
-readresults(flist,P)
+flist, P = findxlsh5(P)
+readresults(flist, P)
